@@ -10,12 +10,11 @@ import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* BrowserRouter handles moving between pages without reloading */}
-    <BrowserRouter>
-      {/* AuthProvider gives the whole app access to the user's info */}
+    {/* 🎯 FIX: We tell the router that our app lives inside the /starium-app/ folder */}
+    <BrowserRouter basename="/starium-app/">
       <AuthProvider>
-        <NetworkProvider> {/* NetworkProvider gives the whole app access to online/offline status */}
-          <ConfigProvider> 
+        <NetworkProvider>
+          <ConfigProvider>
             <App />
           </ConfigProvider>
         </NetworkProvider>
