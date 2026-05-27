@@ -1,7 +1,8 @@
 // src/main.jsx
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+// 🎯 FIX: We swap BrowserRouter for HashRouter!
+import { HashRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { NetworkProvider } from './context/NetworkContext.jsx'
 import { ConfigProvider } from './context/ConfigContext.jsx'
@@ -10,8 +11,8 @@ import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* 🎯 FIX: We tell the router that our app lives inside the /starium-app/ folder */}
-    <BrowserRouter basename="/starium-app/">
+    {/* 🎯 FIX: HashRouter doesn't even need the basename, it figures it out automatically! */}
+    <HashRouter>
       <AuthProvider>
         <NetworkProvider>
           <ConfigProvider>
@@ -19,6 +20,6 @@ createRoot(document.getElementById('root')).render(
           </ConfigProvider>
         </NetworkProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>,
 )
