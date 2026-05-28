@@ -6,12 +6,14 @@ import MachineModal from '../components/MachineModal';
 import { useConfig } from '../context/ConfigContext';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
+import { useAlerts } from '../context/AlertContext'; // 🎯 NEW IMPORT
 import { getOrCreateShiftApproval, saveQCTest, subscribeToShiftTests } from '../services/qcOperations';
 
 export default function Dashboard() {
   const { config, loadingConfig } = useConfig();
   const { isOnline, setQueueCount } = useNetwork();
-  const { userRole } = useAuth(); 
+  const { userRole } = useAuth();
+  const { broadcastAlert } = useAlerts(); // 🎯 GRAB THE LOUDSPEAKER
   
   const [mode, setMode] = useState('level9');
   const [shift, setShift] = useState('DAY');
@@ -167,7 +169,7 @@ export default function Dashboard() {
     setIsModalOpen(false);
   };
 
-  const handleSave = async () => {
+const handleSave = async () => {
     if (!qcName) return setSaveStatus({ state: 'error', message: '⚠️ Enter your name' });
     if (!team) return setSaveStatus({ state: 'error', message: '⚠️ Select your team' });
     if (!weight || isNaN(weight) || parseFloat(weight) <= 0) return setSaveStatus({ state: 'error', message: '⚠️ Enter valid weight' });
@@ -176,41 +178,40 @@ export default function Dashboard() {
     setSaveStatus({ state: 'saving', message: '⏳ Saving...' });
 
     try {
-      const approvalDocId = await getOrCreateShiftApproval(mode, config);
-
-      const testData = {
-        mode,
-        approvalDocId,
-        weight: parseFloat(weight),
-        density: calculatedDensity,
-        shift,
-        team,
-        qcName,
-        appearance,
-        remarks: remarksText,
-      };
-
-      if (mode === 'level9') {
-        testData.buggyNumber = buggyNumber.trim();
-        testData.fragrance = fragrance;
-        testData.machines = selectedMachines.sort((a,b) => a-b);
-      } else {
-        testData.flowProperty = freeFlowing;
-      }
+      const approvalDocId = await getOrCreateShiftApproval(mode, config, isOnline);
+      const testData = { mode, approvalDocId, weight: parseFloat(weight), density: calculatedDensity, shift, team, qcName, appearance, remarks: remarksText };
+      
+      if (mode === 'level9') { testData.buggyNumber = buggyNumber.trim(); testData.fragrance = fragrance; testData.machines = selectedMachines.sort((a,b) => a-b); } 
+      else { testData.flowProperty = freeFlowing; }
 
       const result = await saveQCTest(testData, isOnline, setQueueCount);
 
-      if (result === 'offline-queued') {
-        setSaveStatus({ state: 'saved', message: '📱 Saved Offline!' });
-      } else if (result === 'saved') {
-        setSaveStatus({ state: 'saved', message: '✅ Saved!' });
+      // 🎯 THE AUTOMATED TARGETED ALERTS!
+      if (result === 'saved' || result === 'offline-queued') {
+        const d = parseFloat(calculatedDensity);
+        const isLevel9Bad = mode === 'level9' && (d < config.level9MinDensity || d > config.level9MaxDensity);
+        const isBotBad = mode === 'bot' && (d < config.botMinDensity || d > config.botMaxDensity);
+        
+        if (isLevel9Bad || isBotBad) {
+          const status = (mode === 'level9' ? d > config.level9MaxDensity : d > config.botMaxDensity) ? 'HIGH' : 'LOW';
+          const modeLabel = mode === 'level9' ? 'LEVEL 9' : 'BOT';
+          
+          // Figure out which page should see the alert!
+          const targetPage = mode === 'level9' ? ['/level9-exec'] : ['/bot-exec'];
+          
+          broadcastAlert(
+            `⚠️ ${modeLabel} DENSITY TOO ${status}!`,
+            `Density recorded at ${d.toFixed(3)} g/mL by ${qcName} (Team ${team}).`,
+            'danger',
+            targetPage // 🎯 Send it ONLY to the relevant Exec page!
+          );
+        }
       }
 
-      setTimeout(() => {
-        resetFormFields();
-        setSaveStatus({ state: 'idle', message: '' });
-      }, 2000);
+      if (result === 'offline-queued') setSaveStatus({ state: 'saved', message: '📱 Saved Offline!' });
+      else if (result === 'saved') setSaveStatus({ state: 'saved', message: '✅ Saved!' });
 
+      setTimeout(() => { resetFormFields(); setSaveStatus({ state: 'idle', message: '' }); }, 2000);
     } catch (error) {
       console.error("Error saving:", error);
       setSaveStatus({ state: 'error', message: '❌ Error saving' });
