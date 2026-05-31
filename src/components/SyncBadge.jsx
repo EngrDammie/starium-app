@@ -5,8 +5,8 @@ export default function SyncBadge() {
   const { isOnline, queueCount, isSyncing } = useNetwork();
 
   return (
-    // 🎯 FIX: Added print:hidden
-    <div className={`print:hidden fixed top-14 md:top-5 left-5 px-4 py-2 rounded-full text-xs font-bold z-40 flex items-center gap-2 transition-colors duration-300 shadow-lg backdrop-blur-sm
+    // 🎯 FIX: Changed left-5 to left-[80px] to make room for the Hamburger Menu!
+    <div className={`print:hidden fixed top-14 md:top-5 left-[80px] px-4 py-2 rounded-full text-xs font-bold z-40 flex items-center gap-2 transition-colors duration-300 shadow-lg backdrop-blur-sm
       ${isOnline ? 'bg-status-success/10 text-status-success border border-status-success/30' : 'bg-status-danger/10 text-status-danger border border-status-danger/30'}
       ${isSyncing ? 'animate-pulse bg-status-warning/10 text-status-warning border-status-warning/30' : ''}
     `}>
