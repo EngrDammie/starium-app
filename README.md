@@ -5,16 +5,15 @@ Welcome to the **Starium Rafa Quality Control App**! This is an enterprise-grade
 ---
 
 ## 📖 Table of Contents
-1. [About the Project (For Non-Techies)](#-about-the-project)
+1. [About the Project](#-about-the-project)
 2. [Key Features](#-key-features)
-3. [User Roles & Permissions](#-user-roles--permissions)
+3. [Enterprise Security (The Keycard System)](#-enterprise-security-the-keycard-system)
 4. [Factory Modes](#-the-two-factory-modes)
 5. [Tech Stack](#-tech-stack)
-6. [For Developers: How It Works](#-for-developers-how-it-works)
-7. [Folder Structure](#-folder-structure)
-8. [Local Setup & Installation](#-local-setup--installation)
-9. [Deployment (GitHub Pages)](#-deployment)
-10. [Future Roadmap](#-future-roadmap)
+6. [For Developers: System Architecture](#-for-developers-system-architecture)
+7. [Local Setup & Installation](#-local-setup--installation)
+8. [Deployment (GitHub Pages)](#-deployment-github-pages)
+9. [Future Roadmap](#-future-roadmap)
 
 ---
 
@@ -22,9 +21,9 @@ Welcome to the **Starium Rafa Quality Control App**! This is an enterprise-grade
 
 Factory floors often suffer from spotty internet connections. Standard web apps break when the Wi-Fi drops, causing lost data and frustrated workers. 
 
-This application solves that problem. It is built as an **Offline-First Application**. QC Staff can continuously enter density test results, assign buggy numbers to machines, and write remarks even if the internet goes completely down. The app stores everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
+This application solves that problem. It is built as an **Offline-First Application**. QC Staff can continuously enter density test results even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
 
-Meanwhile, Factory Managers and Executives can watch this data stream into their dashboards in real-time, view automated charts, and digitally sign off on shift approvals.
+Meanwhile, Factory Managers and Executives can watch this data stream into their dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
 
 ---
 
@@ -32,30 +31,30 @@ Meanwhile, Factory Managers and Executives can watch this data stream into their
 
 - **📶 Offline-First Engine**: Never lose a test. Tests are queued locally and auto-synced with perfect timestamp preservation.
 - **⚡ Real-Time Executive Dashboards**: Live view of current factory density, visual machine grids, and moving trend charts.
-- **🛡️ Dynamic Role-Based Security**: Complete access control. Features and approval buttons are hidden or locked based on the user's specific job title.
-- **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, and change density threshold rules without ever touching the code.
-- **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and full CSV export capabilities.
-- **🔐 Master Auth Toggle**: Authentication can be turned on for strict security, or turned off for an open "kiosk" mode during emergencies.
+- **📢 Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens across the factory.
+- **📜 Shift History Modal**: Floor workers can instantly review all tests submitted during their active shift.
+- **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, and change density thresholds without ever touching the code.
+- **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
 
 ---
 
-## 👥 User Roles & Permissions
+## 🔑 Enterprise Security (The Keycard System)
 
-The app uses a dual-layer security system:
+Instead of rigid job titles (like "Manager" or "Staff"), this app uses a highly scalable **Modular Role-Based Access Control (RBAC)** system. We treat permissions like "Keycards" on a worker's lanyard.
 
-### 1. Page Access Roles
-Determines what screens a user can see:
-- **Staff**: Can only access the main Data Entry dashboard.
-- **Manager**: Can access Data Entry, Executive Dashboards, and Reports.
-- **Admin**: Can access everything, including Machine Configuration and User Management.
+A user's profile consists of three security layers:
 
-### 2. Shift Approval Roles
-Determines which buttons a user can click on the Executive Dashboard to approve a shift:
-- 🔧 Buggy Supervisor
-- ⚡ PLC Operator
-- 🏭 Production Manager
-- ✅ QC Manager
-- 🔍 QC Supervisor
+1. **`systemRole` (The Master Key):** 
+   - `super_admin`: Bypasses all security checks. Has full access to everything.
+   - `standard`: Must rely on department keycards.
+2. **`departmentRoles` (Page Access):** 
+   - Example: `qc_staff`, `qc_manager`, `prod_manager`, `hr_manager`.
+   - These control what pages a user can navigate to, and dynamically builds their Sidebar Menu.
+3. **`actionRoles` (Button Powers):**
+   - Example: `plc_operator`, `buggy_supervisor`, `qc_supervisor`.
+   - These dictate which specific approval buttons a user is allowed to click on the Executive Dashboards.
+
+*Note: The app includes a "Ghost Admin" fallback. If the Master Auth Toggle is turned OFF in the settings, the app bypasses Firebase login and grants everyone temporary Super Admin access for emergency/kiosk use.*
 
 ---
 
@@ -80,52 +79,33 @@ This project was completely rewritten from Vanilla HTML/JS into a modern SPA (Si
 
 - **Frontend Framework**: React 18 (via Vite)
 - **Styling**: Tailwind CSS v3
-- **Routing**: React Router v6
+- **Routing**: React Router v6 (using HashRouter for static hosting compatibility)
 - **Database & Auth**: Firebase (Firestore V9 Modular SDK)
 - **Charts**: Chart.js & React-Chartjs-2
 
 ---
 
-## 🧠 For Developers: How It Works
+## 🧠 For Developers: System Architecture
 
-If you are a future developer (or the original creator looking back), here is how the "Brain" of the app operates:
+### 1. The Centralized Router (`src/config/navigation.js`)
+All page routing and security requirements are defined here. The `ProtectedRoute` component (The Bouncer) cross-references the user's `departmentRoles` against this file before allowing a page to render.
 
-### The "Context" Intercom System
-Instead of passing data down manually, the app uses React Context to broadcast critical state globally:
-1. **`AuthContext.jsx`**: Listens to Firebase Auth and the `user_roles` database. It provides every page with `currentUser`, `userRole`, and the array of `approvalRoles`. It also handles the "Master Auth Toggle" bypass.
-2. **`ConfigContext.jsx`**: Listens live to the `config/settings` document in Firestore. If an admin adds a machine, this context instantly updates the UI across all connected screens. It includes a `DEFAULT_CONFIG` safety net.
-3. **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine`. When it detects a reconnection, it reads `localStorage('starium_offline_queue')` and safely flushes the queue to Firebase.
+### 2. The Context Intercoms
+The app uses React Context to broadcast state globally:
+- **`AuthContext.jsx`**: Manages Firebase logins, fetches user keycards, and provides the Owner Fallback security net.
+- **`ConfigContext.jsx`**: Listens live to the `config/settings` document. If an admin edits a machine, this context updates the UI instantly across all connected screens.
+- **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine` and automatically flushes `localStorage` queues to Firebase upon reconnection.
+- **`AlertContext.jsx`**: The global loudspeaker. Exposes the `broadcastAlert()` function which pushes real-time notifications to targeted factory screens.
 
-### The Engine Room (`qcOperations.js`)
-All heavy lifting for Firestore writes happens in `src/services/qcOperations.js`. This prevents UI files like `Dashboard.jsx` from becoming bloated. It handles:
-- Midnight boundary math for Night Shifts.
+### 3. The Engine Room (`src/services/qcOperations.js`)
+All Firestore heavy lifting happens here. It handles:
+- Midnight boundary math for Night Shifts (e.g., tests submitted at 2 AM belong to yesterday's shift document).
 - Fetching and sorting tests from oldest to newest.
-- Processing the offline sync queue.
+- Processing the offline sync queue safely.
 
----
-
-## 📂 Folder Structure
-
-```text
-starium-app/
-├── public/                 # Static assets (Favicons, etc)
-├── src/
-│   ├── components/         # Reusable Lego blocks (MachineGrid, Modals, Layout)
-│   ├── config/             # Firebase initialization & Env Variables
-│   ├── context/            # React Context (Auth, Config, Network)
-│   ├── pages/              # The main screens (Dashboard, Exec Views, Admin)
-│   ├── services/           # Backend logic (qcOperations.js)
-│   ├── App.jsx             # The Router (Traffic Cop)
-│   └── main.jsx            # The root wrapper
-├── .env                    # Secret keys (IGNORED BY GIT)
-├── tailwind.config.js      # Tailwind theme and brand colors
-└── package.json            # Project dependencies
-```
 ---
 
 ## 💻 Local Setup & Installation
-
-To run this app on your local machine:
 
 1. **Clone the repository:**
    ```bash

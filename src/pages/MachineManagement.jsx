@@ -1,43 +1,31 @@
 // src/pages/MachineManagement.jsx
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
-import { useAuth } from '../context/AuthContext';
 
 export default function MachineManagement() {
   const { config, loadingConfig } = useConfig();
-  const { userRole, currentUser } = useAuth();
-  const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  // 🎯 FIX: Old manual security checks completely stripped out!
+  // ProtectedRoute handles all security before this page even loads.
 
   const [activeTab, setActiveTab] = useState('machines');
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
-  // Modals State
   const [isMachineModalOpen, setIsMachineModalOpen] = useState(false);
   const [isLineModalOpen, setIsLineModalOpen] = useState(false);
   const [isGramModalOpen, setIsGramModalOpen] = useState(false);
 
-  // Form States
   const [machineForm, setMachineForm] = useState({ id: '', displayNumber: '', name: '', line: '', gram: 125, min: '', max: '', isEdit: false });
   const [lineForm, setLineForm] = useState({ id: '', name: '', order: '', isEdit: false });
   const [gramForm, setGramForm] = useState({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', isEdit: false });
   const [gridColumns, setGridColumns] = useState(6);
 
-  // Filters
   const [machineSearch, setMachineSearch] = useState('');
   const [machineLineFilter, setMachineLineFilter] = useState('');
-
-  // Security Check
-  useEffect(() => {
-    if (userRole !== 'admin' && currentUser?.email !== 'dammieoptimus@gmail.com') {
-      alert("⛔ Access Denied! Only administrators can access this page.");
-      navigate('/');
-    }
-  }, [userRole, currentUser, navigate]);
 
   useEffect(() => {
     if (config?.machineGridColumns) setGridColumns(config.machineGridColumns);
@@ -63,7 +51,6 @@ export default function MachineManagement() {
     }
   };
 
-  // --- MACHINE LOGIC ---
   const handleOpenMachineModal = (machine = null) => {
     if (machine) {
       const spec = config.gramSpecs?.[String(machine.gram)];
@@ -116,7 +103,6 @@ export default function MachineManagement() {
     await updateDatabase({ machines: newMachines }, 'Machine deleted');
   };
 
-  // --- LINE LOGIC ---
   const saveLine = async (e) => {
     e.preventDefault();
     let newLines = [...(config.productionLines || [])];
@@ -138,7 +124,6 @@ export default function MachineManagement() {
     await updateDatabase({ productionLines: newLines }, 'Line deleted');
   };
 
-  // --- GRAM SPEC LOGIC ---
   const saveGramSpec = async (e) => {
     e.preventDefault();
     const newSpecs = { ...config.gramSpecs };
@@ -157,7 +142,6 @@ export default function MachineManagement() {
     await updateDatabase({ gramSpecs: newSpecs }, 'Gram spec deleted');
   };
 
-  // --- IMPORT / EXPORT LOGIC ---
   const exportConfig = () => {
     const data = {
       machines: config.machines,
@@ -296,14 +280,12 @@ export default function MachineManagement() {
             <button onClick={() => handleOpenMachineModal()} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Machine</button>
           </div>
 
-          {/* 🎯 FIX: Restored the Total Machines and Production Lines stats cards! */}
           <div className="flex gap-4 md:gap-6 mb-6">
             <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner">
               <div className="text-4xl font-bold text-primary">{config.machines?.length || 0}</div>
               <div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Total Machines</div>
             </div>
             <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner">
-              {/* Math: find exactly how many unique lines the current machines are using */}
               <div className="text-4xl font-bold text-primary">{[...new Set((config.machines || []).map(m => m.line))].length}</div>
               <div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Production Lines</div>
             </div>

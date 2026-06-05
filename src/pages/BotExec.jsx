@@ -6,13 +6,15 @@ import { Line } from 'react-chartjs-2';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
+import { useAlerts } from '../context/AlertContext';
 import { getOrCreateShiftApproval, subscribeToShiftTests, subscribeToShiftApproval, addApprover, getShiftDateInfo } from '../services/qcOperations';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function BotExec() {
   const { config, loadingConfig } = useConfig();
-  const { userRole, approvalRoles } = useAuth();
+  const { systemRole, actionRoles } = useAuth();
+  const { broadcastAlert } = useAlerts(); 
   const navigate = useNavigate();
 
   const [shiftInfo, setShiftInfo] = useState({ shift: '--', date: '--' });
@@ -24,12 +26,7 @@ export default function BotExec() {
   const [currentApproverType, setCurrentApproverType] = useState(null);
   const [approverName, setApproverName] = useState('');
 
-  useEffect(() => {
-    if (userRole === 'staff') {
-      alert("Access Denied! Only admins and managers can access the executive views.");
-      navigate('/');
-    }
-  }, [userRole, navigate]);
+  // 🎯 FIX: Security logic completely removed. ProtectedRoute handles it now!
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -78,7 +75,6 @@ export default function BotExec() {
     return "text-status-success text-shadow-[0_0_20px_rgba(0,230,118,0.5)]";
   };
 
-  // 🎯 FIX: Helper to generate the Status Badges in the table for BOT mode
   const getTableDensityBadge = (densityNum) => {
     if (densityNum < config.botMinDensity) return <span className="bg-status-warning/20 text-status-warning px-2 py-1 rounded-full text-xs font-bold">LOW</span>;
     if (densityNum > config.botMaxDensity) return <span className="bg-status-danger/20 text-status-danger px-2 py-1 rounded-full text-xs font-bold">HIGH</span>;
@@ -87,50 +83,25 @@ export default function BotExec() {
 
   const chartData = {
     labels: recent10Tests.slice().reverse().map((_, i) => `T${i + 1}`),
-    datasets: [
-      {
-        label: 'Density (g/mL)',
-        data: recent10Tests.slice().reverse().map(t => parseFloat(t.density)),
-        borderColor: '#00BCD4',
-        backgroundColor: 'rgba(0, 188, 212, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#00BCD4',
-        pointRadius: 4,
-      }
-    ]
+    datasets: [{
+      label: 'Density (g/mL)',
+      data: recent10Tests.slice().reverse().map(t => parseFloat(t.density)),
+      borderColor: '#00BCD4',
+      backgroundColor: 'rgba(0, 188, 212, 0.1)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#00BCD4',
+      pointRadius: 4,
+    }]
   };
 
   const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     scales: {
-      y: { 
-        suggestedMin: Math.max(0, config.botMinDensity - 0.02),
-        suggestedMax: config.botMaxDensity + 0.02,
-        grid: { color: '#333' },
-        ticks: { color: '#888' }
-      },
+      y: { suggestedMin: Math.max(0, config.botMinDensity - 0.02), suggestedMax: config.botMaxDensity + 0.02, grid: { color: '#333' }, ticks: { color: '#888' } },
       x: { grid: { color: '#333' }, ticks: { color: '#888' } }
     },
     plugins: { legend: { display: false } }
-  };
-
-  const handleOpenApproval = (roleType) => {
-    const requiredRole = roleType.replace(/([A-Z])/g, "_$1").toLowerCase();
-    if (!approvalRoles.includes(requiredRole)) {
-      alert("Access Denied! You are not authorized to click this button!");
-      return;
-    }
-    setCurrentApproverType(roleType);
-    setIsApproveModalOpen(true);
-  };
-
-  const submitApproval = async () => {
-    if (!approverName.trim()) return alert("Enter your name");
-    await addApprover(approvalId, approverName, currentApproverType);
-    setIsApproveModalOpen(false);
-    setApproverName('');
   };
 
   const approvalButtons = [
@@ -140,17 +111,41 @@ export default function BotExec() {
     { type: 'qcSupervisor', label: '🔍 QC Supervisor' },
   ];
 
+  const handleOpenApproval = (roleType) => {
+    const requiredRole = roleType.replace(/([A-Z])/g, "_$1").toLowerCase();
+    if (systemRole !== 'super_admin' && !actionRoles.includes(requiredRole)) {
+      alert("⛔ Access Denied! You do not have the specific keycard required to click this approval button.");
+      return;
+    }
+    setCurrentApproverType(roleType);
+    setIsApproveModalOpen(true);
+  };
+
+  const submitApproval = async () => {
+    if (!approverName.trim()) return alert("Enter your name");
+    
+    const success = await addApprover(approvalId, approverName, currentApproverType);
+    
+    // 🎯 FIX: Broadcast to the Factory Floor!
+    if (success) {
+      const btnInfo = approvalButtons.find(b => b.type === currentApproverType);
+      const roleName = btnInfo ? btnInfo.label.split(' ').slice(1).join(' ') : 'Supervisor';
+      
+      broadcastAlert(
+        `✅ SHIFT APPROVED!`,
+        `${approverName} (${roleName}) has approved the ${shiftInfo.shift} shift for BOT mode.`,
+        'info',
+        ['/', '/bot-exec']
+      );
+    }
+
+    setIsApproveModalOpen(false);
+    setApproverName('');
+  };
+
   return (
     <Layout title="🏭 BOT Executive View" subtitle="Real-time Base Powder Density Monitoring" maxWidth="max-w-7xl">
-      
-      <style>{`
-        @keyframes alertBlink {
-          0%, 100% { opacity: 1; }
-          25%, 75% { opacity: 0.4; }
-          50% { opacity: 0; }
-        }
-        .animate-alert-blink { animation: alertBlink 1.5s linear infinite; }
-      `}</style>
+      <style>{`@keyframes alertBlink { 0%, 100% { opacity: 1; } 25%, 75% { opacity: 0.4; } 50% { opacity: 0; } } .animate-alert-blink { animation: alertBlink 1.5s linear infinite; }`}</style>
 
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Mode</div><div className="text-primary font-bold text-lg">BOT</div></div>
@@ -163,33 +158,22 @@ export default function BotExec() {
       </div>
 
       <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border-2 border-primary rounded-xl p-8 text-center mb-6 shadow-[0_0_30px_rgba(0,188,212,0.15)]">
-        <div className="bg-white/25 inline-block px-4 py-1 rounded text-xs font-black tracking-[3px] uppercase mb-4 text-white">
-          Base Powder Density
-        </div>
+        <div className="bg-white/25 inline-block px-4 py-1 rounded text-xs font-black tracking-[3px] uppercase mb-4 text-white">Base Powder Density</div>
         <div className={`text-7xl md:text-8xl font-black mb-2 transition-colors ${getStatusColor(latestTest?.density)}`}>
           {latestTest?.density || '--'}
         </div>
-        
         {latestTest?.density && (() => {
           const status = getDensityStatus(latestTest.density);
-          const statusClass = status === 'normal' 
-            ? 'bg-status-success/20 text-status-success border border-status-success' 
-            : 'bg-status-danger text-white border-2 border-red-400 animate-alert-blink shadow-[0_0_15px_rgba(244,67,54,0.6)]';
+          const statusClass = status === 'normal' ? 'bg-status-success/20 text-status-success border border-status-success' : 'bg-status-danger text-white border-2 border-red-400 animate-alert-blink shadow-[0_0_15px_rgba(244,67,54,0.6)]';
           const statusText = status === 'normal' ? '✓ Normal' : status === 'low' ? '⚠️ Too Low' : '⚠️ Too High';
-          return (
-            <div className={`mt-4 inline-block px-6 py-2 rounded-full text-lg font-bold uppercase tracking-widest ${statusClass}`}>
-              {statusText}
-            </div>
-          );
+          return <div className={`mt-4 inline-block px-6 py-2 rounded-full text-lg font-bold uppercase tracking-widest ${statusClass}`}>{statusText}</div>;
         })()}
       </div>
 
       <div className="bg-dark-card rounded-xl p-6 mb-6 border border-[#333]">
         <div className="bg-[#1a1a1a] border-l-4 border-primary rounded-lg p-4">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2 font-bold">📝 Remarks</div>
-          <div className={`text-sm whitespace-pre-wrap ${!latestTest?.remarks ? 'text-gray-500 italic' : 'text-white'}`}>
-            {latestTest?.remarks || 'No remarks'}
-          </div>
+          <div className={`text-sm whitespace-pre-wrap ${!latestTest?.remarks ? 'text-gray-500 italic' : 'text-white'}`}>{latestTest?.remarks || 'No remarks'}</div>
         </div>
       </div>
 
@@ -205,9 +189,7 @@ export default function BotExec() {
                 onClick={() => handleOpenApproval(btn.type)}
                 disabled={isApproved}
                 className={`p-4 rounded-lg border-2 text-sm font-bold transition-all ${
-                  isApproved 
-                    ? 'bg-status-success/10 border-status-success text-status-success cursor-not-allowed' 
-                    : 'bg-[#1a1a1a] border-[#444] text-white hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.3)]'
+                  isApproved ? 'bg-status-success/10 border-status-success text-status-success cursor-not-allowed' : 'bg-[#1a1a1a] border-[#444] text-white hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                 }`}
               >
                 {isApproved ? `✓ ${labelText} ${isApproved.name} has approved this shift` : btn.label}
@@ -219,9 +201,7 @@ export default function BotExec() {
 
       <div className="bg-dark-card rounded-xl p-6 mb-6 border border-[#333]">
         <h3 className="text-primary font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">📈 Density Trend (Last 10)</h3>
-        <div className="h-[250px] w-full">
-          <Line data={chartData} options={chartOptions} />
-        </div>
+        <div className="h-[250px] w-full"><Line data={chartData} options={chartOptions} /></div>
       </div>
 
       <div className="bg-dark-card rounded-xl p-6 mb-16 border border-[#333] overflow-x-auto">
@@ -232,7 +212,6 @@ export default function BotExec() {
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Time</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Weight</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Density</th>
-              {/* 🎯 FIX: Status Header Added */}
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Status</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Appr.</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Flow</th>
@@ -244,7 +223,6 @@ export default function BotExec() {
                 <td className="p-3 text-gray-300 text-sm">{formatTime(t.createdAt || t.localCreatedAt)}</td>
                 <td className="p-3 text-white text-sm">{t.weight}g</td>
                 <td className="p-3 text-white text-sm font-bold">{parseFloat(t.density).toFixed(3)}</td>
-                {/* 🎯 FIX: Status Badge Added */}
                 <td className="p-3">{getTableDensityBadge(parseFloat(t.density))}</td>
                 <td className="p-3 text-white text-sm font-bold">{t.appearance === 'U' ? 'U' : 'A'}</td>
                 <td className="p-3 text-white text-sm font-bold">{(t.flowProperty === 'U' || t.flowProperty === 'NFF') ? 'U' : 'A'}</td>
@@ -258,13 +236,7 @@ export default function BotExec() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIsApproveModalOpen(false)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-sm shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
             <h2 className="text-primary text-xl font-bold mb-4 text-center uppercase tracking-wider">Approve Shift</h2>
-            <input 
-              type="text" 
-              value={approverName} 
-              onChange={e => setApproverName(e.target.value)} 
-              placeholder="Enter your name" 
-              className="w-full p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg mb-6 outline-none focus:border-primary"
-            />
+            <input type="text" value={approverName} onChange={e => setApproverName(e.target.value)} placeholder="Enter your name" className="w-full p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg mb-6 outline-none focus:border-primary"/>
             <div className="flex gap-3">
               <button onClick={() => setIsApproveModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
               <button onClick={submitApproval} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Confirm</button>
@@ -273,13 +245,9 @@ export default function BotExec() {
         </div>
       )}
       
-      <button 
-        onClick={() => navigate('/level9-exec')}
-        className="fixed bottom-5 right-5 bg-primary text-black px-6 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(0,188,212,0.5)] hover:scale-105 transition-all z-40"
-      >
+      <button onClick={() => navigate('/level9-exec')} className="fixed bottom-5 right-5 bg-primary text-black px-6 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(0,188,212,0.5)] hover:scale-105 transition-all z-40">
         🔄 Switch to Level 9
       </button>
-
     </Layout>
   );
 }

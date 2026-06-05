@@ -1,27 +1,19 @@
 // src/pages/Reports.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
-import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
 export default function Reports() {
   const { config, loadingConfig } = useConfig();
-  const { userRole, currentUser } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (userRole === 'staff' && currentUser?.email !== 'dammieoptimus@gmail.com') {
-      alert("⛔ Access Denied! Only administrators and managers can access reports.");
-      navigate('/');
-    }
-  }, [userRole, currentUser, navigate]);
+  
+  // 🎯 FIX: Old manual security checks completely stripped out!
+  // ProtectedRoute handles all security before this page even loads.
 
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -173,7 +165,6 @@ export default function Reports() {
   return (
     <Layout title="📊 Reports" subtitle="Generate and export QC test reports" maxWidth="max-w-7xl">
       
-      {/* 🎯 FIX: Force html and body backgrounds to white on print */}
       <style>
         {`
           @media print {
@@ -237,8 +228,7 @@ export default function Reports() {
             <button onClick={exportToCSV} className="bg-[#2196F3] text-white px-4 py-2 rounded font-bold hover:bg-blue-600">📥 Export CSV</button>
           </div>
 
-          {/* 🎯 FIX: print:!bg-white overrides the transparent backgrounds that let the dark theme show through */}
-          <div className="bg-white text-black p-6 rounded-xl border-2 border-[#333] mb-6 print:!border-0 print:!shadow-none print:!p-0 print:!m-0 print:!mb-8 print:!bg-white">
+          <div className="bg-white text-black p-6 rounded-xl border-2 border-[#333] mb-6 print:!border-0 print:!border-transparent print:!shadow-none print:!p-0 print:!m-0 print:!mb-8 print:!bg-white">
             <h2 className="text-2xl font-black text-center mb-6 uppercase tracking-wider">
               {mode === 'level9' ? 'Level 9 Powder Density Tests' : 'BOT Powder Density Tests'}
             </h2>
@@ -270,24 +260,24 @@ export default function Reports() {
 
           {reportData.tests.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print:flex print:flex-row print:gap-4 print:break-inside-avoid print:!bg-white">
-              <div className="bg-white p-4 rounded-xl border border-gray-300 print:!border-0 print:!shadow-none print:!p-0 print:flex-1 print:!bg-white">
+              <div className="bg-white p-4 rounded-xl border border-gray-300 print:!border-0 print:!border-transparent print:!shadow-none print:!p-0 print:flex-1 print:!bg-white">
                 <h3 className="text-center font-bold text-black mb-4 uppercase text-sm tracking-wider">📈 Density Trend</h3>
                 <div className="h-[250px]"><Line data={lineChartData} options={lineChartOptions} /></div>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-300 print:!border-0 print:!shadow-none print:!p-0 print:flex-1 print:!bg-white">
+              <div className="bg-white p-4 rounded-xl border border-gray-300 print:!border-0 print:!border-transparent print:!shadow-none print:!p-0 print:flex-1 print:!bg-white">
                 <h3 className="text-center font-bold text-black mb-4 uppercase text-sm tracking-wider">🥧 High/Low Distribution</h3>
                 <div className="h-[250px] flex justify-center"><Doughnut data={doughnutChartData} options={{ maintainAspectRatio: false }} /></div>
               </div>
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-gray-300 overflow-x-auto print:!overflow-visible print:!border-0 print:!shadow-none print:!bg-white">
+          <div className="bg-white rounded-xl border border-gray-300 overflow-x-auto print:!overflow-visible print:!border-0 print:!border-transparent print:!shadow-none print:!bg-transparent">
             {reportData.tests.length === 0 ? (
               <div className="text-center text-gray-500 py-10 font-medium">No tests found for this shift.</div>
             ) : (
               <table className="w-full text-left border-collapse text-sm text-black min-w-[800px] print:min-w-full print:text-xs">
                 <thead>
-                  <tr className="bg-gray-800 text-white print:bg-white print:text-black print:border-b-2 print:border-black">
+                  <tr className="bg-gray-800 text-white print:bg-gray-100 print:text-black print:border-b-2 print:border-black">
                     <th className="p-3 border border-gray-400 print:!border-gray-300">Time</th>
                     <th className="p-3 border border-gray-400 print:!border-gray-300">Weight</th>
                     <th className="p-3 border border-gray-400 print:!border-gray-300">Density</th>

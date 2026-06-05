@@ -14,37 +14,28 @@ export const MENU_CONFIG = [
     title: 'Quality Control',
     icon: '🔬',
     children: [
-      { path: '/', label: 'Data Entry', icon: '📝', allowedRoles: ['qc_staff', 'qc_manager'] },
-      { path: '/level9-exec', label: 'Level 9 Dashboard', icon: '🏭', allowedRoles: ['qc_manager'] },
-      { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager'] },
-      { path: '/reports', label: 'QC Reports', icon: '📊', allowedRoles: ['qc_manager'] }
-    ]
-  },
-  {
-    title: 'Production',
-    icon: '⚙️',
-    children: [
-      // These are placeholders for the future modules you planned!
-      { path: '/laminate-waste', label: 'Laminate Waste', icon: '🗑️', allowedRoles: ['prod_staff', 'prod_manager', 'qc_manager'] },
-      { path: '/downtime-log', label: 'Downtime Logs', icon: '⏱️', allowedRoles: ['prod_manager'] }
-    ]
-  },
-  {
-    title: 'Human Resources',
-    icon: '👥',
-    children: [
-      // Placeholders for future HR modules
-      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] },
-      { path: '/payroll', label: 'Payroll', icon: '💰', allowedRoles: ['hr_manager'] }
+      { path: '/', label: 'Data Entry', icon: '📝', allowedRoles: ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'] },
+      { path: '/level9-exec', label: 'Level 9 Dashboard', icon: '🏭', allowedRoles: ['qc_manager', 'prod_manager'] },
+      { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager', 'prod_manager'] },
+      { path: '/reports', label: 'QC Reports', icon: '📊', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] }
     ]
   },
   {
     title: 'Administration',
     icon: '🛡️',
     children: [
-      { path: '/machine-management', label: 'Machine Config', icon: '🔧', allowedRoles: [] }, // Empty means ONLY super_admin can see it
-      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: [] },
-      { path: '/audit-trail', label: 'Audit Trail', icon: '📜', allowedRoles: [] }
+      { path: '/machine-management', label: 'Machine Config', icon: '🔧', allowedRoles: [] }, // Empty array = ONLY Super Admin
+      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: [] }
     ]
   }
 ];
+
+// Helper function for the Bouncer to look up required roles
+export const getAllowedRolesForPath = (path) => {
+  for (const category of MENU_CONFIG) {
+    for (const route of category.children) {
+      if (route.path === path) return route.allowedRoles;
+    }
+  }
+  return null; // Route not found in config
+};

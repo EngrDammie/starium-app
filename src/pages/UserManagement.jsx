@@ -1,39 +1,55 @@
 // src/pages/UserManagement.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 
+const DEPT_ROLES = {
+  'Quality Control': [
+    { id: 'qc_staff', label: 'QC Staff' },
+    { id: 'qc_manager', label: 'QC Manager' }
+  ],
+  'Production': [
+    { id: 'prod_staff', label: 'Production Staff' },
+    { id: 'prod_manager', label: 'Production Manager' }
+  ],
+  'Human Resources': [
+    { id: 'hr_staff', label: 'HR Staff' },
+    { id: 'hr_manager', label: 'HR Manager' }
+  ]
+};
+
+const ACTION_ROLES = [
+  { id: 'buggy_supervisor', label: '🔧 Buggy Supervisor' },
+  { id: 'plc_operator', label: '⚡ PLC Operator' },
+  { id: 'production_manager', label: '🏭 Production Manager' },
+  { id: 'qc_manager', label: '✅ QC Manager' },
+  { id: 'qc_supervisor', label: '🔍 QC Supervisor' }
+];
+
 export default function UserManagement() {
-  const { userRole, currentUser } = useAuth();
-  const navigate = useNavigate();
+  // 🎯 FIX: Old manual security checks completely stripped out!
+  // ProtectedRoute handles all security before this page even loads.
+  const { currentUser } = useAuth();
 
   const [users, setUsers] = useState([]);
   const [authEnabled, setAuthEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Add User Form State
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState('staff');
-  const [newApprovalRoles, setNewApprovalRoles] = useState([]);
+  const [newSystemRole, setNewSystemRole] = useState('standard');
+  const [newDeptRoles, setNewDeptRoles] = useState(['qc_staff']);
+  const [newActionRoles, setNewActionRoles] = useState([]);
 
-  // Modals State
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
 
-  // Admin Check
   useEffect(() => {
-    if (userRole !== 'admin' && currentUser?.email !== 'dammieoptimus@gmail.com') {
-      alert("⛔ Access Denied! Only administrators can access this page.");
-      navigate('/');
-    } else {
-      loadData();
-    }
-  }, [userRole, currentUser, navigate]);
+    loadData();
+  }, []);
 
   const showMessage = (text, type = 'success') => {
     setMessage({ type, text });
@@ -43,17 +59,12 @@ export default function UserManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 1. Load Auth Settings
       const authDoc = await getDoc(doc(db, 'config', 'auth_settings'));
-      if (authDoc.exists()) {
-        setAuthEnabled(authDoc.data().authEnabled);
-      }
+      if (authDoc.exists()) setAuthEnabled(authDoc.data().authEnabled);
 
-      // 2. Load Users
       const usersSnap = await getDocs(collection(db, 'user_roles'));
       const usersList = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       
-      // Sort by creation date
       usersList.sort((a, b) => {
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
@@ -71,32 +82,25 @@ export default function UserManagement() {
 
   const toggleGlobalAuth = async () => {
     const newState = !authEnabled;
-    
-    // Only dammieoptimus can disable auth (from your vanilla logic)
+    // 🎯 FIX: Only master admin can disable auth (from your vanilla logic)
     if (!newState && authEnabled && currentUser?.email !== 'dammieoptimus@gmail.com') {
       showMessage("⚠️ Only the master admin can disable authentication!", "error");
       return;
     }
-
     try {
-      await setDoc(doc(db, 'config', 'auth_settings'), {
-        authEnabled: newState,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      
+      await setDoc(doc(db, 'config', 'auth_settings'), { authEnabled: newState, updatedAt: serverTimestamp() }, { merge: true });
       setAuthEnabled(newState);
       showMessage(`✅ Authentication ${newState ? 'enabled' : 'disabled'}!`);
     } catch (error) {
-      console.error("Error toggling auth:", error);
       showMessage("❌ Error updating authentication settings", "error");
     }
   };
 
-  const handleApprovalRoleToggle = (role, stateArray, setStateArray) => {
-    if (stateArray.includes(role)) {
-      setStateArray(stateArray.filter(r => r !== role));
+  const handleToggleRole = (roleId, currentArray, setArrayFn) => {
+    if (currentArray.includes(roleId)) {
+      setArrayFn(currentArray.filter(id => id !== roleId));
     } else {
-      setStateArray([...stateArray, role]);
+      setArrayFn([...currentArray, roleId]);
     }
   };
 
@@ -108,36 +112,35 @@ export default function UserManagement() {
     try {
       showMessage('Creating user...', 'success');
 
-      // 🎯 FIX: Using Firebase REST API to create user without logging out the admin!
       const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
       const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newEmail, password: newPassword, returnSecureToken: true })
       });
-
       const userData = await response.json();
+      if (!response.ok) throw new Error(userData.error?.message || 'Failed to create user');
 
-      if (!response.ok) {
-        throw new Error(userData.error?.message || 'Failed to create user');
-      }
-
-      // Save roles to Firestore
       await setDoc(doc(db, 'user_roles', userData.localId), {
         email: newEmail,
-        role: newRole,
-        approvalRoles: newApprovalRoles,
+        systemRole: newSystemRole,
+        departmentRoles: newDeptRoles,
+        actionRoles: newActionRoles,
+        
+        // Legacy fallback
+        role: newSystemRole === 'super_admin' ? 'admin' : (newDeptRoles.includes('qc_manager') ? 'manager' : 'staff'),
+        approvalRoles: newActionRoles,
+        
         createdAt: serverTimestamp(),
         createdBy: currentUser.email
       });
 
-      // Clear Form
-      setNewEmail(''); setNewPassword(''); setNewRole('staff'); setNewApprovalRoles([]);
+      setNewEmail(''); setNewPassword(''); 
+      setNewSystemRole('standard'); setNewDeptRoles(['qc_staff']); setNewActionRoles([]);
+      
       showMessage('User created successfully!', 'success');
       loadData();
-      
     } catch (error) {
-      console.error("Error adding user:", error);
       showMessage(`Error: ${error.message}`, 'error');
     }
   };
@@ -146,8 +149,14 @@ export default function UserManagement() {
     if (!editUser) return;
     try {
       await updateDoc(doc(db, 'user_roles', editUser.id), {
-        role: editUser.role,
-        approvalRoles: editUser.approvalRoles,
+        systemRole: editUser.systemRole,
+        departmentRoles: editUser.departmentRoles,
+        actionRoles: editUser.actionRoles,
+        
+        // Legacy fallback
+        role: editUser.systemRole === 'super_admin' ? 'admin' : (editUser.departmentRoles.includes('qc_manager') ? 'manager' : 'staff'),
+        approvalRoles: editUser.actionRoles,
+
         updatedAt: serverTimestamp(),
         updatedBy: currentUser.email
       });
@@ -155,7 +164,6 @@ export default function UserManagement() {
       setEditUser(null);
       loadData();
     } catch (error) {
-      console.error("Error updating user:", error);
       showMessage('Error updating roles', 'error');
     }
   };
@@ -168,17 +176,20 @@ export default function UserManagement() {
       setDeleteUser(null);
       loadData();
     } catch (error) {
-      console.error("Error deleting user:", error);
       showMessage('Error deleting user', 'error');
     }
   };
 
-  const approvalRoleLabels = {
-    'buggy_supervisor': '🔧 Buggy Supervisor',
-    'plc_operator': '⚡ PLC Operator',
-    'production_manager': '🏭 Production Manager',
-    'qc_manager': '✅ QC Manager',
-    'qc_supervisor': '🔍 QC Supervisor'
+  const getBadgeFormat = (roleId) => {
+    let label = roleId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    let color = 'bg-gray-500/20 text-gray-400 border-gray-600';
+    
+    if (roleId.includes('qc')) color = 'bg-[#00BCD4]/20 text-[#00BCD4] border-[#00BCD4]/50';
+    else if (roleId.includes('prod')) color = 'bg-[#FF9800]/20 text-[#FF9800] border-[#FF9800]/50';
+    else if (roleId.includes('hr')) color = 'bg-[#E91E63]/20 text-[#E91E63] border-[#E91E63]/50';
+    else if (roleId === 'super_admin') color = 'bg-status-success/20 text-status-success border-status-success/50';
+
+    return { label, color };
   };
 
   if (loading) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading User Data...</div></Layout>;
@@ -193,10 +204,9 @@ export default function UserManagement() {
       )}
 
       {/* Global Auth Toggle */}
-      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s] mb-6">
+      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6">
         <h2 className="text-xl font-bold text-primary mb-4">🔐 Authentication Settings</h2>
         <div className="flex items-center gap-4 mb-4">
-          {/* Custom Toggle Switch */}
           <label className="relative inline-block w-14 h-8 cursor-pointer">
             <input type="checkbox" className="sr-only peer" checked={authEnabled} onChange={toggleGlobalAuth} />
             <div className="w-full h-full bg-[#444] rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
@@ -206,141 +216,216 @@ export default function UserManagement() {
             Auth is currently: <span className={authEnabled ? "text-status-success" : "text-gray-500"}>{authEnabled ? 'ENABLED' : 'DISABLED'}</span>
           </span>
         </div>
-        <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded-lg text-sm text-gray-400">
-          <p>ℹ️ When <strong>disabled</strong>: Anyone can access the app without login.</p>
-          <p>When <strong>enabled</strong>: Users must log in to access the app.</p>
-          <p>Anyone can <strong>turn auth ON</strong>. Only the master admin can <strong>turn auth OFF</strong>.</p>
-        </div>
       </div>
 
       {/* Add User Section */}
-      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.4s] mb-6">
+      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6">
         <h2 className="text-xl font-bold text-primary mb-6">➕ Add New User</h2>
         <form onSubmit={handleAddUser} className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row gap-4">
             <input type="email" placeholder="Email Address" value={newEmail} onChange={e => setNewEmail(e.target.value)} required className="flex-1 bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
             <input type="password" placeholder="Temporary Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} className="flex-1 bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
-            <select value={newRole} onChange={e => setNewRole(e.target.value)} className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary w-full md:w-48">
-              <option value="staff">Staff</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded-lg">
-            <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-3">Approval Roles (Executive Pages)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(approvalRoleLabels).map(([roleKey, label]) => (
-                <label key={roleKey} className="flex items-center gap-3 p-3 bg-dark-card rounded-lg cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
-                  <input 
-                    type="checkbox" 
-                    className="w-5 h-5 accent-primary" 
-                    checked={newApprovalRoles.includes(roleKey)}
-                    onChange={() => handleApprovalRoleToggle(roleKey, newApprovalRoles, setNewApprovalRoles)}
-                  />
-                  <span className="text-white text-sm font-bold">{label}</span>
-                </label>
-              ))}
+            
+            <div className="flex-1 bg-[#1a1a1a] border border-[#444] rounded-lg p-2 flex items-center gap-2">
+              <label className="text-gray-400 text-sm font-bold pl-2">System Role:</label>
+              <select value={newSystemRole} onChange={e => setNewSystemRole(e.target.value)} className="bg-transparent text-white font-bold outline-none flex-1">
+                <option value="standard">Standard User</option>
+                <option value="super_admin">Super Admin (God Mode)</option>
+              </select>
             </div>
           </div>
 
-          <button type="submit" className="bg-primary text-black font-bold py-3 px-6 rounded-lg hover:bg-primary-dark transition-colors self-start">
+          {newSystemRole !== 'super_admin' && (
+            <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
+              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access (Pages & Menus)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {Object.entries(DEPT_ROLES).map(([deptName, roles]) => (
+                  <div key={deptName} className="bg-dark-card p-4 rounded-lg border border-[#333]">
+                    <h4 className="text-white font-bold text-xs uppercase mb-3 pb-2 border-b border-[#333]">{deptName}</h4>
+                    <div className="flex flex-col gap-2">
+                      {roles.map(role => (
+                        <label key={role.id} className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 accent-primary" 
+                            checked={newDeptRoles.includes(role.id)}
+                            onChange={() => handleToggleRole(role.id, newDeptRoles, setNewDeptRoles)}
+                          />
+                          <span className="text-gray-300 text-sm group-hover:text-white transition-colors">{role.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {newSystemRole !== 'super_admin' && (
+            <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
+              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers (Buttons)</h3>
+              <div className="flex flex-wrap gap-3">
+                {ACTION_ROLES.map(role => (
+                  <label key={role.id} className="flex items-center gap-2 p-2 px-4 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 accent-primary" 
+                      checked={newActionRoles.includes(role.id)}
+                      onChange={() => handleToggleRole(role.id, newActionRoles, setNewActionRoles)}
+                    />
+                    <span className="text-white text-sm font-bold">{role.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button type="submit" className="bg-primary text-black font-bold py-3 px-8 rounded-lg hover:bg-primary-dark transition-colors self-start shadow-[0_0_15px_rgba(0,188,212,0.3)]">
             Create User
           </button>
         </form>
       </div>
 
       {/* Users Table */}
-      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.5s] mb-16 overflow-x-auto">
+      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-16 overflow-x-auto">
         <h2 className="text-xl font-bold text-primary mb-6">👥 All Users</h2>
-        <table className="w-full text-left border-collapse min-w-[800px]">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Email</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Page Role</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Approval Roles</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Actions</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">System Role</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Department Access</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Approval Powers</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#333]">
-            {users.map(user => (
-              <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                <td className="p-3 text-white font-bold">{user.email}</td>
-                <td className="p-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    user.role === 'admin' ? 'bg-primary/20 text-primary' : 
-                    user.role === 'manager' ? 'bg-[#2196F3]/20 text-[#2196F3]' : 
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="p-3 text-sm text-gray-300">
-                  {user.approvalRoles?.length > 0 
-                    ? user.approvalRoles.map(r => approvalRoleLabels[r]?.split(' ')[0]).join(' ') 
-                    : <span className="text-gray-600 italic">None</span>}
-                </td>
-                <td className="p-3 flex gap-2">
-                  <button onClick={() => setEditUser({...user, approvalRoles: user.approvalRoles || []})} className="bg-[#2196F3] text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">Edit</button>
-                  <button onClick={() => setDeleteUser(user)} className="bg-status-danger text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-red-600 transition-colors">Delete</button>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
-              <tr><td colSpan="4" className="text-center text-gray-500 py-8">No users found.</td></tr>
-            )}
+            {users.map(user => {
+              const sysRole = user.systemRole || (user.role === 'admin' ? 'super_admin' : 'standard');
+              const deptRoles = user.departmentRoles || (user.role === 'admin' ? ['All'] : [user.role || 'staff']);
+              const actRoles = user.actionRoles || user.approvalRoles || [];
+
+              return (
+                <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                  <td className="p-3 text-white font-bold">{user.email}</td>
+                  
+                  <td className="p-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      sysRole === 'super_admin' ? 'bg-status-success/20 text-status-success border border-status-success/30' : 'bg-gray-500/20 text-gray-400 border border-gray-600'
+                    }`}>
+                      {sysRole.replace('_', ' ')}
+                    </span>
+                  </td>
+
+                  <td className="p-3">
+                    {sysRole === 'super_admin' ? (
+                      <span className="text-gray-500 italic text-sm">Full Access</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {deptRoles.length > 0 ? deptRoles.map(r => {
+                          const badge = getBadgeFormat(r);
+                          return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>;
+                        }) : <span className="text-gray-600 italic text-sm">None</span>}
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="p-3">
+                    {sysRole === 'super_admin' ? (
+                      <span className="text-gray-500 italic text-sm">Full Access</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {actRoles.length > 0 ? actRoles.map(r => {
+                          const badge = getBadgeFormat(r);
+                          return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>;
+                        }) : <span className="text-gray-600 italic text-sm">None</span>}
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="p-3 flex gap-2 justify-end">
+                    <button onClick={() => setEditUser({...user, systemRole: sysRole, departmentRoles: deptRoles, actionRoles: actRoles})} className="bg-[#2196F3] text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">Edit</button>
+                    <button onClick={() => setDeleteUser(user)} className="bg-status-danger text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-red-600 transition-colors">Delete</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {users.length === 0 && <tr><td colSpan="5" className="text-center text-gray-500 py-8">No users found.</td></tr>}
           </tbody>
         </table>
       </div>
 
-      {/* --- MODALS --- */}
-      
       {/* Edit User Modal */}
       {editUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setEditUser(null)}>
-          <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-lg shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
+          <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[95%] max-w-2xl shadow-[0_0_30px_rgba(0,188,212,0.3)] overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
             <h2 className="text-primary text-xl font-bold mb-2 text-center uppercase tracking-wider">Edit User Roles</h2>
             <p className="text-center text-white font-bold mb-6">{editUser.email}</p>
             
-            <div className="mb-6">
-              <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Page Access Role</label>
+            <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-4 flex items-center justify-between mb-6">
+              <label className="text-gray-400 text-sm font-bold uppercase">System Role:</label>
               <select 
-                value={editUser.role} 
-                onChange={e => setEditUser({...editUser, role: e.target.value})} 
-                className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary"
+                value={editUser.systemRole} 
+                onChange={e => setEditUser({...editUser, systemRole: e.target.value})} 
+                className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary"
               >
-                <option value="staff">Staff</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                <option value="standard">Standard User</option>
+                <option value="super_admin">Super Admin (God Mode)</option>
               </select>
             </div>
 
-            <div className="mb-6">
-              <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Approval Roles</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Object.entries(approvalRoleLabels).map(([roleKey, label]) => (
-                  <label key={roleKey} className="flex items-center gap-3 p-3 bg-[#1a1a1a] rounded-lg cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
-                    <input 
-                      type="checkbox" 
-                      className="w-5 h-5 accent-primary" 
-                      checked={editUser.approvalRoles.includes(roleKey)}
-                      onChange={() => handleApprovalRoleToggle(roleKey, editUser.approvalRoles, (newRoles) => setEditUser({...editUser, approvalRoles: newRoles}))}
-                    />
-                    <span className="text-white text-sm font-bold">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            {editUser.systemRole !== 'super_admin' && (
+              <>
+                <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
+                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(DEPT_ROLES).map(([deptName, roles]) => (
+                      <div key={deptName}>
+                        <h4 className="text-gray-400 text-xs font-bold uppercase mb-2">{deptName}</h4>
+                        <div className="flex flex-col gap-2">
+                          {roles.map(role => (
+                            <label key={role.id} className="flex items-center gap-2 cursor-pointer group">
+                              <input 
+                                type="checkbox" className="w-4 h-4 accent-primary" 
+                                checked={editUser.departmentRoles.includes(role.id)}
+                                onChange={() => handleToggleRole(role.id, editUser.departmentRoles, (newRoles) => setEditUser({...editUser, departmentRoles: newRoles}))}
+                              />
+                              <span className="text-gray-300 text-sm group-hover:text-white transition-colors">{role.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="flex gap-3 mt-4">
+                <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
+                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {ACTION_ROLES.map(role => (
+                      <label key={role.id} className="flex items-center gap-2 p-2 px-3 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
+                        <input 
+                          type="checkbox" className="w-4 h-4 accent-primary" 
+                          checked={editUser.actionRoles.includes(role.id)}
+                          onChange={() => handleToggleRole(role.id, editUser.actionRoles, (newRoles) => setEditUser({...editUser, actionRoles: newRoles}))}
+                        />
+                        <span className="text-white text-xs font-bold">{role.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-4 mt-6">
               <button onClick={() => setEditUser(null)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-              <button onClick={handleSaveEdit} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Save Roles</button>
+              <button onClick={handleSaveEdit} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors shadow-[0_0_15px_rgba(0,188,212,0.3)]">Save Roles</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       {deleteUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setDeleteUser(null)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-status-danger w-[90%] max-w-sm shadow-[0_0_30px_rgba(244,67,54,0.3)]" onClick={e => e.stopPropagation()}>
@@ -353,7 +438,6 @@ export default function UserManagement() {
           </div>
         </div>
       )}
-
     </Layout>
   );
 }
