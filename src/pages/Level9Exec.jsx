@@ -14,8 +14,10 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 export default function Level9Exec() {
   const { config, loadingConfig } = useConfig();
-  const { systemRole, actionRoles } = useAuth();
-  const { broadcastAlert } = useAlerts(); // 🎯 ADD LOUDSPEAKER
+  
+  // 🎯 FIX: Fetch userFullName to permanently stamp it on the approval!
+  const { systemRole, actionRoles, userFullName } = useAuth();
+  const { broadcastAlert } = useAlerts(); 
   const navigate = useNavigate();
 
   const [shiftInfo, setShiftInfo] = useState({ shift: '--', date: '--' });
@@ -25,11 +27,7 @@ export default function Level9Exec() {
 
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [currentApproverType, setCurrentApproverType] = useState(null);
-  const [approverName, setApproverName] = useState('');
-  
   const [detailsMachine, setDetailsMachine] = useState(null);
-
-  // 🎯 FIX: Security logic completely removed. ProtectedRoute handles it now!
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -140,25 +138,22 @@ export default function Level9Exec() {
   };
 
   const submitApproval = async () => {
-    if (!approverName.trim()) return alert("Enter your name");
+    // 🎯 FIX: Automatically submits userFullName! No typing required.
+    const success = await addApprover(approvalId, userFullName, currentApproverType);
     
-    const success = await addApprover(approvalId, approverName, currentApproverType);
-    
-    // 🎯 FIX: Broadcast to the Factory Floor that the shift was approved!
     if (success) {
       const btnInfo = approvalButtons.find(b => b.type === currentApproverType);
       const roleName = btnInfo ? btnInfo.label.split(' ').slice(1).join(' ') : 'Supervisor';
       
       broadcastAlert(
         `✅ SHIFT APPROVED!`,
-        `${approverName} (${roleName}) has approved the ${shiftInfo.shift} shift for Level 9.`,
+        `${userFullName} (${roleName}) has approved the ${shiftInfo.shift} shift for Level 9.`,
         'info',
-        ['/', '/level9-exec'] // Sends it to Dashboard and Exec pages
+        ['/','/powder-density', '/level9-exec']
       );
     }
 
     setIsApproveModalOpen(false);
-    setApproverName('');
   };
 
   return (
@@ -259,11 +254,17 @@ export default function Level9Exec() {
       {isApproveModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIsApproveModalOpen(false)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-sm shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-primary text-xl font-bold mb-4 text-center uppercase tracking-wider">Approve Shift</h2>
-            <input type="text" value={approverName} onChange={e => setApproverName(e.target.value)} placeholder="Enter your name" className="w-full p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg mb-6 outline-none focus:border-primary"/>
+            <h2 className="text-primary text-xl font-bold mb-4 text-center uppercase tracking-wider">Confirm Approval</h2>
+            
+            {/* 🎯 FIX: Name is now securely locked to the user's authentic account! */}
+            <p className="text-center text-gray-400 mb-2">You are approving this shift as:</p>
+            <div className="w-full p-4 bg-[#1a1a1a] text-primary border-2 border-primary rounded-lg mb-6 text-center font-bold text-xl uppercase tracking-widest shadow-[0_0_15px_rgba(0,188,212,0.2)]">
+              {userFullName}
+            </div>
+            
             <div className="flex gap-3">
               <button onClick={() => setIsApproveModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-              <button onClick={submitApproval} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Confirm</button>
+              <button onClick={submitApproval} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors shadow-[0_0_15px_rgba(0,188,212,0.4)]">CONFIRM</button>
             </div>
           </div>
         </div>
@@ -288,6 +289,7 @@ export default function Level9Exec() {
       <button onClick={() => navigate('/bot-exec')} className="fixed bottom-5 right-5 bg-status-warning text-black px-6 py-3 rounded-lg font-bold shadow-lg hover:scale-105 transition-all z-40">
         🔄 Switch to BOT Mode
       </button>
+
     </Layout>
   );
 }

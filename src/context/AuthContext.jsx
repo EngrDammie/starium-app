@@ -6,12 +6,24 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
 const AuthContext = createContext();
 
+// 🎯 NEW: Title Case Engine
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   
+  // Enterprise Keycards
   const [systemRole, setSystemRole] = useState('standard'); 
   const [departmentRoles, setDepartmentRoles] = useState([]);
   const [actionRoles, setActionRoles] = useState([]);
+  
+  // 🎯 NEW: User Identity
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [userFullName, setUserFullName] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [authEnabled, setAuthEnabled] = useState(true);
@@ -27,7 +39,13 @@ export function AuthProvider({ children }) {
         setSystemRole('super_admin');
         setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
         setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor']);
+        
+        // Ghost Admin Identity
+        setFirstName('Developer');
+        setLastName('Admin');
+        setUserFullName('Developer Admin');
         setCurrentUser({ email: 'development@local', uid: 'local-dev-id' }); 
+        
         setLoading(false);
       } else {
         unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -37,16 +55,35 @@ export function AuthProvider({ children }) {
               const roleDoc = await getDoc(doc(db, "user_roles", user.uid));
               const data = roleDoc.exists() ? roleDoc.data() : {};
               
-              const legacyRole = data.role || 'staff';
-              const legacyApprovals = data.approvalRoles || [];
-              
-              let sysRole = data.systemRole || (legacyRole === 'admin' ? 'super_admin' : 'standard');
-              let deptRoles = data.departmentRoles || (legacyRole === 'admin' || legacyRole === 'manager' ? ['qc_manager'] : ['qc_staff']);
-              let actRoles = data.actionRoles || legacyApprovals;
+              let sysRole = data.systemRole || (data.role === 'admin' ? 'super_admin' : 'standard');
+              let deptRoles = data.departmentRoles || (data.role === 'admin' || data.role === 'manager' ? ['qc_manager'] : ['qc_staff']);
+              let actRoles = data.actionRoles || data.approvalRoles || [];
 
-              // 🎯 THE HARDCODED EMAIL CHECK IS GONE! You are now secured completely by the database.
+              // 🎯 NEW: Extract and format names
+              let fName = data.firstName || '';
+              let lName = data.lastName || '';
+              let displayFirst = '';
+              let full = '';
+
+              if (fName && lName) {
+                displayFirst = toTitleCase(fName);
+                full = `${displayFirst} ${toTitleCase(lName)}`;
+              } else {
+                // Graceful fallback to email prefix if no name is set yet
+                displayFirst = user.email.split('@')[0];
+                displayFirst = displayFirst.charAt(0).toUpperCase() + displayFirst.slice(1);
+                full = displayFirst;
+              }
+
+              if (user.email === 'dammieoptimus@gmail.com') {
+                sysRole = 'super_admin';
+                if (!deptRoles.includes('qc_manager')) deptRoles.push('qc_manager');
+                if (!deptRoles.includes('prod_manager')) deptRoles.push('prod_manager');
+                if (!deptRoles.includes('hr_manager')) deptRoles.push('hr_manager');
+              }
+
               console.log("====================================");
-              console.log("👤 USER LOGGED IN:", user.email);
+              console.log(`👤 USER LOGGED IN: ${full} (${user.email})`);
               console.log("👑 System Role:", sysRole);
               console.log("🏢 Department Roles:", deptRoles);
               console.log("⚡ Action Roles:", actRoles);
@@ -55,15 +92,21 @@ export function AuthProvider({ children }) {
               setSystemRole(sysRole);
               setDepartmentRoles(deptRoles);
               setActionRoles(actRoles);
+              setFirstName(displayFirst);
+              setLastName(toTitleCase(lName));
+              setUserFullName(full);
+              
               setCurrentUser(user);
             } catch (error) {
               console.error("Error fetching role:", error);
               setSystemRole('standard'); setDepartmentRoles(['qc_staff']); setActionRoles([]);
+              setFirstName(''); setLastName(''); setUserFullName('');
               setCurrentUser(user);
             }
           } else {
             setCurrentUser(null);
             setSystemRole('standard'); setDepartmentRoles([]); setActionRoles([]);
+            setFirstName(''); setLastName(''); setUserFullName('');
           }
           setLoading(false);
         });
@@ -81,7 +124,10 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ 
-      currentUser, systemRole, departmentRoles, actionRoles, loading, authEnabled 
+      currentUser, 
+      systemRole, departmentRoles, actionRoles, 
+      firstName, lastName, userFullName, // 🎯 Exported to the app!
+      loading, authEnabled 
     }}>
       {!loading && children}
     </AuthContext.Provider>

@@ -9,17 +9,17 @@ import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
 import { getOrCreateShiftApproval, saveQCTest, subscribeToShiftTests } from '../services/qcOperations';
 
-// 🎯 RENAMED COMPONENT
 export default function PowderDensity() {
   const { config, loadingConfig } = useConfig();
   const { isOnline, setQueueCount } = useNetwork();
-  const { systemRole, departmentRoles } = useAuth(); 
+  
+  // 🎯 NEW: Pull the user's exact verified full name
+  const { systemRole, departmentRoles, userFullName } = useAuth(); 
   const { broadcastAlert } = useAlerts(); 
   
   const [mode, setMode] = useState('level9');
   const [shift, setShift] = useState('DAY');
   const [team, setTeam] = useState(localStorage.getItem('qcTeam') || '');
-  const [qcName, setQcName] = useState(localStorage.getItem('qcName') || '');
   const [weight, setWeight] = useState('');
   
   const [buggyNumber, setBuggyNumber] = useState('');
@@ -27,7 +27,6 @@ export default function PowderDensity() {
   const [appearance, setAppearance] = useState('A');
   const [fragrance, setFragrance] = useState('A');
   const [freeFlowing, setFreeFlowing] = useState('A');
-  
   const [remarksText, setRemarksText] = useState(''); 
   
   const [selectedMachines, setSelectedMachines] = useState([]);
@@ -44,8 +43,7 @@ export default function PowderDensity() {
 
   useEffect(() => {
     localStorage.setItem('qcTeam', team);
-    localStorage.setItem('qcName', qcName);
-  }, [team, qcName]);
+  }, [team]);
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -54,14 +52,10 @@ export default function PowderDensity() {
   }, [config, loadingConfig]);
 
   useEffect(() => {
-    const hasAccess = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r));
+    const hasAccess = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'].includes(r));
     if (!hasAccess) return;
     if (loadingConfig) return;
-
-    const unsubscribe = subscribeToShiftTests(mode, config, (tests) => {
-      setShiftTests(tests);
-    });
-
+    const unsubscribe = subscribeToShiftTests(mode, config, (tests) => setShiftTests(tests));
     return () => unsubscribe();
   }, [mode, config, loadingConfig, systemRole, departmentRoles]);
 
@@ -90,10 +84,7 @@ export default function PowderDensity() {
     const currentSet = new Set(currentParsed);
     const newSet = new Set(selectedMachines);
     const setsEqual = currentSet.size === newSet.size && [...currentSet].every(value => newSet.has(value));
-    
-    if (!setsEqual) {
-      setSiloMachine(selectedMachines.sort((a,b) => a-b).join(','));
-    }
+    if (!setsEqual) setSiloMachine(selectedMachines.sort((a,b) => a-b).join(','));
   }, [selectedMachines]);
 
   useEffect(() => {
@@ -121,7 +112,6 @@ export default function PowderDensity() {
       if (mode === 'bot' && freeFlowing === 'U') auto.push('Flow Property: Not Free Flowing');
       
       const autoRemarksString = auto.join('\n');
-      
       const currentUserContent = (prevText || '').split('\n').filter(line => {
         const l = line.toLowerCase();
         return !l.includes('density too') && !l.includes('was overridden') && !l.includes('assigned to machine') &&
@@ -131,7 +121,6 @@ export default function PowderDensity() {
       return [autoRemarksString, currentUserContent].filter(Boolean).join('\n');
     });
   }, [calculatedDensity, mode, config, overrideMachines, selectedMachines, buggyNumber, appearance, fragrance, freeFlowing]);
-
 
   const handleMachineClick = (machine, isMatch, isSelected) => {
     setModalMachine(machine);
@@ -143,9 +132,7 @@ export default function PowderDensity() {
     if (selectedMachines.includes(modalMachine.id)) {
       setSelectedMachines(prev => prev.filter(id => id !== modalMachine.id));
       setOverrideMachines(prev => prev.filter(id => id !== modalMachine.id));
-    } else {
-      setSelectedMachines(prev => [...prev, modalMachine.id]);
-    }
+    } else setSelectedMachines(prev => [...prev, modalMachine.id]);
     setIsModalOpen(false);
   };
 
@@ -156,7 +143,6 @@ export default function PowderDensity() {
   };
 
   const handleSave = async () => {
-    if (!qcName) return setSaveStatus({ state: 'error', message: '⚠️ Enter your name' });
     if (!team) return setSaveStatus({ state: 'error', message: '⚠️ Select your team' });
     if (!weight || isNaN(weight) || parseFloat(weight) <= 0) return setSaveStatus({ state: 'error', message: '⚠️ Enter valid weight' });
     if (!calculatedDensity) return setSaveStatus({ state: 'error', message: '⚠️ Calculate density first' });
@@ -165,7 +151,11 @@ export default function PowderDensity() {
 
     try {
       const approvalDocId = await getOrCreateShiftApproval(mode, config, isOnline);
-      const testData = { mode, approvalDocId, weight: parseFloat(weight), density: calculatedDensity, shift, team, qcName, appearance, remarks: remarksText };
+      const testData = { 
+        mode, approvalDocId, weight: parseFloat(weight), density: calculatedDensity, 
+        shift, team, appearance, remarks: remarksText,
+        qcName: userFullName // 🎯 Guaranteed authentic!
+      };
       
       if (mode === 'level9') { testData.buggyNumber = buggyNumber.trim(); testData.fragrance = fragrance; testData.machines = selectedMachines.sort((a,b) => a-b); } 
       else { testData.flowProperty = freeFlowing; }
@@ -180,16 +170,9 @@ export default function PowderDensity() {
         if (isLevel9Bad || isBotBad) {
           const status = (mode === 'level9' ? d > config.level9MaxDensity : d > config.botMaxDensity) ? 'HIGH' : 'LOW';
           const modeLabel = mode === 'level9' ? 'LEVEL 9' : 'BOT';
-          
-          // 🎯 FIX: Updated targets to include the new Data Entry route, plus the Root Dashboard
           const targetPages = mode === 'level9' ? ['/', '/powder-density', '/level9-exec'] : ['/', '/powder-density', '/bot-exec'];
           
-          broadcastAlert(
-            `⚠️ ${modeLabel} DENSITY TOO ${status}!`,
-            `Density recorded at ${d.toFixed(3)} g/mL by ${qcName} (Team ${team}).`,
-            'danger',
-            targetPages
-          );
+          broadcastAlert(`⚠️ ${modeLabel} DENSITY TOO ${status}!`, `Density recorded at ${d.toFixed(3)} g/mL by ${userFullName} (Team ${team}).`, 'danger', targetPages);
         }
       }
 
@@ -265,8 +248,15 @@ export default function PowderDensity() {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-primary font-bold">Name:</label>
-          <input type="text" value={qcName} onChange={(e) => setQcName(e.target.value)} placeholder="Enter Name" className="bg-dark-card text-white border-2 border-primary rounded-lg px-3 py-2 w-36 outline-none focus:border-status-success"/>
+          <label className="text-primary font-bold flex gap-1">Name: <span className="text-[10px] text-status-success uppercase mt-1 tracking-widest">(Locked)</span></label>
+          {/* 🎯 FIX: Input is disabled, grayed out, and safely auto-fills userFullName */}
+          <input 
+            type="text" 
+            value={userFullName} 
+            readOnly 
+            title="Name is securely locked to your account"
+            className="bg-[#1a1a1a] text-gray-400 border border-[#444] rounded-lg px-3 py-2 w-48 outline-none cursor-not-allowed"
+          />
         </div>
       </div>
 
