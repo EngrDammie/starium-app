@@ -12,9 +12,6 @@ export function AuthProvider({ children }) {
   const [systemRole, setSystemRole] = useState('standard'); 
   const [departmentRoles, setDepartmentRoles] = useState([]);
   const [actionRoles, setActionRoles] = useState([]);
-  
-  const [userRole, setUserRole] = useState(null); 
-  const [approvalRoles, setApprovalRoles] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [authEnabled, setAuthEnabled] = useState(true);
@@ -30,14 +27,12 @@ export function AuthProvider({ children }) {
         setSystemRole('super_admin');
         setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
         setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor']);
-        setUserRole('admin');
-        setApprovalRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor']);
-        setCurrentUser({ email: 'development@local', uid: 'local-dev-id' }); // 🎯 Set this LAST so the app knows we are ready
+        setCurrentUser({ email: 'development@local', uid: 'local-dev-id' }); 
         setLoading(false);
       } else {
         unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
           if (user) {
-            setLoading(true); // 🎯 Pause the app while we fetch roles!
+            setLoading(true); 
             try {
               const roleDoc = await getDoc(doc(db, "user_roles", user.uid));
               const data = roleDoc.exists() ? roleDoc.data() : {};
@@ -49,13 +44,7 @@ export function AuthProvider({ children }) {
               let deptRoles = data.departmentRoles || (legacyRole === 'admin' || legacyRole === 'manager' ? ['qc_manager'] : ['qc_staff']);
               let actRoles = data.actionRoles || legacyApprovals;
 
-              if (user.email === 'dammieoptimus@gmail.com') {
-                sysRole = 'super_admin';
-                if (!deptRoles.includes('qc_manager')) deptRoles.push('qc_manager');
-                if (!deptRoles.includes('prod_manager')) deptRoles.push('prod_manager');
-                if (!deptRoles.includes('hr_manager')) deptRoles.push('hr_manager');
-              }
-
+              // 🎯 THE HARDCODED EMAIL CHECK IS GONE! You are now secured completely by the database.
               console.log("====================================");
               console.log("👤 USER LOGGED IN:", user.email);
               console.log("👑 System Role:", sysRole);
@@ -66,21 +55,15 @@ export function AuthProvider({ children }) {
               setSystemRole(sysRole);
               setDepartmentRoles(deptRoles);
               setActionRoles(actRoles);
-              setUserRole(legacyRole);
-              setApprovalRoles(legacyApprovals);
-              
-              // 🎯 Set the user ONLY after roles are fully loaded!
               setCurrentUser(user);
             } catch (error) {
               console.error("Error fetching role:", error);
               setSystemRole('standard'); setDepartmentRoles(['qc_staff']); setActionRoles([]);
-              setUserRole('staff'); setApprovalRoles([]);
               setCurrentUser(user);
             }
           } else {
             setCurrentUser(null);
             setSystemRole('standard'); setDepartmentRoles([]); setActionRoles([]);
-            setUserRole(null); setApprovalRoles([]);
           }
           setLoading(false);
         });
@@ -98,10 +81,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ 
-      currentUser, 
-      systemRole, departmentRoles, actionRoles, 
-      userRole, approvalRoles,                  
-      loading, authEnabled 
+      currentUser, systemRole, departmentRoles, actionRoles, loading, authEnabled 
     }}>
       {!loading && children}
     </AuthContext.Provider>

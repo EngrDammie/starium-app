@@ -3,12 +3,16 @@ import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
-import Dashboard from './pages/Dashboard';
+
+// 🎯 NEW: Updated Imports
+import Dashboard from './pages/Dashboard'; // The new Command Center
+import PowderDensity from './pages/PowderDensity'; // The Data Entry form
+
 import Level9Exec from './pages/Level9Exec';
 import BotExec from './pages/BotExec';
-import MachineManagement from './pages/MachineManagement';
+import SystemConfig from './pages/SystemConfig'; 
 import UserManagement from './pages/UserManagement';
-import Reports from './pages/Reports'; // <--- NEW IMPORT
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -16,15 +20,16 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
       
-      {/* Dashboards */}
+      {/* 🎯 NEW: Updated Routes */}
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/powder-density" element={<ProtectedRoute><PowderDensity /></ProtectedRoute>} />
+      
       <Route path="/level9-exec" element={<ProtectedRoute><Level9Exec /></ProtectedRoute>} />
       <Route path="/bot-exec" element={<ProtectedRoute><BotExec /></ProtectedRoute>} />
       
-      {/* Admin & Reports */}
-      <Route path="/machine-management" element={<ProtectedRoute><MachineManagement /></ProtectedRoute>} />
+      <Route path="/system-config" element={<ProtectedRoute><SystemConfig /></ProtectedRoute>} />
       <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} /> {/* <--- NEW ROUTE */}
+      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );
 }

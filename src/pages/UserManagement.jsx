@@ -1,40 +1,18 @@
 // src/pages/UserManagement.jsx
 import { useState, useEffect } from 'react';
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
-
-const DEPT_ROLES = {
-  'Quality Control': [
-    { id: 'qc_staff', label: 'QC Staff' },
-    { id: 'qc_manager', label: 'QC Manager' }
-  ],
-  'Production': [
-    { id: 'prod_staff', label: 'Production Staff' },
-    { id: 'prod_manager', label: 'Production Manager' }
-  ],
-  'Human Resources': [
-    { id: 'hr_staff', label: 'HR Staff' },
-    { id: 'hr_manager', label: 'HR Manager' }
-  ]
-};
-
-const ACTION_ROLES = [
-  { id: 'buggy_supervisor', label: '🔧 Buggy Supervisor' },
-  { id: 'plc_operator', label: '⚡ PLC Operator' },
-  { id: 'production_manager', label: '🏭 Production Manager' },
-  { id: 'qc_manager', label: '✅ QC Manager' },
-  { id: 'qc_supervisor', label: '🔍 QC Supervisor' }
-];
+import { useConfig } from '../context/ConfigContext';
 
 export default function UserManagement() {
-  // 🎯 FIX: Old manual security checks completely stripped out!
-  // ProtectedRoute handles all security before this page even loads.
-  const { currentUser } = useAuth();
+  const { systemRole, currentUser } = useAuth();
+  const { config, loadingConfig } = useConfig();
+  const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
-  const [authEnabled, setAuthEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -48,8 +26,13 @@ export default function UserManagement() {
   const [deleteUser, setDeleteUser] = useState(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (systemRole !== 'super_admin' && currentUser?.email !== 'dammieoptimus@gmail.com') {
+      alert("⛔ Access Denied! Only administrators can access this page.");
+      navigate('/');
+    } else {
+      loadData();
+    }
+  }, [systemRole, currentUser, navigate]);
 
   const showMessage = (text, type = 'success') => {
     setMessage({ type, text });
@@ -59,18 +42,13 @@ export default function UserManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const authDoc = await getDoc(doc(db, 'config', 'auth_settings'));
-      if (authDoc.exists()) setAuthEnabled(authDoc.data().authEnabled);
-
       const usersSnap = await getDocs(collection(db, 'user_roles'));
       const usersList = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      
       usersList.sort((a, b) => {
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
         return dateB - dateA;
       });
-      
       setUsers(usersList);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -80,28 +58,9 @@ export default function UserManagement() {
     }
   };
 
-  const toggleGlobalAuth = async () => {
-    const newState = !authEnabled;
-    // 🎯 FIX: Only master admin can disable auth (from your vanilla logic)
-    if (!newState && authEnabled && currentUser?.email !== 'dammieoptimus@gmail.com') {
-      showMessage("⚠️ Only the master admin can disable authentication!", "error");
-      return;
-    }
-    try {
-      await setDoc(doc(db, 'config', 'auth_settings'), { authEnabled: newState, updatedAt: serverTimestamp() }, { merge: true });
-      setAuthEnabled(newState);
-      showMessage(`✅ Authentication ${newState ? 'enabled' : 'disabled'}!`);
-    } catch (error) {
-      showMessage("❌ Error updating authentication settings", "error");
-    }
-  };
-
   const handleToggleRole = (roleId, currentArray, setArrayFn) => {
-    if (currentArray.includes(roleId)) {
-      setArrayFn(currentArray.filter(id => id !== roleId));
-    } else {
-      setArrayFn([...currentArray, roleId]);
-    }
+    if (currentArray.includes(roleId)) setArrayFn(currentArray.filter(id => id !== roleId));
+    else setArrayFn([...currentArray, roleId]);
   };
 
   const handleAddUser = async (e) => {
@@ -111,7 +70,6 @@ export default function UserManagement() {
 
     try {
       showMessage('Creating user...', 'success');
-
       const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
       const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
         method: 'POST',
@@ -126,18 +84,14 @@ export default function UserManagement() {
         systemRole: newSystemRole,
         departmentRoles: newDeptRoles,
         actionRoles: newActionRoles,
-        
-        // Legacy fallback
         role: newSystemRole === 'super_admin' ? 'admin' : (newDeptRoles.includes('qc_manager') ? 'manager' : 'staff'),
         approvalRoles: newActionRoles,
-        
         createdAt: serverTimestamp(),
         createdBy: currentUser.email
       });
 
       setNewEmail(''); setNewPassword(''); 
       setNewSystemRole('standard'); setNewDeptRoles(['qc_staff']); setNewActionRoles([]);
-      
       showMessage('User created successfully!', 'success');
       loadData();
     } catch (error) {
@@ -152,11 +106,8 @@ export default function UserManagement() {
         systemRole: editUser.systemRole,
         departmentRoles: editUser.departmentRoles,
         actionRoles: editUser.actionRoles,
-        
-        // Legacy fallback
         role: editUser.systemRole === 'super_admin' ? 'admin' : (editUser.departmentRoles.includes('qc_manager') ? 'manager' : 'staff'),
         approvalRoles: editUser.actionRoles,
-
         updatedAt: serverTimestamp(),
         updatedBy: currentUser.email
       });
@@ -183,16 +134,20 @@ export default function UserManagement() {
   const getBadgeFormat = (roleId) => {
     let label = roleId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     let color = 'bg-gray-500/20 text-gray-400 border-gray-600';
-    
     if (roleId.includes('qc')) color = 'bg-[#00BCD4]/20 text-[#00BCD4] border-[#00BCD4]/50';
     else if (roleId.includes('prod')) color = 'bg-[#FF9800]/20 text-[#FF9800] border-[#FF9800]/50';
     else if (roleId.includes('hr')) color = 'bg-[#E91E63]/20 text-[#E91E63] border-[#E91E63]/50';
-    else if (roleId === 'super_admin') color = 'bg-status-success/20 text-status-success border-status-success/50';
-
     return { label, color };
   };
 
-  if (loading) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading User Data...</div></Layout>;
+  // 🎯 FIX: Grouping the dynamic department roles for the UI
+  const groupedDeptRoles = (config?.departmentRoles || []).reduce((acc, role) => {
+    if (!acc[role.category]) acc[role.category] = [];
+    acc[role.category].push(role);
+    return acc;
+  }, {});
+
+  if (loading || loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading User Data...</div></Layout>;
 
   return (
     <Layout title="🔐 User Management" subtitle="Manage accounts, roles, and global security" maxWidth="max-w-6xl">
@@ -202,21 +157,6 @@ export default function UserManagement() {
           {message.text}
         </div>
       )}
-
-      {/* Global Auth Toggle */}
-      <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6">
-        <h2 className="text-xl font-bold text-primary mb-4">🔐 Authentication Settings</h2>
-        <div className="flex items-center gap-4 mb-4">
-          <label className="relative inline-block w-14 h-8 cursor-pointer">
-            <input type="checkbox" className="sr-only peer" checked={authEnabled} onChange={toggleGlobalAuth} />
-            <div className="w-full h-full bg-[#444] rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
-            <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-6"></div>
-          </label>
-          <span className="text-lg font-bold text-white">
-            Auth is currently: <span className={authEnabled ? "text-status-success" : "text-gray-500"}>{authEnabled ? 'ENABLED' : 'DISABLED'}</span>
-          </span>
-        </div>
-      </div>
 
       {/* Add User Section */}
       <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6">
@@ -239,18 +179,14 @@ export default function UserManagement() {
             <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
               <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access (Pages & Menus)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {Object.entries(DEPT_ROLES).map(([deptName, roles]) => (
+                {/* 🎯 FIX: Dynamically maps the grouped database roles */}
+                {Object.entries(groupedDeptRoles).map(([deptName, roles]) => (
                   <div key={deptName} className="bg-dark-card p-4 rounded-lg border border-[#333]">
                     <h4 className="text-white font-bold text-xs uppercase mb-3 pb-2 border-b border-[#333]">{deptName}</h4>
                     <div className="flex flex-col gap-2">
                       {roles.map(role => (
                         <label key={role.id} className="flex items-center gap-3 cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            className="w-4 h-4 accent-primary" 
-                            checked={newDeptRoles.includes(role.id)}
-                            onChange={() => handleToggleRole(role.id, newDeptRoles, setNewDeptRoles)}
-                          />
+                          <input type="checkbox" className="w-4 h-4 accent-primary" checked={newDeptRoles.includes(role.id)} onChange={() => handleToggleRole(role.id, newDeptRoles, setNewDeptRoles)} />
                           <span className="text-gray-300 text-sm group-hover:text-white transition-colors">{role.label}</span>
                         </label>
                       ))}
@@ -265,14 +201,10 @@ export default function UserManagement() {
             <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
               <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers (Buttons)</h3>
               <div className="flex flex-wrap gap-3">
-                {ACTION_ROLES.map(role => (
+                {/* 🎯 FIX: Dynamically maps the database action roles */}
+                {(config?.actionRoles || []).map(role => (
                   <label key={role.id} className="flex items-center gap-2 p-2 px-4 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 accent-primary" 
-                      checked={newActionRoles.includes(role.id)}
-                      onChange={() => handleToggleRole(role.id, newActionRoles, setNewActionRoles)}
-                    />
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={newActionRoles.includes(role.id)} onChange={() => handleToggleRole(role.id, newActionRoles, setNewActionRoles)} />
                     <span className="text-white text-sm font-bold">{role.label}</span>
                   </label>
                 ))}
@@ -286,7 +218,6 @@ export default function UserManagement() {
         </form>
       </div>
 
-      {/* Users Table */}
       <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-16 overflow-x-auto">
         <h2 className="text-xl font-bold text-primary mb-6">👥 All Users</h2>
         <table className="w-full text-left border-collapse min-w-[1000px]">
@@ -308,41 +239,9 @@ export default function UserManagement() {
               return (
                 <tr key={user.id} className="hover:bg-white/5 transition-colors">
                   <td className="p-3 text-white font-bold">{user.email}</td>
-                  
-                  <td className="p-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      sysRole === 'super_admin' ? 'bg-status-success/20 text-status-success border border-status-success/30' : 'bg-gray-500/20 text-gray-400 border border-gray-600'
-                    }`}>
-                      {sysRole.replace('_', ' ')}
-                    </span>
-                  </td>
-
-                  <td className="p-3">
-                    {sysRole === 'super_admin' ? (
-                      <span className="text-gray-500 italic text-sm">Full Access</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {deptRoles.length > 0 ? deptRoles.map(r => {
-                          const badge = getBadgeFormat(r);
-                          return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>;
-                        }) : <span className="text-gray-600 italic text-sm">None</span>}
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="p-3">
-                    {sysRole === 'super_admin' ? (
-                      <span className="text-gray-500 italic text-sm">Full Access</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {actRoles.length > 0 ? actRoles.map(r => {
-                          const badge = getBadgeFormat(r);
-                          return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>;
-                        }) : <span className="text-gray-600 italic text-sm">None</span>}
-                      </div>
-                    )}
-                  </td>
-
+                  <td className="p-3"><span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${sysRole === 'super_admin' ? 'bg-status-success/20 text-status-success border border-status-success/30' : 'bg-gray-500/20 text-gray-400 border border-gray-600'}`}>{sysRole.replace('_', ' ')}</span></td>
+                  <td className="p-3">{sysRole === 'super_admin' ? <span className="text-gray-500 italic text-sm">Full Access</span> : <div className="flex flex-wrap gap-1">{deptRoles.length > 0 ? deptRoles.map(r => { const badge = getBadgeFormat(r); return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>; }) : <span className="text-gray-600 italic text-sm">None</span>}</div>}</td>
+                  <td className="p-3">{sysRole === 'super_admin' ? <span className="text-gray-500 italic text-sm">Full Access</span> : <div className="flex flex-wrap gap-1">{actRoles.length > 0 ? actRoles.map(r => { const badge = getBadgeFormat(r); return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>; }) : <span className="text-gray-600 italic text-sm">None</span>}</div>}</td>
                   <td className="p-3 flex gap-2 justify-end">
                     <button onClick={() => setEditUser({...user, systemRole: sysRole, departmentRoles: deptRoles, actionRoles: actRoles})} className="bg-[#2196F3] text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">Edit</button>
                     <button onClick={() => setDeleteUser(user)} className="bg-status-danger text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-red-600 transition-colors">Delete</button>
@@ -350,12 +249,10 @@ export default function UserManagement() {
                 </tr>
               );
             })}
-            {users.length === 0 && <tr><td colSpan="5" className="text-center text-gray-500 py-8">No users found.</td></tr>}
           </tbody>
         </table>
       </div>
 
-      {/* Edit User Modal */}
       {editUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setEditUser(null)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[95%] max-w-2xl shadow-[0_0_30px_rgba(0,188,212,0.3)] overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -364,13 +261,8 @@ export default function UserManagement() {
             
             <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-4 flex items-center justify-between mb-6">
               <label className="text-gray-400 text-sm font-bold uppercase">System Role:</label>
-              <select 
-                value={editUser.systemRole} 
-                onChange={e => setEditUser({...editUser, systemRole: e.target.value})} 
-                className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary"
-              >
-                <option value="standard">Standard User</option>
-                <option value="super_admin">Super Admin (God Mode)</option>
+              <select value={editUser.systemRole} onChange={e => setEditUser({...editUser, systemRole: e.target.value})} className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary">
+                <option value="standard">Standard User</option><option value="super_admin">Super Admin (God Mode)</option>
               </select>
             </div>
 
@@ -379,17 +271,13 @@ export default function UserManagement() {
                 <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
                   <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(DEPT_ROLES).map(([deptName, roles]) => (
+                    {Object.entries(groupedDeptRoles).map(([deptName, roles]) => (
                       <div key={deptName}>
                         <h4 className="text-gray-400 text-xs font-bold uppercase mb-2">{deptName}</h4>
                         <div className="flex flex-col gap-2">
                           {roles.map(role => (
                             <label key={role.id} className="flex items-center gap-2 cursor-pointer group">
-                              <input 
-                                type="checkbox" className="w-4 h-4 accent-primary" 
-                                checked={editUser.departmentRoles.includes(role.id)}
-                                onChange={() => handleToggleRole(role.id, editUser.departmentRoles, (newRoles) => setEditUser({...editUser, departmentRoles: newRoles}))}
-                              />
+                              <input type="checkbox" className="w-4 h-4 accent-primary" checked={editUser.departmentRoles.includes(role.id)} onChange={() => handleToggleRole(role.id, editUser.departmentRoles, (newRoles) => setEditUser({...editUser, departmentRoles: newRoles}))} />
                               <span className="text-gray-300 text-sm group-hover:text-white transition-colors">{role.label}</span>
                             </label>
                           ))}
@@ -402,13 +290,9 @@ export default function UserManagement() {
                 <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
                   <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers</h3>
                   <div className="flex flex-wrap gap-3">
-                    {ACTION_ROLES.map(role => (
+                    {(config?.actionRoles || []).map(role => (
                       <label key={role.id} className="flex items-center gap-2 p-2 px-3 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
-                        <input 
-                          type="checkbox" className="w-4 h-4 accent-primary" 
-                          checked={editUser.actionRoles.includes(role.id)}
-                          onChange={() => handleToggleRole(role.id, editUser.actionRoles, (newRoles) => setEditUser({...editUser, actionRoles: newRoles}))}
-                        />
+                        <input type="checkbox" className="w-4 h-4 accent-primary" checked={editUser.actionRoles.includes(role.id)} onChange={() => handleToggleRole(role.id, editUser.actionRoles, (newRoles) => setEditUser({...editUser, actionRoles: newRoles}))} />
                         <span className="text-white text-xs font-bold">{role.label}</span>
                       </label>
                     ))}
@@ -425,7 +309,6 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* Delete Modal */}
       {deleteUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setDeleteUser(null)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-status-danger w-[90%] max-w-sm shadow-[0_0_30px_rgba(244,67,54,0.3)]" onClick={e => e.stopPropagation()}>

@@ -1,34 +1,65 @@
-// src/pages/MachineManagement.jsx
+// src/pages/SystemConfig.jsx
 import { useState, useEffect, useRef } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 
-export default function MachineManagement() {
+export default function SystemConfig() {
   const { config, loadingConfig } = useConfig();
   const fileInputRef = useRef(null);
-
-  // 🎯 FIX: Old manual security checks completely stripped out!
-  // ProtectedRoute handles all security before this page even loads.
 
   const [activeTab, setActiveTab] = useState('machines');
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
+  // Modals State
   const [isMachineModalOpen, setIsMachineModalOpen] = useState(false);
   const [isLineModalOpen, setIsLineModalOpen] = useState(false);
   const [isGramModalOpen, setIsGramModalOpen] = useState(false);
 
+  // Form States
   const [machineForm, setMachineForm] = useState({ id: '', displayNumber: '', name: '', line: '', gram: 125, min: '', max: '', isEdit: false });
   const [lineForm, setLineForm] = useState({ id: '', name: '', order: '', isEdit: false });
   const [gramForm, setGramForm] = useState({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', isEdit: false });
-  const [gridColumns, setGridColumns] = useState(6);
+  
+  // Role Definition States
+  const [newDeptRole, setNewDeptRole] = useState({ id: '', label: '', category: '' });
+  const [newActionRole, setNewActionRole] = useState({ id: '', label: '' });
 
+  // Global Settings State
+  const [globalSettings, setGlobalSettings] = useState({
+    level9MinDensity: 0.200, level9MaxDensity: 0.310, level9Divisor: 1580,
+    botMinDensity: 0.200, botMaxDensity: 0.240, botDivisor: 1680,
+    dayShiftStart: 7, nightShiftStart: 19, machineGridColumns: 6
+  });
+  const [authEnabled, setAuthEnabled] = useState(true);
+
+  // Filters
   const [machineSearch, setMachineSearch] = useState('');
   const [machineLineFilter, setMachineLineFilter] = useState('');
 
   useEffect(() => {
-    if (config?.machineGridColumns) setGridColumns(config.machineGridColumns);
+    const fetchAuthSettings = async () => {
+      const authDoc = await getDoc(doc(db, 'config', 'auth_settings'));
+      if (authDoc.exists()) setAuthEnabled(authDoc.data().authEnabled !== false);
+    };
+    fetchAuthSettings();
+  }, []);
+
+  useEffect(() => {
+    if (config) {
+      setGlobalSettings({
+        level9MinDensity: config.level9MinDensity ?? 0.200,
+        level9MaxDensity: config.level9MaxDensity ?? 0.310,
+        level9Divisor: config.level9Divisor ?? 1580,
+        botMinDensity: config.botMinDensity ?? 0.200,
+        botMaxDensity: config.botMaxDensity ?? 0.240,
+        botDivisor: config.botDivisor ?? 1680,
+        dayShiftStart: config.dayShiftStart ?? 7,
+        nightShiftStart: config.nightShiftStart ?? 19,
+        machineGridColumns: config.machineGridColumns ?? 6
+      });
+    }
   }, [config]);
 
   const showToast = (message, isError = false) => {
@@ -38,10 +69,7 @@ export default function MachineManagement() {
 
   const updateDatabase = async (updates, successMsg) => {
     try {
-      await setDoc(doc(db, 'config', 'settings'), {
-        ...updates,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      await setDoc(doc(db, 'config', 'settings'), { ...updates, updatedAt: serverTimestamp() }, { merge: true });
       showToast(successMsg);
       return true;
     } catch (error) {
@@ -51,6 +79,7 @@ export default function MachineManagement() {
     }
   };
 
+  // --- MACHINE LOGIC ---
   const handleOpenMachineModal = (machine = null) => {
     if (machine) {
       const spec = config.gramSpecs?.[String(machine.gram)];
@@ -103,6 +132,7 @@ export default function MachineManagement() {
     await updateDatabase({ machines: newMachines }, 'Machine deleted');
   };
 
+  // --- LINE LOGIC ---
   const saveLine = async (e) => {
     e.preventDefault();
     let newLines = [...(config.productionLines || [])];
@@ -119,11 +149,12 @@ export default function MachineManagement() {
   };
 
   const deleteLine = async (id) => {
-    if (!window.confirm(`Delete line ${id}? Machines on this line will need a new line.`)) return;
+    if (!window.confirm(`Delete line ${id}?`)) return;
     const newLines = (config.productionLines || []).filter(l => l.id !== id);
     await updateDatabase({ productionLines: newLines }, 'Line deleted');
   };
 
+  // --- GRAM SPEC LOGIC ---
   const saveGramSpec = async (e) => {
     e.preventDefault();
     const newSpecs = { ...config.gramSpecs };
@@ -142,46 +173,95 @@ export default function MachineManagement() {
     await updateDatabase({ gramSpecs: newSpecs }, 'Gram spec deleted');
   };
 
+  // --- ROLE DEFINITIONS LOGIC ---
+  const saveDeptRole = async (e) => {
+    e.preventDefault();
+    if (!newDeptRole.id || !newDeptRole.label || !newDeptRole.category) return showToast('Fill all fields', true);
+    const newRoles = [...(config.departmentRoles || []), newDeptRole];
+    if (await updateDatabase({ departmentRoles: newRoles }, 'Department Role Added!')) {
+      setNewDeptRole({ id: '', label: '', category: '' });
+    }
+  };
+
+  const deleteDeptRole = async (id) => {
+    if (!window.confirm(`Delete department role ${id}?`)) return;
+    const newRoles = (config.departmentRoles || []).filter(r => r.id !== id);
+    await updateDatabase({ departmentRoles: newRoles }, 'Role deleted');
+  };
+
+  const saveActionRole = async (e) => {
+    e.preventDefault();
+    if (!newActionRole.id || !newActionRole.label) return showToast('Fill all fields', true);
+    const newRoles = [...(config.actionRoles || []), newActionRole];
+    if (await updateDatabase({ actionRoles: newRoles }, 'Action Role Added!')) {
+      setNewActionRole({ id: '', label: '' });
+    }
+  };
+
+  const deleteActionRole = async (id) => {
+    if (!window.confirm(`Delete action role ${id}?`)) return;
+    const newRoles = (config.actionRoles || []).filter(r => r.id !== id);
+    await updateDatabase({ actionRoles: newRoles }, 'Role deleted');
+  };
+
+  // --- GLOBAL SETTINGS LOGIC ---
+  const handleGlobalSettingsChange = (e) => {
+    const { name, value } = e.target;
+    setGlobalSettings(prev => ({ ...prev, [name]: Number(value) }));
+  };
+
+  const saveGlobalSettings = async () => {
+    if (globalSettings.level9MinDensity >= globalSettings.level9MaxDensity) return showToast('L9 Min must be < Max', true);
+    if (globalSettings.botMinDensity >= globalSettings.botMaxDensity) return showToast('BOT Min must be < Max', true);
+    await updateDatabase(globalSettings, 'Global Settings Saved!');
+  };
+
+  const toggleGlobalAuth = async () => {
+    const newState = !authEnabled;
+    try {
+      await setDoc(doc(db, 'config', 'auth_settings'), { authEnabled: newState, updatedAt: serverTimestamp() }, { merge: true });
+      setAuthEnabled(newState);
+      showToast(`Authentication ${newState ? 'Enabled' : 'Disabled'}!`);
+    } catch (error) {
+      showToast('Error updating auth settings', true);
+    }
+  };
+
+  // --- IMPORT / EXPORT LOGIC ---
   const exportConfig = () => {
     const data = {
-      machines: config.machines,
-      productionLines: config.productionLines,
-      gramSpecs: config.gramSpecs,
-      machineGridColumns: config.machineGridColumns,
+      machines: config.machines, productionLines: config.productionLines, gramSpecs: config.gramSpecs,
+      machineGridColumns: config.machineGridColumns, dayShiftStart: config.dayShiftStart, nightShiftStart: config.nightShiftStart,
+      departmentRoles: config.departmentRoles, actionRoles: config.actionRoles,
       exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `starium-config-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `starium-config-${new Date().toISOString().split('T')[0]}.json`;
+    a.click(); URL.revokeObjectURL(url);
     showToast('Configuration exported!');
   };
 
   const importConfig = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
       const text = await file.text();
       const data = JSON.parse(text);
+      if (!window.confirm('This will overwrite your current configuration. Continue?')) { e.target.value = ''; return; }
       
-      if (!window.confirm('This will overwrite your current configuration. Continue?')) {
-        e.target.value = '';
-        return;
-      }
-
       const updates = {};
       if (data.machines) updates.machines = data.machines;
       if (data.productionLines) updates.productionLines = data.productionLines;
       if (data.gramSpecs) updates.gramSpecs = data.gramSpecs;
       if (data.machineGridColumns) updates.machineGridColumns = data.machineGridColumns;
+      if (data.departmentRoles) updates.departmentRoles = data.departmentRoles;
+      if (data.actionRoles) updates.actionRoles = data.actionRoles;
+      if (data.dayShiftStart) updates.dayShiftStart = data.dayShiftStart;
+      if (data.nightShiftStart) updates.nightShiftStart = data.nightShiftStart;
 
       await updateDatabase(updates, 'Configuration imported successfully!');
     } catch (error) {
-      console.error('Import error:', error);
       showToast('Error importing configuration (Invalid JSON)', true);
     }
     e.target.value = '';
@@ -191,6 +271,7 @@ export default function MachineManagement() {
     if (!window.confirm('⚠️ This will reset ALL configuration to defaults. This cannot be undone! Are you sure?')) return;
     if (!window.confirm('Really reset? All custom machines, lines, and settings will be lost.')) return;
 
+    // Standard 30 machine factory default
     const DEFAULT_FACTORY_CONFIG = {
       machineGridColumns: 6,
       productionLines: [
@@ -251,23 +332,24 @@ export default function MachineManagement() {
   if (loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading Admin Panel...</div></Layout>;
 
   return (
-    <Layout title="⚙️ Machine Admin Panel" subtitle="Manage machines, production lines, and app settings" maxWidth="max-w-6xl">
+    <Layout title="⚙️ System Configuration" subtitle="Master Factory Control Center" maxWidth="max-w-7xl">
       
       <div className={`fixed bottom-5 right-5 px-6 py-3 rounded-lg font-bold text-white shadow-lg transition-transform duration-300 z-50 ${toast.show ? 'translate-y-0' : 'translate-y-[150%]'} ${toast.isError ? 'bg-status-danger' : 'bg-status-success'}`}>
         {toast.message}
       </div>
 
       <div className="flex overflow-x-auto gap-2 mb-6 border-b border-[#333] pb-2 custom-scrollbar">
-        {['machines', 'lines', 'gramspecs', 'settings', 'importexport'].map(tab => (
+        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'importexport'].map(tab => (
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 font-bold rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'bg-primary text-black' : 'bg-dark-card text-gray-400 hover:text-white hover:bg-[#252525]'}`}
+            className={`px-5 py-3 font-bold rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'bg-primary text-black' : 'bg-dark-card text-gray-400 hover:text-white hover:bg-[#252525]'}`}
           >
             {tab === 'machines' && '🏭 Machines'}
-            {tab === 'lines' && '📋 Production Lines'}
-            {tab === 'gramspecs' && '⚖️ Gram Specifications'}
-            {tab === 'settings' && '🔧 Grid Settings'}
+            {tab === 'lines' && '📋 Lines'}
+            {tab === 'gramspecs' && '⚖️ Gram Specs'}
+            {tab === 'roles' && '🏢 Role Definitions'}
+            {tab === 'settings' && '⚙️ Global Settings'}
             {tab === 'importexport' && '💾 Import / Export'}
           </button>
         ))}
@@ -281,14 +363,8 @@ export default function MachineManagement() {
           </div>
 
           <div className="flex gap-4 md:gap-6 mb-6">
-            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner">
-              <div className="text-4xl font-bold text-primary">{config.machines?.length || 0}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Total Machines</div>
-            </div>
-            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner">
-              <div className="text-4xl font-bold text-primary">{[...new Set((config.machines || []).map(m => m.line))].length}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Production Lines</div>
-            </div>
+            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{config.machines?.length || 0}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Total Machines</div></div>
+            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{[...new Set((config.machines || []).map(m => m.line))].length}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Production Lines</div></div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -302,31 +378,13 @@ export default function MachineManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider">
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Display #</th>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Line</th>
-                  <th className="p-3">Gram</th>
-                  <th className="p-3">Min</th>
-                  <th className="p-3">Max</th>
-                  <th className="p-3">Actions</th>
-                </tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">ID</th><th className="p-3">Display #</th><th className="p-3">Name</th><th className="p-3">Line</th><th className="p-3">Gram</th><th className="p-3">Min</th><th className="p-3">Max</th><th className="p-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {filteredMachines.map(m => (
                   <tr key={m.id} className="hover:bg-white/5">
-                    <td className="p-3 text-white">{m.id}</td>
-                    <td className="p-3 text-primary font-bold">M{m.displayNumber || m.id}</td>
-                    <td className="p-3 text-white">{m.name}</td>
-                    <td className="p-3 text-gray-300">{m.line}</td>
-                    <td className="p-3 text-status-warning font-bold">{m.gram}g</td>
-                    <td className="p-3 text-gray-300">{m.min.toFixed(3)}</td>
-                    <td className="p-3 text-gray-300">{m.max.toFixed(3)}</td>
-                    <td className="p-3 flex gap-2">
-                      <button onClick={() => handleOpenMachineModal(m)} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button>
-                      <button onClick={() => deleteMachine(m.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button>
-                    </td>
+                    <td className="p-3 text-white">{m.id}</td><td className="p-3 text-primary font-bold">M{m.displayNumber || m.id}</td><td className="p-3 text-white">{m.name}</td><td className="p-3 text-gray-300">{m.line}</td><td className="p-3 text-status-warning font-bold">{m.gram}g</td><td className="p-3 text-gray-300">{m.min.toFixed(3)}</td><td className="p-3 text-gray-300">{m.max.toFixed(3)}</td>
+                    <td className="p-3 flex gap-2"><button onClick={() => handleOpenMachineModal(m)} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteMachine(m.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -344,25 +402,13 @@ export default function MachineManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider">
-                  <th className="p-3">Order</th>
-                  <th className="p-3">Line ID</th>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Machine Count</th>
-                  <th className="p-3">Actions</th>
-                </tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Order</th><th className="p-3">Line ID</th><th className="p-3">Name</th><th className="p-3">Machine Count</th><th className="p-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {[...(config.productionLines || [])].sort((a,b)=>a.order-b.order).map(l => (
                   <tr key={l.id} className="hover:bg-white/5">
-                    <td className="p-3 text-white">{l.order}</td>
-                    <td className="p-3 text-primary font-bold">{l.id}</td>
-                    <td className="p-3 text-white">{l.name}</td>
-                    <td className="p-3 text-gray-300">{(config.machines || []).filter(m => m.line === l.id).length}</td>
-                    <td className="p-3 flex gap-2">
-                      <button onClick={() => { setLineForm({ ...l, isEdit: true }); setIsLineModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button>
-                      <button onClick={() => deleteLine(l.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button>
-                    </td>
+                    <td className="p-3 text-white">{l.order}</td><td className="p-3 text-primary font-bold">{l.id}</td><td className="p-3 text-white">{l.name}</td><td className="p-3 text-gray-300">{(config.machines || []).filter(m => m.line === l.id).length}</td>
+                    <td className="p-3 flex gap-2"><button onClick={() => { setLineForm({ ...l, isEdit: true }); setIsLineModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteLine(l.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -380,27 +426,13 @@ export default function MachineManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider">
-                  <th className="p-3">Gram</th>
-                  <th className="p-3">Min Density</th>
-                  <th className="p-3">Max Density</th>
-                  <th className="p-3">Pieces / Carton</th>
-                  <th className="p-3">Breakdown</th>
-                  <th className="p-3">Actions</th>
-                </tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Gram</th><th className="p-3">Min Density</th><th className="p-3">Max Density</th><th className="p-3">Pieces / Carton</th><th className="p-3">Breakdown</th><th className="p-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {Object.entries(config.gramSpecs || {}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([gram, spec]) => (
                   <tr key={gram} className="hover:bg-white/5">
-                    <td className="p-3 text-status-warning font-bold">{gram}g</td>
-                    <td className="p-3 text-white">{spec.min.toFixed(3)}</td>
-                    <td className="p-3 text-white">{spec.max.toFixed(3)}</td>
-                    <td className="p-3 text-gray-300">{spec.piecesPerCarton || 'N/A'}</td>
-                    <td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
-                    <td className="p-3 flex gap-2">
-                      <button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button>
-                      <button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button>
-                    </td>
+                    <td className="p-3 text-status-warning font-bold">{gram}g</td><td className="p-3 text-white">{spec.min.toFixed(3)}</td><td className="p-3 text-white">{spec.max.toFixed(3)}</td><td className="p-3 text-gray-300">{spec.piecesPerCarton || 'N/A'}</td><td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
+                    <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -409,14 +441,117 @@ export default function MachineManagement() {
         </div>
       )}
 
+      {/* 🎯 FIXED: SMART STACKING FORM FOR ROLES TAB */}
+      {activeTab === 'roles' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-[fadeIn_0.3s]">
+          {/* Department Roles */}
+          <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg">
+            <h2 className="text-xl font-bold text-primary mb-2">🏢 Department Access Roles</h2>
+            <p className="text-sm text-gray-400 mb-6">These roles define which Pages and Menus a user can see.</p>
+            
+            <form onSubmit={saveDeptRole} className="flex flex-col gap-3 mb-6 bg-[#1a1a1a] p-4 rounded-lg border border-[#444]">
+              <input type="text" placeholder="Category (e.g., Human Resources)" required value={newDeptRole.category} onChange={e=>setNewDeptRole({...newDeptRole, category: e.target.value})} className="w-full bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input type="text" placeholder="ID (e.g., hr_staff)" required value={newDeptRole.id} onChange={e=>setNewDeptRole({...newDeptRole, id: e.target.value.toLowerCase().replace(/\s+/g, '_')})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
+                <input type="text" placeholder="Label (e.g., HR Staff)" required value={newDeptRole.label} onChange={e=>setNewDeptRole({...newDeptRole, label: e.target.value})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
+              </div>
+
+              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">Add Department Role</button>
+            </form>
+
+            <div className="space-y-4">
+              {Object.entries((config.departmentRoles || []).reduce((acc, r) => {
+                if (!acc[r.category]) acc[r.category] = [];
+                acc[r.category].push(r);
+                return acc;
+              }, {})).map(([category, roles]) => (
+                <div key={category}>
+                  <h4 className="text-status-warning text-xs uppercase font-bold tracking-wider mb-2 border-b border-[#333] pb-1">{category}</h4>
+                  <ul className="space-y-2">
+                    {roles.map(r => (
+                      <li key={r.id} className="flex justify-between items-center bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                        <div><span className="font-bold text-white mr-3">{r.label}</span><span className="text-xs text-gray-500 font-mono">{r.id}</span></div>
+                        <button onClick={() => deleteDeptRole(r.id)} className="text-status-danger hover:text-red-400 px-2 text-xl">&times;</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Roles */}
+          <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg">
+            <h2 className="text-xl font-bold text-primary mb-2">⚡ Action Approval Roles</h2>
+            <p className="text-sm text-gray-400 mb-6">These roles define which specific Buttons a user can click.</p>
+            
+            <form onSubmit={saveActionRole} className="flex flex-col gap-3 mb-6 bg-[#1a1a1a] p-4 rounded-lg border border-[#444]">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input type="text" placeholder="ID (e.g., forklift_op)" required value={newActionRole.id} onChange={e=>setNewActionRole({...newActionRole, id: e.target.value.toLowerCase().replace(/\s+/g, '_')})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
+                <input type="text" placeholder="Label (e.g., 🚜 Forklift)" required value={newActionRole.label} onChange={e=>setNewActionRole({...newActionRole, label: e.target.value})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
+              </div>
+              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">Add Action Role</button>
+            </form>
+
+            <ul className="space-y-2">
+              {(config.actionRoles || []).map(r => (
+                <li key={r.id} className="flex justify-between items-center bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                  <div><span className="font-bold text-white mr-3">{r.label}</span><span className="text-xs text-gray-500 font-mono">{r.id}</span></div>
+                  <button onClick={() => deleteActionRole(r.id)} className="text-status-danger hover:text-red-400 px-2 text-xl">&times;</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'settings' && (
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
-          <h2 className="text-xl font-bold text-primary mb-6">Grid Settings</h2>
-          <div className="max-w-md">
-            <label className="block text-gray-400 text-sm font-bold mb-2 uppercase">Machine Grid Columns</label>
-            <input type="number" value={gridColumns} onChange={e => setGridColumns(e.target.value)} className="w-full bg-[#1a1a1a] text-white border border-[#444] rounded-lg p-3 outline-none focus:border-primary mb-4" min="1" max="12" />
-            <p className="text-sm text-gray-500 mb-6">Number of columns displayed in the machine grid on desktop views.</p>
-            <button onClick={() => updateDatabase({ machineGridColumns: parseInt(gridColumns) }, 'Grid settings saved!')} className="bg-primary text-black px-6 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all">Save Settings</button>
+          <h2 className="text-xl font-bold text-primary mb-6">⚙️ Global Factory Settings</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Level 9 Density Rules</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Min Density:</label><input type="number" name="level9MinDensity" step="0.001" value={globalSettings.level9MinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Max Density:</label><input type="number" name="level9MaxDensity" step="0.001" value={globalSettings.level9MaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">Divisor:</label><input type="number" name="level9Divisor" step="1" value={globalSettings.level9Divisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">BOT Density Rules</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Min Density:</label><input type="number" name="botMinDensity" step="0.001" value={globalSettings.botMinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Max Density:</label><input type="number" name="botMaxDensity" step="0.001" value={globalSettings.botMaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">Divisor:</label><input type="number" name="botDivisor" step="1" value={globalSettings.botDivisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Shift Times (24h)</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Day Shift Start:</label><input type="number" name="dayShiftStart" min="0" max="23" value={globalSettings.dayShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">Night Shift Start:</label><input type="number" name="nightShiftStart" min="0" max="23" value={globalSettings.nightShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">UI Settings</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Machine Grid Columns:</label><input type="number" name="machineGridColumns" min="1" max="12" value={globalSettings.machineGridColumns} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+            </div>
+          </div>
+          
+          <button onClick={saveGlobalSettings} className="bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">💾 Save All Settings</button>
+
+          <div className="mt-12 pt-8 border-t border-[#333]">
+            <h3 className="text-xl font-bold text-white mb-4">🔐 Master Authentication Toggle</h3>
+            <div className="flex items-center gap-4 bg-[#1a1a1a] p-6 border border-[#444] rounded-xl max-w-lg">
+              <label className="relative inline-block w-14 h-8 cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={authEnabled} onChange={toggleGlobalAuth} />
+                <div className="w-full h-full bg-[#444] rounded-full peer peer-checked:bg-status-success transition-colors duration-300"></div>
+                <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-6"></div>
+              </label>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-white">Auth is <span className={authEnabled ? "text-status-success" : "text-gray-500"}>{authEnabled ? 'ENABLED' : 'DISABLED'}</span></span>
+                <span className="text-xs text-gray-400 mt-1">Disabling allows "Ghost Admin" mode without login.</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -424,27 +559,17 @@ export default function MachineManagement() {
       {activeTab === 'importexport' && (
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
           <h2 className="text-xl font-bold text-primary mb-6">💾 Import / Export Configuration</h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
               <h3 className="text-lg font-bold text-white mb-2">📤 Export Configuration</h3>
-              <p className="text-gray-400 text-sm mb-6">Download all current settings (machines, lines, gram specs) as a JSON file for backup.</p>
+              <p className="text-gray-400 text-sm mb-6">Download all current settings (machines, roles, rules) as a JSON file.</p>
               <button onClick={exportConfig} className="w-full bg-primary text-black px-6 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all">📥 Download Backup</button>
             </div>
-
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
               <h3 className="text-lg font-bold text-white mb-2">📥 Import Configuration</h3>
               <p className="text-gray-400 text-sm mb-6">Restore settings from a previously exported backup JSON file.</p>
               <input type="file" accept=".json" ref={fileInputRef} onChange={importConfig} className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="w-full bg-[#333] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#444] transition-all border border-[#555]">📤 Upload Backup File</button>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-[#333]">
-            <div className="bg-status-danger/10 border border-status-danger p-6 rounded-xl">
-              <h3 className="text-lg font-bold text-status-danger mb-2">⚠️ Reset Configuration</h3>
-              <p className="text-gray-400 text-sm mb-6">This will restore ALL settings to factory defaults (30 standard machines). This cannot be undone!</p>
-              <button onClick={resetToDefaults} className="bg-status-danger text-white px-6 py-3 rounded-lg font-bold hover:bg-red-600 transition-all shadow-[0_0_15px_rgba(244,67,54,0.3)]">🗑️ Reset to Defaults</button>
             </div>
           </div>
         </div>

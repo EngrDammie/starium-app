@@ -1,6 +1,8 @@
 # 🏭 Starium Rafa Quality Control Tool
 
-Welcome to the **Starium Rafa Quality Control App**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze powder density data on the factory floor in real-time.
+Welcome to the **Starium Rafa Quality Control App**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time. 
+
+Initially built for Powder Density tracking, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
 
 ---
 
@@ -23,17 +25,18 @@ Factory floors often suffer from spotty internet connections. Standard web apps 
 
 This application solves that problem. It is built as an **Offline-First Application**. QC Staff can continuously enter density test results even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
 
-Meanwhile, Factory Managers and Executives can watch this data stream into their dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
+When users log in, they land on the **Command Center**, providing a high-level overview of active shifts and tests. Meanwhile, Factory Managers can watch data stream into their executive dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
 
 ---
 
 ## ✨ Key Features
 
+- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., tests completed this shift) and quick-action navigation tailored to the user's role.
 - **📶 Offline-First Engine**: Never lose a test. Tests are queued locally and auto-synced with perfect timestamp preservation.
 - **⚡ Real-Time Executive Dashboards**: Live view of current factory density, visual machine grids, and moving trend charts.
 - **📢 Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens across the factory.
 - **📜 Shift History Modal**: Floor workers can instantly review all tests submitted during their active shift.
-- **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, and change density thresholds without ever touching the code.
+- **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, edit roles, and change density thresholds without touching the code.
 - **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
 
 ---
@@ -49,7 +52,7 @@ A user's profile consists of three security layers:
    - `standard`: Must rely on department keycards.
 2. **`departmentRoles` (Page Access):** 
    - Example: `qc_staff`, `qc_manager`, `prod_manager`, `hr_manager`.
-   - These control what pages a user can navigate to, and dynamically builds their Sidebar Menu.
+   - These control what pages a user can navigate to, and dynamically builds their Sidebar Accordion Menu.
 3. **`actionRoles` (Button Powers):**
    - Example: `plc_operator`, `buggy_supervisor`, `qc_supervisor`.
    - These dictate which specific approval buttons a user is allowed to click on the Executive Dashboards.
@@ -58,9 +61,9 @@ A user's profile consists of three security layers:
 
 ---
 
-## 🏭 The Two Factory Modes
+## 🏭 The Two Factory Modes (Powder Density)
 
-The app adapts its UI and math based on what part of the factory is being tested:
+The data entry module adapts its UI and math based on what part of the factory is being tested:
 
 1. **Level 9 Silos**: 
    - Divides weight by `1580`.
@@ -74,8 +77,6 @@ The app adapts its UI and math based on what part of the factory is being tested
 ---
 
 ## 🛠️ Tech Stack
-
-This project was completely rewritten from Vanilla HTML/JS into a modern SPA (Single Page Application).
 
 - **Frontend Framework**: React 18 (via Vite)
 - **Styling**: Tailwind CSS v3
@@ -104,6 +105,7 @@ All Firestore heavy lifting happens here. It handles:
 - Processing the offline sync queue safely.
 
 ---
+
 
 ## 💻 Local Setup & Installation
 
