@@ -3,10 +3,10 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { setOnlineStatus, setOfflineStatus } from "../services/presenceOperations"; // 🎯 NEW IMPORT
 
 const AuthContext = createContext();
 
-// 🎯 NEW: Title Case Engine
 const toTitleCase = (str) => {
   if (!str) return '';
   return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -15,12 +15,10 @@ const toTitleCase = (str) => {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   
-  // Enterprise Keycards
   const [systemRole, setSystemRole] = useState('standard'); 
   const [departmentRoles, setDepartmentRoles] = useState([]);
   const [actionRoles, setActionRoles] = useState([]);
   
-  // 🎯 NEW: User Identity
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [userFullName, setUserFullName] = useState('');
@@ -28,6 +26,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authEnabled, setAuthEnabled] = useState(true);
 
+  // --- 1. CORE AUTHENTICATION ENGINE ---
   useEffect(() => {
     let unsubscribeAuth = () => {};
 
@@ -40,7 +39,6 @@ export function AuthProvider({ children }) {
         setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
         setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor']);
         
-        // Ghost Admin Identity
         setFirstName('Developer');
         setLastName('Admin');
         setUserFullName('Developer Admin');
@@ -59,7 +57,6 @@ export function AuthProvider({ children }) {
               let deptRoles = data.departmentRoles || (data.role === 'admin' || data.role === 'manager' ? ['qc_manager'] : ['qc_staff']);
               let actRoles = data.actionRoles || data.approvalRoles || [];
 
-              // 🎯 NEW: Extract and format names
               let fName = data.firstName || '';
               let lName = data.lastName || '';
               let displayFirst = '';
@@ -69,7 +66,6 @@ export function AuthProvider({ children }) {
                 displayFirst = toTitleCase(fName);
                 full = `${displayFirst} ${toTitleCase(lName)}`;
               } else {
-                // Graceful fallback to email prefix if no name is set yet
                 displayFirst = user.email.split('@')[0];
                 displayFirst = displayFirst.charAt(0).toUpperCase() + displayFirst.slice(1);
                 full = displayFirst;
@@ -81,7 +77,6 @@ export function AuthProvider({ children }) {
                 if (!deptRoles.includes('prod_manager')) deptRoles.push('prod_manager');
                 if (!deptRoles.includes('hr_manager')) deptRoles.push('hr_manager');
               }
-
               console.log("====================================");
               console.log(`👤 USER LOGGED IN: ${full} (${user.email})`);
               console.log("👑 System Role:", sysRole);
@@ -122,11 +117,40 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // --- 2. 🎯 NEW: THE PRESENCE HEARTBEAT ENGINE ---
+  useEffect(() => {
+    if (!currentUser || currentUser.uid === 'local-dev-id') return;
+
+    const uid = currentUser.uid;
+    const email = currentUser.email;
+
+    // 1. Send the initial "Hello, I am online!" ping
+    setOnlineStatus(uid, email, window.location.hash);
+
+    // 2. Set up the 3-minute recurring heartbeat
+    const intervalId = setInterval(() => {
+      setOnlineStatus(uid, email, window.location.hash);
+    }, 3 * 60 * 1000); // 3 minutes in milliseconds
+
+    // 3. Set up the interceptor for when they close the browser tab
+    const handleUnload = () => {
+      setOfflineStatus(uid);
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    // 4. Cleanup function: When they explicitly click "Logout"
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('beforeunload', handleUnload);
+      setOfflineStatus(uid); // Send the "Goodbye" signal
+    };
+  }, [currentUser]); // This entire block restarts whenever currentUser changes
+
   return (
     <AuthContext.Provider value={{ 
       currentUser, 
       systemRole, departmentRoles, actionRoles, 
-      firstName, lastName, userFullName, // 🎯 Exported to the app!
+      firstName, lastName, userFullName, 
       loading, authEnabled 
     }}>
       {!loading && children}
