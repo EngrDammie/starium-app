@@ -74,6 +74,8 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/system-config` | SystemConfig | Super admin only (empty allowedRoles) |
 | `/user-management` | UserManagement | Super admin only |
 | `/active-users` | ActiveUsers | Super admin only |
+| `/empty-silos` | EmptySilos | QC staff, QC managers |
+| `/empty-silos-report` | EmptySilosReport | QC managers, Prod managers, Packaging managers |
 | `/reports` | Reports | QC/Prod managers, HR managers |
 
 Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`.
@@ -149,7 +151,7 @@ MENU_CONFIG = [
 
 Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRolesForPath(path)` function iterates all categories to find the matching route and returns its `allowedRoles` array.
 
-**Important**: Admin routes (`/system-config`, `/user-management`, `/active-users`) have `allowedRoles: []` — meaning ONLY super_admin can access them. Standard users are always denied.
+**Important**: Admin routes (`/system-config`, `/user-management`, `/active-users`) have `allowedRoles: []` — meaning ONLY super_admin can access them. Standard users are always denied. Other routes use explicit role arrays.
 
 ---
 
@@ -263,6 +265,13 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Updates `shift_approvals` doc with `{[approverRole]: {name, role, timestamp}}`
 - Note: `approverRole` key is camelCase (e.g., `buggySupervisor`, `plcOperator`)
 
+### emptySiloOperations (`src/services/emptySiloOperations.js`)
+- **`getEmptySilosDocId(config)`**: Returns `empty_silos_{shift}_{date}` as the shift approval document ID for empty silos records.
+- **`subscribeToActiveEmptySilos(callback)`**: Cross-shift query: `where('noLongerEmptyAt', '==', null)`. Returns every machine across all shifts/days that is still empty and not yet refilled. Powers the live grid in Dashboard count, EmptySilos page, EmptySilosReport grid, and PowderDensity auto-refill detection.
+- **`subscribeToShiftEmptySilos(config, callback)`**: Shift-scoped query: filters by current shift's `shiftApprovalDocId`. Used only for the "Refilled This Shift" counter in EmptySilosReport (and potential historical reporting).
+- **`markMachineEmpty(machine, userFullName, config, broadcastAlert)`**: Creates an `empty_silos` document with machine details, marker identity, and timestamp. Fires a `warning`-level broadcast to `/`, `/powder-density`, `/level9-exec`, `/bot-exec`.
+- **`markMachineNoLongerEmpty(recordId, buggyNumber, userFullName, config, broadcastAlert, machine)`**: Updates an existing empty_silos record with buggy number and refill timestamp. Fires an `info`-level broadcast.
+
 ### presenceOperations (`src/services/presenceOperations.js`)
 
 **`setOnlineStatus(uid, email, path)`**:
@@ -295,13 +304,31 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 ### Dashboard (`src/pages/Dashboard.jsx`) — "Factory Command Center"
 - Displays 5 metric cards:
    1. **Live Users** — count from `subscribeToActiveUsers` (green pulse indicator); super-admins see this as a clickable `<Link to="/active-users">`
-  2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`
-  3. **BOT Tests** — count from `subscribeToShiftTests('bot')`
-  4. **Empty Silos** — placeholder (coming soon)
-  5. **Stopped Issues** — placeholder (coming soon)
+   2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`
+   3. **BOT Tests** — count from `subscribeToShiftTests('bot')`
+   4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos">` for QC staff/managers; shows "All Filled" or "⚠️ Needs Attention"
+   5. **Stopped Issues** — placeholder (coming soon)
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
+
+### EmptySilos (`src/pages/EmptySilos.jsx`) — Mark Machines Empty
+- Guarded: QC staff/managers only (also checks internally)
+- Subscribes to `subscribeToActiveEmptySilos()` for cross-shift real-time empty record list
+- Renders a machine grid (same layout as Level 9 PowderDensity) colored **green** (filled) / **red** (empty)
+- Clicking a machine opens a modal with machine details and a "Mark as Empty" button
+- Button uses `window.confirm()` for safety; on confirm, calls `markMachineEmpty()` which creates the Firestore record + fires a warning broadcast
+- Once marked, the machine's button shows red and the modal shows "Already Marked Empty" with the marker's name
+- Quick action: "Report Empty Silos" link in Dashboard for same roles
+
+### EmptySilosReport (`src/pages/EmptySilosReport.jsx`) — Real-Time Empty Status Report
+- Guarded: QC managers, Production managers, Packaging managers
+- No date selection — always loads real-time data from current state
+- Uses **dual subscription**: `subscribeToActiveEmptySilos()` for the live grid (cross-shift), `subscribeToShiftEmptySilos()` for the "Refilled This Shift" counter (shift-scoped)
+- Three summary cards: Empty/Total count (cross-shift), Empty Percentage (color-coded by severity), Refilled count (current shift only)
+- Machine grid: **green** = filled (no active empty record), **red** = empty (clickable for details)
+- Clicking a red machine opens a modal showing: machine details, who marked it empty, **human-readable empty duration** (e.g. "2h 15m ago"), and buggy number if refilled
+- Quick action: "Empty Silos Report" link in Dashboard for same roles
 
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
 - **Mode selector**: Level 9 Silo Densities vs BOT Densities
@@ -332,7 +359,8 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 3. Builds `testData` object with `qcName: userFullName`
 4. Calls `saveQCTest()` → online or offline
 5. If density is out of range → triggers `broadcastAlert()` with danger level, targeted to relevant pages
-6. Shows success/queued message, resets form after 2s
+6. **Level 9 only**: If selected machines have active empty records, calls `markMachineNoLongerEmpty()` for each, setting buggy number and refill timestamp, firing an info broadcast
+7. Shows success/queued message, resets form after 2s
 
 **Shift History Modal** (bottom-right floating button):
 - Shows all tests for current shift in a table
@@ -583,6 +611,28 @@ Doc ID: `${mode}_${shift}_${date}`
 }
 ```
 
+**`empty_silos`** (Empty silo/machine records):
+```
+{
+  shiftApprovalDocId: 'empty_silos_DAY_2026-06-11',
+  machineId: number,
+  machineDisplayNumber: string,      // "M1"
+  machineName: string,
+  line: string,                      // "1A"
+  gram: number,
+  markedEmptyBy: string,             // userFullName
+  markedEmptyAt: Timestamp,
+  shift: 'DAY' | 'NIGHT',
+  date: 'YYYY-MM-DD',
+  buggyNumber: string | null,        // filled when refilled
+  noLongerEmptyAt: Timestamp | null,
+  noLongerEmptyBy: string | null,
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`alerts`** (Broadcast messages):
 ```
 {
@@ -675,6 +725,7 @@ User names are stored lowercase in Firestore, converted to Title Case on read. `
 - [ ] **Audit Trail** — Log who modified settings, deleted users, overrode machines
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
 - [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`
+- ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 
 ---
 

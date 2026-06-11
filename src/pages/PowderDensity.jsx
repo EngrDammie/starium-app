@@ -8,6 +8,7 @@ import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
 import { getOrCreateShiftApproval, saveQCTest, subscribeToShiftTests } from '../services/qcOperations';
+import { subscribeToActiveEmptySilos, markMachineNoLongerEmpty, getEmptySilosDocId } from '../services/emptySiloOperations';
 
 export default function PowderDensity() {
   const { config, loadingConfig } = useConfig();
@@ -39,6 +40,7 @@ export default function PowderDensity() {
   const [saveStatus, setSaveStatus] = useState({ state: 'idle', message: '' });
   
   const [shiftTests, setShiftTests] = useState([]);
+  const [emptyRecords, setEmptyRecords] = useState([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   useEffect(() => {
@@ -55,8 +57,14 @@ export default function PowderDensity() {
     const hasAccess = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'].includes(r));
     if (!hasAccess) return;
     if (loadingConfig) return;
-    const unsubscribe = subscribeToShiftTests(mode, config, (tests) => setShiftTests(tests));
-    return () => unsubscribe();
+
+    const unsubTests = subscribeToShiftTests(mode, config, (tests) => setShiftTests(tests));
+
+    const unsubEmpty = subscribeToActiveEmptySilos((records) => {
+      setEmptyRecords(records);
+    });
+
+    return () => { unsubTests(); unsubEmpty(); };
   }, [mode, config, loadingConfig, systemRole, departmentRoles]);
 
   const resetFormFields = () => {
@@ -173,6 +181,17 @@ export default function PowderDensity() {
           const targetPages = mode === 'level9' ? ['/', '/powder-density', '/level9-exec'] : ['/', '/powder-density', '/bot-exec'];
           
           broadcastAlert(`⚠️ ${modeLabel} DENSITY TOO ${status}!`, `Density recorded at ${d.toFixed(3)} g/mL by ${userFullName} (Team ${team}).`, 'danger', targetPages);
+        }
+
+        if (mode === 'level9' && selectedMachines.length > 0) {
+          const buggy = buggyNumber.trim();
+          for (const machineId of selectedMachines) {
+            const emptyRecord = emptyRecords.find(r => r.machineId === machineId && !r.noLongerEmptyAt);
+            if (emptyRecord && buggy) {
+              const machine = config.machines?.find(m => m.id === machineId);
+              markMachineNoLongerEmpty(emptyRecord.id, buggy, userFullName, config, broadcastAlert, machine);
+            }
+          }
         }
       }
 

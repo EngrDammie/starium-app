@@ -25,6 +25,8 @@ export const MENU_CONFIG = [
       { path: '/powder-density', label: 'Powder Density Tests', icon: '📝', allowedRoles: ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'] },
       { path: '/level9-exec', label: 'Level 9 Dashboard', icon: '🏭', allowedRoles: ['qc_manager', 'prod_manager'] },
       { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager', 'prod_manager'] },
+      { path: '/empty-silos', label: 'Report Empty Silos', icon: '🛢️', allowedRoles: ['qc_staff', 'qc_manager'] },
+      { path: '/empty-silos-report', label: 'Empty Silos Report', icon: '📋', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
       { path: '/reports', label: 'QC Reports', icon: '📈', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] }
     ]
   },

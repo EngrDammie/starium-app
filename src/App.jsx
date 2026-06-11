@@ -13,6 +13,8 @@ import BotExec from './pages/BotExec';
 import SystemConfig from './pages/SystemConfig'; 
 import UserManagement from './pages/UserManagement';
 import ActiveUsers from './pages/ActiveUsers';
+import EmptySilos from './pages/EmptySilos';
+import EmptySilosReport from './pages/EmptySilosReport';
 import Reports from './pages/Reports';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
       <Route path="/system-config" element={<ProtectedRoute><SystemConfig /></ProtectedRoute>} />
       <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/active-users" element={<ProtectedRoute><ActiveUsers /></ProtectedRoute>} />
+      <Route path="/empty-silos" element={<ProtectedRoute><EmptySilos /></ProtectedRoute>} />
+      <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );
