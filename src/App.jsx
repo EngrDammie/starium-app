@@ -15,6 +15,8 @@ import UserManagement from './pages/UserManagement';
 import ActiveUsers from './pages/ActiveUsers';
 import EmptySilos from './pages/EmptySilos';
 import EmptySilosReport from './pages/EmptySilosReport';
+import StopMachine from './pages/StopMachine';
+import StoppedMachinesReport from './pages/StoppedMachinesReport';
 import Reports from './pages/Reports';
 
 function App() {
@@ -35,6 +37,8 @@ function App() {
       <Route path="/active-users" element={<ProtectedRoute><ActiveUsers /></ProtectedRoute>} />
       <Route path="/empty-silos" element={<ProtectedRoute><EmptySilos /></ProtectedRoute>} />
       <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
+      <Route path="/stop-machine" element={<ProtectedRoute><StopMachine /></ProtectedRoute>} />
+      <Route path="/stopped-machines-report" element={<ProtectedRoute><StoppedMachinesReport /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );

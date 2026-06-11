@@ -76,6 +76,8 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/active-users` | ActiveUsers | Super admin only |
 | `/empty-silos` | EmptySilos | QC staff, QC managers |
 | `/empty-silos-report` | EmptySilosReport | QC managers, Prod managers, Packaging managers |
+| `/stop-machine` | StopMachine | QC staff, QC managers |
+| `/stopped-machines-report` | StoppedMachinesReport | QC managers, Prod managers, Packaging managers |
 | `/reports` | Reports | QC/Prod managers, HR managers |
 
 Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`.
@@ -272,6 +274,14 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`markMachineEmpty(machine, userFullName, config, broadcastAlert)`**: Creates an `empty_silos` document with machine details, marker identity, and timestamp. Fires a `warning`-level broadcast to `/`, `/powder-density`, `/level9-exec`, `/bot-exec`.
 - **`markMachineNoLongerEmpty(recordId, buggyNumber, userFullName, config, broadcastAlert, machine)`**: Updates an existing empty_silos record with buggy number and refill timestamp. Fires an `info`-level broadcast.
 
+### stoppedMachineOperations (`src/services/stoppedMachineOperations.js`)
+- **`subscribeToMachineIssues(callback)`**: Subscribes to `machine_issues` collection (reusable issue definitions). Returns sorted list of issues.
+- **`addMachineIssue(label, addedBy)`**: Creates a new reusable issue definition in `machine_issues` collection.
+- **`subscribeToActiveStoppedMachines(callback)`**: Cross-shift query: `where('isActive', '==', true)`. Returns all machines currently in a non-running state (stopped, started-with-issues, issues-cleared).
+- **`reportStoppedMachine(machine, issues, userFullName)`**: Creates a `stopped_machines` document with machine details, stopped-by identity, selected issues, and timestamp.
+- **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Returns `'all-solved'` if the last issue was just cleared.
+- **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state).
+
 ### presenceOperations (`src/services/presenceOperations.js`)
 
 **`setOnlineStatus(uid, email, path)`**:
@@ -307,6 +317,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
    2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`
    3. **BOT Tests** — count from `subscribeToShiftTests('bot')`
    4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos">` for QC staff/managers; shows "All Filled" or "⚠️ Needs Attention"
+   5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stop-machine">` for QC staff/managers; shows "All Running" or "⚠️ Needs Attention"
    5. **Stopped Issues** — placeholder (coming soon)
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles
@@ -329,6 +340,30 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Machine grid: **green** = filled (no active empty record), **red** = empty (clickable for details)
 - Clicking a red machine opens a modal showing: machine details, who marked it empty, **human-readable empty duration** (e.g. "2h 15m ago"), and buggy number if refilled
 - Quick action: "Empty Silos Report" link in Dashboard for same roles
+
+### StopMachine (`src/pages/StopMachine.jsx`) — Report Stopped Machines
+- Guarded: QC staff/managers only (also checks internally)
+- Subscribes to `subscribeToActiveStoppedMachines()` (cross-shift active records) and `subscribeToMachineIssues()` (reusable issue definitions)
+- Machine grid with **4 color-coded states**:
+
+| State | Color | CSS |
+|---|---|---|
+| Normal (running) | Green | `bg-gradient-to-br from-[#00E676] to-[#00C853]` |
+| Stopped w/ issues | Darkest red | `background: #8B0000` |
+| Started w/ issues | Cycling dark red ↔ light green | `@keyframes cycleStopped { 0%,100%: #8B0000; 50%: #2E7D32 }` |
+| All issues cleared | Light red | `background: #FF6B6B` |
+- Clicking a machine opens a modal: shows machine details, existing issues with **click-once solve buttons** (confirms via `window.confirm()`), and a START button
+- Reports a new stoppage via a **second modal** with multi-select issue checkboxes + "Add New Issue" text input (new issues are added to the reusable `machine_issues` collection)
+- When the last issue is solved → sparkle animation (✨)
+- START button always available; sets `startedAt`/`startedBy` and deactivates record if no issues remain
+- Quick action: "Report Stopped Machine" link in Dashboard for same roles
+
+### StoppedMachinesReport (`src/pages/StoppedMachinesReport.jsx`) — Real-Time Stopped Status Report
+- Guarded: QC managers, Production managers, Packaging managers
+- Uses `subscribeToActiveStoppedMachines()` for cross-shift real-time stopped machine data
+- Three summary cards: Stopped count (dark red), Started with Issues (warning), Issues Cleared (white)
+- Machine grid with same 4-color scheme; clicking a non-normal machine opens a modal with full details: reported by, stopped duration (human-readable), started info, issues list with solved/unsolved status
+- Quick action: "Stopped Machines Report" link in Dashboard for same roles
 
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
 - **Mode selector**: Level 9 Silo Densities vs BOT Densities
@@ -611,6 +646,43 @@ Doc ID: `${mode}_${shift}_${date}`
 }
 ```
 
+**`machine_issues`** (Reusable issue definitions):
+```
+{
+  label: string,          // e.g. "Motor failure", "Bearing worn"
+  createdBy: string,      // userFullName who added it
+  createdAt: Timestamp
+}
+```
+Doc ID: auto-generated via `addDoc`
+
+**`stopped_machines`** (Stopped machine records):
+```
+{
+  machineId: number,
+  machineDisplayNumber: string,
+  machineName: string,
+  line: string,
+  gram: number,
+  stoppedBy: string,
+  stoppedAt: Timestamp,
+  startedAt: Timestamp | null,
+  startedBy: string | null,
+  issues: [
+    {
+      id: string,           // references machine_issues doc ID
+      label: string,        // denormalized for display
+      solvedAt: Timestamp | null,
+      solvedBy: string | null
+    }
+  ],
+  isActive: boolean,        // false when started with no issues (fully resolved)
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`empty_silos`** (Empty silo/machine records):
 ```
 {
@@ -726,6 +798,7 @@ User names are stored lowercase in Firestore, converted to Title Case on read. `
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
 - [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
+- ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
 
 ---
 

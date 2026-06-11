@@ -27,6 +27,8 @@ export const MENU_CONFIG = [
       { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager', 'prod_manager'] },
       { path: '/empty-silos', label: 'Report Empty Silos', icon: '🛢️', allowedRoles: ['qc_staff', 'qc_manager'] },
       { path: '/empty-silos-report', label: 'Empty Silos Report', icon: '📋', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
+      { path: '/stop-machine', label: 'Report Stopped Machine', icon: '🛑', allowedRoles: ['qc_staff', 'qc_manager'] },
+      { path: '/stopped-machines-report', label: 'Stopped Machines Report', icon: '📊', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
       { path: '/reports', label: 'QC Reports', icon: '📈', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] }
     ]
   },

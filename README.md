@@ -39,6 +39,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, edit roles, and change density thresholds without touching the code.
 - **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
 - **🛢️ Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts, auto-refill detection when powder density tests are saved, and a dedicated manager report with color-coded machine grid and refill counters.
+- **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine state grid, and dedicated real-time manager report.
 
 ---
 

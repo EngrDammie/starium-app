@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { subscribeToShiftTests } from '../services/qcOperations';
 import { subscribeToActiveUsers } from '../services/presenceOperations';
 import { subscribeToActiveEmptySilos } from '../services/emptySiloOperations';
+import { subscribeToActiveStoppedMachines } from '../services/stoppedMachineOperations';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [botCount, setBotCount] = useState(0);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [emptySilosCount, setEmptySilosCount] = useState(0);
+  const [stoppedCount, setStoppedCount] = useState(0);
   const [currentShift, setCurrentShift] = useState('--');
 
   useEffect(() => {
@@ -43,11 +45,16 @@ export default function Dashboard() {
       setEmptySilosCount(records.length);
     });
 
+    const unsubStopped = subscribeToActiveStoppedMachines((records) => {
+      setStoppedCount(records.filter(r => !r.startedAt).length);
+    });
+
     return () => {
       unsubLevel9();
       unsubBot();
       unsubPresence();
       unsubEmpty();
+      unsubStopped();
     };
   }, [config, loadingConfig]);
 
@@ -158,15 +165,27 @@ export default function Dashboard() {
         )}
 
         {/* Metric 5: Stopped Machines */}
-        <div className="bg-gradient-to-br from-[#1a1a1a] to-[#121212] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden opacity-60 animate-[fadeIn_0.9s_ease-out]">
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <span className="bg-black/80 text-primary border border-primary px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase rotate-[-15deg] backdrop-blur-sm">Coming Soon</span>
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (
+          <Link to="/stop-machine" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛑</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${stoppedCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
+              Stopped Machines
+            </h3>
+            <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
+            <div className={`text-xs font-bold uppercase tracking-wider ${stoppedCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{stoppedCount > 0 ? '⚠️ Needs Attention' : 'All Running'}</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛑</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${stoppedCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
+              Stopped Issues
+            </h3>
+            <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
+            <div className={`text-xs font-bold uppercase tracking-wider ${stoppedCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{stoppedCount > 0 ? '⚠️ Needs Attention' : 'All Running'}</div>
           </div>
-          <div className="absolute top-0 right-0 p-4 opacity-5 text-5xl">🛑</div>
-          <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Stopped Issues</h3>
-          <div className="text-5xl font-black text-gray-600 mb-1">--<span className="text-2xl text-gray-700">/{config?.machines?.length || 30}</span></div>
-          <div className="text-gray-600 text-xs font-bold uppercase tracking-wider">Total Machines</div>
-        </div>
+        )}
 
       </div>
 
@@ -190,6 +209,16 @@ export default function Dashboard() {
                 <div>
                   <div className="text-white font-bold text-lg">Report Empty Silos</div>
                   <div className="text-gray-400 text-sm">Mark machines as empty</div>
+                </div>
+              </Link>
+            )}
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r))) && (
+              <Link to="/stop-machine" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">🛑</div>
+                <div>
+                  <div className="text-white font-bold text-lg">Report Stopped Machine</div>
+                  <div className="text-gray-400 text-sm">Report & resolve machine issues</div>
                 </div>
               </Link>
             )}
@@ -217,13 +246,23 @@ export default function Dashboard() {
         )}
 
         {(systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager', 'packaging_manager'].includes(r))) && (
-          <Link to="/empty-silos-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
-            <div className="text-3xl group-hover:scale-110 transition-transform">📋</div>
-            <div>
-              <div className="text-white font-bold text-lg">Empty Silos Report</div>
-              <div className="text-gray-400 text-sm">Real-time empty status overview</div>
-            </div>
-          </Link>
+          <>
+            <Link to="/empty-silos-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+              <div className="text-3xl group-hover:scale-110 transition-transform">📋</div>
+              <div>
+                <div className="text-white font-bold text-lg">Empty Silos Report</div>
+                <div className="text-gray-400 text-sm">Real-time empty status overview</div>
+              </div>
+            </Link>
+
+            <Link to="/stopped-machines-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+              <div className="text-3xl group-hover:scale-110 transition-transform">📊</div>
+              <div>
+                <div className="text-white font-bold text-lg">Stopped Machines Report</div>
+                <div className="text-gray-400 text-sm">Real-time machine issues overview</div>
+              </div>
+            </Link>
+          </>
         )}
       </div>
 
