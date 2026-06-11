@@ -31,7 +31,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 
 ## ✨ Key Features
 
-- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., tests completed this shift) and quick-action navigation tailored to the user's role.
+- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., active users, tests completed this shift) and quick-action navigation tailored to the user's role. Super admins can click the Live Users card to view a detailed table of all active operators and their current page.
 - **📶 Offline-First Engine**: Never lose a test. Tests are queued locally and auto-synced with perfect timestamp preservation.
 - **⚡ Real-Time Executive Dashboards**: Live view of current factory density, visual machine grids, and moving trend charts.
 - **📢 Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens across the factory.
@@ -98,7 +98,13 @@ The app uses React Context to broadcast state globally:
 - **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine` and automatically flushes `localStorage` queues to Firebase upon reconnection.
 - **`AlertContext.jsx`**: The global loudspeaker. Exposes the `broadcastAlert()` function which pushes real-time notifications to targeted factory screens.
 
-### 3. The Engine Room (`src/services/qcOperations.js`)
+### 3. The Presence System (`src/services/presenceOperations.js`)
+Tracks who is online in real-time across the factory:
+- **`setOnlineStatus()`**: Called by AuthContext on login and every 3 minutes (heartbeat). Records the user's UID, email, and current page.
+- **`setOfflineStatus()`**: Called on logout or tab close to mark the user offline.
+- **`subscribeToActiveUsers()`**: Returns a live stream of online users (with a 5-minute stale-entry safety net). Used by the Dashboard for the Live Users counter and by the Active Users page for the full table.
+
+### 4. The Engine Room (`src/services/qcOperations.js`)
 All Firestore heavy lifting happens here. It handles:
 - Midnight boundary math for Night Shifts (e.g., tests submitted at 2 AM belong to yesterday's shift document).
 - Fetching and sorting tests from oldest to newest.

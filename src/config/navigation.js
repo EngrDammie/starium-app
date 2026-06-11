@@ -49,7 +49,8 @@ export const MENU_CONFIG = [
     icon: '🛡️',
     children: [
       { path: '/system-config', label: 'System Config', icon: '🔧', allowedRoles: [] }, 
-      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: [] }
+      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: [] },
+      { path: '/active-users', label: 'Active Users', icon: '🟢', allowedRoles: [] }
     ]
   }
 ];

@@ -12,6 +12,7 @@ import Level9Exec from './pages/Level9Exec';
 import BotExec from './pages/BotExec';
 import SystemConfig from './pages/SystemConfig'; 
 import UserManagement from './pages/UserManagement';
+import ActiveUsers from './pages/ActiveUsers';
 import Reports from './pages/Reports';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
       
       <Route path="/system-config" element={<ProtectedRoute><SystemConfig /></ProtectedRoute>} />
       <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+      <Route path="/active-users" element={<ProtectedRoute><ActiveUsers /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );
