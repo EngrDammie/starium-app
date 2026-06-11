@@ -58,7 +58,7 @@ export default function Login() {
       <div className="flex flex-col items-center justify-center flex-1 w-full p-4">
         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] p-10 md:p-12 rounded-2xl border-2 border-primary shadow-[0_0_30px_rgba(255,107,0,0.3)] max-w-md w-full animate-[fadeIn_0.5s_ease-out]">
           <h1 className="text-primary text-3xl font-bold mb-2 uppercase tracking-widest text-center">Starium Rafa</h1>
-          <p className="text-gray-400 text-center mb-8 text-sm">Quality Control Tool</p>
+          <p className="text-gray-400 text-center mb-8 text-sm">Enterprise Resource Planner</p>
 
           {error && <div className="text-status-danger bg-status-danger/10 border border-status-danger p-3 rounded-lg mb-5 text-center text-sm font-medium">{error}</div>}
 

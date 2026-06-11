@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-**Name:** Starium Rafa Quality Control Tool  
+**Name:** Starium Rafa Enterprise Resource Planner (ERP)  
 **Purpose:** Enterprise-grade, offline-capable web application for monitoring, recording, and analyzing factory powder density metrics in real-time. Initially built for Powder Density tracking; structured to scale into a full factory ERP (Production, HR, Quality Control).  
 **Repository Base:** `/home/dammieoptimus/Documents/starium-app`
 
@@ -511,7 +511,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Sends via `broadcastAlert()` with `targetPages` array
 
 ### Footer (`src/components/Footer.jsx`)
-- Default text: "Starium Rafa Quality Control Tool"
+- Default text: "Starium Rafa ERP"
 - On hover: "WhatsApp Dammie Optimus Solutions on 07053331253"
 
 ---

@@ -245,7 +245,7 @@ export default function PowderDensity() {
   const showTestCounter = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r));
 
   return (
-    <Layout title="Starium Rafa Quality Control" subtitle="Powder Density Data Entry">
+    <Layout title="Starium Rafa ERP" subtitle="Powder Density Data Entry">
       <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } } .animate-shake { animation: shake 0.4s ease-in-out; }`}</style>
       
       <div className="flex flex-wrap justify-center gap-4 mb-6 animate-[fadeIn_0.5s_ease-out]">

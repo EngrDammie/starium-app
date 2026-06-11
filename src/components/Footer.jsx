@@ -7,7 +7,7 @@ export default function Footer() {
       
       {/* This text hides when the footer is hovered (group-hover:opacity-0) */}
       <div className="text-[#666] text-sm transition-opacity duration-300 group-hover:opacity-0">
-        Starium Rafa Quality Control Tool
+        Starium Rafa ERP
       </div>
 
       {/* This text is invisible by default (opacity-0), but appears on hover (group-hover:opacity-100) */}

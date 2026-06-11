@@ -1,6 +1,6 @@
-# 🏭 Starium Rafa Quality Control Tool
+# 🏭 Starium Rafa Enterprise Resource Planner (ERP)
 
-Welcome to the **Starium Rafa Quality Control App**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time. 
+Welcome to the **Starium Rafa ERP**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time. 
 
 Initially built for Powder Density tracking, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
 
@@ -167,4 +167,4 @@ We use **GitHub Actions** to automate this.
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices for roaming QC staff.
 
 ---
-*Built with ❤️ and extreme attention to detail for the Starium Rafa Factory.*
+*Built with ❤️ and extreme attention to detail for the Starium Rafa Factory. Formerly Starium Rafa Quality Control Tool.*
