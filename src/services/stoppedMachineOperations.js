@@ -78,7 +78,7 @@ export async function markIssueSolved(machineDocId, issueId, userFullName) {
     const idx = issues.findIndex(i => i.id === issueId);
     if (idx === -1) return 'error';
 
-    issues[idx] = { ...issues[idx], solvedAt: serverTimestamp(), solvedBy: userFullName };
+    issues[idx] = { ...issues[idx], solvedAt: new Date(), solvedBy: userFullName };
 
     const allSolved = issues.every(i => i.solvedAt);
     const updateData = { issues, updatedAt: serverTimestamp() };
@@ -110,6 +110,40 @@ export async function startMachine(machineDocId, userFullName) {
     return allSolved ? 'running' : 'started-with-issues';
   } catch (error) {
     console.error("Error starting machine:", error);
+    return 'error';
+  }
+}
+
+export async function appendIssuesToMachine(docId, issues, userFullName) {
+  try {
+    const docRef = doc(db, 'stopped_machines', docId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return 'error';
+
+    const data = snap.data();
+    const existingIssues = [...(data.issues || [])];
+    const existingIds = new Set(existingIssues.map(i => i.id));
+    const newIssues = issues
+      .filter(issue => !existingIds.has(issue.id))
+      .map(issue => ({
+        id: issue.id,
+        label: issue.label,
+        solvedAt: null,
+        solvedBy: null,
+      }));
+
+    if (newIssues.length === 0) return 'saved';
+
+    await updateDoc(docRef, {
+      issues: [...existingIssues, ...newIssues],
+      startedAt: null,
+      startedBy: null,
+      isActive: true,
+      updatedAt: serverTimestamp(),
+    });
+    return 'saved';
+  } catch (error) {
+    console.error("Error appending issues:", error);
     return 'error';
   }
 }

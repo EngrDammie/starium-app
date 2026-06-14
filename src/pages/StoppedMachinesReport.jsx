@@ -167,65 +167,71 @@ export default function StoppedMachinesReport() {
 
       {isModalOpen && modalRecord && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.3s_ease]" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#2d2d2d] p-8 rounded-2xl max-w-sm w-[90%]" style={{ borderColor: '#8B0000', borderWidth: 2 }} onClick={e => e.stopPropagation()}>
-            <h2 className="text-2xl font-bold mb-5 text-center" style={{ color: '#8B0000' }}>
-              🛑 Machine M{modalRecord.machineDisplayNumber || modalRecord.machineId}
-            </h2>
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#2d2d2d] rounded-2xl max-w-sm w-[90%] max-h-[85vh] flex flex-col" style={{ borderColor: '#8B0000', borderWidth: 2 }} onClick={e => e.stopPropagation()}>
+            <div className="p-8 pb-0">
+              <h2 className="text-2xl font-bold mb-5 text-center" style={{ color: '#8B0000' }}>
+                🛑 Machine M{modalRecord.machineDisplayNumber || modalRecord.machineId}
+              </h2>
 
-            <div className="flex flex-col gap-3 text-sm mb-6">
-              <div className="flex justify-between border-b border-[#333] pb-2">
-                <span className="text-gray-400">Line:</span>
-                <span className="text-white font-bold">{modalRecord.line}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#333] pb-2">
-                <span className="text-gray-400">Gram Setting:</span>
-                <span className="text-white font-bold">{modalRecord.gram}g</span>
-              </div>
-              <div className="flex justify-between border-b border-[#333] pb-2">
-                <span className="text-gray-400">Reported By:</span>
-                <span className="text-white font-bold">{modalRecord.stoppedBy}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#333] pb-2">
-                <span className="text-gray-400">Stopped:</span>
-                <span className="text-white font-bold">{timeAgo(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : new Date())}</span>
-              </div>
-              {modalRecord.startedAt && (
+              <div className="flex flex-col gap-3 text-sm mb-6">
                 <div className="flex justify-between border-b border-[#333] pb-2">
-                  <span className="text-gray-400">Started:</span>
-                  <span className="text-white font-bold">{timeAgo(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : new Date())}</span>
+                  <span className="text-gray-400">Line:</span>
+                  <span className="text-white font-bold">{modalRecord.line}</span>
                 </div>
-              )}
-              {modalRecord.startedBy && (
                 <div className="flex justify-between border-b border-[#333] pb-2">
-                  <span className="text-gray-400">Started By:</span>
-                  <span className="text-white font-bold">{modalRecord.startedBy}</span>
+                  <span className="text-gray-400">Gram Setting:</span>
+                  <span className="text-white font-bold">{modalRecord.gram}g</span>
                 </div>
-              )}
+                <div className="flex justify-between border-b border-[#333] pb-2">
+                  <span className="text-gray-400">Reported By:</span>
+                  <span className="text-white font-bold">{modalRecord.stoppedBy}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#333] pb-2">
+                  <span className="text-gray-400">Stopped:</span>
+                  <span className="text-white font-bold">{timeAgo(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : new Date())}</span>
+                </div>
+                {modalRecord.startedAt && (
+                  <div className="flex justify-between border-b border-[#333] pb-2">
+                    <span className="text-gray-400">Started:</span>
+                    <span className="text-white font-bold">{timeAgo(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : new Date())}</span>
+                  </div>
+                )}
+                {modalRecord.startedBy && (
+                  <div className="flex justify-between border-b border-[#333] pb-2">
+                    <span className="text-gray-400">Started By:</span>
+                    <span className="text-white font-bold">{modalRecord.startedBy}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mb-4">
-              <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Issues</h3>
-              {modalRecord.issues?.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {modalRecord.issues.map(issue => (
-                    <div key={issue.id} className={`flex items-center justify-between p-3 rounded-lg border ${issue.solvedAt ? 'border-status-success/30 bg-status-success/10' : 'border-status-danger/30 bg-status-danger/10'}`}>
-                      <span className={`text-sm font-medium ${issue.solvedAt ? 'text-status-success line-through' : 'text-white'}`}>
-                        {issue.label}
-                      </span>
-                      {issue.solvedAt && (
-                        <span className="text-xs text-status-success font-bold">✓ Solved</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No issues recorded.</p>
-              )}
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-8">
+              <div className="mb-4">
+                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Issues</h3>
+                {modalRecord.issues?.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {modalRecord.issues.map((issue, idx) => (
+                      <div key={`${issue.id}-${idx}`} className={`flex items-center justify-between p-3 rounded-lg border ${issue.solvedAt ? 'border-status-success/30 bg-status-success/10' : 'border-status-danger/30 bg-status-danger/10'}`}>
+                        <span className={`text-sm font-medium ${issue.solvedAt ? 'text-status-success line-through' : 'text-white'}`}>
+                          {issue.label}
+                        </span>
+                        {issue.solvedAt && (
+                          <span className="text-xs text-status-success font-bold">✓ Solved</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No issues recorded.</p>
+                )}
+              </div>
             </div>
 
-            <button onClick={() => setIsModalOpen(false)} className="w-full py-3 bg-primary text-black font-bold rounded-lg hover:bg-status-success transition-transform hover:scale-105">
-              Close
-            </button>
+            <div className="px-8 pb-8 pt-4">
+              <button onClick={() => setIsModalOpen(false)} className="w-full py-3 bg-primary text-black font-bold rounded-lg hover:bg-status-success transition-transform hover:scale-105">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

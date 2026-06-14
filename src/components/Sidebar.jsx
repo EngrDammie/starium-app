@@ -62,7 +62,7 @@ export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
               </button>
 
               {/* Collapsible Children */}
-              <div className={`overflow-hidden transition-all duration-300 ${openCategory === category.title ? 'max-h-96 mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-300 ${openCategory === category.title ? 'max-h-[2000px] mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="flex flex-col gap-1 pl-4 border-l-2 border-[#333] ml-6">
                   {category.children.map((route) => {
                     const isActive = location.pathname === route.path;

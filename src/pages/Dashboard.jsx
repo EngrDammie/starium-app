@@ -126,20 +126,38 @@ export default function Dashboard() {
         )}
 
         {/* Metric 2: Level 9 Tests */}
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out]">
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Level 9 Tests</h3>
-          <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
-          <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
-        </div>
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager'].includes(r)) ? (
+          <Link to="/level9-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Level 9 Tests</h3>
+            <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Level 9 Tests</h3>
+            <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
+          </div>
+        )}
 
         {/* Metric 3: BOT Tests */}
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out]">
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">BOT Tests</h3>
-          <div className="text-5xl font-black text-white mb-1">{botCount}</div>
-          <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
-        </div>
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager'].includes(r)) ? (
+          <Link to="/bot-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">BOT Tests</h3>
+            <div className="text-5xl font-black text-white mb-1">{botCount}</div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">BOT Tests</h3>
+            <div className="text-5xl font-black text-white mb-1">{botCount}</div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
+          </div>
+        )}
 
         {/* Metric 4: Empty Silos */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (

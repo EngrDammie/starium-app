@@ -31,7 +31,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 
 ## ✨ Key Features
 
-- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., active users, tests completed this shift) and quick-action navigation tailored to the user's role. Super admins can click the Live Users card to view a detailed table of all active operators and their current page.
+- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., active users, tests completed this shift) and quick-action navigation tailored to the user's role. Level 9 and BOT test cards are clickable for QC/Production managers, navigating to their respective executive dashboards. Super admins can click the Live Users card to view a detailed table of all active operators and their current page.
 - **📶 Offline-First Engine**: Never lose a test. Tests are queued locally and auto-synced with perfect timestamp preservation.
 - **⚡ Real-Time Executive Dashboards**: Live view of current factory density, visual machine grids, and moving trend charts.
 - **📢 Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens across the factory.
@@ -39,7 +39,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, edit roles, and change density thresholds without touching the code.
 - **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
 - **🛢️ Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts, auto-refill detection when powder density tests are saved, and a dedicated manager report with color-coded machine grid and refill counters.
-- **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine state grid, and dedicated real-time manager report.
+- **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid, and dedicated real-time manager report. Supports appending additional issues to already-stopped machines via "Report More Issues" (which re-stops the machine), with automatic deduplication of already-attached issues — the UI filters out pre-existing issues and warns when typing a duplicate label.
 
 ---
 

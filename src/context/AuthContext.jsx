@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../config/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { setOnlineStatus, setOfflineStatus } from "../services/presenceOperations"; // 🎯 NEW IMPORT
 
@@ -142,16 +142,22 @@ export function AuthProvider({ children }) {
     return () => {
       clearInterval(intervalId);
       window.removeEventListener('beforeunload', handleUnload);
-      setOfflineStatus(uid); // Send the "Goodbye" signal
+      setOfflineStatus(uid).catch(() => {}); // May fail if auth already cleared
     };
-  }, [currentUser]); // This entire block restarts whenever currentUser changes
+  }, [currentUser]);
+
+  const logout = async () => {
+    const uid = currentUser?.uid;
+    if (uid) await setOfflineStatus(uid);
+    await signOut(auth);
+  };
 
   return (
     <AuthContext.Provider value={{ 
       currentUser, 
       systemRole, departmentRoles, actionRoles, 
       firstName, lastName, userFullName, 
-      loading, authEnabled 
+      loading, authEnabled, logout
     }}>
       {!loading && children}
     </AuthContext.Provider>

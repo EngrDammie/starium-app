@@ -1,4 +1,4 @@
-# Starium App - Complete Codebase Reference
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    # Starium App - Complete Codebase Reference
 
 ## Project Identity
 
@@ -161,7 +161,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### AuthContext (`src/context/AuthContext.jsx`)
 
-**State exposed**: `currentUser`, `systemRole`, `departmentRoles`, `actionRoles`, `firstName`, `lastName`, `userFullName`, `loading`, `authEnabled`
+**State exposed**: `currentUser`, `systemRole`, `departmentRoles`, `actionRoles`, `firstName`, `lastName`, `userFullName`, `loading`, `authEnabled`, `logout`
 
 **Initialization flow**:
 1. Subscribes to `config/auth_settings` via `onSnapshot`
@@ -174,7 +174,12 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 1. Calls `setOnlineStatus(uid, email, currentHash)` immediately on login
 2. Sets `setInterval` every 3 minutes to refresh the heartbeat
 3. Listens to `beforeunload` to call `setOfflineStatus(uid)` on tab close
-4. Cleanup on logout: clears interval, removes listener, sends offline signal
+4. Cleanup on logout: clears interval, removes listener, sends offline signal (error silently caught if auth already cleared)
+
+**Logout function** (exposed in context):
+1. Calls `setOfflineStatus(uid)` **first** while still authenticated
+2. Then calls `signOut(auth)` to clear Firebase auth
+3. Prevents "Missing or insufficient permissions" errors that occurred when auth was cleared before the presence write
 
 ### ConfigContext (`src/context/ConfigContext.jsx`)
 
@@ -279,8 +284,9 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`addMachineIssue(label, addedBy)`**: Creates a new reusable issue definition in `machine_issues` collection.
 - **`subscribeToActiveStoppedMachines(callback)`**: Cross-shift query: `where('isActive', '==', true)`. Returns all machines currently in a non-running state (stopped, started-with-issues, issues-cleared).
 - **`reportStoppedMachine(machine, issues, userFullName)`**: Creates a `stopped_machines` document with machine details, stopped-by identity, selected issues, and timestamp.
-- **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Returns `'all-solved'` if the last issue was just cleared.
-- **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state).
+- **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Uses `new Date()` instead of `serverTimestamp()` to avoid Firestore errors inside array mutations. Returns `'all-solved'` if the last issue was just cleared.
+- **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state and disappears from the stopped list).
+- **`appendIssuesToMachine(docId, issues, userFullName)`**: Reads the existing stopped_machines doc, deduplicates by issue ID (skips if already present), appends new issue objects, and resets `startedAt/startedBy` to null (effectively re-stopping the machine so the Start button reappears). Always sets `isActive: true`. This powers the "Report More Issues" flow.
 
 ### presenceOperations (`src/services/presenceOperations.js`)
 
@@ -314,11 +320,10 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 ### Dashboard (`src/pages/Dashboard.jsx`) — "Factory Command Center"
 - Displays 5 metric cards:
    1. **Live Users** — count from `subscribeToActiveUsers` (green pulse indicator); super-admins see this as a clickable `<Link to="/active-users">`
-   2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`
-   3. **BOT Tests** — count from `subscribeToShiftTests('bot')`
+   2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`; clickable `<Link to="/level9-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
+   3. **BOT Tests** — count from `subscribeToShiftTests('bot')`; clickable `<Link to="/bot-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
    4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos">` for QC staff/managers; shows "All Filled" or "⚠️ Needs Attention"
    5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stop-machine">` for QC staff/managers; shows "All Running" or "⚠️ Needs Attention"
-   5. **Stopped Issues** — placeholder (coming soon)
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
@@ -352,10 +357,18 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 | Stopped w/ issues | Darkest red | `background: #8B0000` |
 | Started w/ issues | Cycling dark red ↔ light green | `@keyframes cycleStopped { 0%,100%: #8B0000; 50%: #2E7D32 }` |
 | All issues cleared | Light red | `background: #FF6B6B` |
-- Clicking a machine opens a modal: shows machine details, existing issues with **click-once solve buttons** (confirms via `window.confirm()`), and a START button
-- Reports a new stoppage via a **second modal** with multi-select issue checkboxes + "Add New Issue" text input (new issues are added to the reusable `machine_issues` collection)
+- Clicking a machine opens a modal: shows machine details, existing issues with **click-once solve buttons** (confirms via `window.confirm()`)
+- **Start Machine button** only visible when machine has NOT been started yet (`!currentRecord.startedAt`); hidden for already-running machines
+- **"Report More Issues"** button always visible when a record exists; opens the report modal
+- Reports a new stoppage via a **second modal** with:
+  - Multi-select issue chips from `machineIssues`, filtered to exclude issues already attached to this machine (by `unsolvedLabels` set)
+  - "Add New Issue" text input → typed issue converted to Title Case, stored as `__new__`-prefixed entry in `selectedIssueIds`, rendered as a removable red chip in the issue list
+  - Warning when user types an issue label that's already on the machine ("This issue is already on this machine.")
+  - Fallback text "No existing issues. Add one below." when all pre-existing issues are already attached and no custom chips are added yet
+- Submitting via "Report & Save": `__new__` issues are persisted to `machine_issues` collection first, then all issues are appended via `appendIssuesToMachine()` (or a new `stopped_machines` doc via `reportStoppedMachine()` for first-time reports)
+- Appending issues re-stops the machine (clears `startedAt/startedBy`), making the Start button reappear
 - When the last issue is solved → sparkle animation (✨)
-- START button always available; sets `startedAt`/`startedBy` and deactivates record if no issues remain
+- Scrollable modals: both main and report dialogs use `max-h-[85vh] flex flex-col` with `flex-1 overflow-y-auto` body and fixed footers so buttons are always visible
 - Quick action: "Report Stopped Machine" link in Dashboard for same roles
 
 ### StoppedMachinesReport (`src/pages/StoppedMachinesReport.jsx`) — Real-Time Stopped Status Report
@@ -363,6 +376,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Uses `subscribeToActiveStoppedMachines()` for cross-shift real-time stopped machine data
 - Three summary cards: Stopped count (dark red), Started with Issues (warning), Issues Cleared (white)
 - Machine grid with same 4-color scheme; clicking a non-normal machine opens a modal with full details: reported by, stopped duration (human-readable), started info, issues list with solved/unsolved status
+- Modal uses `max-h-[85vh] flex flex-col` layout with scrollable body and fixed Close button
 - Quick action: "Stopped Machines Report" link in Dashboard for same roles
 
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
@@ -502,7 +516,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 ### Sidebar (`src/components/Sidebar.jsx`)
 - Full-screen backdrop + sliding left panel (w-80)
 - Accordion-style categories (default: Quality Control open)
-- Each category expands to show child links
+- Each category expands to show child links (uses `max-h-[2000px]` for open state to support long lists)
 - Active link highlighted with primary color + glow
 - Pinned "Send Broadcast" button at bottom → opens BroadcastModal
 
@@ -524,6 +538,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### AuthBar (`src/components/AuthBar.jsx`)
 - Fixed top-right: user email + Logout button
+- Uses `logout()` from AuthContext (which sets offline status first, then signs out) instead of calling `auth.signOut()` directly
 - Hidden on print
 
 ### SyncBadge (`src/components/SyncBadge.jsx`)
@@ -666,17 +681,17 @@ Doc ID: auto-generated via `addDoc`
   gram: number,
   stoppedBy: string,
   stoppedAt: Timestamp,
-  startedAt: Timestamp | null,
-  startedBy: string | null,
+  startedAt: Timestamp | null,     // reset to null when issues are appended
+  startedBy: string | null,        // reset to null when issues are appended
   issues: [
     {
-      id: string,           // references machine_issues doc ID
+      id: string,           // references machine_issues doc ID (unique per issue)
       label: string,        // denormalized for display
       solvedAt: Timestamp | null,
       solvedBy: string | null
     }
   ],
-  isActive: boolean,        // false when started with no issues (fully resolved)
+  isActive: boolean,        // false when started with no issues (fully resolved); true otherwise
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -784,10 +799,22 @@ User names are stored lowercase in Firestore, converted to Title Case on read. `
 - Old `approvalRoles` field maps to new `actionRoles`
 - `localCreatedAt` fallback when `createdAt` is missing (offline tests)
 
+### Scrollable Modal Pattern
+Both StopMachine and StoppedMachinesReport modals use `max-h-[85vh] flex flex-col` with `p-8 pb-0` header, `flex-1 overflow-y-auto custom-scrollbar` body, and `px-8 pb-8 pt-4` footer. This keeps buttons always visible regardless of content length.
+
 ### Print Support
 - Reports page switches to white background for print
 - `@media print` rules: landscape, margins, color-adjust exact
 - All chrome elements (sidebar, auth bar, badges, alerts, footer) hidden with `print:hidden`
+
+### Duplicate Prevention (Stopped Machines)
+- `availableIssues` filters `machineIssues` to exclude issues whose labels match any unsolved issue already on the current machine
+- `appendIssuesToMachine` deduplicates by issue ID before writing to Firestore
+- +Add button disabled when typed text matches an existing unresolved issue label
+- Composite React keys (`${issue.id}-${idx}`) used in issue list maps to handle data-level duplicates gracefully
+
+### Safe Logout Flow
+The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** `signOut(auth)`, ensuring the presence heartbeat gets its goodbye signal while the auth token is still valid. The cleanup effect's `setOfflineStatus` call is wrapped with `.catch(() => {})` since by that point the token may already be cleared.
 
 ---
 
