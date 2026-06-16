@@ -29,12 +29,21 @@ function timeAgo(date) {
   return `${days}d ${hrs % 24}h ago`;
 }
 
+function formatFullDateTime(date) {
+  if (!date) return 'Unknown';
+  return date.toLocaleString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+  });
+}
+
 export default function StoppedMachinesReport() {
   const { config, loadingConfig } = useConfig();
   const { systemRole, departmentRoles } = useAuth();
   const [records, setRecords] = useState([]);
   const [modalRecord, setModalRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedDateField, setExpandedDateField] = useState(null);
 
   const canView = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager', 'packaging_manager'].includes(r));
 
@@ -55,6 +64,7 @@ export default function StoppedMachinesReport() {
     if (status.type !== 'normal') {
       setModalRecord(status.record);
       setIsModalOpen(true);
+      setExpandedDateField(null);
     }
   };
 
@@ -188,12 +198,30 @@ export default function StoppedMachinesReport() {
                 </div>
                 <div className="flex justify-between border-b border-[#333] pb-2">
                   <span className="text-gray-400">Stopped:</span>
-                  <span className="text-white font-bold">{timeAgo(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : new Date())}</span>
+                  <span
+                    className="text-white font-bold cursor-pointer select-none"
+                    onClick={() => setExpandedDateField(expandedDateField === 'stopped' ? null : 'stopped')}
+                    title={expandedDateField !== 'stopped' ? formatFullDateTime(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : null) : ''}
+                  >
+                    {expandedDateField === 'stopped'
+                      ? formatFullDateTime(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : null)
+                      : timeAgo(modalRecord.stoppedAt?.toDate ? modalRecord.stoppedAt.toDate() : null)
+                    }
+                  </span>
                 </div>
                 {modalRecord.startedAt && (
                   <div className="flex justify-between border-b border-[#333] pb-2">
                     <span className="text-gray-400">Started:</span>
-                    <span className="text-white font-bold">{timeAgo(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : new Date())}</span>
+                    <span
+                      className="text-white font-bold cursor-pointer select-none"
+                      onClick={() => setExpandedDateField(expandedDateField === 'started' ? null : 'started')}
+                      title={expandedDateField !== 'started' ? formatFullDateTime(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : null) : ''}
+                    >
+                      {expandedDateField === 'started'
+                        ? formatFullDateTime(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : null)
+                        : timeAgo(modalRecord.startedAt?.toDate ? modalRecord.startedAt.toDate() : null)
+                      }
+                    </span>
                   </div>
                 )}
                 {modalRecord.startedBy && (

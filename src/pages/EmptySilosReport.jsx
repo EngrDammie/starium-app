@@ -17,6 +17,14 @@ function timeAgo(date) {
   return `${days}d ${hrs % 24}h ago`;
 }
 
+function formatFullDateTime(date) {
+  if (!date) return 'Unknown';
+  return date.toLocaleString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+  });
+}
+
 export default function EmptySilosReport() {
   const { config, loadingConfig } = useConfig();
   const { systemRole, departmentRoles } = useAuth();
@@ -26,6 +34,7 @@ export default function EmptySilosReport() {
   const [currentShift, setCurrentShift] = useState('--');
   const [modalRecord, setModalRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showFullEmptyDate, setShowFullEmptyDate] = useState(false);
 
   const canView = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager', 'packaging_manager'].includes(r));
 
@@ -68,6 +77,7 @@ export default function EmptySilosReport() {
     if (empty) {
       setModalRecord(empty);
       setIsModalOpen(true);
+      setShowFullEmptyDate(false);
     }
   };
 
@@ -175,9 +185,18 @@ export default function EmptySilosReport() {
               </div>
               <div className="flex justify-between border-b border-[#333] pb-2">
                 <span className="text-gray-400">Empty Duration:</span>
-                <span className="text-status-warning font-bold">{timeAgo(modalRecord.markedEmptyAt?.toDate ? modalRecord.markedEmptyAt.toDate() : new Date())}</span>
+                <span
+                  className="text-status-warning font-bold cursor-pointer select-none"
+                  onClick={() => setShowFullEmptyDate(v => !v)}
+                  title={!showFullEmptyDate ? formatFullDateTime(modalRecord.markedEmptyAt?.toDate ? modalRecord.markedEmptyAt.toDate() : null) : ''}
+                >
+                  {showFullEmptyDate
+                    ? formatFullDateTime(modalRecord.markedEmptyAt?.toDate ? modalRecord.markedEmptyAt.toDate() : null)
+                    : timeAgo(modalRecord.markedEmptyAt?.toDate ? modalRecord.markedEmptyAt.toDate() : null)
+                  }
+                </span>
               </div>
-              <div className="flex justify-between border-b border-[#sss] pb-2">
+              <div className="flex justify-between border-b border-[#333] pb-2">
                 <span className="text-gray-400">Buggy Number:</span>
                 <span className="text-white font-bold">{modalRecord.buggyNumber || 'Not yet refilled'}</span>
               </div>
