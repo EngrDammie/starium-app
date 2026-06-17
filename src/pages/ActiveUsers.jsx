@@ -16,6 +16,7 @@ const PAGE_LABELS = {
   '#/user-management': 'User Roles',
   '#/reports': 'QC Reports',
   '#/active-users': 'Active Users',
+  '#/downtime-log': 'Machine Downtime Log',
 };
 
 function formatPage(path) {

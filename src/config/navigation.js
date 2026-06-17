@@ -37,7 +37,7 @@ export const MENU_CONFIG = [
     icon: '⚙️',
     children: [
       { path: '/laminate-waste', label: 'Laminate Waste', icon: '🗑️', allowedRoles: ['prod_staff', 'prod_manager', 'qc_manager'] },
-      { path: '/downtime-log', label: 'Downtime Logs', icon: '⏱️', allowedRoles: ['prod_manager'] }
+      { path: '/downtime-log', label: 'Machine Downtime Log', icon: '⏱️', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] }
     ]
   },
   {

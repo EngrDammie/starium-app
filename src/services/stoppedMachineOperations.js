@@ -53,6 +53,7 @@ export async function reportStoppedMachine(machine, issues, userFullName) {
       issues: issues.map(issue => ({
         id: issue.id,
         label: issue.label,
+        createdAt: new Date(),
         solvedAt: null,
         solvedBy: null,
       })),
@@ -128,6 +129,7 @@ export async function appendIssuesToMachine(docId, issues, userFullName) {
       .map(issue => ({
         id: issue.id,
         label: issue.label,
+        createdAt: new Date(),
         solvedAt: null,
         solvedBy: null,
       }));

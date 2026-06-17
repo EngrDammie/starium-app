@@ -17,6 +17,7 @@ import EmptySilos from './pages/EmptySilos';
 import EmptySilosReport from './pages/EmptySilosReport';
 import StopMachine from './pages/StopMachine';
 import StoppedMachinesReport from './pages/StoppedMachinesReport';
+import MachineDowntimeLog from './pages/MachineDowntimeLog';
 import Reports from './pages/Reports';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
       <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
       <Route path="/stop-machine" element={<ProtectedRoute><StopMachine /></ProtectedRoute>} />
       <Route path="/stopped-machines-report" element={<ProtectedRoute><StoppedMachinesReport /></ProtectedRoute>} />
+      <Route path="/downtime-log" element={<ProtectedRoute><MachineDowntimeLog /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );
