@@ -276,35 +276,44 @@ export default function Reports() {
               <div className="text-center text-gray-500 py-10 font-medium">No tests found for this shift.</div>
             ) : (
               <table className="w-full text-left border-collapse text-sm text-black min-w-[800px] print:min-w-full print:text-xs">
-                <thead>
-                  <tr className="bg-gray-800 text-white print:bg-gray-100 print:text-black print:border-b-2 print:border-black">
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">Time</th>
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">Weight</th>
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">Density</th>
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">Status</th>
-                    {mode === 'level9' && <th className="p-3 border border-gray-400 print:!border-gray-300">Buggy</th>}
-                    {mode === 'level9' && <th className="p-3 border border-gray-400 print:!border-gray-300">Machines</th>}
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">Appr.</th>
-                    <th className="p-3 border border-gray-400 print:!border-gray-300">{mode === 'level9' ? 'Frag.' : 'Flow'}</th>
-                    <th className="p-3 border border-gray-400 print:!border-gray-300 w-1/3">Remarks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.tests.map((t, index) => (
-                    <tr key={t.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300 whitespace-nowrap">{formatTime(t.createdAt || t.localCreatedAt)}</td>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300">{t.weight}g</td>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300 font-bold">{parseFloat(t.density).toFixed(3)}</td>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300">{getStatusBadge(getDensityStatus(parseFloat(t.density)))}</td>
-                      {mode === 'level9' && <td className="p-3 border border-gray-300 print:!border-gray-300">{t.buggyNumber || '--'}</td>}
-                      {mode === 'level9' && <td className="p-3 border border-gray-300 print:!border-gray-300 font-bold">{t.machines ? t.machines.join(', ') : '--'}</td>}
-                      <td className="p-3 border border-gray-300 print:!border-gray-300">{t.appearance === 'U' ? 'U' : 'A'}</td>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300">{mode === 'level9' ? (t.fragrance === 'U' ? 'U' : 'A') : ((t.flowProperty === 'U' || t.flowProperty === 'NFF') ? 'U' : 'A')}</td>
-                      <td className="p-3 border border-gray-300 print:!border-gray-300 text-xs whitespace-pre-wrap break-words">{t.remarks || '--'}</td>
+                  <thead>
+                    <tr className="bg-gray-800 text-white print:bg-gray-100 print:text-black print:border-b-2 print:border-black">
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">Time</th>
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">Weight</th>
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">Density</th>
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">Status</th>
+                      {mode === 'level9' && <th className="p-3 border border-gray-400 print:!border-gray-300">Buggy</th>}
+                      {mode === 'level9' && <th className="p-3 border border-gray-400 print:!border-gray-300">Machines</th>}
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">Appr.</th>
+                      <th className="p-3 border border-gray-400 print:!border-gray-300">{mode === 'level9' ? 'Frag.' : 'Flow'}</th>
+                      <th className="p-3 border border-gray-400 print:!border-gray-300 w-1/3">Remarks</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const sortedByDensity = [...reportData.tests].sort((a, b) => parseFloat(b.density) - parseFloat(a.density));
+                      const top5Ids = new Set(sortedByDensity.slice(0, 5).map(t => t.id));
+                      return reportData.tests.map((t, index) => {
+                        const isTop5 = top5Ids.has(t.id);
+                        return (
+                          <tr key={t.id} className={`${isTop5 ? 'bg-amber-50 print:!bg-amber-50' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="p-3 border border-gray-300 print:!border-gray-300 whitespace-nowrap">{formatTime(t.createdAt || t.localCreatedAt)}</td>
+                            <td className="p-3 border border-gray-300 print:!border-gray-300">{t.weight}g</td>
+                            <td className={`p-3 border border-gray-300 print:!border-gray-300 font-bold ${isTop5 ? 'text-amber-800' : ''}`}>
+                              {isTop5 ? '⭐ ' : ''}{parseFloat(t.density).toFixed(3)}
+                            </td>
+                            <td className="p-3 border border-gray-300 print:!border-gray-300">{getStatusBadge(getDensityStatus(parseFloat(t.density)))}</td>
+                            {mode === 'level9' && <td className="p-3 border border-gray-300 print:!border-gray-300">{t.buggyNumber || '--'}</td>}
+                            {mode === 'level9' && <td className="p-3 border border-gray-300 print:!border-gray-300 font-bold">{t.machines ? t.machines.join(', ') : '--'}</td>}
+                            <td className="p-3 border border-gray-300 print:!border-gray-300">{t.appearance === 'U' ? 'U' : 'A'}</td>
+                            <td className="p-3 border border-gray-300 print:!border-gray-300">{mode === 'level9' ? (t.fragrance === 'U' ? 'U' : 'A') : ((t.flowProperty === 'U' || t.flowProperty === 'NFF') ? 'U' : 'A')}</td>
+                            <td className="p-3 border border-gray-300 print:!border-gray-300 text-xs whitespace-pre-wrap break-words">{t.remarks || '--'}</td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
             )}
           </div>
 
