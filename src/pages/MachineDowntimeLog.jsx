@@ -144,6 +144,29 @@ function groupEventsByMachine(events) {
   return map;
 }
 
+function computeMachineDowntime(events) {
+  let total = 0;
+  let inDowntime = false;
+  let downtimeStart = null;
+  for (const e of events) {
+    if (e.type === 'STOPPED') {
+      inDowntime = true;
+      downtimeStart = e.time;
+    } else if (e.type === 'ISSUE_APPENDED' && !inDowntime) {
+      inDowntime = true;
+      downtimeStart = e.time;
+    } else if (e.type === 'STARTED' && inDowntime && downtimeStart) {
+      total += e.time - downtimeStart;
+      inDowntime = false;
+      downtimeStart = null;
+    }
+  }
+  if (inDowntime && downtimeStart) {
+    total += Date.now() - downtimeStart;
+  }
+  return total;
+}
+
 function formatStoppedIssues(issues) {
   if (!issues || issues.length === 0) return 'No issues reported';
   return issues.map(i => i.label).join(', ');
@@ -178,21 +201,21 @@ export default function MachineDowntimeLog() {
 
   const machinesAffected = Object.keys(grouped).length;
 
-  const totalDowntime = useMemo(() => {
-    let total = 0;
+  const longestDowntime = useMemo(() => {
+    let longest = 0;
     for (const machineKey in grouped) {
-      const machineEvents = grouped[machineKey];
-      let stopTime = null;
-      for (const e of machineEvents) {
-        if (e.type === 'STOPPED') stopTime = e.time;
-        else if (e.type === 'STARTED' && stopTime) {
-          total += e.time - stopTime;
-          stopTime = null;
-        }
-      }
-      if (stopTime) total += Date.now() - stopTime;
+      const dt = computeMachineDowntime(grouped[machineKey]);
+      if (dt > longest) longest = dt;
     }
-    return total;
+    return longest;
+  }, [grouped]);
+
+  const machineDowntimes = useMemo(() => {
+    const map = {};
+    for (const machineKey in grouped) {
+      map[machineKey] = computeMachineDowntime(grouped[machineKey]);
+    }
+    return map;
   }, [grouped]);
 
   const handleGenerate = async () => {
@@ -293,8 +316,8 @@ export default function MachineDowntimeLog() {
             <div className="text-3xl font-black text-white">{machinesAffected}</div>
           </div>
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Downtime</h3>
-            <div className="text-3xl font-black text-white">{formatDelta(totalDowntime)}</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Longest Downtime</h3>
+            <div className="text-3xl font-black text-white">{formatDelta(longestDowntime)}</div>
           </div>
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Records</h3>
@@ -332,6 +355,8 @@ export default function MachineDowntimeLog() {
                       </p>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <span className="text-primary font-bold">⏱️ {formatDelta(machineDowntimes[machineKey] || 0)}</span>
+                      <span className="text-gray-600">|</span>
                       <span>{machineEvents.length} event{machineEvents.length !== 1 ? 's' : ''}</span>
                       <span className="text-gray-600">|</span>
                       <span>{formatShortDate(first.time)}</span>
