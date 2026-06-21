@@ -7,6 +7,7 @@ import { subscribeToShiftTests } from '../services/qcOperations';
 import { subscribeToActiveUsers } from '../services/presenceOperations';
 import { subscribeToActiveEmptySilos } from '../services/emptySiloOperations';
 import { subscribeToActiveStoppedMachines } from '../services/stoppedMachineOperations';
+import { subscribeToShiftCartonRecords } from '../services/cartonOperations';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [emptySilosCount, setEmptySilosCount] = useState(0);
   const [stoppedCount, setStoppedCount] = useState(0);
+  const [cartonWaste, setCartonWaste] = useState({ wasted: 0, wastePercent: 0 });
   const [currentShift, setCurrentShift] = useState('--');
 
   useEffect(() => {
@@ -49,12 +51,23 @@ export default function Dashboard() {
       setStoppedCount(records.filter(r => !r.startedAt).length);
     });
 
+    const unsubCarton = subscribeToShiftCartonRecords(config, (records) => {
+      const totalWasted = records.reduce((sum, r) => sum + (r.wasted || 0), 0);
+      const totalUsed = records.reduce((sum, r) => sum + (r.used || 0), 0);
+      const totalProcessed = totalUsed + totalWasted;
+      setCartonWaste({
+        wasted: totalWasted,
+        wastePercent: totalProcessed > 0 ? Math.round((totalWasted / totalProcessed) * 10000) / 100 : 0
+      });
+    });
+
     return () => {
       unsubLevel9();
       unsubBot();
       unsubPresence();
       unsubEmpty();
       unsubStopped();
+      unsubCarton();
     };
   }, [config, loadingConfig]);
 
@@ -100,7 +113,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         
         {/* Metric 1: Live Users */}
         {systemRole === 'super_admin' ? (
@@ -161,7 +174,7 @@ export default function Dashboard() {
 
         {/* Metric 4: Empty Silos */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (
-          <Link to="/empty-silos" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.8s_ease-out] block cursor-pointer">
+          <Link to="/empty-silos-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.8s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛢️</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${emptySilosCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
@@ -184,7 +197,7 @@ export default function Dashboard() {
 
         {/* Metric 5: Stopped Machines */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (
-          <Link to="/stop-machine" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out] block cursor-pointer">
+          <Link to="/stopped-machines-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛑</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${stoppedCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
@@ -202,6 +215,30 @@ export default function Dashboard() {
             </h3>
             <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
             <div className={`text-xs font-bold uppercase tracking-wider ${stoppedCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{stoppedCount > 0 ? '⚠️ Needs Attention' : 'All Running'}</div>
+          </div>
+        )}
+
+
+        {/* Metric 6: Carton Waste */}
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'qc_manager', 'packaging_manager'].includes(r)) ? (
+          <Link to="/carton-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Carton Waste</h3>
+            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
+            <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
+              Waste {cartonWaste.wastePercent}%
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Carton Waste</h3>
+            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
+            <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
+              Waste {cartonWaste.wastePercent}%
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
           </div>
         )}
 
@@ -240,6 +277,16 @@ export default function Dashboard() {
                 </div>
               </Link>
             )}
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['prod_staff', 'prod_manager', 'qc_manager'].includes(r))) && (
+              <Link to="/carton-waste" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">📦</div>
+                <div>
+                  <div className="text-white font-bold text-lg">Carton Waste Tracking</div>
+                  <div className="text-gray-400 text-sm">Enter carton waste data per machine</div>
+                </div>
+              </Link>
+            )}
           </>
         )}
 
@@ -253,10 +300,10 @@ export default function Dashboard() {
               </div>
             </Link>
 
-            <Link to="/reports" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+            <Link to="/qc-density-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
               <div className="text-3xl group-hover:scale-110 transition-transform">📊</div>
               <div>
-                <div className="text-white font-bold text-lg">QC Reports</div>
+                <div className="text-white font-bold text-lg">QC Density Report</div>
                 <div className="text-gray-400 text-sm">Generate & export PDF/CSV</div>
               </div>
             </Link>
@@ -278,6 +325,14 @@ export default function Dashboard() {
               <div>
                 <div className="text-white font-bold text-lg">Stopped Machines Report</div>
                 <div className="text-gray-400 text-sm">Real-time machine issues overview</div>
+              </div>
+            </Link>
+
+            <Link to="/carton-waste-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+              <div className="text-3xl group-hover:scale-110 transition-transform">📊</div>
+              <div>
+                <div className="text-white font-bold text-lg">Carton Waste Report</div>
+                <div className="text-gray-400 text-sm">Waste analysis & cross-shift comparison</div>
               </div>
             </Link>
           </>

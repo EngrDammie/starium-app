@@ -6,15 +6,22 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const PAGE_LABELS = {
+  '': 'Command Center',
   '#/': 'Command Center',
   '#/login': 'Login',
   '#/change-password': 'Change Password',
   '#/powder-density': 'Powder Density Tests',
   '#/level9-exec': 'Level 9 Dashboard',
   '#/bot-exec': 'BOT Dashboard',
+  '#/empty-silos': 'Report Empty Silos',
+  '#/empty-silos-report': 'Empty Silos Report',
+  '#/stop-machine': 'Report Stopped Machine',
+  '#/stopped-machines-report': 'Stopped Machines Report',
+  '#/carton-waste': 'Carton Waste Tracking',
+  '#/carton-waste-report': 'Carton Waste Report',
   '#/system-config': 'System Config',
   '#/user-management': 'User Roles',
-  '#/reports': 'QC Reports',
+  '#/qc-density-report': 'QC Density Report',
   '#/active-users': 'Active Users',
   '#/downtime-log': 'Machine Downtime Log',
 };

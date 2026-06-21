@@ -163,7 +163,7 @@ export default function Reports() {
   if (loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading Reports...</div></Layout>;
 
   return (
-    <Layout title="📊 Reports" subtitle="Generate and export QC test reports" maxWidth="max-w-7xl">
+    <Layout title="📊 QC Density Report" subtitle="Generate and export QC test reports" maxWidth="max-w-7xl">
       
       <style>
         {`

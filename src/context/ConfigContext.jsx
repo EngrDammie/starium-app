@@ -27,6 +27,13 @@ const DEFAULT_CONFIG = {
     "125": { min: 0.200, max: 0.270, piecesPerCarton: 31 },
     "850": { min: 0.200, max: 0.270, piecesPerCarton: 7 }
   },
+  // 🎯 Carton Waste Tracking Config
+  cartonWaste: {
+    targetWastePercent: 5,
+    wasteAlertThreshold: 10,
+    teams: ['A', 'B', 'C'],
+    defaultTeam: 'A'
+  },
   // 🎯 NEW: Dynamic roles lists pushed to database
   departmentRoles: [
     { id: 'qc_staff', label: 'QC Staff', category: 'Quality Control' },
@@ -57,6 +64,7 @@ export function ConfigProvider({ children }) {
         setConfig({ 
           ...DEFAULT_CONFIG, 
           ...data,
+          cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}) },
           machines: data.machines || DEFAULT_CONFIG.machines,
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
           gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,

@@ -2,7 +2,7 @@
 
 Welcome to the **Starium Rafa ERP**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time. 
 
-Initially built for Powder Density tracking, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
+Built for Powder Density tracking and Carton Waste management, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
 
 ---
 
@@ -10,7 +10,7 @@ Initially built for Powder Density tracking, the platform is structured to scale
 1. [About the Project](#-about-the-project)
 2. [Key Features](#-key-features)
 3. [Enterprise Security (The Keycard System)](#-enterprise-security-the-keycard-system)
-4. [Factory Modes](#-the-two-factory-modes)
+4. [Factory Modules](#-the-factory-modules)
 5. [Tech Stack](#-tech-stack)
 6. [For Developers: System Architecture](#-for-developers-system-architecture)
 7. [Local Setup & Installation](#-local-setup--installation)
@@ -23,7 +23,7 @@ Initially built for Powder Density tracking, the platform is structured to scale
 
 Factory floors often suffer from spotty internet connections. Standard web apps break when the Wi-Fi drops, causing lost data and frustrated workers. 
 
-This application solves that problem. It is built as an **Offline-First Application**. QC Staff can continuously enter density test results even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
+This application solves that problem. It is built as an **Offline-First Application**. QC and Production staff can continuously enter density test results and carton waste data even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
 
 When users log in, they land on the **Command Center**, providing a high-level overview of active shifts and tests. Meanwhile, Factory Managers can watch data stream into their executive dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
 
@@ -40,6 +40,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
 - **🛢️ Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts, auto-refill detection when powder density tests are saved, and a dedicated manager report with color-coded machine grid and refill counters.
 - **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid, and dedicated real-time manager report. Supports appending additional issues to already-stopped machines via "Report More Issues" (which re-stops the machine), with automatic deduplication of already-attached issues — the UI filters out pre-existing issues and warns when typing a duplicate label.
+- **📦 Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining ≤ available, wasted ≤ available, used + wasted ≤ allocated), running totals, and "Save & Next Machine" flow. Includes a full report page with waste percentage by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison, shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts are broadcast to the command centre and carton waste pages in real-time. Full offline-queue support via dedicated localStorage key.
 
 ---
 
@@ -63,9 +64,9 @@ A user's profile consists of three security layers:
 
 ---
 
-## 🏭 The Two Factory Modes (Powder Density)
+## 🏭 The Factory Modules
 
-The data entry module adapts its UI and math based on what part of the factory is being tested:
+The application has three core data entry and monitoring modules:
 
 1. **Level 9 Silos**: 
    - Divides weight by `1580`.
@@ -75,6 +76,12 @@ The data entry module adapts its UI and math based on what part of the factory i
    - Divides weight by `1680`.
    - Focuses strictly on base powder metrics.
    - Tracks Appearance and Flow Property (Free Flowing).
+3. **Carton Waste**:
+   - Per-machine tracking of allocated, remaining, used, and wasted cartons.
+   - Each independently tracks its own check rounds (no global round counter).
+   - Machine grid with 3 statuses: unchecked (gray), checked (green), high-waste (red — waste% > target).
+   - "Save & Next Machine" advances numerically, closes on last machine.
+   - Report page with waste% charts, cross-shift comparison, CSV export.
 
 ---
 
@@ -106,11 +113,18 @@ Tracks who is online in real-time across the factory:
 - **`setOfflineStatus()`**: Called on logout or tab close to mark the user offline.
 - **`subscribeToActiveUsers()`**: Returns a live stream of online users (with a 5-minute stale-entry safety net). Used by the Dashboard for the Live Users counter and by the Active Users page for the full table.
 
-### 4. The Engine Room (`src/services/qcOperations.js`)
-All Firestore heavy lifting happens here. It handles:
+### 4. The Engine Room (`src/services/qcOperations.js` and `src/services/cartonOperations.js`)
+
+**`qcOperations.js`** handles all Powder Density Firestore operations:
 - Midnight boundary math for Night Shifts (e.g., tests submitted at 2 AM belong to yesterday's shift document).
 - Fetching and sorting tests from oldest to newest.
 - Processing the offline sync queue safely.
+
+**`cartonOperations.js`** handles all Carton Waste operations:
+- `subscribeToShiftCartonRecords()` — real-time subscription to `carton_records` for the current shift.
+- `saveCartonRecord()` — online/offline-aware save with 4 validation rules (remaining ≤ maxAvailable, wasted ≤ maxAvailable, used ≥ 0, used + wasted ≤ maxAvailable).
+- `queueCartonOffline()` — dedicated localStorage queue under `starium_carton_offline_queue`.
+- `syncCartonOfflineQueue()` — bulk write-batch sync of queued records on reconnect.
 
 ---
 
@@ -163,7 +177,8 @@ We use **GitHub Actions** to automate this.
 
 ## 🔮 Future Roadmap
 
-- [ ] **Laminate Waste System**: A new module to track packaging film waste per machine to improve efficiency.
+- [ ] **Laminate Waste System**: Track packaging film waste per machine (planned — follows carton waste pattern).
+- ✅ **Carton Waste System**: Live per-machine carton waste tracking with offline support, reports, and broadcasts.
 - [ ] **Audit Trail**: A background logging system to record exactly *who* modified a setting, deleted a user, or overrode a machine, providing full factory accountability.
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices for roaming QC staff.
 

@@ -575,33 +575,31 @@ Location: `src/pages/CartonWaste.jsx`
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  ← Carton Waste Tracking           Team: [A ▼]            │
-│  Shift: DAY · 2026-06-18 · Round 3 of ~5                 │
-│  Last checked: Machine M3 (14:30)                         │
+│  Shift: DAY · Saturday, 18 Jun 2026                       │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
-│  │ M1 ✅    │ │ M2 ✅    │ │ M3 ✅    │ │ M4 ⏳    │    │
+│  │ M1       │ │ M2       │ │ M3       │ │ M4       │    │
 │  │ Alloc:500│ │ Alloc:450│ │ Alloc:350│ │ —       │    │
 │  │ Waste:2.1%│ │ Waste:3.5%│ │ Waste:1.8%│ │         │    │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘    │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐                 │
-│  │ M5 ⏳    │ │ M6 ⏳    │ │ M7 ❌    │                 │
-│  │ —       │ │ —       │ │ Error   │                 │
+│  │ M5       │ │ M6       │ │ M7       │                 │
+│  │ —       │ │ —       │ │ —       │                 │
 │  └──────────┘ └──────────┘ └──────────┘                 │
 │                                                            │
-│  [Start New Round]  [View Report →]                       │
+│  [View Report →]                                           │
 └────────────────────────────────────────────────────────────┘
 ```
 
 #### Key State Variables
 
 ```javascript
-const [records, setRecords] = useState([]);       // all checks in current shift
+const [records, setRecords] = useState([]);       // all checks in current shift (real-time)
 const [selectedMachine, setSelectedMachine] = useState(null);
 const [isModalOpen, setIsModalOpen] = useState(false);
-const [currentRound, setCurrentRound] = useState(1);
-const [team, setTeam] = useState('');
-const [checkedMachines, setCheckedMachines] = useState({}); // { [machineId]: roundNumber }
+const [previousCheck, setPreviousCheck] = useState(null); // latest check for current machine
+const [team, setTeam] = useState('');             // persisted to localStorage
 ```
 
 ### 5.2 Machine Grid
@@ -609,19 +607,17 @@ const [checkedMachines, setCheckedMachines] = useState({}); // { [machineId]: ro
 Uses the exact same `MachineGrid` component but with carton-specific coloring:
 
 | Color | Meaning |
-|---|---|
-| 🟢 Green border | Checked in the current round |
-| ⚪ Gray | Not yet checked this round |
-| 🟡 Yellow | Currently being checked (modal open) |
-| 🔴 Red | Running waste percent > threshold (configurable, default 10%) |
+|---|---|---|
+| 🟢 Green | Checked at least once this shift |
+| ⚪ Gray | Not yet checked this shift |
+| 🔴 Red | Running waste percent > target (configurable via `targetWastePercent`, default 5%) |
 
 The grid renders machines from `config.machines` grouped by `config.productionLines`, sorted right-to-left (3B → 1A), same as the existing `MachineGrid` component.
 
 Key difference: Instead of a density value driving the color, each machine cell displays:
 - Machine label (M1, M2...)
-- Check status icon (✅ / ⏳ / ❌)
-- Running allocated count (for quick reference)
-- Running waste % (for quick reference)
+- Running allocated count (if checked at least once)
+- Running waste % (if checked at least once)
 
 ### 5.3 Check Modal
 
@@ -631,11 +627,11 @@ Opens when a machine cell is clicked.
 ┌─────────────────────────────────────────────────────┐
 │  Machine M5 — Line 2A (85g)                    [✕]  │
 │                                                      │
-│  Previous Check (Round 2 · 12:30 by John Doe):      │
+│  Previous Check (Round 2 by John Doe):           │  ← "Round 2" in cyan bold
 │    Allocated: 150  |  Remaining: 200  |  Wasted: 8  │
 │    Used: 70  |  Waste %: 10.3%                      │
 │                                                      │
-│  ─── New Check — Round 3 ───                       │
+│  New Check — Round 3                              │  ← "Round 3" in amber bold
 │                                                      │
 │  Cartons Allocated (new since last check):           │
 │  [___________________120__________________]          │
@@ -662,7 +658,7 @@ Opens when a machine cell is clicked.
 
 #### Modal Behaviors
 
-- **"Save & Next Machine"**: Saves current check and opens the next unchecked machine (sorted by displayNumber). This enables rapid data entry — staff tap through machines one by one.
+- **"Save & Next Machine"**: Saves the current check and opens the **next machine in numerically sorted order** (e.g., M12 → M13 → M17 → M18 → M19), regardless of round or check status. This enables rapid data entry — staff tap through machines one by one. **Closes when the last machine is reached**, signaling the user to start a new cycle.
 - **"Save & Close"**: Saves and closes modal, returning to machine grid.
 - **"Cancel"**: Discards input, closes modal.
 - **Validation feedback**: If any validation rule fails, the relevant field gets a red border + error message below it.
@@ -675,31 +671,21 @@ Opens when a machine cell is clicked.
 - `wasted`: integer ≥ 0, ≤ previousRemaining + allocated
 - All fields auto-focus on open (first field), Tab advances to next
 
-### 5.4 Round Management
+### 5.4 Round Management (Per-Machine, Implicit)
 
-**How does a "round" start?**
+Rounds are **per-machine** — there is no global round counter. Each machine independently tracks how many times it has been checked this shift.
 
-Option A (Recommended): **Implicit round detection**
+- **Round number** = count of existing records for that machine in this shift + 1
+- Machine A can be on Round 5 while Machine B is on Round 2 — no coordination needed
 
-There's no "start round" button. When a staff member checks a machine, the system:
-1. Finds the most recent check for this machine in this shift
-2. If that check's `roundNumber` is, say, 2, then this new check is round 3
+When a staff member opens a machine's check modal:
+1. The system fetches the most recent check for this machine in this shift (`getPreviousCheck`)
+2. If that check has `roundNumber: 2`, this new check will be `roundNumber: 3`
+3. The dialog shows **`Previous Check (Round 2)`** in cyan and **`New Check — Round 3`** in amber
 
-The "round number" is per-machine, not global. This means:
-- Staff A checks M1 → round 1
-- Staff A checks M2 → round 1
-- Staff B checks M3 → round 1
-- Staff A checks M1 again → round 2
+Since rounds are per-machine, "Save & Next Machine" simply advances to the next machine in numeric order — it doesn't care about rounds at all.
 
-The UI prominently shows the round number for the currently selected machine. This avoids any need for coordination between staff.
-
-**Note**: This means "Round 1" across different machines represents the first check of each machine, and they may happen at slightly different times. The `checkedAt` timestamp provides the exact ordering.
-
-Option B: **Explicit rounds with a "Start Round" button**
-
-If management wants all machines checked in a coordinated wave, a designated person clicks "Start Round N", which takes a snapshot of current status and records the round's start time. Staff then check all machines before the next round can start.
-
-**Recommendation**: Start with Option A (implicit). It's simpler, more robust, and doesn't block data entry on coordination. Add Option B later if needed.
+**Rationale**: This avoids all coordination problems. Staff A can check M1, M2, M3 (all Round 1), then check M1 again (Round 2) before ever touching M4. Staff B can independently check their own machines. The `checkedAt` timestamp provides exact ordering across machines.
 
 ### 5.5 Real-Time Updates
 
@@ -707,9 +693,9 @@ If management wants all machines checked in a coordinated wave, a designated per
 - When another staff member checks a machine on another device, the grid updates instantly
 - The running waste % per machine updates live
 
-### 5.6 Pending Checks Indicator
+### 5.6 Unchecked Machines Indicator
 
-A small badge on the page header shows number of machines not yet checked in the current round. As checks are saved, this count decrements. This gives staff immediate feedback on their progress.
+A small badge on the page header shows the number of machines with **zero checks this shift** (completely untouched). As each machine is checked for the first time, this count decrements. This gives staff immediate feedback on which machines still need their first check.
 
 ---
 
@@ -1178,10 +1164,9 @@ lines.map(lineObj => {
 Follow the existing color scheme pattern but adapt for carton status:
 
 | Existing (PowderDensity) | Carton Waste Equivalent |
-|---|---|
-| Green: density in range | Green: checked in current round |
-| Gray: density out of range | Gray: not checked this round |
-| Gold/Orange: selected/override | Yellow: modal open / being checked |
+|---|---|---|
+| Green: density in range | Green: checked at least once this shift |
+| Gray: density out of range | Gray: not yet checked this shift |
 | — | Red: waste % exceeds target |
 
 ### Pattern 5: Charts (Report Page)

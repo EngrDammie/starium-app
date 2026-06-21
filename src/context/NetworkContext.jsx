@@ -2,13 +2,16 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { syncCartonOfflineQueue } from '../services/cartonOperations';
 
 const NetworkContext = createContext();
 
 export function NetworkProvider({ children }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queueCount, setQueueCount] = useState(0);
+  const [cartonQueueCount, setCartonQueueCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isCartonSyncing, setIsCartonSyncing] = useState(false);
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
@@ -21,6 +24,8 @@ export function NetworkProvider({ children }) {
     // Initial check of local memory
     const queue = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
     setQueueCount(queue.length);
+    const cartonQueue = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
+    setCartonQueueCount(cartonQueue.length);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -28,8 +33,7 @@ export function NetworkProvider({ children }) {
     };
   }, []);
 
-  // 2. The Auto-Sync trigger!
-  // This watches the isOnline variable. If it turns TRUE, and we have queue items, it fires!
+  // 2. The Auto-Sync trigger for QC queue
   useEffect(() => {
     const syncLocalQueue = async () => {
       const queue = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
@@ -79,8 +83,24 @@ export function NetworkProvider({ children }) {
     }
   }, [isOnline, queueCount, isSyncing]);
 
+  // 3. Auto-Sync trigger for carton queue
+  useEffect(() => {
+    const syncCartonQueue = async () => {
+      setIsCartonSyncing(true);
+      const result = await syncCartonOfflineQueue();
+      if (result?.synced > 0) {
+        setCartonQueueCount(0);
+      }
+      setIsCartonSyncing(false);
+    };
+
+    if (isOnline && cartonQueueCount > 0 && !isCartonSyncing) {
+      syncCartonQueue();
+    }
+  }, [isOnline, cartonQueueCount, isCartonSyncing]);
+
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, isSyncing, setIsSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, isSyncing, setIsSyncing }}>
       {children}
     </NetworkContext.Provider>
   );

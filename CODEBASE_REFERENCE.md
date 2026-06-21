@@ -3,7 +3,7 @@
 ## Project Identity
 
 **Name:** Starium Rafa Enterprise Resource Planner (ERP)  
-**Purpose:** Enterprise-grade, offline-capable web application for monitoring, recording, and analyzing factory powder density metrics in real-time. Initially built for Powder Density tracking; structured to scale into a full factory ERP (Production, HR, Quality Control).  
+**Purpose:** Enterprise-grade, offline-capable web application for monitoring, recording, and analyzing factory production metrics in real-time. Built for Powder Density tracking and Carton Waste management; structured to scale into a full factory ERP (Production, HR, Quality Control).  
 **Repository Base:** `/home/dammieoptimus/Documents/starium-app`
 
 ---
@@ -78,9 +78,13 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/empty-silos-report` | EmptySilosReport | QC managers, Prod managers, Packaging managers |
 | `/stop-machine` | StopMachine | QC staff, QC managers |
 | `/stopped-machines-report` | StoppedMachinesReport | QC managers, Prod managers, Packaging managers |
-| `/reports` | Reports | QC/Prod managers, HR managers |
+| `/reports` → `/qc-density-report` | Reports / QC Density Report | QC/Prod managers, HR managers |
+| `/carton-waste` | CartonWaste | Production staff & managers, QC managers |
+| `/carton-waste-report` | CartonWasteReport | Production managers, QC managers, Packaging managers |
 
 Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`.
+
+**Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Carton waste routes appear first in the Production menu category.
 
 ---
 
@@ -153,7 +157,13 @@ MENU_CONFIG = [
 
 Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRolesForPath(path)` function iterates all categories to find the matching route and returns its `allowedRoles` array.
 
+**Carton waste routes** appear first in the Production category (above Empty Silos and Stopped Machines entries):
+- `/carton-waste` (📋) — `['prod_staff', 'prod_manager', 'qc_manager']`
+- `/carton-waste-report` (📊) — `['prod_manager', 'qc_manager', 'packaging_manager']`
+
 **Important**: Admin routes (`/system-config`, `/user-management`, `/active-users`) have `allowedRoles: []` — meaning ONLY super_admin can access them. Standard users are always denied. Other routes use explicit role arrays.
+
+**Route rename note**: `/reports` was renamed to `/qc-density-report` throughout the codebase. All references in `App.jsx`, `navigation.js`, `Dashboard.jsx`, `ActiveUsers.jsx`, and `Reports.jsx` itself have been updated.
 
 ---
 
@@ -196,7 +206,13 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
   machines: [3 default machines],
   gramSpecs: { "22": {...}, "45": {...}, "85": {...}, "125": {...}, "850": {...} },
   departmentRoles: [6 predefined roles],
-  actionRoles: [5 predefined roles]
+  actionRoles: [5 predefined roles],
+  cartonWaste: {
+    targetWastePercent: 5,
+    wasteAlertThreshold: 10,
+    teams: ['A', 'B', 'C'],
+    defaultTeam: 'A'
+  }
 }
 ```
 
@@ -209,16 +225,22 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 **Offline Engine**:
 1. Initializes `isOnline` from `navigator.onLine`
 2. Listens to `online`/`offline` browser events
-3. Reads `localStorage.getItem('starium_offline_queue')` to get queue count
-4. When `isOnline` becomes `true` AND `queueCount > 0` → triggers `syncLocalQueue()`
+3. Reads `localStorage.getItem('starium_offline_queue')` and `localStorage.getItem('starium_carton_offline_queue')` to get queue counts
+4. When `isOnline` becomes `true` AND `queueCount > 0` → triggers `syncLocalQueue()` (for qc_tests) and `syncCartonOfflineQueue()` (for carton_records)
 
-**Sync Logic**:
+**QC Sync Logic** (`syncLocalQueue()`):
 - Iterates queued items, adds each to `qc_tests` collection
 - Converts `localCreatedAt` back to Firestore `Timestamp`
 - Adds `syncedAt: serverTimestamp()`, `wasOfflineQueued: true`, `offlineSyncId`
 - Removes `localCreatedAt` and `syncId` fields before saving
 - On success → removes item from queue; on failure → keeps it for retry
 - If all succeed → clears entire queue from localStorage
+
+**Carton Sync Logic** (`syncCartonOfflineQueue()`):
+- Reads `starium_carton_offline_queue` from localStorage
+- Uses Firestore `writeBatch` for atomic batch writes to `carton_records`
+- Each record includes all original fields plus `syncedAt: serverTimestamp()`
+- On success → clears carton queue from localStorage; on failure → keeps for retry
 
 ### AlertContext (`src/context/AlertContext.jsx`)
 
@@ -288,6 +310,47 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state and disappears from the stopped list).
 - **`appendIssuesToMachine(docId, issues, userFullName)`**: Reads the existing stopped_machines doc, deduplicates by issue ID (skips if already present), appends new issue objects, and resets `startedAt/startedBy` to null (effectively re-stopping the machine so the Start button reappears). Always sets `isActive: true`. This powers the "Report More Issues" flow.
 
+### cartonOperations (`src/services/cartonOperations.js`)
+
+**`getCartonShiftDateInfo(config)`**:
+- Same midnight-boundary-aware shift/date logic as `qcOperations.getShiftDateInfo()`
+- Returns `{ shift: 'DAY'|'NIGHT', date: 'YYYY-MM-DD', shiftApprovalDocId: 'carton_waste_DAY_2026-06-18' }`
+- Doc ID pattern: `carton_waste_{SHIFT}_{DATE}`
+
+**`subscribeToShiftCartonRecords(config, callback)`**:
+- Queries `carton_records` where `shiftApprovalDocId == carton_waste_{shift}_{date}`
+- Returns live snapshot sorted by `createdAt` ascending
+- Calls callback with mapped records array (converts Timestamps, extracts `roundNumber`)
+- Returns unsubscribe function for cleanup
+
+**`saveCartonRecord(recordData, isOnline, setCartonQueueCount, broadcastAlert, config)`**:
+- Validates 4 business rules (see Carton Waste Business Rules below)
+- If online → tries `addDoc` to `carton_records`; on error → falls back to offline queue
+- If offline → queues to `starium_carton_offline_queue` in localStorage
+- Calculates wastePercent = `wasted / (used + wasted) × 100` (capped at 100%)
+- If wastePercent > `config.cartonWaste.wasteAlertThreshold` (default 10%) → fires `danger`-level broadcast to `['/', '/carton-waste', '/carton-waste-report']`
+- Returns `{ success: true, docRef }` or `{ success: true, queued: true }` or `{ success: false, error }`
+
+**`queueCartonOffline(recordData, setCartonQueueCount)`**:
+- Generates `syncId` = timestamp + random string
+- Stores `localCreatedAt: new Date().toISOString()` for timestamp preservation
+- Stores object with: `shiftApprovalDocId`, `machineId`, `machineDisplayNumber`, `team`, `checkedBy`, `allocated`, `remaining`, `used` (computed), `wasted`, `wastePercent`, `shift`, `date`, `roundNumber`, `source`, `localCreatedAt`, `syncId`
+- Pushes to `starium_carton_offline_queue` in localStorage
+- Updates queue count via `setCartonQueueCount`
+
+**`getPreviousCheckForMachine(config, machineId, callback)`**:
+- Queries `carton_records` where `shiftApprovalDocId == carton_waste_{shift}_{date}` AND `machineId == machineId`
+- Orders by `createdAt` descending, limits to 1
+- Calls callback with the latest record (or null) + its round number
+
+**Validation Rules** (enforced in `saveCartonRecord`):
+1. `remaining > (allocated + previousRemaining)` → "Remaining cartons cannot exceed available cartons."
+2. `used < 0` → "Used cartons calculated as negative. Check your inputs."
+3. `wasted > (allocated + previousRemaining)` → "Wasted cartons cannot exceed available cartons."
+4. `(used + wasted) > (allocated + previousRemaining)` → "Used + wasted cannot exceed available cartons."
+
+Where `used = previousRemaining + allocated - remaining` and `maxAvailable = previousRemaining + allocated`.
+
 ### presenceOperations (`src/services/presenceOperations.js`)
 
 **`setOnlineStatus(uid, email, path)`**:
@@ -318,15 +381,26 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Redirects to `/login` after 2s success
 
 ### Dashboard (`src/pages/Dashboard.jsx`) — "Factory Command Center"
-- Displays 5 metric cards:
+- Grid layout: `xl:grid-cols-6` (changed from 5 to fit all 6 cards in one row)
+- Displays 6 metric cards:
    1. **Live Users** — count from `subscribeToActiveUsers` (green pulse indicator); super-admins see this as a clickable `<Link to="/active-users">`
    2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`; clickable `<Link to="/level9-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
    3. **BOT Tests** — count from `subscribeToShiftTests('bot')`; clickable `<Link to="/bot-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
-   4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos">` for QC staff/managers; shows "All Filled" or "⚠️ Needs Attention"
-   5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stop-machine">` for QC staff/managers; shows "All Running" or "⚠️ Needs Attention"
+   4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos-report">` for QC/managers; shows "All Filled" or "⚠️ Needs Attention"
+   5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stopped-machines-report">` for QC/managers; shows "All Running" or "⚠️ Needs Attention"
+   6. **Carton Waste** — live count from `subscribeToShiftCartonRecords()` (current shift only); shows total wasted cartons + waste% (color-coded green/red vs target); clickable `<Link to="/carton-waste-report">` for prod/qc managers; label "This Shift" in cyan
 - Welcome banner showing user's name, email, systemRole, and department categories
-- Quick action links filtered by user roles
+- Quick action links filtered by user roles (includes Carton Waste Tracking + Carton Waste Report for relevant roles)
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
+
+**Card link updates**:
+- Empty Silos card now links to `/empty-silos-report` (report page) instead of `/empty-silos` (data entry)
+- Stopped Machines card now links to `/stopped-machines-report` (report page) instead of `/stop-machine` (data entry)
+- Carton Waste card links to `/carton-waste-report` for managers
+
+**Quick Actions added**:
+- "📦 Carton Waste Tracking" → `/carton-waste` for `prod_staff`, `prod_manager`, `qc_manager`
+- "📦 Carton Waste Report" → `/carton-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
 
 ### EmptySilos (`src/pages/EmptySilos.jsx`) — Mark Machines Empty
 - Guarded: QC staff/managers only (also checks internally)
@@ -378,6 +452,56 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Machine grid with same 4-color scheme; clicking a non-normal machine opens a modal with full details: reported by, stopped duration (human-readable), started info, issues list with solved/unsolved status
 - Modal uses `max-h-[85vh] flex flex-col` layout with scrollable body and fixed Close button
 - Quick action: "Stopped Machines Report" link in Dashboard for same roles
+
+### CartonWaste (`src/pages/CartonWaste.jsx`) — Carton Waste Data Entry
+- Guarded: Production staff & managers, QC managers
+- Subscribes to `subscribeToShiftCartonRecords(config, callback)` for live current-shift carton records
+- Displays a machine grid with **3 statuses**:
+
+| Status | Meaning | Color |
+|---|---|---|
+| Unchecked | No records found for this machine this shift | Gray (`bg-gray-700`) |
+| Checked | Has ≥1 record, waste% ≤ target | Green (`bg-gradient-to-br from-[#00E676] to-[#00C853]`) |
+| High Waste | Has ≥1 record, waste% > target | Red (`bg-gradient-to-br from-[#F44336] to-[#D32F2F]`) |
+
+- Each machine button shows the machine display number and a check count badge (if checked)
+- Clicking a machine opens a modal with:
+  - **Banner**: "Previous Check (Round N)" in cyan bold (`text-cyan-400 font-bold`) — shows previous record's data if it exists
+  - **Heading**: "New Check — Round N" in amber bold (`text-amber-400 font-bold`) — round = previous round + 1
+  - **Previous data display**: If a previous check exists, shows allocated, remaining, used, wasted, waste%, checked-by user, and timestamp from the latest record
+  - **Form fields**: Allocated (number, default 0), Remaining (number), Wasted (number)
+  - Running totals: Used (computed: `previousRemaining + allocated - remaining`), Total Waste %, status badge
+  - Team dropdown (persisted to localStorage `starium_carton_team`)
+  - **Validation**: 4 rules enforced before save (see cartonOperations validation rules)
+- **Buttons**:
+  - **Cancel** — closes modal
+  - **Save** — validates and saves to carton_records (online or offline queue), stays on current machine
+  - **Save & Next Machine** — saves, then advances to the next machine in **numeric order** (by `displayNumber` or `id`). On the last machine, closes the modal (user starts a new cycle). Not round-aware — purely sequential advancement
+- **Broadcast**: High waste (> `wasteAlertThreshold` default 10%) fires a `danger`-level alert targeted to `['/', '/carton-waste', '/carton-waste-report']`
+- **Offline**: Falls back to `starium_carton_offline_queue` if offline or Firestore write fails
+- **Date display**: Shows current date as "Saturday, 18 Jun 2026" (en-GB locale with weekday)
+
+### CartonWasteReport (`src/pages/CartonWasteReport.jsx`) — Carton Waste Report
+- Guarded: Production managers, QC managers, Packaging managers
+- Always loads current shift data (no date picker — real-time for "This Shift")
+- Subscribes to `subscribeToShiftCartonRecords()` for current-shift data
+- **Summary Cards** (4):
+  1. **Total Allocated** — sum of allocated across all records (cyan)
+  2. **Total Used** — sum of used = previousRemaining + allocated - remaining (green)
+  3. **Total Wasted** — sum of wasted across all records (red, with 🔥 emoji if high)
+  4. **Waste %** — overall waste% = totalWasted / (totalUsed + totalWasted) × 100 (color-coded: green ≤ target, red > target)
+- **Charts**:
+  1. **Waste % by Machine** — Horizontal bar chart showing each machine's waste percentage
+  2. **Waste Trend Over Rounds (Top 5)** — Line chart showing waste% over rounds for the 5 machines with highest waste. Title clearly labelled "(Top 5)"
+  3. **Cross-Shift Comparison** — Bar chart comparing current shift metrics against aggregated data from the last 14 completed shifts. Queries `carton_records` for recent non-current shift documents, groups by shift date, displays used/wasted/allocated per shift
+- **Tables**:
+  1. **Shift Comparison Table** — Lists recent shifts with allocated, used, wasted, waste%, and a vs-prev diff arrow (↑ red if worse, ↓ green if improved, ➡ gray if same compared to the immediately preceding shift)
+  2. **Per-Machine Breakdown** — Groups records by machine, shows total allocated, used, wasted, waste% per machine
+  3. **Round-by-Round Detail** — Full record table with machine, round, allocated, remaining, used, wasted, waste%, checked-by, and timestamp
+- **Actions**:
+  - **Print** — Opens browser print dialog (landscape A4). Print styles apply white backgrounds to all chart canvases, hide UI chrome, show a dedicated print-only title "Carton Waste Report"
+  - **Export CSV** — Generates a CSV file with machine, round, allocated, remaining, used, wasted, waste%, checked-by, timestamp columns. Uses UTF-8 BOM for Excel compatibility
+- **Print styles**: Each chart is wrapped in a `<div className="print-container">` that forces white backgrounds on canvases, hides non-print elements, and adds the print title
 
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
 - **Mode selector**: Level 9 Silo Densities vs BOT Densities
@@ -438,7 +562,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
   - Floating "Switch to Level 9" button → navigates to `/level9-exec`
 
 ### SystemConfig (`src/pages/SystemConfig.jsx`) — Admin Panel
-6 tabs:
+7 tabs (6 original + 1 Carton Waste):
 
 **1. Machines Tab**:
 - CRUD for machines: ID, Display Number, Name, Line, Gram, Min/Max (auto-filled from gram specs)
@@ -469,12 +593,20 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Import: uploads JSON, overwrites current config (with confirmation)
 - Reset to Defaults: double-confirmation, restores 30-machine factory default config
 
+**7. Carton Waste Tab**:
+- Target Waste %: default 5% — machines exceeding this turn red on the grid
+- Waste Alert Threshold: default 10% — when a save exceeds this, a danger-level broadcast fires
+- Teams: comma-separated team labels (A, B, C by default), rendered as dropdown options in CartonWaste form
+- Default Team: pre-selected team in the form when no localStorage preference exists
+- Settings are stored under `config.settings.cartonWaste` as a nested object (merged into DEFAULT_CONFIG in ConfigContext)
+- Fully compatible with the Export/Import JSON and Reset to Defaults features (cartonWaste is included in the exported JSON and reset sequence)
+
 ### ActiveUsers (`src/pages/ActiveUsers.jsx`)
 - Guarded: non-super_admin users see a restricted message (dual layer with `ProtectedRoute`)
 - Subscribes to `subscribeToActiveUsers()` from `presenceOperations` for real-time online user list
 - Resolves display names from `user_roles/{uid}` Firestore documents with in-memory caching (`useRef`) to avoid redundant reads on snapshot updates
 - Renders a table with columns: **Name** (title-cased), **Email**, **Current Page** (human-readable label mapped from hash path), **Last Heartbeat** (relative time: "3m ago")
-- Page labels mapped via `PAGE_LABELS` constant; unknown paths fall back to a cleaned-up format
+- Page labels mapped via `PAGE_LABELS` constant; includes all known routes including: carton waste pages (`/carton-waste`, `/carton-waste-report`), empty silos (`/empty-silos`, `/empty-silos-report`), stop machine (`/stop-machine`, `/stopped-machines-report`), reports (`/qc-density-report`), and an empty string `''` fallback mapping to "Command Centre" for users without a hash fragment in their URL. Unknown paths fall back to a cleaned-up format.
 - Super_admin-only: dashboard card links to this page; sidebar entry in Administration menu
 
 ### UserManagement (`src/pages/UserManagement.jsx`)
@@ -490,7 +622,8 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **Edit modal**: Modify names, system role, department roles, action roles
 - **Delete modal**: Confirms removal of `user_roles/{uid}` document (does NOT delete Firebase auth user)
 
-### Reports (`src/pages/Reports.jsx`)
+### Reports (`src/pages/Reports.jsx`) — Now "QC Density Report"
+- **Note**: Route was changed from `/reports` to `/qc-density-report` to disambiguate from Carton Waste Report. The page title displays "📊 QC Density Report" instead of the previous "📊 Reports".
 - **Filter panel**: Date picker, Mode (level9/bot), Shift (DAY/NIGHT), Generate button
 - **Report display** (white background for print):
   - Title, metadata grid (Mode, Shift, Date, Total Tests, QC Staff, Team)
@@ -720,6 +853,31 @@ Doc ID: auto-generated via `addDoc`
 ```
 Doc ID: auto-generated via `addDoc`
 
+**`carton_records`** (Carton waste check records):
+```
+{
+  shiftApprovalDocId: 'carton_waste_DAY_2026-06-18',
+  machineId: number,
+  machineDisplayNumber: string,         // e.g. "M1"
+  team: 'A' | 'B' | 'C',
+  checkedBy: string,                    // userFullName
+  allocated: number,                    // cartons allocated this check
+  remaining: number,                    // cartons remaining after production
+  used: number,                         // computed: previousRemaining + allocated - remaining
+  wasted: number,                       // cartons wasted
+  wastePercent: number,                 // wasted / (used + wasted) * 100, capped at 100
+  shift: 'DAY' | 'NIGHT',
+  date: 'YYYY-MM-DD',
+  roundNumber: number,                  // per-machine: previous round + 1
+  source: 'manual' | 'offline-sync',
+  createdAt: Timestamp (or localCreatedAt if offline),
+  syncedAt: Timestamp (if synced),
+  wasOfflineQueued: boolean,
+  offlineSyncId: string
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`alerts`** (Broadcast messages):
 ```
 {
@@ -760,6 +918,44 @@ Each gram setting (22g, 45g, 85g, 125g, 850g) has its own density range and piec
 - **Day shift**: 07:00 → 18:59 (configurable `dayShiftStart`)
 - **Night shift**: 19:00 → 06:59 (configurable `nightShiftStart`)
 - Tests at 02:00 AM belong to the previous calendar day's NIGHT shift
+
+### Carton Waste Math
+
+**Waste percentage formula**:
+```
+wastePercent = wasted / (used + wasted) × 100
+```
+Capped at 100% (if `used + wasted` is 0, waste percent is 0).
+
+**Used cartons formula**:
+```
+used = previousRemaining + allocated - remaining
+maxAvailable = previousRemaining + allocated
+```
+
+**Validation rules** (all checked before save):
+1. `remaining > maxAvailable` → "Remaining cartons cannot exceed available cartons."
+2. `used < 0` → "Used cartons calculated as negative. Check your inputs."
+3. `wasted > maxAvailable` → "Wasted cartons cannot exceed available cartons."
+4. `used + wasted > maxAvailable` → "Used + wasted cannot exceed available cartons."
+
+**Per-machine round numbering**:
+- Round = number of existing records for that machine this shift + 1
+- No global round counter — machines independently track their own check rounds
+- Round 1 means it's the first time that machine has been checked this shift
+
+**Cross-shift carryover**:
+- No automatic carryover mechanism. The UI guidance note says: "Carryover from previous shift? Enter as Allocated."
+- Previous remaining from a prior shift must be manually entered as part of the allocated amount
+
+**Shift grouping**:
+- Records are grouped by `shiftApprovalDocId` = `carton_waste_{SHIFT}_{DATE}` (e.g., `carton_waste_DAY_2026-06-18`)
+- Cross-shift comparison queries all non-current `carton_waste_*` docs from the last 14 days
+
+**Alert threshold**:
+- When `wastePercent > config.cartonWaste.wasteAlertThreshold` (default 10%), a `danger`-level broadcast is fired
+- Target pages: `['/', '/carton-waste', '/carton-waste-report']`
+- This means the alert appears on the Command Centre, Carton Waste data entry page, and Carton Waste Report page
 
 ### Default Factory Layout (30 machines across 6 lines)
 Lines are ordered 1A, 1B, 2A, 2B, 3A, 3B (displayed right-to-left):
@@ -820,12 +1016,14 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 
 ## Known Gaps & Future Work (from README)
 
-- [ ] **Laminate Waste System** — Track packaging film waste per machine
+- [ ] **Laminate Waste System** — Track packaging film waste per machine (planned — follows carton waste pattern)
 - [ ] **Audit Trail** — Log who modified settings, deleted users, overrode machines
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
 - [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 - ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
+- ✅ **Carton Waste System** — Per-machine carton waste tracking with offline support, report with charts, CSV export, and targeted broadcasts. See full documentation in CartonWaste, CartonWasteReport pages and cartonOperations service.
+- ℹ️ **Old Reports route** — `/reports` was renamed to `/qc-density-report`. The old path will 404. All navigation references, PAGE_LABELS, and menu config entries have been updated.
 
 ---
 
@@ -837,9 +1035,13 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | Change permissions | `src/config/navigation.js` (allowedRoles), `src/context/AuthContext.jsx` (role logic) |
 | Add a new config field | `src/context/ConfigContext.jsx` (DEFAULT_CONFIG), `src/pages/SystemConfig.jsx` (UI) |
 | Change density math | `src/context/ConfigContext.jsx` (divisors), `src/pages/PowderDensity.jsx` (calculation) |
-| Modify offline behavior | `src/context/NetworkContext.jsx`, `src/services/qcOperations.js` |
+| Modify offline behavior | `src/context/NetworkContext.jsx`, `src/services/qcOperations.js`, `src/services/cartonOperations.js` |
 | Add a new alert type | `src/context/AlertContext.jsx`, `src/components/AlertBanner.jsx` |
 | Change machine grid layout | `src/components/MachineGrid.jsx`, config `machineGridColumns` |
 | Add a new approval role | `src/pages/SystemConfig.jsx` (roles tab), update approvalButtons in Level9Exec/BotExec |
 | Change Firebase config | `src/config/firebase.js`, `.env` |
 | Deploy settings | `.github/workflows/deploy.yml`, `vite.config.js` (base path) |
+| Carton waste logic | `src/services/cartonOperations.js` |
+| Carton waste data entry | `src/pages/CartonWaste.jsx` |
+| Carton waste report | `src/pages/CartonWasteReport.jsx` |
+| Carton waste config | `src/context/ConfigContext.jsx` (`cartonWaste` object), `src/pages/SystemConfig.jsx` (Carton Waste tab) |
