@@ -691,10 +691,13 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Hidden on print
 
 ### BroadcastModal (`src/components/BroadcastModal.jsx`)
-- Target screens checkboxes: All Screens, Data Entry (/), L9 Exec, BOT Exec
+- Imports `MENU_CONFIG` from `navigation.js` to dynamically build the target screen list — every route in the app is automatically available with its icon and label
+- Target screens: "All Screens" chip always shown; when deselected, a scrollable grouped list of all routes appears organized by menu category (Factory Overview, Quality Control, Production, Reports, Human Resources, Administration)
+- Toggle logic: selecting "All Screens" hides individual chips; deselecting individual pages falls back to `['all']`
 - Message textarea
 - Alert level dropdown: Info (blue), Warning (orange), Critical (red shaking)
 - Sends via `broadcastAlert()` with `targetPages` array
+- Adding a new route to `MENU_CONFIG` automatically makes it targetable — no manual BroadcastModal update needed
 
 ### Footer (`src/components/Footer.jsx`)
 - Default text: "Starium Rafa ERP"
