@@ -15,17 +15,23 @@ export function NetworkProvider({ children }) {
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
+    const checkQueues = () => {
+      const q = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
+      const cq = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
+      setQueueCount(q.length);
+      setCartonQueueCount(cq.length);
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkQueues();
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Initial check of local memory
-    const queue = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
-    setQueueCount(queue.length);
-    const cartonQueue = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
-    setCartonQueueCount(cartonQueue.length);
+    checkQueues();
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -100,7 +106,7 @@ export function NetworkProvider({ children }) {
   }, [isOnline, cartonQueueCount, isCartonSyncing]);
 
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, isSyncing, setIsSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing }}>
       {children}
     </NetworkContext.Provider>
   );

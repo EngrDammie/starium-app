@@ -82,9 +82,9 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/carton-waste` | CartonWaste | Production staff & managers, QC managers |
 | `/carton-waste-report` | CartonWasteReport | Production managers, QC managers, Packaging managers |
 
-Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`.
+Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/machine-downtime-log`, `/employees`, `/payroll`.
 
-**Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Carton waste routes appear first in the Production menu category.
+**Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Report pages were moved from their department categories into a centralized Reports menu category.
 
 ---
 
@@ -150,6 +150,7 @@ MENU_CONFIG = [
   { title: 'Factory Overview', icon: '🏢', children: [...] },
   { title: 'Quality Control', icon: '🔬', children: [...] },
   { title: 'Production', icon: '⚙️', children: [...] },
+  { title: 'Reports', icon: '📑', children: [...] },
   { title: 'Human Resources', icon: '👥', children: [...] },
   { title: 'Administration', icon: '🛡️', children: [...] },
 ]
@@ -157,9 +158,11 @@ MENU_CONFIG = [
 
 Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRolesForPath(path)` function iterates all categories to find the matching route and returns its `allowedRoles` array.
 
-**Carton waste routes** appear first in the Production category (above Empty Silos and Stopped Machines entries):
-- `/carton-waste` (📋) — `['prod_staff', 'prod_manager', 'qc_manager']`
-- `/carton-waste-report` (📊) — `['prod_manager', 'qc_manager', 'packaging_manager']`
+**Reports category** centralized all report pages under one heading:
+- `/qc-density-report` (📈) — `['qc_manager', 'prod_manager', 'hr_manager']`
+- `/carton-waste-report` (📦) — `['prod_manager', 'qc_manager', 'packaging_manager']`
+- `/empty-silos-report` (📋) — `['qc_manager', 'prod_manager', 'packaging_manager']`
+- `/stopped-machines-report` (📊) — `['qc_manager', 'prod_manager', 'packaging_manager']`
 
 **Important**: Admin routes (`/system-config`, `/user-management`, `/active-users`) have `allowedRoles: []` — meaning ONLY super_admin can access them. Standard users are always denied. Other routes use explicit role arrays.
 
@@ -1019,7 +1022,7 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 - [ ] **Laminate Waste System** — Track packaging film waste per machine (planned — follows carton waste pattern)
 - [ ] **Audit Trail** — Log who modified settings, deleted users, overrode machines
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
-- [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/downtime-log`, `/employees`, `/payroll`
+- [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/machine-downtime-log`, `/employees`, `/payroll`
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 - ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
 - ✅ **Carton Waste System** — Per-machine carton waste tracking with offline support, report with charts, CSV export, and targeted broadcasts. See full documentation in CartonWaste, CartonWasteReport pages and cartonOperations service.

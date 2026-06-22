@@ -23,7 +23,7 @@ const PAGE_LABELS = {
   '#/user-management': 'User Roles',
   '#/qc-density-report': 'QC Density Report',
   '#/active-users': 'Active Users',
-  '#/downtime-log': 'Machine Downtime Log',
+  '#/machine-downtime-log': 'Machine Downtime Log',
 };
 
 function formatPage(path) {

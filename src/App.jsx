@@ -42,7 +42,7 @@ function App() {
       <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
       <Route path="/stop-machine" element={<ProtectedRoute><StopMachine /></ProtectedRoute>} />
       <Route path="/stopped-machines-report" element={<ProtectedRoute><StoppedMachinesReport /></ProtectedRoute>} />
-      <Route path="/downtime-log" element={<ProtectedRoute><MachineDowntimeLog /></ProtectedRoute>} />
+      <Route path="/machine-downtime-log" element={<ProtectedRoute><MachineDowntimeLog /></ProtectedRoute>} />
       <Route path="/carton-waste" element={<ProtectedRoute><CartonWaste /></ProtectedRoute>} />
       <Route path="/carton-waste-report" element={<ProtectedRoute><CartonWasteReport /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />

@@ -17,7 +17,7 @@ export default function CartonWaste() {
   const { config, loadingConfig } = useConfig();
   const { currentUser, userFullName } = useAuth();
   const { broadcastAlert } = useAlerts();
-  const { isOnline } = useNetwork();
+  const { isOnline, setCartonQueueCount } = useNetwork();
   const navigate = useNavigate();
 
   const [records, setRecords] = useState([]);
@@ -149,6 +149,7 @@ export default function CartonWaste() {
     setSaving(false);
 
     if (result.status === 'offline-queued') {
+      setCartonQueueCount(prev => prev + 1);
       broadcastAlert(`Carton check saved offline for M${selectedMachine.displayNumber || selectedMachine.id}`, 'info', undefined, ['/', '/carton-waste', '/carton-waste-report']);
     }
 
