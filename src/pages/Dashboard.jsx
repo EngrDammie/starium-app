@@ -8,6 +8,7 @@ import { subscribeToActiveUsers } from '../services/presenceOperations';
 import { subscribeToActiveEmptySilos } from '../services/emptySiloOperations';
 import { subscribeToActiveStoppedMachines } from '../services/stoppedMachineOperations';
 import { subscribeToShiftCartonRecords } from '../services/cartonOperations';
+import { subscribeToShiftLaminateRecords } from '../services/laminateOperations';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [emptySilosCount, setEmptySilosCount] = useState(0);
   const [stoppedCount, setStoppedCount] = useState(0);
   const [cartonWaste, setCartonWaste] = useState({ wasted: 0, wastePercent: 0 });
+  const [laminateWaste, setLaminateWaste] = useState({ wasteCollected: 0, wastePercent: 0 });
   const [currentShift, setCurrentShift] = useState('--');
 
   useEffect(() => {
@@ -61,6 +63,24 @@ export default function Dashboard() {
       });
     });
 
+    const unsubLaminate = subscribeToShiftLaminateRecords(config, (records) => {
+      const machinesMap = {};
+      for (const r of records) {
+        if (!machinesMap[r.machineId]) {
+          machinesMap[r.machineId] = { totalLaminateUsed: 0, totalWasteCollected: 0 };
+        }
+        machinesMap[r.machineId].totalLaminateUsed = r.totalLaminateUsed || 0;
+        machinesMap[r.machineId].totalWasteCollected += (r.wasteCollected || 0);
+      }
+      const machineTotals = Object.values(machinesMap);
+      const totalWaste = machineTotals.reduce((s, m) => s + m.totalWasteCollected, 0);
+      const totalUsed = machineTotals.reduce((s, m) => s + m.totalLaminateUsed, 0);
+      setLaminateWaste({
+        wasteCollected: totalWaste,
+        wastePercent: totalUsed > 0 ? Math.round((totalWaste / totalUsed) * 10000) / 100 : 0
+      });
+    });
+
     return () => {
       unsubLevel9();
       unsubBot();
@@ -68,6 +88,7 @@ export default function Dashboard() {
       unsubEmpty();
       unsubStopped();
       unsubCarton();
+      unsubLaminate();
     };
   }, [config, loadingConfig]);
 
@@ -113,7 +134,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
         
         {/* Metric 1: Live Users */}
         {systemRole === 'super_admin' ? (
@@ -242,6 +263,29 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Metric 7: Laminate Waste */}
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'qc_manager', 'packaging_manager'].includes(r)) ? (
+          <Link to="/laminate-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Laminate Waste</h3>
+            <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
+            <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
+              Waste {laminateWaste.wastePercent}%
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Laminate Waste</h3>
+            <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
+            <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
+              Waste {laminateWaste.wastePercent}%
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
+          </div>
+        )}
+
       </div>
 
       {/* Quick Action Links */}
@@ -284,6 +328,16 @@ export default function Dashboard() {
                 <div>
                   <div className="text-white font-bold text-lg">Carton Waste Tracking</div>
                   <div className="text-gray-400 text-sm">Enter carton waste data per machine</div>
+                </div>
+              </Link>
+            )}
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['prod_staff', 'prod_manager', 'qc_manager'].includes(r))) && (
+              <Link to="/laminate-waste" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">🗑️</div>
+                <div>
+                  <div className="text-white font-bold text-lg">Laminate Waste Tracking</div>
+                  <div className="text-gray-400 text-sm">Enter laminate waste data per machine</div>
                 </div>
               </Link>
             )}
@@ -333,6 +387,14 @@ export default function Dashboard() {
               <div>
                 <div className="text-white font-bold text-lg">Carton Waste Report</div>
                 <div className="text-gray-400 text-sm">Waste analysis & cross-shift comparison</div>
+              </div>
+            </Link>
+
+            <Link to="/laminate-waste-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+              <div className="text-3xl group-hover:scale-110 transition-transform">🗑️</div>
+              <div>
+                <div className="text-white font-bold text-lg">Laminate Waste Report</div>
+                <div className="text-gray-400 text-sm">Laminate waste analysis & cross-shift comparison</div>
               </div>
             </Link>
           </>

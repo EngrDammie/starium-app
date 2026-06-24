@@ -23,7 +23,7 @@ Built for Powder Density tracking and Carton Waste management, the platform is s
 
 Factory floors often suffer from spotty internet connections. Standard web apps break when the Wi-Fi drops, causing lost data and frustrated workers. 
 
-This application solves that problem. It is built as an **Offline-First Application**. QC and Production staff can continuously enter density test results and carton waste data even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
+This application solves that problem. It is built as an **Offline-First Application**. QC and Production staff can continuously enter density test results, carton waste data, and laminate waste data even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
 
 When users log in, they land on the **Command Center**, providing a high-level overview of active shifts and tests. Meanwhile, Factory Managers can watch data stream into their executive dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
 
@@ -41,6 +41,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **🛢️ Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts, auto-refill detection when powder density tests are saved, and a dedicated manager report with color-coded machine grid and refill counters.
 - **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid, and dedicated real-time manager report. Supports appending additional issues to already-stopped machines via "Report More Issues" (which re-stops the machine), with automatic deduplication of already-attached issues — the UI filters out pre-existing issues and warns when typing a duplicate label.
 - **📦 Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining ≤ available, wasted ≤ available, used + wasted ≤ allocated), running totals, and "Save & Next Machine" flow. Includes a full report page with waste percentage by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison, shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts are broadcast to the command centre and carton waste pages in real-time. Full offline-queue support via dedicated localStorage key.
+- **🗑️ Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (small 80g / large 160g) and record gross weight each round. Total laminate used is auto-computed from the machine's gram setting: `rollsPerShift × rollWeight[gram]` (e.g., a 125g machine uses 53.70 kg/roll × 3 rolls = 161.10 kg per shift). Sac type dropdown with configurable weights, auto-calculated waste collected (gross − sac), running waste totals, and 3-status machine grid (green/gray/red). Full report page with waste % by machine bar chart, waste trend over rounds (top 5), cross-shift comparison, per-machine breakdown, round-by-round detail table, CSV export, and print. High waste alerts broadcast to command centre, laminate waste page, and report page. Offline-first with dedicated localStorage queue.
 
 ---
 
@@ -82,6 +83,13 @@ The application has three core data entry and monitoring modules:
    - Machine grid with 3 statuses: unchecked (gray), checked (green), high-waste (red — waste% > target).
    - "Save & Next Machine" advances numerically, closes on last machine.
    - Report page with waste% charts, cross-shift comparison, CSV export.
+4. **Laminate Waste**:
+   - Per-machine tracking of laminate waste using weight (kg) instead of carton counts.
+   - Two sac types: Small (80g) and Large (160g) — configurable via System Config.
+   - Total laminate used auto-computed from machine gram: `rollsPerShift × rollWeight[gram]`.
+   - Waste collected = gross weight − sac weight. Running totals and waste % displayed in real-time.
+   - Same 3-status machine grid and "Save & Next Machine" flow as Carton Waste.
+   - Report page with waste% charts, cross-shift comparison, per-machine breakdown, CSV export, print.
 
 ---
 
@@ -104,7 +112,7 @@ All page routing and security requirements are defined here. The `ProtectedRoute
 The app uses React Context to broadcast state globally:
 - **`AuthContext.jsx`**: Manages Firebase logins, fetches user keycards, and provides the Owner Fallback security net.
 - **`ConfigContext.jsx`**: Listens live to the `config/settings` document. If an admin edits a machine, this context updates the UI instantly across all connected screens.
-- **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine` and automatically flushes `localStorage` queues to Firebase upon reconnection.
+- **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine` and automatically flushes `localStorage` queues (qc_tests, carton_records, laminate_records) to Firebase upon reconnection.
 - **`AlertContext.jsx`**: The global loudspeaker. Exposes the `broadcastAlert()` function which pushes real-time notifications to targeted factory screens.
 
 ### 3. The Presence System (`src/services/presenceOperations.js`)
@@ -113,7 +121,7 @@ Tracks who is online in real-time across the factory:
 - **`setOfflineStatus()`**: Called on logout or tab close to mark the user offline.
 - **`subscribeToActiveUsers()`**: Returns a live stream of online users (with a 5-minute stale-entry safety net). Used by the Dashboard for the Live Users counter and by the Active Users page for the full table.
 
-### 4. The Engine Room (`src/services/qcOperations.js` and `src/services/cartonOperations.js`)
+### 4. The Engine Room (`src/services/qcOperations.js`, `src/services/cartonOperations.js`, and `src/services/laminateOperations.js`)
 
 **`qcOperations.js`** handles all Powder Density Firestore operations:
 - Midnight boundary math for Night Shifts (e.g., tests submitted at 2 AM belong to yesterday's shift document).
@@ -125,6 +133,13 @@ Tracks who is online in real-time across the factory:
 - `saveCartonRecord()` — online/offline-aware save with 4 validation rules (remaining ≤ maxAvailable, wasted ≤ maxAvailable, used ≥ 0, used + wasted ≤ maxAvailable).
 - `queueCartonOffline()` — dedicated localStorage queue under `starium_carton_offline_queue`.
 - `syncCartonOfflineQueue()` — bulk write-batch sync of queued records on reconnect.
+
+**`laminateOperations.js`** handles all Laminate Waste operations:
+- `subscribeToShiftLaminateRecords()` — real-time subscription to `laminate_records` for the current shift.
+- `computeTotalLaminateUsed()` — auto-computes total laminate used from machine gram: `rollsPerShift × rollWeight`.
+- `saveLaminateCheck()` — online/offline-aware save with 3 validation rules (sac type, gross ≥ sac weight, total > 0).
+- `queueLaminateCheckOffline()` — dedicated localStorage queue under `starium_laminate_offline_queue`.
+- `syncLaminateOfflineQueue()` — bulk write-batch sync of queued records on reconnect.
 
 ---
 
@@ -177,7 +192,7 @@ We use **GitHub Actions** to automate this.
 
 ## 🔮 Future Roadmap
 
-- [ ] **Laminate Waste System**: Track packaging film waste per machine (planned — follows carton waste pattern).
+- ✅ **Laminate Waste System**: Live per-machine laminate waste tracking (kg) with configurable sac types, auto-computed roll usage, offline support, reports, and broadcasts.
 - ✅ **Carton Waste System**: Live per-machine carton waste tracking with offline support, reports, and broadcasts.
 - [ ] **Audit Trail**: A background logging system to record exactly *who* modified a setting, deleted a user, or overrode a machine, providing full factory accountability.
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices for roaming QC staff.

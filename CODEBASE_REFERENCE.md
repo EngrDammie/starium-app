@@ -81,8 +81,10 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/reports` → `/qc-density-report` | Reports / QC Density Report | QC/Prod managers, HR managers |
 | `/carton-waste` | CartonWaste | Production staff & managers, QC managers |
 | `/carton-waste-report` | CartonWasteReport | Production managers, QC managers, Packaging managers |
+| `/laminate-waste` | LaminateWaste | Production staff & managers, QC managers |
+| `/laminate-waste-report` | LaminateWasteReport | Production managers, QC managers, Packaging managers |
 
-Future routes exist in `MENU_CONFIG` but have no components yet: `/laminate-waste`, `/machine-downtime-log`, `/employees`, `/payroll`.
+Future routes exist in `MENU_CONFIG` but have no components yet: `/machine-downtime-log`, `/employees`, `/payroll`.
 
 **Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Report pages were moved from their department categories into a centralized Reports menu category.
 
@@ -161,6 +163,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 **Reports category** centralized all report pages under one heading:
 - `/qc-density-report` (📈) — `['qc_manager', 'prod_manager', 'hr_manager']`
 - `/carton-waste-report` (📦) — `['prod_manager', 'qc_manager', 'packaging_manager']`
+- `/laminate-waste-report` (🗑️) — `['prod_manager', 'qc_manager', 'packaging_manager']`
 - `/empty-silos-report` (📋) — `['qc_manager', 'prod_manager', 'packaging_manager']`
 - `/stopped-machines-report` (📊) — `['qc_manager', 'prod_manager', 'packaging_manager']`
 
@@ -215,6 +218,21 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
     wasteAlertThreshold: 10,
     teams: ['A', 'B', 'C'],
     defaultTeam: 'A'
+  },
+  laminateWaste: {
+    targetWastePercent: 5,
+    wasteAlertThreshold: 10,
+    teams: ['A', 'B', 'C'],
+    defaultTeam: 'A',
+    rollsPerShift: 3,
+    rollWeights: {
+      "22": 51.32, "45": 54.40, "85": 51.60, "125": 53.70, "850": 49.90
+    },
+    sacTypes: [
+      { id: 'small', label: 'Small Sac', weight: 0.080 },
+      { id: 'large', label: 'Large Sac', weight: 0.160 }
+    ],
+    defaultSacType: 'small'
   }
 }
 ```
@@ -223,13 +241,13 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### NetworkContext (`src/context/NetworkContext.jsx`)
 
-**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `isSyncing`, `setIsSyncing`
+**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`
 
 **Offline Engine**:
 1. Initializes `isOnline` from `navigator.onLine`
 2. Listens to `online`/`offline` browser events
-3. Reads `localStorage.getItem('starium_offline_queue')` and `localStorage.getItem('starium_carton_offline_queue')` to get queue counts
-4. When `isOnline` becomes `true` AND `queueCount > 0` → triggers `syncLocalQueue()` (for qc_tests) and `syncCartonOfflineQueue()` (for carton_records)
+3. Reads `localStorage.getItem('starium_offline_queue')`, `localStorage.getItem('starium_carton_offline_queue')`, and `localStorage.getItem('starium_laminate_offline_queue')` to get queue counts
+4. When `isOnline` becomes `true` AND `queueCount > 0` → triggers `syncLocalQueue()` (for qc_tests), `syncCartonOfflineQueue()` (for carton_records), and `syncLaminateOfflineQueue()` (for laminate_records)
 
 **QC Sync Logic** (`syncLocalQueue()`):
 - Iterates queued items, adds each to `qc_tests` collection
@@ -244,6 +262,12 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Uses Firestore `writeBatch` for atomic batch writes to `carton_records`
 - Each record includes all original fields plus `syncedAt: serverTimestamp()`
 - On success → clears carton queue from localStorage; on failure → keeps for retry
+
+**Laminate Sync Logic** (`syncLaminateOfflineQueue()`):
+- Same pattern as carton: reads `starium_laminate_offline_queue` from localStorage
+- Uses Firestore `writeBatch` for atomic batch writes to `laminate_records`
+- Each record includes all original fields plus `syncedAt: serverTimestamp()`
+- On success → clears laminate queue from localStorage; on failure → keeps for retry
 
 ### AlertContext (`src/context/AlertContext.jsx`)
 
@@ -312,6 +336,73 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Uses `new Date()` instead of `serverTimestamp()` to avoid Firestore errors inside array mutations. Returns `'all-solved'` if the last issue was just cleared.
 - **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state and disappears from the stopped list).
 - **`appendIssuesToMachine(docId, issues, userFullName)`**: Reads the existing stopped_machines doc, deduplicates by issue ID (skips if already present), appends new issue objects, and resets `startedAt/startedBy` to null (effectively re-stopping the machine so the Start button reappears). Always sets `isActive: true`. This powers the "Report More Issues" flow.
+
+### laminateOperations (`src/services/laminateOperations.js`)
+
+**`getLaminateWasteDocId(config)`**:
+- Returns `laminate_waste_{SHIFT}_{DATE}` (e.g., `laminate_waste_DAY_2026-06-24`)
+- Used as `shiftApprovalDocId` on all laminate records for this shift
+
+**`getOrCreateLaminateWasteShift(config, isOnline)`**:
+- Same pattern as carton: creates/gets a `shift_approvals` doc with `mode: 'laminate_waste'`
+- If offline → returns docId without Firestore call
+
+**`computeTotalLaminateUsed(machine, config)`**:
+- Auto-computes total laminate used for a machine this shift:
+  ```
+  totalLaminateUsed = config.laminateWaste.rollsPerShift × config.laminateWaste.rollWeights[String(machine.gram)]
+  ```
+- No manual input needed — displayed as read-only in the modal
+
+**`getSacWeight(sacType, config)`**:
+- Looks up the weight of a sac type from `config.laminateWaste.sacTypes`
+- Small sac = 0.080 kg (80g), Large sac = 0.160 kg (160g), both configurable
+
+**`getPreviousLaminateCheck(machineId, shiftApprovalDocId)`**:
+- Queries `laminate_records` where `machineId == machineId` AND `shiftApprovalDocId == shiftApprovalDocId`
+- Orders by `roundNumber` descending, limits to 1
+- Returns the latest record (or null) for per-machine round numbering
+
+**`validateLaminateCheck(record, config)`**:
+3 validation rules:
+1. `sacType not selected` → "Select a sac type."
+2. `grossWeight < sacWeight` → "Gross weight cannot be less than sac weight."
+3. `totalLaminateUsed <= 0` → "Total laminate used must be greater than 0."
+
+**`saveLaminateCheck(checkData, config, isOnline)`**:
+- Computes: `wasteCollected = grossWeight - sacWeight`, `runningWasteCollected = previousRunning + wasteCollected`
+- Waste % formula: `wastePercent = runningWasteCollected / totalLaminateUsed × 100`
+- If online → `addDoc` to `laminate_records`; on error → queues offline
+- If offline → queues to `starium_laminate_offline_queue`
+- Returns `{ status: 'saved' }`, `{ status: 'offline-queued' }`, or `{ status: 'error', message }`
+
+**`queueLaminateCheckOffline(record)`**:
+- Pushes to `starium_laminate_offline_queue` in localStorage
+- Each record includes all fields plus `localCreatedAt: new Date().toISOString()`
+
+**`syncLaminateOfflineQueue()`**:
+- Reads `starium_laminate_offline_queue` from localStorage
+- Uses Firestore `writeBatch` for atomic batch writes to `laminate_records`
+- On success → clears queue; on failure → keeps for retry
+
+**`subscribeToShiftLaminateRecords(config, callback)`**:
+- Queries `laminate_records` where `shiftApprovalDocId == laminate_waste_{shift}_{date}`
+- Returns live snapshot sorted by `roundNumber` ascending
+
+**`subscribeToMachineLaminateHistory(machineId, shiftApprovalDocId, callback)`**:
+- Queries `laminate_records` for a specific machine in a specific shift
+- Returns live snapshot sorted by `roundNumber` ascending
+
+**`fetchLaminateRecordsByShift(config, targetShift, targetDate)`**:
+- One-time fetch (not subscription) for report page
+- Returns all records for the given shift and date
+
+**`getLaminateWasteSummary(config, targetShift, targetDate)`**:
+- Groups records by machine, computes per-machine totals:
+  - `totalLaminateUsed` = latest record's value (same for all records of a machine)
+  - `totalWasteCollected` = sum of all `wasteCollected` across records
+  - `wastePercent` = `totalWasteCollected / totalLaminateUsed × 100`
+- Returns array of machine summary objects
 
 ### cartonOperations (`src/services/cartonOperations.js`)
 
@@ -384,14 +475,15 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Redirects to `/login` after 2s success
 
 ### Dashboard (`src/pages/Dashboard.jsx`) — "Factory Command Center"
-- Grid layout: `xl:grid-cols-6` (changed from 5 to fit all 6 cards in one row)
-- Displays 6 metric cards:
+- Grid layout: `xl:grid-cols-5` (5 cards per row, extras wrap to next line)
+- Displays 7 metric cards:
    1. **Live Users** — count from `subscribeToActiveUsers` (green pulse indicator); super-admins see this as a clickable `<Link to="/active-users">`
    2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`; clickable `<Link to="/level9-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
    3. **BOT Tests** — count from `subscribeToShiftTests('bot')`; clickable `<Link to="/bot-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
    4. **Empty Silos** — live count from `subscribeToActiveEmptySilos` (cross-shift, red pulse if > 0); clickable `<Link to="/empty-silos-report">` for QC/managers; shows "All Filled" or "⚠️ Needs Attention"
    5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stopped-machines-report">` for QC/managers; shows "All Running" or "⚠️ Needs Attention"
    6. **Carton Waste** — live count from `subscribeToShiftCartonRecords()` (current shift only); shows total wasted cartons + waste% (color-coded green/red vs target); clickable `<Link to="/carton-waste-report">` for prod/qc managers; label "This Shift" in cyan
+   7. **Laminate Waste** — live data from `subscribeToShiftLaminateRecords()` (current shift only); shows total waste collected (kg) + waste% (color-coded green/red vs target); clickable `<Link to="/laminate-waste-report">` for prod/qc managers; label "This Shift" in cyan
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles (includes Carton Waste Tracking + Carton Waste Report for relevant roles)
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
@@ -404,6 +496,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 **Quick Actions added**:
 - "📦 Carton Waste Tracking" → `/carton-waste` for `prod_staff`, `prod_manager`, `qc_manager`
 - "📦 Carton Waste Report" → `/carton-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
+- "🗑️ Laminate Waste Tracking" → `/laminate-waste` for `prod_staff`, `prod_manager`, `qc_manager`
+- "🗑️ Laminate Waste Report" → `/laminate-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
 
 ### EmptySilos (`src/pages/EmptySilos.jsx`) — Mark Machines Empty
 - Guarded: QC staff/managers only (also checks internally)
@@ -483,6 +577,41 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - **Broadcast**: High waste (> `wasteAlertThreshold` default 10%) fires a `danger`-level alert targeted to `['/', '/carton-waste', '/carton-waste-report']`
 - **Offline**: Falls back to `starium_carton_offline_queue` if offline or Firestore write fails
 - **Date display**: Shows current date as "Saturday, 18 Jun 2026" (en-GB locale with weekday)
+
+### LaminateWaste (`src/pages/LaminateWaste.jsx`) — Laminate Waste Data Entry
+- Guarded: Production staff & managers, QC managers
+- Subscribes to `subscribeToShiftLaminateRecords(config, callback)` for live current-shift laminate records
+- Displays a machine grid with **3 statuses** (same as Carton Waste): unchecked (gray), checked (green), high-waste (red)
+- Each machine button shows: machine number, `Waste: X.XXX kg` (latest waste collected), `Y.YY%` (latest waste %)
+- Clicking a machine opens a modal with:
+  - **Previous Check banner**: Shows sac type, gross weight, waste collected, running waste, waste % from latest round
+  - **Round indicator**: "New Check — Round N" (amber bold)
+  - **Form fields**: Sac Type dropdown (Small 80g / Large 160g, pre-filled from previous round), Gross Weight (kg) input
+  - **Auto-Calculated display**: Sac weight, waste collected (gross − sac), total laminate used (auto-computed from machine gram), running waste totals, waste % (color-coded green/red)
+  - Team dropdown (persisted to localStorage `starium_laminate_team`)
+  - Validation: 3 rules enforced before save (see Laminate Waste Business Rules)
+- **Buttons**: Cancel, Save & Next Machine (numeric order), Save & Close
+- **Broadcast**: High waste (> `wasteAlertThreshold` default 10%) fires a `warning`-level alert targeted to `['/', '/laminate-waste', '/laminate-waste-report']`
+- **Offline**: Falls back to `starium_laminate_offline_queue` if offline or Firestore write fails
+- **Date display**: Shows current date as "Tuesday, 24 Jun 2026" (en-GB locale)
+
+### LaminateWasteReport (`src/pages/LaminateWasteReport.jsx`) — Laminate Waste Report
+- Guarded: Production managers, QC managers, Packaging managers
+- Filter panel: Date, Shift (DAY/NIGHT), Team (all/specific), Machine (all/specific), Generate button
+- **Summary Cards** (4):
+  1. **Total Laminate Used** — sum of per-machine totalLaminateUsed (kg)
+  2. **Total Waste Collected** — sum of wasteCollected across all records (kg)
+  3. **Waste %** — overall waste% = totalWasteCollected / totalLaminateUsed × 100 (color-coded green/amber/red)
+  4. **Machines with Data** — count of machines that have records
+- **Charts**:
+  1. **Waste % by Machine** — Horizontal bar chart with color-coded bars
+  2. **Waste Trend Over Rounds (Top 5)** — Line chart for 5 highest-waste machines
+  3. **Cross-Shift Comparison** — Bar chart comparing last 14 shifts
+- **Tables**:
+  1. **Shift Comparison Table** — Recent shifts with laminate used, waste collected, waste %, vs-prev diff arrows
+  2. **Per-Machine Breakdown** — Machine, line, checks count, laminate used, waste collected, waste %
+  3. **Round-by-Round Details** — Full record table with sac type, sac wt, gross wt, waste, laminate used, waste %, checked-by
+- **Actions**: Print (landscape A4, white backgrounds), Export CSV (`laminate_waste_{SHIFT}_{DATE}.csv`)
 
 ### CartonWasteReport (`src/pages/CartonWasteReport.jsx`) — Carton Waste Report
 - Guarded: Production managers, QC managers, Packaging managers
@@ -565,7 +694,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
   - Floating "Switch to Level 9" button → navigates to `/level9-exec`
 
 ### SystemConfig (`src/pages/SystemConfig.jsx`) — Admin Panel
-7 tabs (6 original + 1 Carton Waste):
+8 tabs (7 original + Carton Waste + Laminate Waste):
 
 **1. Machines Tab**:
 - CRUD for machines: ID, Display Number, Name, Line, Gram, Min/Max (auto-filled from gram specs)
@@ -604,12 +733,20 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Settings are stored under `config.settings.cartonWaste` as a nested object (merged into DEFAULT_CONFIG in ConfigContext)
 - Fully compatible with the Export/Import JSON and Reset to Defaults features (cartonWaste is included in the exported JSON and reset sequence)
 
+**8. Laminate Waste Tab**:
+- Waste Thresholds: Target Waste % (default 5%), Waste Alert Threshold (default 10%)
+- Packaging Teams: Team labels (comma-separated, default "A, B, C"), Default Team (default "A")
+- Roll Settings: Rolls per Shift (default 3), Roll Weight per Gram (22g→51.32, 45g→54.40, 85g→51.60, 125g→53.70, 850g→49.90 kg)
+- Sac Types: Small Sac Weight in grams (default 80g), Large Sac Weight in grams (default 160g)
+- Settings stored under `config.settings.laminateWaste` as a nested object (merged into DEFAULT_CONFIG)
+- Fully included in Export/Import JSON and Reset to Defaults
+
 ### ActiveUsers (`src/pages/ActiveUsers.jsx`)
 - Guarded: non-super_admin users see a restricted message (dual layer with `ProtectedRoute`)
 - Subscribes to `subscribeToActiveUsers()` from `presenceOperations` for real-time online user list
 - Resolves display names from `user_roles/{uid}` Firestore documents with in-memory caching (`useRef`) to avoid redundant reads on snapshot updates
 - Renders a table with columns: **Name** (title-cased), **Email**, **Current Page** (human-readable label mapped from hash path), **Last Heartbeat** (relative time: "3m ago")
-- Page labels mapped via `PAGE_LABELS` constant; includes all known routes including: carton waste pages (`/carton-waste`, `/carton-waste-report`), empty silos (`/empty-silos`, `/empty-silos-report`), stop machine (`/stop-machine`, `/stopped-machines-report`), reports (`/qc-density-report`), and an empty string `''` fallback mapping to "Command Centre" for users without a hash fragment in their URL. Unknown paths fall back to a cleaned-up format.
+- Page labels mapped via `PAGE_LABELS` constant; includes all known routes including: carton waste pages (`/carton-waste`, `/carton-waste-report`), laminate waste pages (`/laminate-waste`, `/laminate-waste-report`), empty silos (`/empty-silos`, `/empty-silos-report`), stop machine (`/stop-machine`, `/stopped-machines-report`), reports (`/qc-density-report`), and an empty string `''` fallback mapping to "Command Centre" for users without a hash fragment in their URL. Unknown paths fall back to a cleaned-up format.
 - Super_admin-only: dashboard card links to this page; sidebar entry in Administration menu
 
 ### UserManagement (`src/pages/UserManagement.jsx`)
@@ -679,7 +816,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 
 ### SyncBadge (`src/components/SyncBadge.jsx`)
 - Fixed top-left (left of hamburger): Online/Offline/ Syncing indicator
-- Shows queue count badge when items pending
+- Shows combined queue count badge (`queueCount + cartonQueueCount + laminateQueueCount`) when any items pending
+- Syncing state is true when `isSyncing || isCartonSyncing || isLaminateSyncing`
 - Color-coded: green (online), red (offline), orange pulse (syncing)
 - Hidden on print
 
@@ -884,6 +1022,39 @@ Doc ID: auto-generated via `addDoc`
 ```
 Doc ID: auto-generated via `addDoc`
 
+**`laminate_records`** (Laminate waste check records):
+```
+{
+  shiftApprovalDocId: 'laminate_waste_DAY_2026-06-24',
+  machineId: number,
+  machineDisplayNumber: string,
+  machineName: string,
+  line: string,
+  gram: number,
+  shift: 'DAY' | 'NIGHT',
+  date: 'YYYY-MM-DD',
+  team: 'A' | 'B' | 'C',
+  roundNumber: number,                  // per-machine: previous round + 1
+  sacType: 'small' | 'large',           // which sac was used
+  sacWeight: number,                    // weight of empty sac in kg (e.g. 0.080)
+  grossWeight: number,                  // weight of sac + collected waste in kg
+  wasteCollected: number,               // computed: grossWeight - sacWeight (kg)
+  totalLaminateUsed: number,            // auto-computed per machine: rollsPerShift × rollWeight[gram]
+  runningWasteCollected: number,        // cumulative: prevRunning + wasteCollected (kg)
+  wastePercent: number,                 // runningWasteCollected / totalLaminateUsed × 100
+  previousRecordId: string | null,      // link to previous round for this machine
+  checkedBy: string,                    // userFullName
+  checkedAt: Timestamp,
+  remarks: string,
+  createdAt: Timestamp (or localCreatedAt if offline),
+  updatedAt: Timestamp,
+  syncedAt: Timestamp (if synced),
+  wasOfflineQueued: boolean,
+  offlineSyncId: string
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`alerts`** (Broadcast messages):
 ```
 {
@@ -963,6 +1134,54 @@ maxAvailable = previousRemaining + allocated
 - Target pages: `['/', '/carton-waste', '/carton-waste-report']`
 - This means the alert appears on the Command Centre, Carton Waste data entry page, and Carton Waste Report page
 
+### Laminate Waste Math
+
+**Waste percentage formula**:
+```
+wastePercent = runningWasteCollected / totalLaminateUsed × 100
+```
+Where:
+- `wasteCollected = grossWeight - sacWeight` (per round)
+- `runningWasteCollected = previousRunning + wasteCollected` (cumulative)
+- `totalLaminateUsed = rollsPerShift × rollWeight[gram]` (auto-computed, constant per machine per shift)
+
+**Auto-computed total laminate used** (no manual input):
+```
+rollWeight = config.laminateWaste.rollWeights[String(machine.gram)]
+rollsPerShift = config.laminateWaste.rollsPerShift  // default 3
+totalLaminateUsed = rollWeight × rollsPerShift
+```
+
+**Roll weights by gram setting** (all configurable):
+| Gram | Roll Weight (kg) | 3-Roll Total (kg) |
+|---|---|---|
+| 22 | 51.32 | 153.96 |
+| 45 | 54.40 | 163.20 |
+| 85 | 51.60 | 154.80 |
+| 125 | 53.70 | 161.10 |
+| 850 | 49.90 | 149.70 |
+
+**Sac types** (all configurable):
+| ID | Label | Weight (kg) | Weight (g) |
+|---|---|---|---|
+| `small` | Small Sac | 0.080 | 80g |
+| `large` | Large Sac | 0.160 | 160g |
+
+**Per-machine round numbering**:
+- Same as carton: round = number of existing records for that machine this shift + 1
+- Round 1 means first check of the shift for that machine
+- No global round counter
+
+**Validation rules** (all checked before save):
+1. `sacType not selected` → "Select a sac type."
+2. `grossWeight < sacWeight` → "Gross weight cannot be less than sac weight."
+3. `totalLaminateUsed <= 0` → "Total laminate used must be greater than 0."
+
+**Alert threshold**:
+- When `wastePercent > config.laminateWaste.wasteAlertThreshold` (default 10%), a `warning`-level broadcast is fired
+- Target pages: `['/', '/laminate-waste', '/laminate-waste-report']`
+- Appears on Command Centre, Laminate Waste data entry page, and Laminate Waste Report page
+
 ### Default Factory Layout (30 machines across 6 lines)
 Lines are ordered 1A, 1B, 2A, 2B, 3A, 3B (displayed right-to-left):
 - **1A**: M1(125g), M2(85g), M3(85g), M4(85g), M5(85g)
@@ -1022,10 +1241,10 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 
 ## Known Gaps & Future Work (from README)
 
-- [ ] **Laminate Waste System** — Track packaging film waste per machine (planned — follows carton waste pattern)
+- ✅ **Laminate Waste System** — Per-machine laminate waste tracking (kg) with configurable sac types, auto-computed roll usage, offline support, reports, and broadcasts.
 - [ ] **Audit Trail** — Log who modified settings, deleted users, overrode machines
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
-- [ ] Routes defined in MENU_CONFIG without components: `/laminate-waste`, `/machine-downtime-log`, `/employees`, `/payroll`
+- [ ] Routes defined in MENU_CONFIG without components: `/machine-downtime-log`, `/employees`, `/payroll`
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 - ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
 - ✅ **Carton Waste System** — Per-machine carton waste tracking with offline support, report with charts, CSV export, and targeted broadcasts. See full documentation in CartonWaste, CartonWasteReport pages and cartonOperations service.
@@ -1051,3 +1270,7 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | Carton waste data entry | `src/pages/CartonWaste.jsx` |
 | Carton waste report | `src/pages/CartonWasteReport.jsx` |
 | Carton waste config | `src/context/ConfigContext.jsx` (`cartonWaste` object), `src/pages/SystemConfig.jsx` (Carton Waste tab) |
+| Laminate waste logic | `src/services/laminateOperations.js` |
+| Laminate waste data entry | `src/pages/LaminateWaste.jsx` |
+| Laminate waste report | `src/pages/LaminateWasteReport.jsx` |
+| Laminate waste config | `src/context/ConfigContext.jsx` (`laminateWaste` object), `src/pages/SystemConfig.jsx` (Laminate Waste tab) |

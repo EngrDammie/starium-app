@@ -20,6 +20,8 @@ import StoppedMachinesReport from './pages/StoppedMachinesReport';
 import MachineDowntimeLog from './pages/MachineDowntimeLog';
 import CartonWaste from './pages/CartonWaste';
 import CartonWasteReport from './pages/CartonWasteReport';
+import LaminateWaste from './pages/LaminateWaste';
+import LaminateWasteReport from './pages/LaminateWasteReport';
 import Reports from './pages/Reports';
 
 function App() {
@@ -45,6 +47,8 @@ function App() {
       <Route path="/machine-downtime-log" element={<ProtectedRoute><MachineDowntimeLog /></ProtectedRoute>} />
       <Route path="/carton-waste" element={<ProtectedRoute><CartonWaste /></ProtectedRoute>} />
       <Route path="/carton-waste-report" element={<ProtectedRoute><CartonWasteReport /></ProtectedRoute>} />
+      <Route path="/laminate-waste" element={<ProtectedRoute><LaminateWaste /></ProtectedRoute>} />
+      <Route path="/laminate-waste-report" element={<ProtectedRoute><LaminateWasteReport /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     </Routes>
   );

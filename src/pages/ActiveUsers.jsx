@@ -19,6 +19,8 @@ const PAGE_LABELS = {
   '#/stopped-machines-report': 'Stopped Machines Report',
   '#/carton-waste': 'Carton Waste Tracking',
   '#/carton-waste-report': 'Carton Waste Report',
+  '#/laminate-waste': 'Laminate Waste Tracking',
+  '#/laminate-waste-report': 'Laminate Waste Report',
   '#/system-config': 'System Config',
   '#/user-management': 'User Roles',
   '#/qc-density-report': 'QC Density Report',

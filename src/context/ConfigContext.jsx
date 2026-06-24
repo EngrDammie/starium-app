@@ -34,6 +34,26 @@ const DEFAULT_CONFIG = {
     teams: ['A', 'B', 'C'],
     defaultTeam: 'A'
   },
+  // 🎯 Laminate Waste Tracking Config
+  laminateWaste: {
+    targetWastePercent: 5,
+    wasteAlertThreshold: 10,
+    teams: ['A', 'B', 'C'],
+    defaultTeam: 'A',
+    rollsPerShift: 3,
+    rollWeights: {
+      "22": 51.32,
+      "45": 54.40,
+      "85": 51.60,
+      "125": 53.70,
+      "850": 49.90
+    },
+    sacTypes: [
+      { id: 'small', label: 'Small Sac', weight: 0.080 },
+      { id: 'large', label: 'Large Sac', weight: 0.160 }
+    ],
+    defaultSacType: 'small'
+  },
   // 🎯 NEW: Dynamic roles lists pushed to database
   departmentRoles: [
     { id: 'qc_staff', label: 'QC Staff', category: 'Quality Control' },
@@ -65,6 +85,7 @@ export function ConfigProvider({ children }) {
           ...DEFAULT_CONFIG, 
           ...data,
           cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}) },
+          laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}) },
           machines: data.machines || DEFAULT_CONFIG.machines,
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
           gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,

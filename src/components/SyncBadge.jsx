@@ -2,9 +2,9 @@
 import { useNetwork } from '../context/NetworkContext';
 
 export default function SyncBadge() {
-  const { isOnline, queueCount, cartonQueueCount, isSyncing, isCartonSyncing } = useNetwork();
-  const syncing = isSyncing || isCartonSyncing;
-  const totalPending = queueCount + cartonQueueCount;
+  const { isOnline, queueCount, cartonQueueCount, laminateQueueCount, isSyncing, isCartonSyncing, isLaminateSyncing } = useNetwork();
+  const syncing = isSyncing || isCartonSyncing || isLaminateSyncing;
+  const totalPending = queueCount + cartonQueueCount + laminateQueueCount;
 
   return (
     // 🎯 FIX: Changed left-5 to left-[80px] to make room for the Hamburger Menu!

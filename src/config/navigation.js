@@ -44,6 +44,7 @@ export const MENU_CONFIG = [
     children: [
       { path: '/qc-density-report', label: 'QC Density Report', icon: '📈', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] },
       { path: '/carton-waste-report', label: 'Carton Waste Report', icon: '📦', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
+      { path: '/laminate-waste-report', label: 'Laminate Waste Report', icon: '🗑️', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
       { path: '/empty-silos-report', label: 'Empty Silos Report', icon: '📋', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
       { path: '/stopped-machines-report', label: 'Stopped Machines Report', icon: '📊', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] }
     ]

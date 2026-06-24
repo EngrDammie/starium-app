@@ -42,6 +42,22 @@ export default function SystemConfig() {
     defaultTeam: 'A'
   });
 
+  // Laminate Waste Settings State
+  const [laminateWasteSettings, setLaminateWasteSettings] = useState({
+    targetWastePercent: 5,
+    wasteAlertThreshold: 10,
+    teams: 'A, B, C',
+    defaultTeam: 'A',
+    rollsPerShift: 3,
+    smallSacWeight: 80,
+    largeSacWeight: 160,
+    rollWeight22: 51.32,
+    rollWeight45: 54.40,
+    rollWeight85: 51.60,
+    rollWeight125: 53.70,
+    rollWeight850: 49.90
+  });
+
   // Filters
   const [machineSearch, setMachineSearch] = useState('');
   const [machineLineFilter, setMachineLineFilter] = useState('');
@@ -74,6 +90,23 @@ export default function SystemConfig() {
         wasteAlertThreshold: config.cartonWaste.wasteAlertThreshold ?? 10,
         teams: (config.cartonWaste.teams || ['A', 'B', 'C']).join(', '),
         defaultTeam: config.cartonWaste.defaultTeam ?? 'A'
+      });
+    }
+    if (config?.laminateWaste) {
+      const lw = config.laminateWaste;
+      setLaminateWasteSettings({
+        targetWastePercent: lw.targetWastePercent ?? 5,
+        wasteAlertThreshold: lw.wasteAlertThreshold ?? 10,
+        teams: (lw.teams || ['A', 'B', 'C']).join(', '),
+        defaultTeam: lw.defaultTeam ?? 'A',
+        rollsPerShift: lw.rollsPerShift ?? 3,
+        smallSacWeight: (lw.sacTypes?.find(s => s.id === 'small')?.weight || 0.080) * 1000,
+        largeSacWeight: (lw.sacTypes?.find(s => s.id === 'large')?.weight || 0.160) * 1000,
+        rollWeight22: lw.rollWeights?.['22'] ?? 51.32,
+        rollWeight45: lw.rollWeights?.['45'] ?? 54.40,
+        rollWeight85: lw.rollWeights?.['85'] ?? 51.60,
+        rollWeight125: lw.rollWeights?.['125'] ?? 53.70,
+        rollWeight850: lw.rollWeights?.['850'] ?? 49.90
       });
     }
   }, [config]);
@@ -250,6 +283,7 @@ export default function SystemConfig() {
       machineGridColumns: config.machineGridColumns, dayShiftStart: config.dayShiftStart, nightShiftStart: config.nightShiftStart,
       departmentRoles: config.departmentRoles, actionRoles: config.actionRoles,
       cartonWaste: config.cartonWaste,
+      laminateWaste: config.laminateWaste,
       exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -277,6 +311,7 @@ export default function SystemConfig() {
       if (data.dayShiftStart) updates.dayShiftStart = data.dayShiftStart;
       if (data.nightShiftStart) updates.nightShiftStart = data.nightShiftStart;
       if (data.cartonWaste) updates.cartonWaste = data.cartonWaste;
+      if (data.laminateWaste) updates.laminateWaste = data.laminateWaste;
 
       await updateDatabase(updates, 'Configuration imported successfully!');
     } catch (error) {
@@ -341,6 +376,25 @@ export default function SystemConfig() {
         wasteAlertThreshold: 10,
         teams: ['A', 'B', 'C'],
         defaultTeam: 'A'
+      },
+      laminateWaste: {
+        targetWastePercent: 5,
+        wasteAlertThreshold: 10,
+        teams: ['A', 'B', 'C'],
+        defaultTeam: 'A',
+        rollsPerShift: 3,
+        rollWeights: {
+          "22": 51.32,
+          "45": 54.40,
+          "85": 51.60,
+          "125": 53.70,
+          "850": 49.90
+        },
+        sacTypes: [
+          { id: 'small', label: 'Small Sac', weight: 0.080 },
+          { id: 'large', label: 'Large Sac', weight: 0.160 }
+        ],
+        defaultSacType: 'small'
       }
     };
 
@@ -363,7 +417,7 @@ export default function SystemConfig() {
       </div>
 
       <div className="flex overflow-x-auto gap-2 mb-6 border-b border-[#333] pb-2 custom-scrollbar">
-        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'cartonwaste', 'importexport'].map(tab => (
+        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'cartonwaste', 'laminatewaste', 'importexport'].map(tab => (
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab)}
@@ -375,6 +429,7 @@ export default function SystemConfig() {
             {tab === 'roles' && '🏢 Role Definitions'}
             {tab === 'settings' && '⚙️ Global Settings'}
             {tab === 'cartonwaste' && '📦 Carton Waste'}
+            {tab === 'laminatewaste' && '🗑️ Laminate Waste'}
             {tab === 'importexport' && '💾 Import / Export'}
           </button>
         ))}
@@ -639,6 +694,119 @@ export default function SystemConfig() {
             }, 'Carton waste settings saved!');
           }} className="mt-6 bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
             💾 Save Carton Waste Settings
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'laminatewaste' && (
+        <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
+          <h2 className="text-xl font-bold text-primary mb-6">🗑️ Laminate Waste Settings</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Waste Thresholds</h3>
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-gray-300">Target Waste %:</label>
+                <input type="number" min="0" max="100" step="0.5"
+                  value={laminateWasteSettings.targetWastePercent}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, targetWastePercent: Number(e.target.value) }))}
+                  className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" />
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Machines above this % turn red.</div>
+              <div className="flex justify-between items-center mt-4 mb-3">
+                <label className="text-gray-300">Alert Threshold %:</label>
+                <input type="number" min="0" max="100" step="0.5"
+                  value={laminateWasteSettings.wasteAlertThreshold}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, wasteAlertThreshold: Number(e.target.value) }))}
+                  className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" />
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Broadcasts alert when waste exceeds this %.</div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Packaging Teams</h3>
+              <div className="mb-3">
+                <label className="text-gray-300">Team Labels (comma-separated):</label>
+                <input type="text"
+                  value={laminateWasteSettings.teams}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, teams: e.target.value }))}
+                  placeholder="A, B, C"
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+              <div className="mb-3">
+                <label className="text-gray-300">Default Team:</label>
+                <input type="text"
+                  value={laminateWasteSettings.defaultTeam}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, defaultTeam: e.target.value }))}
+                  placeholder="A"
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Roll Settings</h3>
+              <div className="mb-3">
+                <label className="text-gray-300">Rolls per Shift:</label>
+                <input type="number" min="1" step="0.5"
+                  value={laminateWasteSettings.rollsPerShift}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, rollsPerShift: Number(e.target.value) }))}
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mt-4 mb-2 border-b border-[#333] pb-1">Roll Weight per Gram Setting (kg)</div>
+              {['22', '45', '85', '125', '850'].map(gram => (
+                <div key={gram} className="flex justify-between items-center mb-2">
+                  <label className="text-gray-300">{gram}g:</label>
+                  <input type="number" min="0" step="0.01"
+                    value={laminateWasteSettings[`rollWeight${gram}`]}
+                    onChange={e => setLaminateWasteSettings(prev => ({ ...prev, [`rollWeight${gram}`]: Number(e.target.value) }))}
+                    className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" />
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Sac Types</h3>
+              <div className="mb-3">
+                <label className="text-gray-300">Small Sac Weight (g):</label>
+                <input type="number" min="0" step="1"
+                  value={laminateWasteSettings.smallSacWeight}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, smallSacWeight: Number(e.target.value) }))}
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+              <div className="mb-3">
+                <label className="text-gray-300">Large Sac Weight (g):</label>
+                <input type="number" min="0" step="1"
+                  value={laminateWasteSettings.largeSacWeight}
+                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, largeSacWeight: Number(e.target.value) }))}
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+            </div>
+          </div>
+
+          <button onClick={async () => {
+            const teamsArray = laminateWasteSettings.teams.split(',').map(t => t.trim()).filter(Boolean);
+            await updateDatabase({
+              laminateWaste: {
+                targetWastePercent: laminateWasteSettings.targetWastePercent,
+                wasteAlertThreshold: laminateWasteSettings.wasteAlertThreshold,
+                teams: teamsArray,
+                defaultTeam: laminateWasteSettings.defaultTeam,
+                rollsPerShift: laminateWasteSettings.rollsPerShift,
+                sacTypes: [
+                  { id: 'small', label: 'Small Sac', weight: laminateWasteSettings.smallSacWeight / 1000 },
+                  { id: 'large', label: 'Large Sac', weight: laminateWasteSettings.largeSacWeight / 1000 }
+                ],
+                rollWeights: {
+                  "22": laminateWasteSettings.rollWeight22,
+                  "45": laminateWasteSettings.rollWeight45,
+                  "85": laminateWasteSettings.rollWeight85,
+                  "125": laminateWasteSettings.rollWeight125,
+                  "850": laminateWasteSettings.rollWeight850
+                }
+              }
+            }, 'Laminate waste settings saved!');
+          }} className="mt-6 bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
+            💾 Save Laminate Waste Settings
           </button>
         </div>
       )}

@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { syncCartonOfflineQueue } from '../services/cartonOperations';
+import { syncLaminateOfflineQueue } from '../services/laminateOperations';
 
 const NetworkContext = createContext();
 
@@ -10,16 +11,20 @@ export function NetworkProvider({ children }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queueCount, setQueueCount] = useState(0);
   const [cartonQueueCount, setCartonQueueCount] = useState(0);
+  const [laminateQueueCount, setLaminateQueueCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCartonSyncing, setIsCartonSyncing] = useState(false);
+  const [isLaminateSyncing, setIsLaminateSyncing] = useState(false);
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
     const checkQueues = () => {
       const q = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
       const cq = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
+      const lq = JSON.parse(localStorage.getItem('starium_laminate_offline_queue') || '[]');
       setQueueCount(q.length);
       setCartonQueueCount(cq.length);
+      setLaminateQueueCount(lq.length);
     };
 
     const handleOnline = () => {
@@ -105,8 +110,24 @@ export function NetworkProvider({ children }) {
     }
   }, [isOnline, cartonQueueCount, isCartonSyncing]);
 
+  // 4. Auto-Sync trigger for laminate queue
+  useEffect(() => {
+    const syncLaminateQueue = async () => {
+      setIsLaminateSyncing(true);
+      const result = await syncLaminateOfflineQueue();
+      if (result?.synced > 0) {
+        setLaminateQueueCount(0);
+      }
+      setIsLaminateSyncing(false);
+    };
+
+    if (isOnline && laminateQueueCount > 0 && !isLaminateSyncing) {
+      syncLaminateQueue();
+    }
+  }, [isOnline, laminateQueueCount, isLaminateSyncing]);
+
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing }}>
       {children}
     </NetworkContext.Provider>
   );
