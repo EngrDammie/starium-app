@@ -25,7 +25,7 @@ export default function LaminateWaste() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState(() => {
-    return localStorage.getItem('starium_laminate_team') || config?.laminateWaste?.defaultTeam || '';
+    return localStorage.getItem('starium_laminate_team') || config?.packagingTeams?.defaultTeam || '';
   });
   const [shiftInfo, setShiftInfo] = useState({ shift: '--', date: '--' });
 
@@ -216,7 +216,7 @@ export default function LaminateWaste() {
                 className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-1.5 rounded-lg text-sm outline-none focus:border-primary"
               >
                 <option value="">Select Team</option>
-                {(config?.laminateWaste?.teams || ['A', 'B', 'C']).map(t => (
+                {(config?.packagingTeams?.labels || ['A', 'B', 'C']).map(t => (
                   <option key={t} value={t}>Team {t}</option>
                 ))}
               </select>

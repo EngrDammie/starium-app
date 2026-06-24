@@ -34,20 +34,22 @@ export default function SystemConfig() {
   });
   const [authEnabled, setAuthEnabled] = useState(true);
 
+  // Packaging Teams State
+  const [packagingTeamsSettings, setPackagingTeamsSettings] = useState({
+    labels: 'A, B, C',
+    defaultTeam: 'A'
+  });
+
   // Carton Waste Settings State
   const [cartonWasteSettings, setCartonWasteSettings] = useState({
     targetWastePercent: 5,
-    wasteAlertThreshold: 10,
-    teams: 'A, B, C',
-    defaultTeam: 'A'
+    wasteAlertThreshold: 10
   });
 
   // Laminate Waste Settings State
   const [laminateWasteSettings, setLaminateWasteSettings] = useState({
     targetWastePercent: 5,
     wasteAlertThreshold: 10,
-    teams: 'A, B, C',
-    defaultTeam: 'A',
     rollsPerShift: 3,
     smallSacWeight: 80,
     largeSacWeight: 160,
@@ -84,12 +86,16 @@ export default function SystemConfig() {
         machineGridColumns: config.machineGridColumns ?? 6
       });
     }
+    if (config?.packagingTeams) {
+      setPackagingTeamsSettings({
+        labels: (config.packagingTeams.labels || ['A', 'B', 'C']).join(', '),
+        defaultTeam: config.packagingTeams.defaultTeam ?? 'A'
+      });
+    }
     if (config?.cartonWaste) {
       setCartonWasteSettings({
         targetWastePercent: config.cartonWaste.targetWastePercent ?? 5,
-        wasteAlertThreshold: config.cartonWaste.wasteAlertThreshold ?? 10,
-        teams: (config.cartonWaste.teams || ['A', 'B', 'C']).join(', '),
-        defaultTeam: config.cartonWaste.defaultTeam ?? 'A'
+        wasteAlertThreshold: config.cartonWaste.wasteAlertThreshold ?? 10
       });
     }
     if (config?.laminateWaste) {
@@ -97,8 +103,6 @@ export default function SystemConfig() {
       setLaminateWasteSettings({
         targetWastePercent: lw.targetWastePercent ?? 5,
         wasteAlertThreshold: lw.wasteAlertThreshold ?? 10,
-        teams: (lw.teams || ['A', 'B', 'C']).join(', '),
-        defaultTeam: lw.defaultTeam ?? 'A',
         rollsPerShift: lw.rollsPerShift ?? 3,
         smallSacWeight: (lw.sacTypes?.find(s => s.id === 'small')?.weight || 0.080) * 1000,
         largeSacWeight: (lw.sacTypes?.find(s => s.id === 'large')?.weight || 0.160) * 1000,
@@ -262,7 +266,11 @@ export default function SystemConfig() {
   const saveGlobalSettings = async () => {
     if (globalSettings.level9MinDensity >= globalSettings.level9MaxDensity) return showToast('L9 Min must be < Max', true);
     if (globalSettings.botMinDensity >= globalSettings.botMaxDensity) return showToast('BOT Min must be < Max', true);
-    await updateDatabase(globalSettings, 'Global Settings Saved!');
+    const teamsArray = packagingTeamsSettings.labels.split(',').map(t => t.trim()).filter(Boolean);
+    await updateDatabase({
+      ...globalSettings,
+      packagingTeams: { labels: teamsArray, defaultTeam: packagingTeamsSettings.defaultTeam }
+    }, 'Global Settings Saved!');
   };
 
   const toggleGlobalAuth = async () => {
@@ -282,6 +290,7 @@ export default function SystemConfig() {
       machines: config.machines, productionLines: config.productionLines, gramSpecs: config.gramSpecs,
       machineGridColumns: config.machineGridColumns, dayShiftStart: config.dayShiftStart, nightShiftStart: config.nightShiftStart,
       departmentRoles: config.departmentRoles, actionRoles: config.actionRoles,
+      packagingTeams: config.packagingTeams,
       cartonWaste: config.cartonWaste,
       laminateWaste: config.laminateWaste,
       exportedAt: new Date().toISOString()
@@ -310,6 +319,7 @@ export default function SystemConfig() {
       if (data.actionRoles) updates.actionRoles = data.actionRoles;
       if (data.dayShiftStart) updates.dayShiftStart = data.dayShiftStart;
       if (data.nightShiftStart) updates.nightShiftStart = data.nightShiftStart;
+      if (data.packagingTeams) updates.packagingTeams = data.packagingTeams;
       if (data.cartonWaste) updates.cartonWaste = data.cartonWaste;
       if (data.laminateWaste) updates.laminateWaste = data.laminateWaste;
 
@@ -327,6 +337,10 @@ export default function SystemConfig() {
     // Standard 30 machine factory default
     const DEFAULT_FACTORY_CONFIG = {
       machineGridColumns: 6,
+      packagingTeams: {
+        labels: ['A', 'B', 'C'],
+        defaultTeam: 'A'
+      },
       productionLines: [
         { id: "1A", name: "Line 1A", order: 1 }, { id: "1B", name: "Line 1B", order: 2 },
         { id: "2A", name: "Line 2A", order: 3 }, { id: "2B", name: "Line 2B", order: 4 },
@@ -373,15 +387,11 @@ export default function SystemConfig() {
       },
       cartonWaste: {
         targetWastePercent: 5,
-        wasteAlertThreshold: 10,
-        teams: ['A', 'B', 'C'],
-        defaultTeam: 'A'
+        wasteAlertThreshold: 10
       },
       laminateWaste: {
         targetWastePercent: 5,
         wasteAlertThreshold: 10,
-        teams: ['A', 'B', 'C'],
-        defaultTeam: 'A',
         rollsPerShift: 3,
         rollWeights: {
           "22": 51.32,
@@ -612,6 +622,26 @@ export default function SystemConfig() {
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Packaging Teams</h3>
+              <div className="mb-3">
+                <label className="text-gray-300">Team Labels (comma-separated):</label>
+                <input type="text"
+                  value={packagingTeamsSettings.labels}
+                  onChange={e => setPackagingTeamsSettings(prev => ({ ...prev, labels: e.target.value }))}
+                  placeholder="A, B, C"
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+              <div className="mb-3">
+                <label className="text-gray-300">Default Team:</label>
+                <input type="text"
+                  value={packagingTeamsSettings.defaultTeam}
+                  onChange={e => setPackagingTeamsSettings(prev => ({ ...prev, defaultTeam: e.target.value }))}
+                  placeholder="A"
+                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+              </div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
               <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">UI Settings</h3>
               <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Machine Grid Columns:</label><input type="number" name="machineGridColumns" min="1" max="12" value={globalSettings.machineGridColumns} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
             </div>
@@ -660,36 +690,13 @@ export default function SystemConfig() {
               </div>
               <div className="text-xs text-gray-500 mt-1">Broadcasts alert when a check exceeds this %.</div>
             </div>
-
-            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Packaging Teams</h3>
-              <div className="mb-3">
-                <label className="text-gray-300">Team Labels (comma-separated):</label>
-                <input type="text"
-                  value={cartonWasteSettings.teams}
-                  onChange={e => setCartonWasteSettings(prev => ({ ...prev, teams: e.target.value }))}
-                  placeholder="A, B, C"
-                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-              </div>
-              <div className="mb-3">
-                <label className="text-gray-300">Default Team:</label>
-                <input type="text"
-                  value={cartonWasteSettings.defaultTeam}
-                  onChange={e => setCartonWasteSettings(prev => ({ ...prev, defaultTeam: e.target.value }))}
-                  placeholder="A"
-                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-              </div>
-            </div>
           </div>
 
           <button onClick={async () => {
-            const teamsArray = cartonWasteSettings.teams.split(',').map(t => t.trim()).filter(Boolean);
             await updateDatabase({
               cartonWaste: {
                 targetWastePercent: cartonWasteSettings.targetWastePercent,
-                wasteAlertThreshold: cartonWasteSettings.wasteAlertThreshold,
-                teams: teamsArray,
-                defaultTeam: cartonWasteSettings.defaultTeam
+                wasteAlertThreshold: cartonWasteSettings.wasteAlertThreshold
               }
             }, 'Carton waste settings saved!');
           }} className="mt-6 bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
@@ -721,26 +728,6 @@ export default function SystemConfig() {
                   className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" />
               </div>
               <div className="text-xs text-gray-500 mt-1">Broadcasts alert when waste exceeds this %.</div>
-            </div>
-
-            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Packaging Teams</h3>
-              <div className="mb-3">
-                <label className="text-gray-300">Team Labels (comma-separated):</label>
-                <input type="text"
-                  value={laminateWasteSettings.teams}
-                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, teams: e.target.value }))}
-                  placeholder="A, B, C"
-                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-              </div>
-              <div className="mb-3">
-                <label className="text-gray-300">Default Team:</label>
-                <input type="text"
-                  value={laminateWasteSettings.defaultTeam}
-                  onChange={e => setLaminateWasteSettings(prev => ({ ...prev, defaultTeam: e.target.value }))}
-                  placeholder="A"
-                  className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-              </div>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
@@ -784,13 +771,10 @@ export default function SystemConfig() {
           </div>
 
           <button onClick={async () => {
-            const teamsArray = laminateWasteSettings.teams.split(',').map(t => t.trim()).filter(Boolean);
             await updateDatabase({
               laminateWaste: {
                 targetWastePercent: laminateWasteSettings.targetWastePercent,
                 wasteAlertThreshold: laminateWasteSettings.wasteAlertThreshold,
-                teams: teamsArray,
-                defaultTeam: laminateWasteSettings.defaultTeam,
                 rollsPerShift: laminateWasteSettings.rollsPerShift,
                 sacTypes: [
                   { id: 'small', label: 'Small Sac', weight: laminateWasteSettings.smallSacWeight / 1000 },

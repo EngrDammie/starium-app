@@ -20,7 +20,7 @@ export default function PowderDensity() {
   
   const [mode, setMode] = useState('level9');
   const [shift, setShift] = useState('DAY');
-  const [team, setTeam] = useState(localStorage.getItem('qcTeam') || '');
+  const [team, setTeam] = useState(localStorage.getItem('qcTeam') || config?.packagingTeams?.defaultTeam || '');
   const [weight, setWeight] = useState('');
   
   const [buggyNumber, setBuggyNumber] = useState('');
@@ -263,7 +263,7 @@ export default function PowderDensity() {
         <div className="flex items-center gap-2">
           <label className="text-primary font-bold">Team:</label>
           <select value={team} onChange={(e) => setTeam(e.target.value)} className="bg-dark-card text-white border-2 border-primary rounded-lg px-3 py-2 outline-none cursor-pointer focus:border-status-success">
-            <option value="" disabled>Select Team</option><option value="A">Team A</option><option value="B">Team B</option><option value="C">Team C</option>
+            <option value="" disabled>Select Team</option>{(config?.packagingTeams?.labels || ['A', 'B', 'C']).map(t => (<option key={t} value={t}>Team {t}</option>))}
           </select>
         </div>
         <div className="flex items-center gap-2">

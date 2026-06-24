@@ -330,7 +330,7 @@ export default function LaminateWasteReport() {
                 <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
                   className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary">
                   <option value="all">All Teams</option>
-                  {(config?.laminateWaste?.teams || ['A', 'B', 'C']).map(t => (
+                  {(config?.packagingTeams?.labels || ['A', 'B', 'C']).map(t => (
                     <option key={t} value={t}>Team {t}</option>
                   ))}
                 </select>

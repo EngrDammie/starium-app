@@ -23,7 +23,7 @@ export default function CartonWaste() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState(() => {
-    return localStorage.getItem('starium_carton_team') || config?.cartonWaste?.defaultTeam || '';
+    return localStorage.getItem('starium_carton_team') || config?.packagingTeams?.defaultTeam || '';
   });
   const [shiftInfo, setShiftInfo] = useState({ shift: '--', date: '--' });
 
@@ -221,7 +221,7 @@ export default function CartonWaste() {
                 className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-1.5 rounded-lg text-sm outline-none focus:border-primary"
               >
                 <option value="">Select Team</option>
-                {(config?.cartonWaste?.teams || ['A', 'B', 'C']).map(t => (
+                {(config?.packagingTeams?.labels || ['A', 'B', 'C']).map(t => (
                   <option key={t} value={t}>Team {t}</option>
                 ))}
               </select>

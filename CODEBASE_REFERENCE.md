@@ -208,6 +208,10 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
   botMinDensity: 0.200, botMaxDensity: 0.240, botDivisor: 1680,
   dayShiftStart: 7, nightShiftStart: 19,
   machineGridColumns: 6,
+  packagingTeams: {
+    labels: ['A', 'B', 'C'],
+    defaultTeam: 'A'
+  },
   productionLines: [{id: "1A", ...}, {id: "1B", ...}, ... 6 lines total],
   machines: [3 default machines],
   gramSpecs: { "22": {...}, "45": {...}, "85": {...}, "125": {...}, "850": {...} },
@@ -215,15 +219,11 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
   actionRoles: [5 predefined roles],
   cartonWaste: {
     targetWastePercent: 5,
-    wasteAlertThreshold: 10,
-    teams: ['A', 'B', 'C'],
-    defaultTeam: 'A'
+    wasteAlertThreshold: 10
   },
   laminateWaste: {
     targetWastePercent: 5,
     wasteAlertThreshold: 10,
-    teams: ['A', 'B', 'C'],
-    defaultTeam: 'A',
     rollsPerShift: 3,
     rollWeights: {
       "22": 51.32, "45": 54.40, "85": 51.60, "125": 53.70, "850": 49.90
@@ -717,6 +717,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Level 9: Min/Max density, Divisor
 - BOT: Min/Max density, Divisor
 - Shift times: Day start, Night start (24h)
+- Packaging Teams: Team labels (comma-separated, default "A, B, C"), Default Team (default "A") — consumed by Powder Density, Carton Waste, Laminate Waste, and both waste report pages
 - UI: Machine Grid Columns
 - Master Auth Toggle: enable/disable Firebase login (Ghost Admin mode)
 
@@ -726,16 +727,13 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Reset to Defaults: double-confirmation, restores 30-machine factory default config
 
 **7. Carton Waste Tab**:
-- Target Waste %: default 5% — machines exceeding this turn red on the grid
-- Waste Alert Threshold: default 10% — when a save exceeds this, a danger-level broadcast fires
-- Teams: comma-separated team labels (A, B, C by default), rendered as dropdown options in CartonWaste form
-- Default Team: pre-selected team in the form when no localStorage preference exists
+- Waste Thresholds: Target Waste % (default 5%), Waste Alert Threshold (default 10%)
+- Team labels and default team are now managed centrally in the **Global Settings** tab (see item 5: Packaging Teams)
 - Settings are stored under `config.settings.cartonWaste` as a nested object (merged into DEFAULT_CONFIG in ConfigContext)
 - Fully compatible with the Export/Import JSON and Reset to Defaults features (cartonWaste is included in the exported JSON and reset sequence)
 
 **8. Laminate Waste Tab**:
 - Waste Thresholds: Target Waste % (default 5%), Waste Alert Threshold (default 10%)
-- Packaging Teams: Team labels (comma-separated, default "A, B, C"), Default Team (default "A")
 - Roll Settings: Rolls per Shift (default 3), Roll Weight per Gram (22g→51.32, 45g→54.40, 85g→51.60, 125g→53.70, 850g→49.90 kg)
 - Sac Types: Small Sac Weight in grams (default 80g), Large Sac Weight in grams (default 160g)
 - Settings stored under `config.settings.laminateWaste` as a nested object (merged into DEFAULT_CONFIG)

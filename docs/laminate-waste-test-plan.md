@@ -210,9 +210,9 @@
 | Step | Action | Expected Result |
 |---|---|---|
 | 1 | Go to **System Config** (Admin sidebar) | Config page loads |
-| 2 | Click the **🗑️ Laminate Waste** tab | Settings page shows 4 sections |
+| 2 | Click the **🗑️ Laminate Waste** tab | Settings page shows 3 sections |
 | 3 | Find **Waste Thresholds** | Target Waste % (default 5) and Alert Threshold % (default 10) |
-| 4 | Find **Packaging Teams** | Team labels (default "A, B, C") and Default Team (default "A") |
+| 4 | Find **Packaging Teams** (not here — moved to Global Settings tab) | Team labels are now configured under **⚙️ Global Settings → Packaging Teams** |
 | 5 | Find **Roll Settings** | Rolls per Shift (default 3) and a table of roll weights for each gram (22g→51.32, 45g→54.40, etc.) |
 | 6 | Find **Sac Types** | Small Sac Weight (80g) and Large Sac Weight (160g) |
 | 7 | Change Target Waste % to `8` and click **Save Laminate Waste Settings** | Green toast: "Laminate waste settings saved!" |

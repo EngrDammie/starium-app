@@ -430,9 +430,10 @@ Auto-calculated display shows: Sac Weight (from lookup), Waste Collected (Gross 
 | Section | Fields |
 |---|---|
 | Waste Thresholds | Target Waste %, Alert Threshold % |
-| Packaging Teams | Team Labels (comma-separated), Default Team |
 | Roll Settings | Rolls per Shift, Roll Weight per Gram (table: 22g–850g) |
 | Sac Types | Small Sac Weight (g), Large Sac Weight (g) |
+
+> Packaging Teams (Team Labels + Default Team) moved to **Global Settings** tab — shared across Powder Density, Carton Waste, and Laminate Waste pages.
 
 ---
 

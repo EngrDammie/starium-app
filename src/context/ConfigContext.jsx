@@ -10,6 +10,10 @@ const DEFAULT_CONFIG = {
   botMinDensity: 0.200, botMaxDensity: 0.240, botDivisor: 1680,
   dayShiftStart: 7, nightShiftStart: 19,
   machineGridColumns: 6,
+  packagingTeams: {
+    labels: ['A', 'B', 'C'],
+    defaultTeam: 'A'
+  },
   productionLines: [
     { id: "1A", name: "Line 1A", order: 1 }, { id: "1B", name: "Line 1B", order: 2 },
     { id: "2A", name: "Line 2A", order: 3 }, { id: "2B", name: "Line 2B", order: 4 },
@@ -30,16 +34,12 @@ const DEFAULT_CONFIG = {
   // 🎯 Carton Waste Tracking Config
   cartonWaste: {
     targetWastePercent: 5,
-    wasteAlertThreshold: 10,
-    teams: ['A', 'B', 'C'],
-    defaultTeam: 'A'
+    wasteAlertThreshold: 10
   },
   // 🎯 Laminate Waste Tracking Config
   laminateWaste: {
     targetWastePercent: 5,
     wasteAlertThreshold: 10,
-    teams: ['A', 'B', 'C'],
-    defaultTeam: 'A',
     rollsPerShift: 3,
     rollWeights: {
       "22": 51.32,
@@ -84,8 +84,9 @@ export function ConfigProvider({ children }) {
         setConfig({ 
           ...DEFAULT_CONFIG, 
           ...data,
-          cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}) },
-          laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}) },
+          packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
+          cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
+          laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
           machines: data.machines || DEFAULT_CONFIG.machines,
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
           gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,

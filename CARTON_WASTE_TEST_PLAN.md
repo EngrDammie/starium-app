@@ -348,7 +348,7 @@ Allocated: 350 | Used: 230 | Wasted: 4 | Waste %: 1.71%
 |---|---|---|
 | 1 | Click **"System Config"** in the left menu (under Administration). | System Configuration page opens |
 | 2 | Look at the row of tabs near the top. | Tabs for Machines, Lines, Gram Specs, Roles, Settings, **📦 Carton Waste**, Import / Export |
-| 3 | **Click "📦 Carton Waste"**. | Two boxes appear: "Waste Thresholds" and "Packaging Teams" |
+| 3 | **Click "📦 Carton Waste"**. | One box: "Waste Thresholds". Team settings are now in **Global Settings** tab. |
 
 ### 8.2 — Changing the Target Waste Percentage
 
@@ -360,19 +360,20 @@ Allocated: 350 | Used: 230 | Wasted: 4 | Waste %: 1.71%
 | 4 | Go back to **Carton Waste Tracking** page. | |
 | 5 | Look at the machine you checked earlier that had high waste (M2 with 44.44%). | It was red before — it might still be red because 44.44% > 10% too |
 
-### 8.3 — Changing Team Names
+### 8.3 — Changing Team Names (Now in Global Settings)
 
 | Step | What to do | You should see |
 |---|---|---|
-| 1 | Go back to **System Config → 📦 Carton Waste**. | |
-| 2 | Find the **"Team Labels"** text box. | Shows "A, B, C" |
-| 3 | Change it to **"Alpha, Bravo, Charlie"**. | Box shows "Alpha, Bravo, Charlie" |
-| 4 | Find the **"Default Team"** box. | Shows "A" |
-| 5 | Change it to **"Alpha"**. | Box shows "Alpha" |
-| 6 | **Click "Save Carton Waste Settings"**. | Green success message |
-| 7 | Go to **Carton Waste Tracking** page. | |
-| 8 | Click the **Team dropdown**. | Shows "Alpha", "Bravo", "Charlie" instead of "A", "B", "C" |
-| 9 | **IMPORTANT:** Set the team back to **"Alpha"** (or whatever makes sense). | |
+| 1 | Go to **System Config → ⚙️ Global Settings**. | |
+| 2 | Scroll to **"Packaging Teams"** card. | Shows Team Labels and Default Team inputs |
+| 3 | Find the **"Team Labels"** text box. | Shows "A, B, C" |
+| 4 | Change it to **"Alpha, Bravo, Charlie"**. | Box shows "Alpha, Bravo, Charlie" |
+| 5 | Find the **"Default Team"** box. | Shows "A" |
+| 6 | Change it to **"Alpha"**. | Box shows "Alpha" |
+| 7 | **Click "Save All Settings"**. | Green success message |
+| 8 | Go to **Carton Waste Tracking** page. | |
+| 9 | Click the **Team dropdown**. | Shows "Alpha", "Bravo", "Charlie" instead of "A", "B", "C" |
+| 10 | **IMPORTANT:** Set the team back to **"Alpha"** (or whatever makes sense). | |
 
 ---
 
