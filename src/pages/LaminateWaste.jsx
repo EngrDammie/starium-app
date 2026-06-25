@@ -267,7 +267,7 @@ export default function LaminateWaste() {
                   const status = getMachineStatus(m.id);
                   const latest = getMachineLatestCheck(m.id);
 
-                  let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative flex flex-col items-center gap-1 ";
+                  let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative flex flex-col items-center gap-1 justify-center min-h-[80px] ";
                   if (status === 'checked') {
                     btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105";
                   } else if (status === 'high-waste') {
