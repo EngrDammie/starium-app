@@ -697,7 +697,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 8 tabs (7 original + Carton Waste + Laminate Waste):
 
 **1. Machines Tab**:
-- CRUD for machines: ID, Display Number, Name, Line, Gram, Min/Max (auto-filled from gram specs)
+- CRUD for machines: ID, Display Number, Name, Line, Gram, Fill Heads (default 2), Min/Max (auto-filled from gram specs)
 - Search by name/ID, filter by line
 - Stats: total machines, production lines count
 
@@ -896,7 +896,7 @@ Doc ID: `${mode}_${shift}_${date}`
   dayShiftStart, nightShiftStart,
   machineGridColumns,
   productionLines: [{ id, name, order }],
-  machines: [{ id, displayNumber, name, line, gram, min, max }],
+  machines: [{ id, displayNumber, name, line, gram, fillHeads, min, max }],
   gramSpecs: { "22": { min, max, piecesPerCarton, piecesBreakdown }, ... },
   departmentRoles: [{ id, label, category }],
   actionRoles: [{ id, label }],

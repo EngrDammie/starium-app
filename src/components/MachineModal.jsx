@@ -43,6 +43,10 @@ export default function MachineModal({ isOpen, onClose, machine, isMatch, isSele
             <span className="text-primary font-bold">{min.toFixed(3)} - {max.toFixed(3)}</span>
           </div>
           <div className="flex justify-between border-b border-[#333] pb-2">
+            <span className="text-gray-400">Fill Heads:</span>
+            <span className="text-primary font-bold">{machine.fillHeads ?? 2}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#333] pb-2">
             <span className="text-gray-400">Carton Content:</span>
             <span className="text-primary font-bold text-right w-1/2">{cartonContent}</span>
           </div>

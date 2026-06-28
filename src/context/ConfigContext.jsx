@@ -20,9 +20,9 @@ const DEFAULT_CONFIG = {
     { id: "3A", name: "Line 3A", order: 5 }, { id: "3B", name: "Line 3B", order: 6 }
   ],
   machines: [
-    { id: 1, displayNumber: 1, gram: 125, min: 0.200, max: 0.270, line: "1A", name: "Machine 1" },
-    { id: 2, displayNumber: 2, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 2" },
-    { id: 6, displayNumber: 6, gram: 125, min: 0.200, max: 0.270, line: "1B", name: "Machine 6" }
+    { id: 1, displayNumber: 1, gram: 125, min: 0.200, max: 0.270, line: "1A", name: "Machine 1", fillHeads: 2 },
+    { id: 2, displayNumber: 2, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 2", fillHeads: 2 },
+    { id: 6, displayNumber: 6, gram: 125, min: 0.200, max: 0.270, line: "1B", name: "Machine 6", fillHeads: 2 }
   ],
   gramSpecs: {
     "22": { min: 0.200, max: 0.310, piecesPerCarton: 162 },
@@ -87,7 +87,7 @@ export function ConfigProvider({ children }) {
           packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
           cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
           laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
-          machines: data.machines || DEFAULT_CONFIG.machines,
+          machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
           gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,
           departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,

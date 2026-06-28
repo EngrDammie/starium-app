@@ -18,7 +18,7 @@ export default function SystemConfig() {
   const [isGramModalOpen, setIsGramModalOpen] = useState(false);
 
   // Form States
-  const [machineForm, setMachineForm] = useState({ id: '', displayNumber: '', name: '', line: '', gram: 125, min: '', max: '', isEdit: false });
+  const [machineForm, setMachineForm] = useState({ id: '', displayNumber: '', name: '', line: '', gram: 125, min: '', max: '', fillHeads: 2, isEdit: false });
   const [lineForm, setLineForm] = useState({ id: '', name: '', order: '', isEdit: false });
   const [gramForm, setGramForm] = useState({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', isEdit: false });
   
@@ -145,7 +145,7 @@ export default function SystemConfig() {
         const lineM = config.machines?.filter(m => m.line === firstLine) || [];
         nextDisplay = lineM.length > 0 ? Math.max(...lineM.map(m => m.displayNumber || m.id)) + 1 : 1;
       }
-      setMachineForm({ id: maxId + 1, displayNumber: nextDisplay, name: '', line: firstLine, gram: 125, min: '', max: '', isEdit: false });
+      setMachineForm({ id: maxId + 1, displayNumber: nextDisplay, name: '', line: firstLine, gram: 125, min: '', max: '', fillHeads: 2, isEdit: false });
     }
     setIsMachineModalOpen(true);
   };
@@ -158,7 +158,7 @@ export default function SystemConfig() {
   const saveMachine = async (e) => {
     e.preventDefault();
     let newMachines = [...(config.machines || [])];
-    let { id, displayNumber, name, line, gram, min, max, isEdit } = machineForm;
+    let { id, displayNumber, name, line, gram, min, max, fillHeads, isEdit } = machineForm;
     id = parseInt(id); displayNumber = parseInt(displayNumber); gram = parseInt(gram);
     min = parseFloat(min); max = parseFloat(max);
 
@@ -167,7 +167,7 @@ export default function SystemConfig() {
       if (spec) { min = spec.min; max = spec.max; }
     }
 
-    const machineData = { id, displayNumber, name, line, gram, min, max };
+    const machineData = { id, displayNumber, name, line, gram, min, max, fillHeads };
 
     if (isEdit) {
       newMachines = newMachines.map(m => m.id === id ? machineData : m);
@@ -347,36 +347,36 @@ export default function SystemConfig() {
         { id: "3A", name: "Line 3A", order: 5 }, { id: "3B", name: "Line 3B", order: 6 }
       ],
       machines: [
-        { id: 1, displayNumber: 1, gram: 125, min: 0.200, max: 0.270, line: "1A", name: "Machine 1" },
-        { id: 2, displayNumber: 2, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 2" },
-        { id: 3, displayNumber: 3, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 3" },
-        { id: 4, displayNumber: 4, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 4" },
-        { id: 5, displayNumber: 5, gram: 85, min: 0.240, max: 0.300, line: "1A", name: "Machine 5" },
-        { id: 6, displayNumber: 6, gram: 125, min: 0.200, max: 0.270, line: "1B", name: "Machine 6" },
-        { id: 7, displayNumber: 7, gram: 85, min: 0.240, max: 0.300, line: "1B", name: "Machine 7" },
-        { id: 8, displayNumber: 8, gram: 850, min: 0.200, max: 0.270, line: "1B", name: "Machine 8" },
-        { id: 9, displayNumber: 9, gram: 85, min: 0.240, max: 0.300, line: "1B", name: "Machine 9" },
-        { id: 10, displayNumber: 10, gram: 22, min: 0.200, max: 0.310, line: "1B", name: "Machine 10" },
-        { id: 11, displayNumber: 11, gram: 85, min: 0.240, max: 0.300, line: "2A", name: "Machine 11" },
-        { id: 12, displayNumber: 12, gram: 85, min: 0.240, max: 0.300, line: "2A", name: "Machine 12" },
-        { id: 13, displayNumber: 13, gram: 85, min: 0.240, max: 0.300, line: "2A", name: "Machine 13" },
-        { id: 14, displayNumber: 14, gram: 85, min: 0.240, max: 0.300, line: "2A", name: "Machine 14" },
-        { id: 15, displayNumber: 15, gram: 85, min: 0.240, max: 0.300, line: "2A", name: "Machine 15" },
-        { id: 16, displayNumber: 16, gram: 850, min: 0.200, max: 0.270, line: "2B", name: "Machine 16" },
-        { id: 17, displayNumber: 17, gram: 85, min: 0.240, max: 0.300, line: "2B", name: "Machine 17" },
-        { id: 18, displayNumber: 18, gram: 85, min: 0.240, max: 0.300, line: "2B", name: "Machine 18" },
-        { id: 19, displayNumber: 19, gram: 85, min: 0.240, max: 0.300, line: "2B", name: "Machine 19" },
-        { id: 20, displayNumber: 20, gram: 85, min: 0.240, max: 0.300, line: "2B", name: "Machine 20" },
-        { id: 21, displayNumber: 21, gram: 850, min: 0.200, max: 0.270, line: "3A", name: "Machine 21" },
-        { id: 22, displayNumber: 22, gram: 45, min: 0.210, max: 0.310, line: "3A", name: "Machine 22" },
-        { id: 23, displayNumber: 23, gram: 45, min: 0.210, max: 0.310, line: "3A", name: "Machine 23" },
-        { id: 24, displayNumber: 24, gram: 45, min: 0.210, max: 0.310, line: "3A", name: "Machine 24" },
-        { id: 25, displayNumber: 25, gram: 45, min: 0.210, max: 0.310, line: "3A", name: "Machine 25" },
-        { id: 26, displayNumber: 26, gram: 850, min: 0.200, max: 0.270, line: "3B", name: "Machine 26" },
-        { id: 27, displayNumber: 27, gram: 45, min: 0.210, max: 0.310, line: "3B", name: "Machine 27" },
-        { id: 28, displayNumber: 28, gram: 45, min: 0.210, max: 0.310, line: "3B", name: "Machine 28" },
-        { id: 29, displayNumber: 29, gram: 45, min: 0.210, max: 0.310, line: "3B", name: "Machine 29" },
-        { id: 30, displayNumber: 30, gram: 45, min: 0.210, max: 0.310, line: "3B", name: "Machine 30" }
+        { id: 1, displayNumber: 1, gram: 125, min: 0.200, max: 0.270, line: "1A", fillHeads: 2, name: "Machine 1" },
+        { id: 2, displayNumber: 2, gram: 85, min: 0.240, max: 0.300, line: "1A", fillHeads: 2, name: "Machine 2" },
+        { id: 3, displayNumber: 3, gram: 85, min: 0.240, max: 0.300, line: "1A", fillHeads: 2, name: "Machine 3" },
+        { id: 4, displayNumber: 4, gram: 85, min: 0.240, max: 0.300, line: "1A", fillHeads: 2, name: "Machine 4" },
+        { id: 5, displayNumber: 5, gram: 85, min: 0.240, max: 0.300, line: "1A", fillHeads: 2, name: "Machine 5" },
+        { id: 6, displayNumber: 6, gram: 125, min: 0.200, max: 0.270, line: "1B", fillHeads: 2, name: "Machine 6" },
+        { id: 7, displayNumber: 7, gram: 85, min: 0.240, max: 0.300, line: "1B", fillHeads: 2, name: "Machine 7" },
+        { id: 8, displayNumber: 8, gram: 850, min: 0.200, max: 0.270, line: "1B", fillHeads: 2, name: "Machine 8" },
+        { id: 9, displayNumber: 9, gram: 85, min: 0.240, max: 0.300, line: "1B", fillHeads: 2, name: "Machine 9" },
+        { id: 10, displayNumber: 10, gram: 22, min: 0.200, max: 0.310, line: "1B", fillHeads: 2, name: "Machine 10" },
+        { id: 11, displayNumber: 11, gram: 85, min: 0.240, max: 0.300, line: "2A", fillHeads: 2, name: "Machine 11" },
+        { id: 12, displayNumber: 12, gram: 85, min: 0.240, max: 0.300, line: "2A", fillHeads: 2, name: "Machine 12" },
+        { id: 13, displayNumber: 13, gram: 85, min: 0.240, max: 0.300, line: "2A", fillHeads: 2, name: "Machine 13" },
+        { id: 14, displayNumber: 14, gram: 85, min: 0.240, max: 0.300, line: "2A", fillHeads: 2, name: "Machine 14" },
+        { id: 15, displayNumber: 15, gram: 85, min: 0.240, max: 0.300, line: "2A", fillHeads: 2, name: "Machine 15" },
+        { id: 16, displayNumber: 16, gram: 850, min: 0.200, max: 0.270, line: "2B", fillHeads: 2, name: "Machine 16" },
+        { id: 17, displayNumber: 17, gram: 85, min: 0.240, max: 0.300, line: "2B", fillHeads: 2, name: "Machine 17" },
+        { id: 18, displayNumber: 18, gram: 85, min: 0.240, max: 0.300, line: "2B", fillHeads: 2, name: "Machine 18" },
+        { id: 19, displayNumber: 19, gram: 85, min: 0.240, max: 0.300, line: "2B", fillHeads: 2, name: "Machine 19" },
+        { id: 20, displayNumber: 20, gram: 85, min: 0.240, max: 0.300, line: "2B", fillHeads: 2, name: "Machine 20" },
+        { id: 21, displayNumber: 21, gram: 850, min: 0.200, max: 0.270, line: "3A", fillHeads: 2, name: "Machine 21" },
+        { id: 22, displayNumber: 22, gram: 45, min: 0.210, max: 0.310, line: "3A", fillHeads: 2, name: "Machine 22" },
+        { id: 23, displayNumber: 23, gram: 45, min: 0.210, max: 0.310, line: "3A", fillHeads: 2, name: "Machine 23" },
+        { id: 24, displayNumber: 24, gram: 45, min: 0.210, max: 0.310, line: "3A", fillHeads: 2, name: "Machine 24" },
+        { id: 25, displayNumber: 25, gram: 45, min: 0.210, max: 0.310, line: "3A", fillHeads: 2, name: "Machine 25" },
+        { id: 26, displayNumber: 26, gram: 850, min: 0.200, max: 0.270, line: "3B", fillHeads: 2, name: "Machine 26" },
+        { id: 27, displayNumber: 27, gram: 45, min: 0.210, max: 0.310, line: "3B", fillHeads: 2, name: "Machine 27" },
+        { id: 28, displayNumber: 28, gram: 45, min: 0.210, max: 0.310, line: "3B", fillHeads: 2, name: "Machine 28" },
+        { id: 29, displayNumber: 29, gram: 45, min: 0.210, max: 0.310, line: "3B", fillHeads: 2, name: "Machine 29" },
+        { id: 30, displayNumber: 30, gram: 45, min: 0.210, max: 0.310, line: "3B", fillHeads: 2, name: "Machine 30" }
       ],
       gramSpecs: {
         "22": { min: 0.200, max: 0.310, piecesPerCarton: 162 },
@@ -468,12 +468,12 @@ export default function SystemConfig() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">ID</th><th className="p-3">Display #</th><th className="p-3">Name</th><th className="p-3">Line</th><th className="p-3">Gram</th><th className="p-3">Min</th><th className="p-3">Max</th><th className="p-3">Actions</th></tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">ID</th><th className="p-3">Display #</th><th className="p-3">Name</th><th className="p-3">Line</th><th className="p-3">Gram</th><th className="p-3">Heads</th><th className="p-3">Min</th><th className="p-3">Max</th><th className="p-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {filteredMachines.map(m => (
                   <tr key={m.id} className="hover:bg-white/5">
-                    <td className="p-3 text-white">{m.id}</td><td className="p-3 text-primary font-bold">M{m.displayNumber || m.id}</td><td className="p-3 text-white">{m.name}</td><td className="p-3 text-gray-300">{m.line}</td><td className="p-3 text-status-warning font-bold">{m.gram}g</td><td className="p-3 text-gray-300">{m.min.toFixed(3)}</td><td className="p-3 text-gray-300">{m.max.toFixed(3)}</td>
+                    <td className="p-3 text-white">{m.id}</td><td className="p-3 text-primary font-bold">M{m.displayNumber || m.id}</td><td className="p-3 text-white">{m.name}</td><td className="p-3 text-gray-300">{m.line}</td><td className="p-3 text-status-warning font-bold">{m.gram}g</td><td className="p-3 text-status-warning font-bold">{m.fillHeads ?? 2}H</td><td className="p-3 text-gray-300">{m.min.toFixed(3)}</td><td className="p-3 text-gray-300">{m.max.toFixed(3)}</td>
                     <td className="p-3 flex gap-2"><button onClick={() => handleOpenMachineModal(m)} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteMachine(m.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
                   </tr>
                 ))}
@@ -850,6 +850,10 @@ export default function SystemConfig() {
                 </div>
               </div>
               <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 uppercase font-bold">Fill Heads</label>
+                  <input type="number" min="1" required value={machineForm.fillHeads} onChange={e => setMachineForm({...machineForm, fillHeads: Number(e.target.value)})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+                </div>
                 <div className="flex-1">
                   <label className="text-xs text-gray-400 uppercase font-bold">Min Density</label>
                   <input type="number" step="0.001" disabled value={machineForm.min} className="w-full mt-1 p-3 bg-[#1a1a1a] text-gray-500 border border-[#333] rounded-lg cursor-not-allowed" />

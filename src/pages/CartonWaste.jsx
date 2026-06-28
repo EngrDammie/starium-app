@@ -314,7 +314,7 @@ export default function CartonWaste() {
               <h2 className="text-primary text-xl font-bold">
                 Machine M{selectedMachine.displayNumber || selectedMachine.id}
                 <span className="text-sm text-gray-400 font-normal ml-2">
-                  Line {selectedMachine.line} ({selectedMachine.gram}g)
+                  Line {selectedMachine.line} ({selectedMachine.gram}g) · {selectedMachine.fillHeads ?? 2}H
                 </span>
               </h2>
               <button onClick={() => !saving && setIsModalOpen(false)} className="text-gray-500 hover:text-white text-2xl">&times;</button>
