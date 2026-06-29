@@ -46,6 +46,22 @@ export default function SystemConfig() {
     wasteAlertThreshold: 10
   });
 
+  // QC Settings State
+  const [qcSettings, setQcSettings] = useState({
+    weightRanges: {
+      "22":  { tooLow: { max: 128 }, low: { min: 129, max: 136 }, target: { min: 137, max: 141 }, high: { min: 142, max: 149 }, tooHigh: { min: 150 } },
+      "45":  { tooLow: { max: 259 }, low: { min: 260, max: 272 }, target: { min: 273, max: 282 }, high: { min: 283, max: 290 }, tooHigh: { min: 291 } },
+      "85":  { tooLow: { max: 487 }, low: { min: 488, max: 516 }, target: { min: 517, max: 536 }, high: { min: 537, max: 564 }, tooHigh: { min: 565 } },
+      "125": { tooLow: { max: 487 }, low: { min: 488, max: 506 }, target: { min: 507, max: 517 }, high: { min: 518, max: 538 }, tooHigh: { min: 539 } },
+      "850": { tooLow: { max: 861 }, low: { min: 862, max: 870 }, target: { min: 871, max: 900 }, high: { min: 901, max: 980 }, tooHigh: { min: 981 } }
+    },
+    checkIntervals: {
+      stringWeight: 15,
+      bagInspection: 15,
+      cartonInspection: 60
+    }
+  });
+
   // Laminate Waste Settings State
   const [laminateWasteSettings, setLaminateWasteSettings] = useState({
     targetWastePercent: 5,
@@ -91,6 +107,12 @@ export default function SystemConfig() {
         labels: (config.packagingTeams.labels || ['A', 'B', 'C']).join(', '),
         defaultTeam: config.packagingTeams.defaultTeam ?? 'A'
       });
+    }
+    if (config?.fillHeadWeightRanges || config?.qcCheckIntervals) {
+      setQcSettings(prev => ({
+        weightRanges: config.fillHeadWeightRanges || prev.weightRanges,
+        checkIntervals: config.qcCheckIntervals || prev.checkIntervals
+      }));
     }
     if (config?.cartonWaste) {
       setCartonWasteSettings({
@@ -291,6 +313,8 @@ export default function SystemConfig() {
       machineGridColumns: config.machineGridColumns, dayShiftStart: config.dayShiftStart, nightShiftStart: config.nightShiftStart,
       departmentRoles: config.departmentRoles, actionRoles: config.actionRoles,
       packagingTeams: config.packagingTeams,
+      fillHeadWeightRanges: config.fillHeadWeightRanges,
+      qcCheckIntervals: config.qcCheckIntervals,
       cartonWaste: config.cartonWaste,
       laminateWaste: config.laminateWaste,
       exportedAt: new Date().toISOString()
@@ -320,6 +344,8 @@ export default function SystemConfig() {
       if (data.dayShiftStart) updates.dayShiftStart = data.dayShiftStart;
       if (data.nightShiftStart) updates.nightShiftStart = data.nightShiftStart;
       if (data.packagingTeams) updates.packagingTeams = data.packagingTeams;
+      if (data.fillHeadWeightRanges) updates.fillHeadWeightRanges = data.fillHeadWeightRanges;
+      if (data.qcCheckIntervals) updates.qcCheckIntervals = data.qcCheckIntervals;
       if (data.cartonWaste) updates.cartonWaste = data.cartonWaste;
       if (data.laminateWaste) updates.laminateWaste = data.laminateWaste;
 
@@ -385,6 +411,18 @@ export default function SystemConfig() {
         "125": { min: 0.200, max: 0.270, piecesPerCarton: 31 },
         "850": { min: 0.200, max: 0.270, piecesPerCarton: 7 }
       },
+      qcCheckIntervals: {
+        stringWeight: 15,
+        bagInspection: 15,
+        cartonInspection: 60
+      },
+      fillHeadWeightRanges: {
+        "22":  { tooLow: { max: 128 }, low: { min: 129, max: 136 }, target: { min: 137, max: 141 }, high: { min: 142, max: 149 }, tooHigh: { min: 150 } },
+        "45":  { tooLow: { max: 259 }, low: { min: 260, max: 272 }, target: { min: 273, max: 282 }, high: { min: 283, max: 290 }, tooHigh: { min: 291 } },
+        "85":  { tooLow: { max: 487 }, low: { min: 488, max: 516 }, target: { min: 517, max: 536 }, high: { min: 537, max: 564 }, tooHigh: { min: 565 } },
+        "125": { tooLow: { max: 487 }, low: { min: 488, max: 506 }, target: { min: 507, max: 517 }, high: { min: 518, max: 538 }, tooHigh: { min: 539 } },
+        "850": { tooLow: { max: 861 }, low: { min: 862, max: 870 }, target: { min: 871, max: 900 }, high: { min: 901, max: 980 }, tooHigh: { min: 981 } }
+      },
       cartonWaste: {
         targetWastePercent: 5,
         wasteAlertThreshold: 10
@@ -427,7 +465,7 @@ export default function SystemConfig() {
       </div>
 
       <div className="flex overflow-x-auto gap-2 mb-6 border-b border-[#333] pb-2 custom-scrollbar">
-        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'cartonwaste', 'laminatewaste', 'importexport'].map(tab => (
+        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'qc', 'cartonwaste', 'laminatewaste', 'importexport'].map(tab => (
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab)}
@@ -438,6 +476,7 @@ export default function SystemConfig() {
             {tab === 'gramspecs' && '⚖️ Gram Specs'}
             {tab === 'roles' && '🏢 Role Definitions'}
             {tab === 'settings' && '⚙️ Global Settings'}
+            {tab === 'qc' && '🔬 QC Settings'}
             {tab === 'cartonwaste' && '📦 Carton Waste'}
             {tab === 'laminatewaste' && '🗑️ Laminate Waste'}
             {tab === 'importexport' && '💾 Import / Export'}
@@ -663,6 +702,116 @@ export default function SystemConfig() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'qc' && (
+        <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
+          <h2 className="text-xl font-bold text-primary mb-6">🔬 QC Settings</h2>
+
+          {/* Check Intervals */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-status-warning mb-2">⏱️ Check Intervals</h3>
+            <p className="text-sm text-gray-400 mb-4">Minimum time (in minutes) between consecutive checks per machine. Prevents overly frequent inspections.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { key: 'stringWeight', label: 'String Weight Check', default: 15 },
+                { key: 'bagInspection', label: 'Bag Inspection', default: 15 },
+                { key: 'cartonInspection', label: 'Carton Inspection', default: 60 }
+              ].map(item => (
+                <div key={item.key} className="bg-[#1a1a1a] border border-[#444] p-4 rounded-xl">
+                  <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">{item.label}</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="number" min="0" value={qcSettings.checkIntervals[item.key] ?? item.default}
+                      onChange={e => setQcSettings(prev => ({ ...prev, checkIntervals: { ...prev.checkIntervals, [item.key]: Number(e.target.value) } }))}
+                      className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    <span className="text-gray-500 text-sm">minutes</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* String Weight Ranges */}
+          <h3 className="text-lg font-bold text-status-warning mb-2">⚖️ String Weight Ranges</h3>
+          <p className="text-sm text-gray-400 mb-4">Configure the acceptable weight ranges per gram setting for sachet string checks.</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            {['22', '45', '85', '125', '850'].map(gram => {
+              const range = qcSettings.weightRanges[gram];
+              if (!range) return null;
+              return (
+                <div key={gram} className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl">
+                  <h3 className="text-status-warning font-bold text-lg mb-4 border-b border-[#333] pb-2">{gram}g Settings</h3>
+
+                  <div className="mb-3">
+                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Too Low (max)</label>
+                    <input type="number" value={range.tooLow.max}
+                      onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooLow: { max: Number(e.target.value) } } } }))}
+                      className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                  </div>
+
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Low (min)</label>
+                      <input type="number" value={range.low.min}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, min: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Low (max)</label>
+                      <input type="number" value={range.low.max}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, max: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Target (min)</label>
+                      <input type="number" value={range.target.min}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, min: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Target (max)</label>
+                      <input type="number" value={range.target.max}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, max: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">High (min)</label>
+                      <input type="number" value={range.high.min}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, min: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">High (max)</label>
+                      <input type="number" value={range.high.max}
+                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, max: Number(e.target.value) } } } }))}
+                        className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Too High (min)</label>
+                    <input type="number" value={range.tooHigh.min}
+                      onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooHigh: { ...prev.weightRanges[gram].tooHigh, min: Number(e.target.value) } } } }))}
+                      className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button onClick={async () => {
+            await updateDatabase({ fillHeadWeightRanges: qcSettings.weightRanges, qcCheckIntervals: qcSettings.checkIntervals }, 'QC settings saved!');
+          }} className="bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
+            💾 Save QC Settings
+          </button>
         </div>
       )}
 

@@ -42,6 +42,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid, and dedicated real-time manager report. Supports appending additional issues to already-stopped machines via "Report More Issues" (which re-stops the machine), with automatic deduplication of already-attached issues — the UI filters out pre-existing issues and warns when typing a duplicate label.
 - **📦 Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining ≤ available, wasted ≤ available, used + wasted ≤ allocated), running totals, and "Save & Next Machine" flow. Includes a full report page with waste percentage by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison, shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts are broadcast to the command centre and carton waste pages in real-time. Full offline-queue support via dedicated localStorage key.
 - **🗑️ Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (small 80g / large 160g) and record gross weight each round. Total laminate used is auto-computed from the machine's gram setting: `rollsPerShift × rollWeight[gram]` (e.g., a 125g machine uses 53.70 kg/roll × 3 rolls = 161.10 kg per shift). Sac type dropdown with configurable weights, auto-calculated waste collected (gross − sac), running waste totals, and 3-status machine grid (green/gray/red). Full report page with waste % by machine bar chart, waste trend over rounds (top 5), cross-shift comparison, per-machine breakdown, round-by-round detail table, CSV export, and print. High waste alerts broadcast to command centre, laminate waste page, and report page. Offline-first with dedicated localStorage queue.
+45: - **⚖️ QC Sachet Production Checks**: Per-machine production quality monitoring with 3 action buttons per machine (String Weight Check, Bag Inspection — coming soon, Carton Inspection — coming soon). Each check type has a configurable cooldown interval (default: 15 min for String Weight, 15 min for Bag, 60 min for Carton) editable in System Config → QC Settings. The string weight dialog supports dynamic fill heads (2-4 per machine), real-time weight validation against configurable 5-level ranges (Too Low / Low / Target / High / Too High), per-machine batch numbers, round-based data entry with full history tracking (who checked what and when), and offline queue support via dedicated localStorage key. Machine grid shows green (passed) / red (issues) / gray (unchecked) per-machine status based on the latest round.
 
 ---
 
@@ -90,6 +91,13 @@ The application has three core data entry and monitoring modules:
    - Waste collected = gross weight − sac weight. Running totals and waste % displayed in real-time.
    - Same 3-status machine grid and "Save & Next Machine" flow as Carton Waste.
    - Report page with waste% charts, cross-shift comparison, per-machine breakdown, CSV export, print.
+5. **QC Sachet Production Checks**:
+   - Per-machine production quality monitoring with per-machine round numbering and check-type-specific buttons.
+   - String Weight Check dialog: dynamic fill heads (matching machine spec), real-time validation against 5-level weight ranges (configurable per gram in QC Settings), per-machine batch number (set in Round 1, read-only thereafter).
+   - Configurable cooldown intervals between checks (String Weight: 15 min, Bag Inspection: 15 min, Carton Inspection: 60 min — all editable in System Config → QC Settings).
+   - Full round history per machine showing weights, checker, result, and timestamp.
+   - 3-status machine grid: green (latest round passed), red (weights outside target or criteria not met), gray (unchecked).
+   - Offline queue support with dedicated localStorage key and Firestore `writeBatch` sync.
 
 ---
 
@@ -194,8 +202,12 @@ We use **GitHub Actions** to automate this.
 
 - ✅ **Laminate Waste System**: Live per-machine laminate waste tracking (kg) with configurable sac types, auto-computed roll usage, offline support, reports, and broadcasts.
 - ✅ **Carton Waste System**: Live per-machine carton waste tracking with offline support, reports, and broadcasts.
+- ✅ **QC Sachet Production Checks**: Per-machine production quality monitoring with dynamic string weight dialog, configurable weight ranges, per-machine batch numbers, round-based history, cooldown intervals, and offline support. Additional check types (Bag Inspection, Carton Inspection) in development.
 - [ ] **Audit Trail**: A background logging system to record exactly *who* modified a setting, deleted a user, or overrode a machine, providing full factory accountability.
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices for roaming QC staff.
+- [ ] **Bag Inspection Dialog**: Round-based bag integrity inspection with configurable pass/fail criteria.
+- [ ] **Carton Inspection Dialog**: Round-based carton seal integrity and visual inspection with configurable pass/fail criteria.
+- [ ] **Shift-Wide Approval Flow**: Consolidated approval system across all 3 check types for approver sign-off.
 
 ---
 *Built with ❤️ and extreme attention to detail for the Starium Rafa Factory. Formerly Starium Rafa Quality Control Tool.*

@@ -26,7 +26,8 @@ export const MENU_CONFIG = [
       { path: '/level9-exec', label: 'Level 9 Dashboard', icon: '🏭', allowedRoles: ['qc_manager', 'prod_manager'] },
       { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager', 'prod_manager'] },
       { path: '/empty-silos', label: 'Report Empty Silos', icon: '🛢️', allowedRoles: ['qc_staff', 'qc_manager'] },
-      { path: '/stop-machine', label: 'Report Stopped Machine', icon: '🛑', allowedRoles: ['qc_staff', 'qc_manager'] }
+      { path: '/stop-machine', label: 'Report Stopped Machine', icon: '🛑', allowedRoles: ['qc_staff', 'qc_manager'] },
+      { path: '/qc-sachet-production-checks', label: 'QC Sachet Production Checks', icon: '⚖️', allowedRoles: ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'] }
     ]
   },
   {

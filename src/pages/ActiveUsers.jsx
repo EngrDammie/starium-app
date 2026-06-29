@@ -26,6 +26,7 @@ const PAGE_LABELS = {
   '#/qc-density-report': 'QC Density Report',
   '#/active-users': 'Active Users',
   '#/machine-downtime-log': 'Machine Downtime Log',
+  '#/qc-sachet-production-checks': 'QC Sachet Production Checks',
 };
 
 function formatPage(path) {

@@ -54,7 +54,18 @@ const DEFAULT_CONFIG = {
     ],
     defaultSacType: 'small'
   },
-  // 🎯 NEW: Dynamic roles lists pushed to database
+  qcCheckIntervals: {
+    stringWeight: 15,
+    bagInspection: 15,
+    cartonInspection: 60
+  },
+  fillHeadWeightRanges: {
+    "22":  { tooLow: { max: 128 }, low: { min: 129, max: 136 }, target: { min: 137, max: 141 }, high: { min: 142, max: 149 }, tooHigh: { min: 150 } },
+    "45":  { tooLow: { max: 259 }, low: { min: 260, max: 272 }, target: { min: 273, max: 282 }, high: { min: 283, max: 290 }, tooHigh: { min: 291 } },
+    "85":  { tooLow: { max: 487 }, low: { min: 488, max: 516 }, target: { min: 517, max: 536 }, high: { min: 537, max: 564 }, tooHigh: { min: 565 } },
+    "125": { tooLow: { max: 487 }, low: { min: 488, max: 506 }, target: { min: 507, max: 517 }, high: { min: 518, max: 538 }, tooHigh: { min: 539 } },
+    "850": { tooLow: { max: 861 }, low: { min: 862, max: 870 }, target: { min: 871, max: 900 }, high: { min: 901, max: 980 }, tooHigh: { min: 981 } }
+  },
   departmentRoles: [
     { id: 'qc_staff', label: 'QC Staff', category: 'Quality Control' },
     { id: 'qc_manager', label: 'QC Manager', category: 'Quality Control' },
@@ -90,6 +101,7 @@ export function ConfigProvider({ children }) {
           machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
           gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,
+          fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
           departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
           actionRoles: data.actionRoles || DEFAULT_CONFIG.actionRoles
         });

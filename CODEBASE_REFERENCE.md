@@ -83,6 +83,7 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/carton-waste-report` | CartonWasteReport | Production managers, QC managers, Packaging managers |
 | `/laminate-waste` | LaminateWaste | Production staff & managers, QC managers |
 | `/laminate-waste-report` | LaminateWasteReport | Production managers, QC managers, Packaging managers |
+| `/qc-sachet-production-checks` | QCSachetProductionChecks | QC staff & managers, Production staff & managers |
 
 Future routes exist in `MENU_CONFIG` but have no components yet: `/machine-downtime-log`, `/employees`, `/payroll`.
 
@@ -217,6 +218,18 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
   gramSpecs: { "22": {...}, "45": {...}, "85": {...}, "125": {...}, "850": {...} },
   departmentRoles: [6 predefined roles],
   actionRoles: [5 predefined roles],
+  qcCheckIntervals: {
+    stringWeight: 15,
+    bagInspection: 15,
+    cartonInspection: 60
+  },
+  fillHeadWeightRanges: {
+    "22":  { tooLow: { max: 128 }, low: { min: 129, max: 136 }, target: { min: 137, max: 141 }, high: { min: 142, max: 149 }, tooHigh: { min: 150 } },
+    "45":  { tooLow: { max: 259 }, low: { min: 260, max: 272 }, target: { min: 273, max: 282 }, high: { min: 283, max: 290 }, tooHigh: { min: 291 } },
+    "85":  { tooLow: { max: 487 }, low: { min: 488, max: 516 }, target: { min: 517, max: 536 }, high: { min: 537, max: 564 }, tooHigh: { min: 565 } },
+    "125": { tooLow: { max: 487 }, low: { min: 488, max: 506 }, target: { min: 507, max: 517 }, high: { min: 518, max: 538 }, tooHigh: { min: 539 } },
+    "850": { tooLow: { max: 861 }, low: { min: 862, max: 870 }, target: { min: 871, max: 900 }, high: { min: 901, max: 980 }, tooHigh: { min: 981 } }
+  },
   cartonWaste: {
     targetWastePercent: 5,
     wasteAlertThreshold: 10
@@ -242,6 +255,8 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 ### NetworkContext (`src/context/NetworkContext.jsx`)
 
 **State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`
+
+**String Weight Queue**: `starium_qc_string_weight_queue` — synced via `syncStringWeightQueue()` in `qcStringWeightOperations.js` using Firestore `writeBatch`. Queue count is tracked locally in the page (not exposed in NetworkContext yet).
 
 **Offline Engine**:
 1. Initializes `isOnline` from `navigator.onLine`
@@ -301,6 +316,24 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 **`saveQCTest(testData, isOnline, setQueueCount)`**:
 - If online → tries `addDoc` to `qc_tests`; on error, falls back to offline queue
+
+### qcStringWeightOperations (`src/services/qcStringWeightOperations.js`)
+
+**`getShiftDateInfo(config)`**: Shared shift/date logic (same pattern as qcOperations).
+
+**`getOrCreateStringWeightShift(config, isOnline)`**: Creates/gets a `shift_approvals` doc with mode `qc_string_weight`. Doc ID: `qc_string_weight_{SHIFT}_{DATE}`.
+
+**`saveStringWeightCheck(data, isOnline)`**: Online/offline-aware save to `qc_string_weight_checks`. Falls back to `starium_qc_string_weight_queue` on failure.
+
+**`subscribeToMachineStringWeights(docId, machineId, callback)`**: Real-time subscription to `qc_string_weight_checks` filtered by approval doc + machine ID, sorted by roundNumber asc.
+
+**`subscribeToAllStringWeights(docId, callback)`**: Real-time subscription for all machines in the current shift (powers grid status).
+
+**`subscribeToShiftApproval(approvalId, callback)`**: Watches `shift_approvals/{approvalId}` for live updates.
+
+**`syncStringWeightQueue()`**: Bulk `writeBatch` sync of `starium_qc_string_weight_queue` on reconnect.
+
+**`getStringWeightStatus(gramSetting, weight, config)`**: Maps weight to 5-level status (tooLow/low/target/high/tooHigh) with color CSS classes, based on `config.fillHeadWeightRanges`.
 - If offline → queues to localStorage
 
 **`queueOffline(testData, setQueueCount)`**:
@@ -635,6 +668,25 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
   - **Export CSV** — Generates a CSV file with machine, round, allocated, remaining, used, wasted, waste%, checked-by, timestamp columns. Uses UTF-8 BOM for Excel compatibility
 - **Print styles**: Each chart is wrapped in a `<div className="print-container">` that forces white backgrounds on canvases, hides non-print elements, and adds the print title
 
+### QCSachetProductionChecks (`src/pages/QCSachetProductionChecks.jsx`) — QC Sachet Production Checks
+- Guarded: QC staff, QC managers, Production staff, Production managers
+- **Grid view**: Machine grid with 3 statuses — green (latest round all-in-target + meets criteria), red (weights outside target or criteria not met), gray (unchecked). Teams dropdown (persisted to localStorage), shift/date display.
+- **Detail view**: Clicking a machine shows the machine detail page with Round History table (round, weights, result, staff, time) and 3 action buttons: String Weight Check, Bag Inspection (coming soon), Carton Inspection (coming soon).
+- **Cooldown timer**: String Weight Check button has a live countdown (configured via `config.qcCheckIntervals.stringWeight`, default 15 min) — disabled until cooldown expires.
+- Per-machine round numbering: `Math.max(...existingRoundNumbers) + 1`.
+- Round History table shows all previous rounds with weights, meets-criteria status, checked-by, and timestamp.
+- Empty state: "First round of the shift" guidance message shown when no records exist.
+
+### QCStringWeightDialog (`src/components/QCStringWeightDialog.jsx`) — String Weight Check Modal
+- Dynamic number of weight inputs based on `machine.fillHeads` (2-4).
+- Real-time validation per input using `getStringWeightStatus()` — color-coded borders (bright red for Too Low/Too High, dark red for Low/High, green for Target).
+- "All N sachet strings within target range" summary banner computed live.
+- Meets Criteria dropdown (Yes/No) — required for save.
+- Remarks textarea (optional).
+- Batch number input shown only in Round 1 (per-machine), read-only in subsequent rounds.
+- Previous round info panel: weights, statuses, checked-by name, saved timestamp.
+- Save disabled until all weights filled, criteria selected, and batch number entered (if first round).
+
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
 - **Mode selector**: Level 9 Silo Densities vs BOT Densities
 - **Shift**: auto-detected (disabled field)
@@ -871,13 +923,13 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 }
 ```
 
-**`shift_approvals`** (Shift approval tracking):
+**`shift_approvals`** (Shift approval tracking — used by QC tests, carton waste, laminate waste, and string weight):
 ```
 {
-  mode: 'level9' | 'bot',
+  mode: 'level9' | 'bot' | 'carton_waste' | 'laminate_waste' | 'qc_string_weight',
   shift: 'DAY' | 'NIGHT',
   date: 'YYYY-MM-DD',
-  status: 'pending',
+  status: 'pending' | 'active',
   createdAt: Timestamp,
   buggySupervisor: { name, role, timestamp },
   plcOperator: { name, role, timestamp },
@@ -1053,6 +1105,33 @@ Doc ID: auto-generated via `addDoc`
 ```
 Doc ID: auto-generated via `addDoc`
 
+**`qc_string_weight_checks`** (String weight check records):
+```
+{
+  approvalDocId: 'qc_string_weight_DAY_2026-06-28',
+  machineId: number,
+  machineDisplayNumber: string,
+  line: string,
+  gram: number,
+  fillHeads: number,
+  roundNumber: number,                    // per-machine: previous round + 1
+  shift: 'DAY' | 'NIGHT',
+  date: 'YYYY-MM-DD',
+  team: 'A' | 'B' | 'C',
+  checkedBy: string,                      // userFullName
+  weights: number[],                      // one weight per fill head
+  weightStatuses: string[],              // 'tooLow' | 'low' | 'target' | 'high' | 'tooHigh'
+  allInTarget: boolean,                   // true if all weights in target range
+  outOfRangeCount: number,               // count of weights outside target
+  meetsCriteria: 'Y' | 'N',              // operator's judgement
+  remarks: string,
+  batchNumber: string,                    // per-machine batch number
+  createdAt: Timestamp (or localCreatedAt if offline),
+  syncedAt: Timestamp (if synced)
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`alerts`** (Broadcast messages):
 ```
 {
@@ -1180,6 +1259,37 @@ totalLaminateUsed = rollWeight × rollsPerShift
 - Target pages: `['/', '/laminate-waste', '/laminate-waste-report']`
 - Appears on Command Centre, Laminate Waste data entry page, and Laminate Waste Report page
 
+### QC Sachet Production Checks — String Weight Math
+
+**Weight validation levels** (configured via `fillHeadWeightRanges` per gram):
+```
+tooLow  → weight <= tooLow.max
+low     → weight <= low.max
+target  → weight <= target.max  (ideal range)
+high    → weight <= high.max
+tooHigh → weight >= tooHigh.min
+```
+
+Each gram setting (22, 45, 85, 125, 850) has its own thresholds with 5 ranges:
+| Gram | Too Low (≤) | Low (≤) | Target (≤) | High (≤) | Too High (≥) |
+|---|---|---|---|---|---|
+| 22 | 128 | 136 | 141 | 149 | 150 |
+| 45 | 259 | 272 | 282 | 290 | 291 |
+| 85 | 487 | 516 | 536 | 564 | 565 |
+| 125 | 487 | 506 | 517 | 538 | 539 |
+| 850 | 861 | 870 | 900 | 980 | 981 |
+
+**Machine grid status** (3 states):
+- **Green** (`checked`): Latest round has `allInTarget === true` AND `meetsCriteria === 'Y'`
+- **Red** (`high-waste`): Latest round has any weight outside target OR `meetsCriteria === 'N'`
+- **Gray** (`unchecked`): No records yet this shift for this machine
+
+**Per-machine round numbering**: `roundNumber = Math.max(...existingRoundNumbers) + 1` (zero records → Round 1)
+
+**Per-machine batch number**: Set in Round 1 (editable input), read-only in subsequent rounds (carried forward from previous round). Independent per machine — different machines can have different batch numbers.
+
+**Check cooldown**: String Weight Check button disabled for `config.qcCheckIntervals.stringWeight` minutes (default 15) after the latest round. Live countdown displayed on the button. Configured in System Config → QC Settings.
+
 ### Default Factory Layout (30 machines across 6 lines)
 Lines are ordered 1A, 1B, 2A, 2B, 3A, 3B (displayed right-to-left):
 - **1A**: M1(125g), M2(85g), M3(85g), M4(85g), M5(85g)
@@ -1272,3 +1382,9 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | Laminate waste data entry | `src/pages/LaminateWaste.jsx` |
 | Laminate waste report | `src/pages/LaminateWasteReport.jsx` |
 | Laminate waste config | `src/context/ConfigContext.jsx` (`laminateWaste` object), `src/pages/SystemConfig.jsx` (Laminate Waste tab) |
+| QC Sachet Production Checks data entry | `src/pages/QCSachetProductionChecks.jsx` |
+| QC String Weight Check dialog | `src/components/QCStringWeightDialog.jsx` |
+| QC String Weight operations | `src/services/qcStringWeightOperations.js` |
+| QC Settings (weight ranges + check intervals) | `src/pages/SystemConfig.jsx` (QC Settings tab) |
+| Check intervals config | `src/context/ConfigContext.jsx` (`qcCheckIntervals`), `src/pages/SystemConfig.jsx` (QC Settings tab) |
+| String weight ranges config | `src/context/ConfigContext.jsx` (`fillHeadWeightRanges`), `src/pages/SystemConfig.jsx` (QC Settings tab) |

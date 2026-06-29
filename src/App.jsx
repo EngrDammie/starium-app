@@ -23,6 +23,7 @@ import CartonWasteReport from './pages/CartonWasteReport';
 import LaminateWaste from './pages/LaminateWaste';
 import LaminateWasteReport from './pages/LaminateWasteReport';
 import Reports from './pages/Reports';
+import QCSachetProductionChecks from './pages/QCSachetProductionChecks';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
       <Route path="/empty-silos" element={<ProtectedRoute><EmptySilos /></ProtectedRoute>} />
       <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
       <Route path="/stop-machine" element={<ProtectedRoute><StopMachine /></ProtectedRoute>} />
+      <Route path="/qc-sachet-production-checks" element={<ProtectedRoute><QCSachetProductionChecks /></ProtectedRoute>} />
       <Route path="/stopped-machines-report" element={<ProtectedRoute><StoppedMachinesReport /></ProtectedRoute>} />
       <Route path="/machine-downtime-log" element={<ProtectedRoute><MachineDowntimeLog /></ProtectedRoute>} />
       <Route path="/carton-waste" element={<ProtectedRoute><CartonWaste /></ProtectedRoute>} />
