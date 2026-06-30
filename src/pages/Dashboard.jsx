@@ -10,6 +10,9 @@ import { subscribeToActiveStoppedMachines } from '../services/stoppedMachineOper
 import { subscribeToShiftCartonRecords } from '../services/cartonOperations';
 import { subscribeToShiftLaminateRecords } from '../services/laminateOperations';
 import { Link } from 'react-router-dom';
+import { subscribeToAllStringWeights, getShiftDateInfo } from '../services/qcStringWeightOperations';
+import { subscribeToAllBagInspections } from '../services/qcBagInspectionOperations';
+import { subscribeToAllCartonInspections } from '../services/qcCartonInspectionOperations';
 
 export default function Dashboard() {
   const { config, loadingConfig } = useConfig();
@@ -23,6 +26,9 @@ export default function Dashboard() {
   const [cartonWaste, setCartonWaste] = useState({ wasted: 0, wastePercent: 0 });
   const [laminateWaste, setLaminateWaste] = useState({ wasteCollected: 0, wastePercent: 0 });
   const [currentShift, setCurrentShift] = useState('--');
+  const [swCount, setSwCount] = useState(0);
+  const [biCount, setBiCount] = useState(0);
+  const [ciCount, setCiCount] = useState(0);
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -91,6 +97,19 @@ export default function Dashboard() {
       unsubLaminate();
     };
   }, [config, loadingConfig]);
+
+  // QC Sachet subscriptions
+  useEffect(() => {
+    if (loadingConfig) return;
+    const { shift, date } = getShiftDateInfo(config);
+    const docId = `qc_string_weight_${shift}_${date}`;
+    const unsubSW = subscribeToAllStringWeights(docId, (records) => setSwCount(records.length));
+    const unsubBI = subscribeToAllBagInspections(docId, (records) => setBiCount(records.length));
+    const unsubCI = subscribeToAllCartonInspections(docId, (records) => setCiCount(records.length));
+    return () => { unsubSW(); unsubBI(); unsubCI(); };
+  }, [config, loadingConfig]);
+
+  const isAdminOrQcManager = systemRole === 'super_admin' || (departmentRoles || []).includes('qc_manager');
 
   // 🎯 TRUE ENTERPRISE FIX: 100% Dynamic! No hardcoded maps allowed.
   const userCategories = [...new Set(
@@ -286,6 +305,35 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Metric 8: QC Sachet Checks */}
+        {isAdminOrQcManager ? (
+          <Link to="/qc-sachet-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">QC Sachet Checks</h3>
+            <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
+            <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
+              <span>SW: <strong className="text-white">{swCount}</strong></span>
+              <span>BI: <strong className="text-white">{biCount}</strong></span>
+              <span>CI: <strong className="text-white">{ciCount}</strong></span>
+            </div>
+            <div className="text-primary text-[10px] font-bold uppercase tracking-wider mt-1">📊 View Reports →</div>
+            <div className="text-primary text-[10px] font-bold uppercase tracking-wider">This Shift</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">QC Sachet Checks</h3>
+            <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
+            <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
+              <span>SW: <strong className="text-white">{swCount}</strong></span>
+              <span>BI: <strong className="text-white">{biCount}</strong></span>
+              <span>CI: <strong className="text-white">{ciCount}</strong></span>
+            </div>
+            <div className="text-gray-600 text-[10px] font-bold uppercase tracking-wider mt-1">Total Records This Shift</div>
+            <div className="text-gray-600 text-[10px] font-bold uppercase tracking-wider">This Shift</div>
+          </div>
+        )}
+
       </div>
 
       {/* Quick Action Links */}
@@ -301,6 +349,26 @@ export default function Dashboard() {
                 <div className="text-gray-400 text-sm">Enter QC data for Level 9 & BOT</div>
               </div>
             </Link>
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r))) && (
+              <Link to="/qc-sachet-production-checks" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">✅</div>
+                <div>
+                  <div className="text-white font-bold text-lg">QC Sachet Production Checks</div>
+                  <div className="text-gray-400 text-sm">String weight, bag & carton inspection</div>
+                </div>
+              </Link>
+            )}
+
+            {(systemRole === 'super_admin' || (departmentRoles || []).includes('qc_manager')) && (
+              <Link to="/qc-sachet-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">📊</div>
+                <div>
+                  <div className="text-white font-bold text-lg">QC Sachet Report</div>
+                  <div className="text-gray-400 text-sm">Printable reports & CSV export</div>
+                </div>
+              </Link>
+            )}
 
             {(systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r))) && (
               <Link to="/empty-silos" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">

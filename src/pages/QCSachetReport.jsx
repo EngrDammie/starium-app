@@ -3,6 +3,7 @@ import { collection, getDocs, query, where, orderBy, doc, getDoc } from 'firebas
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
+import { getStringWeightStatus } from '../services/qcStringWeightOperations';
 
 const formatName = (str) => {
   if (!str) return '';
@@ -191,12 +192,22 @@ export default function QCSachetReport() {
   return (
     <Layout title="QC Sachet Production Report" subtitle="String weights, bag and carton inspection summary" maxWidth="max-w-7xl">
       <style>{`
+        .sw-too-low { color: #B71C1C; }
+        .sw-low { color: #E65100; }
+        .sw-target { color: #2E7D32; }
+        .sw-high { color: #E65100; }
+        .sw-too-high { color: #B71C1C; }
         @media print {
           @page { size: landscape; margin: 8mm; }
           body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           * { color: #000 !important; }
+          .sw-too-low { color: #B71C1C !important; }
+          .sw-low { color: #E65100 !important; }
+          .sw-target { color: #2E7D32 !important; }
+          .sw-high { color: #E65100 !important; }
+          .sw-too-high { color: #B71C1C !important; }
           .text-status-success { color: #00E676 !important; }
           .text-status-danger { color: #F44336 !important; }
           .text-\\[\\#FF9800\\] { color: #FF9800 !important; }
@@ -343,10 +354,15 @@ export default function QCSachetReport() {
                         </td>
                         <td className="text-center px-2 text-primary font-bold">R{r.roundNumber}</td>
                         <td className="px-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {(r.weights || []).map((w, i) => (
-                              <span key={i} className="text-white font-bold text-xs">{w}g</span>
-                            ))}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {(r.weights || []).map((w, i) => {
+                              const status = getStringWeightStatus(getMachineGram(r.machineId), w, config);
+                              const cls = status ? `sw-${status.level}` : '';
+                              return (
+                                <span key={i}
+                                  className={`text-xs font-bold ${cls} ${cls ? '' : 'text-white'}`}>{w}g</span>
+                              );
+                            })}
                           </div>
                         </td>
                         <td className="text-center px-2">

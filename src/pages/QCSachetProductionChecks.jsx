@@ -58,16 +58,6 @@ export default function QCSachetProductionChecks() {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState(false);
 
-  // Quick Actions state
-  const [qaSelectedMachineId, setQaSelectedMachineId] = useState('');
-  const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
-
-  // 1-second timer for QA cooldown displays
-  useEffect(() => {
-    const id = setInterval(() => setCurrentTimestamp(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
   const lines = [...(config.productionLines || [])].sort((a, b) => b.order - a.order);
 
   const isAdminOrQcManager = systemRole === 'super_admin' || (departmentRoles || []).includes('qc_manager');
@@ -403,36 +393,6 @@ export default function QCSachetProductionChecks() {
     }
   };
 
-  // ── Quick Actions logic ──
-  const qaMachineObj = (config.machines || []).find(m => m.id === qaSelectedMachineId);
-  const qaSwRecords = allRecords.filter(r => r.machineId === qaSelectedMachineId);
-  const qaBiRecords = allBagRecords.filter(r => r.machineId === qaSelectedMachineId);
-  const qaCiRecords = allCartonRecords.filter(r => r.machineId === qaSelectedMachineId);
-  const qaHasSwR1 = qaSwRecords.length > 0;
-
-  const computeTimeLeft = (records, intervalMin) => {
-    if (!records.length) return null;
-    const latest = records[records.length - 1];
-    const intervalMs = (intervalMin ?? 15) * 60 * 1000;
-    const created = latest.createdAt?.toDate ? latest.createdAt.toDate() : new Date(latest.localCreatedAt || latest.createdAt);
-    return Math.max(0, intervalMs - (currentTimestamp - created.getTime()));
-  };
-
-  const qaSwTimeLeft = computeTimeLeft(qaSwRecords, config?.qcCheckIntervals?.stringWeight ?? 15);
-  const qaBiTimeLeft = computeTimeLeft(qaBiRecords, config?.qcCheckIntervals?.bagInspection ?? 15);
-  const qaCiTimeLeft = computeTimeLeft(qaCiRecords, config?.qcCheckIntervals?.cartonInspection ?? 60);
-
-  const qaSwLocked = qaSwTimeLeft !== null && qaSwTimeLeft > 0;
-  const qaBiLocked = !qaHasSwR1 || (qaBiTimeLeft !== null && qaBiTimeLeft > 0);
-  const qaCiLocked = !qaHasSwR1 || (qaCiTimeLeft !== null && qaCiTimeLeft > 0);
-
-  const handleQuickAction = (type) => {
-    const machine = (config.machines || []).find(m => m.id === qaSelectedMachineId);
-    if (!machine) return;
-    setSelectedMachine(machine);
-    setDialogType(type);
-  };
-
   // ── Render ──
   if (loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading...</div></Layout>;
 
@@ -567,89 +527,6 @@ export default function QCSachetProductionChecks() {
 
   return (
     <Layout title="QC Sachet Production Checks" subtitle="Per-machine production quality monitoring" maxWidth="max-w-6xl">
-      {/* ── Command Center Card ── */}
-      <div className="mb-4 bg-dark-card p-4 md:p-5 rounded-xl border border-[#333] shadow-lg">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">📊 Command Center — Shift Summary</h3>
-          {isAdminOrQcManager && (
-            <button onClick={() => navigate('/qc-sachet-report')}
-              className="text-primary hover:text-white text-xs font-bold transition-colors">
-              📊 View Reports &rarr;
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center border border-[#333]">
-            <div className="text-xl md:text-2xl font-bold text-primary">{allRecords.length}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-0.5">String Weights</div>
-          </div>
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center border border-[#333]">
-            <div className="text-xl md:text-2xl font-bold text-[#00BCD4]">{allBagRecords.length}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-0.5">Bag Inspections</div>
-          </div>
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center border border-[#333]">
-            <div className="text-xl md:text-2xl font-bold text-[#7C4DFF]">{allCartonRecords.length}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-0.5">Carton Inspections</div>
-          </div>
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center border border-primary/30">
-            <div className="text-xl md:text-2xl font-bold text-white">{allRecords.length + allBagRecords.length + allCartonRecords.length}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-0.5">Total Records</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Quick Actions ── */}
-      <div className="mb-4 bg-dark-card p-4 rounded-xl border border-[#333] shadow-lg">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-bold">⚡ Quick Actions</span>
-          </div>
-          <div className="w-px h-6 bg-[#333]"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-500">Machine:</span>
-            <select value={qaSelectedMachineId} onChange={e => setQaSelectedMachineId(e.target.value)}
-              className="bg-[#1a1a1a] text-white border border-[#444] px-2 py-1.5 rounded-lg text-xs outline-none focus:border-primary min-w-[120px]">
-              <option value="">Select Machine</option>
-              {(config.machines || []).sort((a,b) => (a.displayNumber || a.id) - (b.displayNumber || b.id)).map(m => (
-                <option key={m.id} value={m.id}>M{m.displayNumber || m.id} ({m.gram}g · L{m.line})</option>
-              ))}
-            </select>
-          </div>
-          {qaSelectedMachineId && (
-            <>
-              <button onClick={() => handleQuickAction('stringWeight')}
-                disabled={qaSwLocked}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${qaSwLocked ? 'bg-[#1a1a1a] border border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black'}`}>
-                {qaSwLocked ? `⏳ SW ${formatCountdown(qaSwTimeLeft)}` : '✅ String Weight'}
-              </button>
-              <button onClick={() => handleQuickAction('bagInspection')}
-                disabled={qaBiLocked}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${qaBiLocked ? 'bg-[#1a1a1a] border border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black'}`}>
-                {qaBiLocked ? (qaHasSwR1 ? `⏳ BI ${formatCountdown(qaBiTimeLeft)}` : '🔒 Bag Insp.') : '✅ Bag Inspection'}
-              </button>
-              <button onClick={() => handleQuickAction('cartonInspection')}
-                disabled={qaCiLocked}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${qaCiLocked ? 'bg-[#1a1a1a] border border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black'}`}>
-                {qaCiLocked ? (qaHasSwR1 ? `⏳ CI ${formatCountdown(qaCiTimeLeft)}` : '🔒 Carton Insp.') : '✅ Carton Inspection'}
-              </button>
-            </>
-          )}
-          {isAdminOrQcManager && (
-            <>
-              <div className="w-px h-6 bg-[#333]"></div>
-              <button onClick={() => setIsApproveModalOpen(true)}
-                className="bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all">
-                📋 Approve Shift
-              </button>
-              <button onClick={() => navigate('/qc-sachet-report')}
-                className="bg-[#1a1a1a] border border-[#444] text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all">
-                📊 View Reports
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       <div className="bg-dark-card p-4 md:p-6 rounded-xl border border-[#333] shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -668,8 +545,8 @@ export default function QCSachetProductionChecks() {
             <div><span className="text-gray-400">User:</span> <span className="font-bold text-primary">{userFullName || 'Unknown'}</span></div>
           </div>
 
-          {/* Approval badges */}
-          {isAdminOrQcManager && approversList.length > 0 && (
+          {/* Approval badges + action buttons */}
+          {isAdminOrQcManager && (
             <div className="flex flex-wrap items-center gap-2">
               {approversList.map((a, i) => (
                 <div key={i} className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#333] px-2.5 py-1 rounded-lg text-xs">
@@ -679,6 +556,14 @@ export default function QCSachetProductionChecks() {
                   <span className="text-gray-600">{formatTime(a.timestamp)}</span>
                 </div>
               ))}
+              <button onClick={() => setIsApproveModalOpen(true)}
+                className="bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                📋 Approve Shift
+              </button>
+              <button onClick={() => navigate('/qc-sachet-report')}
+                className="bg-[#1a1a1a] border border-[#444] text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                📊 View Reports
+              </button>
             </div>
           )}
         </div>

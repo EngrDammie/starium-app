@@ -51,6 +51,9 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Copy management presentation into dist
+        run: cp docs/management-presentation.html dist/
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

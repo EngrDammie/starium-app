@@ -509,7 +509,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 
 ### Dashboard (`src/pages/Dashboard.jsx`) — "Factory Command Center"
 - Grid layout: `xl:grid-cols-5` (5 cards per row, extras wrap to next line)
-- Displays 7 metric cards:
+- Displays 8 metric cards:
    1. **Live Users** — count from `subscribeToActiveUsers` (green pulse indicator); super-admins see this as a clickable `<Link to="/active-users">`
    2. **Level 9 Tests** — count from `subscribeToShiftTests('level9')`; clickable `<Link to="/level9-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
    3. **BOT Tests** — count from `subscribeToShiftTests('bot')`; clickable `<Link to="/bot-exec">` for QC/Prod managers; renders as plain `<div>` otherwise
@@ -517,6 +517,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
    5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stopped-machines-report">` for QC/managers; shows "All Running" or "⚠️ Needs Attention"
    6. **Carton Waste** — live count from `subscribeToShiftCartonRecords()` (current shift only); shows total wasted cartons + waste% (color-coded green/red vs target); clickable `<Link to="/carton-waste-report">` for prod/qc managers; label "This Shift" in cyan
    7. **Laminate Waste** — live data from `subscribeToShiftLaminateRecords()` (current shift only); shows total waste collected (kg) + waste% (color-coded green/red vs target); clickable `<Link to="/laminate-waste-report">` for prod/qc managers; label "This Shift" in cyan
+    8. **QC Sachet Checks** — live counts from `subscribeToAllStringWeights`/`subscribeToAllBagInspections`/`subscribeToAllCartonInspections` showing SW/BI/CI/Total; visible to all users; clickable `<Link to="/qc-sachet-report">` only for `super_admin` and `qc_manager`; renders as plain `<div>` otherwise
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles (includes Carton Waste Tracking + Carton Waste Report for relevant roles)
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
@@ -531,6 +532,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - "📦 Carton Waste Report" → `/carton-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
 - "🗑️ Laminate Waste Tracking" → `/laminate-waste` for `prod_staff`, `prod_manager`, `qc_manager`
 - "🗑️ Laminate Waste Report" → `/laminate-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
+- "🧪 QC Sachet Production Checks" → `/qc-sachet-production-checks` for `qc_staff`, `qc_manager`
+- "🧪 QC Sachet Report" → `/qc-sachet-report` for `qc_manager`
 
 ### EmptySilos (`src/pages/EmptySilos.jsx`) — Mark Machines Empty
 - Guarded: QC staff/managers only (also checks internally)
@@ -676,16 +679,20 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Per-machine round numbering: `Math.max(...existingRoundNumbers) + 1`.
 - Round History table shows all previous rounds with weights, meets-criteria status, checked-by, and timestamp.
 - Empty state: "First round of the shift" guidance message shown when no records exist.
+- **Dashboard integration**: Command Centre card in Dashboard.jsx shows live SW/BI/CI/Total counts via Firestore subscriptions (`subscribeToAllStringWeights`, `subscribeToAllBagInspections`, `subscribeToAllCartonInspections`). Card visible to all users; click-through to report only for `super_admin`/`qc_manager`.
+- **Quick Actions**: Role-based links in Dashboard's Quick Actions bar: "QC Sachet Production Checks" (for `qc_staff`, `qc_manager`) and "QC Sachet Report" (for `qc_manager` only).
 
-### QCStringWeightDialog (`src/components/QCStringWeightDialog.jsx`) — String Weight Check Modal
-- Dynamic number of weight inputs based on `machine.fillHeads` (2-4).
-- Real-time validation per input using `getStringWeightStatus()` — color-coded borders (bright red for Too Low/Too High, dark red for Low/High, green for Target).
-- "All N sachet strings within target range" summary banner computed live.
-- Meets Criteria dropdown (Yes/No) — required for save.
-- Remarks textarea (optional).
-- Batch number input shown only in Round 1 (per-machine), read-only in subsequent rounds.
-- Previous round info panel: weights, statuses, checked-by name, saved timestamp.
-- Save disabled until all weights filled, criteria selected, and batch number entered (if first round).
+### QCSachetReport (`src/pages/QCSachetReport.jsx`) — QC Sachet Printable Report
+- Filter panel: Date, Shift, Team, Machine
+- 3-section tables: String Weights (color-coded), Bag Inspection, Carton Inspection
+- String weight values color-coded by status via `getStringWeightStatus()`:
+  - `tooLow` → CSS class `.sw-too-low` (#B71C1C)
+  - `low` → `.sw-low` (#E65100)
+  - `target` → `.sw-target` (#2E7D32)
+  - `high` → `.sw-high` (#E65100)
+  - `tooHigh` → `.sw-too-high` (#B71C1C)
+- Print CSS includes `!important` rules for above classes to preserve colors in printed output
+- Actions: Print (landscape A4), Export CSV
 
 ### PowderDensity (`src/pages/PowderDensity.jsx`) — Data Entry Form
 - **Mode selector**: Level 9 Silo Densities vs BOT Densities
