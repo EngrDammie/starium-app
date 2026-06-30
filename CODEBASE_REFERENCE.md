@@ -1388,3 +1388,164 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | QC Settings (weight ranges + check intervals) | `src/pages/SystemConfig.jsx` (QC Settings tab) |
 | Check intervals config | `src/context/ConfigContext.jsx` (`qcCheckIntervals`), `src/pages/SystemConfig.jsx` (QC Settings tab) |
 | String weight ranges config | `src/context/ConfigContext.jsx` (`fillHeadWeightRanges`), `src/pages/SystemConfig.jsx` (QC Settings tab) |
+| QC Bag Inspection operations | `src/services/qcBagInspectionOperations.js` |
+| QC Carton Inspection operations | `src/services/qcCartonInspectionOperations.js` |
+| Command Center Card (live stats) | `src/pages/QCSachetProductionChecks.jsx` |
+| Quick Actions bar | `src/pages/QCSachetProductionChecks.jsx` |
+
+---
+
+## Appendix: QC Sachet — Complete Module Reference
+
+### Component Prop Interfaces
+
+#### QCStringWeightDialog (`src/components/QCStringWeightDialog.jsx`)
+| Prop | Type | Description |
+|---|---|---|
+| `machine` | `object` | Machine config object `{ id, displayNumber, gram, fillHeads, line }` |
+| `roundNumber` | `number` | Current round number for this machine |
+| `previousRecord` | `object\|null` | Previous string weight record for context display |
+| `onSave` | `(data) => void` | Save handler receiving `{ weights, weightStatuses, allInTarget, outOfRangeCount, meetsCriteria, remarks, batchNumber }` |
+| `onClose` | `() => void` | Close dialog without saving |
+| `saving` | `boolean` | Disables form while save is in progress |
+
+#### QCBagInspectionDialog (`src/components/QCBagInspectionDialog.jsx`)
+| Prop | Type | Description |
+|---|---|---|
+| `machine` | `object` | Machine config |
+| `roundNumber` | `number` | Current round number |
+| `previousRecord` | `object\|null` | Previous bag inspection record |
+| `batchNumber` | `string` | Inherited from latest String Weight record |
+| `stringWeightRecord` | `object\|null` | Latest SW record (used for batch + packing standard display) |
+| `onSave` | `(data) => void` | Save handler |
+| `onClose` | `() => void` | Close dialog |
+| `saving` | `boolean` | Disables form during save |
+
+#### QCCartonInspectionDialog (`src/components/QCCartonInspectionDialog.jsx`)
+| Prop | Type | Description |
+|---|---|---|
+| `machine` | `object` | Machine config |
+| `roundNumber` | `number` | Current round number |
+| `previousRecord` | `object\|null` | Previous carton inspection record |
+| `batchNumber` | `string` | Inherited from latest String Weight record |
+| `stringWeightRecord` | `object\|null` | Latest SW record |
+| `onSave` | `(data) => void` | Save handler |
+| `onClose` | `() => void` | Close dialog |
+| `saving` | `boolean` | Disables form during save |
+
+### Service API — Bag & Carton Inspection
+
+#### qcBagInspectionOperations.js
+| Function | Returns | Description |
+|---|---|---|
+| `saveBagInspectionCheck(data, isOnline)` | `'saved'\|'queued'` | Creates bag inspection record; queues if offline |
+| `subscribeToMachineBagInspections(docId, machineId, callback)` | `unsubscribe` | Real-time subscription filtered by machine |
+| `subscribeToAllBagInspections(docId, callback)` | `unsubscribe` | All bag inspections for this shift |
+| `syncBagInspectionQueue()` | `{ synced: number } \| void` | Flushes `starium_bag_inspection_queue` to Firestore |
+| `computeOverallResult(criteria)` | `'pass'\|'conditional'\|'fail'` | Any U = fail, any M = conditional, else pass |
+
+#### qcCartonInspectionOperations.js
+| Function | Returns | Description |
+|---|---|---|
+| `saveCartonInspectionCheck(data, isOnline)` | `'saved'\|'queued'` | Creates carton inspection record |
+| `subscribeToMachineCartonInspections(docId, machineId, callback)` | `unsubscribe` | Real-time subscription filtered by machine |
+| `subscribeToAllCartonInspections(docId, callback)` | `unsubscribe` | All carton inspections for this shift |
+| `syncCartonInspectionQueue()` | `{ synced: number } \| void` | Flushes `starium_carton_inspection_queue` |
+| `computeCartonOverallResult(criteria)` | `'pass'\|'fail'` | Any U = fail, else pass |
+
+### QC Check Flow — All 3 Check Types
+
+```
+String Weight Round 1
+  ├── Sets batchNumber for machine (per-machine, entered once)
+  ├── Enables Bag Inspection button
+  └── Enables Carton Inspection button
+         │
+String Weight Round N (cooldown: qcCheckIntervals.stringWeight, default 15 min)
+Bag Inspection Round N      (cooldown: qcCheckIntervals.bagInspection, default 15 min)
+Carton Inspection Round N   (cooldown: qcCheckIntervals.cartonInspection, default 60 min)
+```
+
+Each check type:
+- Has its own `roundNumber` per machine (independent counters)
+- Subscribes to its own Firestore collection
+- Has its own offline queue
+- Inherits `batchNumber` from String Weight Round 1
+- Shows previous round details when available
+- Has configurable cooldown timer (countdown displayed on button; button disabled during cooldown)
+
+### Shift-Wide Approval Flow
+
+1. **Visibility**: Approve Shift / View Reports buttons visible only to `super_admin` or users with `qc_manager` department role
+2. **Approvers**: QC Supervisor (`qc_supervisor` actionRole) and Line Leader (`line_leader` actionRole)
+3. **Modal**: Stats dialog showing per-machine record counts (SW/BI/CI rounds, batch numbers, status)
+4. **Role gating**: Each approval button only shows if user has matching actionRole (or `super_admin`)
+5. **Broadcast**: On approval, broadcasts to `/` and `/qc-sachet-production-checks`
+6. **Badges**: Approval badges at top showing name, role, and time
+7. **Persistence**: Stored on `shift_approvals` doc
+
+### Command Center Card & Quick Actions (Latest Addition)
+
+**Command Center Card** — Live shift summary at top of page:
+- 4-column grid: String Weight count, Bag Inspection count, Carton Inspection count, Total Records
+- Updates reactively via Firestore subscriptions
+- Visible to all users
+- "View Reports" link visible only to `super_admin` and `qc_manager`
+
+**Quick Actions Bar** — Below Command Center:
+| Element | Description |
+|---|---|
+| Machine dropdown | Sort all machines by display number |
+| String Weight button | Opens SW dialog directly with cooldown display |
+| Bag Inspection button | Opens BI dialog directly with cooldown/lock display |
+| Carton Inspection button | Opens CI dialog directly with cooldown/lock display |
+| Approve Shift (manager only) | Opens approval modal |
+| View Reports (manager only) | Navigates to `/qc-sachet-report` |
+
+**State additions to QCSachetProductionChecks:**
+| State | Type | Purpose |
+|---|---|---|
+| `qaSelectedMachineId` | `string` | Machine selected in Quick Actions dropdown |
+| `currentTimestamp` | `number` | 1-second timer for cooldown displays |
+
+**Computed values:**
+| Value | Source | Purpose |
+|---|---|---|
+| `qaSwRecords` | `allRecords.filter(...)` | Filtered SW records for QA machine |
+| `qaBiRecords` | `allBagRecords.filter(...)` | Filtered BI records |
+| `qaCiRecords` | `allCartonRecords.filter(...)` | Filtered CI records |
+| `qaSwTimeLeft` | `computeTimeLeft(...)` | Milliseconds remaining in SW cooldown |
+| `qaBiTimeLeft` | `computeTimeLeft(...)` | Milliseconds remaining in BI cooldown |
+| `qaCiTimeLeft` | `computeTimeLeft(...)` | Milliseconds remaining in CI cooldown |
+| `qaSwLocked` | `qaSwTimeLeft > 0` | Button disabled state |
+| `qaBiLocked` | `!qaHasSwR1 \|\| qaBiTimeLeft > 0` | Button disabled state |
+| `qaCiLocked` | `!qaHasSwR1 \|\| qaCiTimeLeft > 0` | Button disabled state |
+
+### Offline Queue Summary
+
+| localStorage Key | Module | Sync Function | Firestore Collection |
+|---|---|---|---|
+| `starium_offline_queue` | QC Tests (legacy) | Manual in NetworkContext | `qc_tests` |
+| `starium_carton_offline_queue` | Carton Waste | `syncCartonOfflineQueue()` | `carton_records` |
+| `starium_laminate_offline_queue` | Laminate Waste | `syncLaminateOfflineQueue()` | `laminate_records` |
+| `starium_qc_string_weight_queue` | String Weight | `syncStringWeightQueue()` | `qc_string_weight_checks` |
+| `starium_bag_inspection_queue` | Bag Inspection | `syncBagInspectionQueue()` | `qc_bag_inspection_checks` |
+| `starium_carton_inspection_queue` | Carton Inspection | `syncCartonInspectionQueue()` | `qc_carton_inspection_checks` |
+
+All sync functions: write batch to Firestore with `localCreatedAt` + `syncedAt: serverTimestamp()`, clear queue on success.
+
+### Firestore Indexes Required
+
+For each QC check collection (`qc_string_weight_checks`, `qc_bag_inspection_checks`, `qc_carton_inspection_checks`):
+- Composite: `approvalDocId` ASC, `machineId` ASC, `roundNumber` ASC
+
+For `carton_records` and `laminate_records`:
+- Composite: `shiftApprovalDocId` ASC, `machineId` ASC, `roundNumber` ASC
+- Composite: `machineId` ASC, `shiftApprovalDocId` ASC, `roundNumber` DESC
+
+For `stopped_machines`:
+- Single: `isActive` ASC
+- Composite: `stoppedAt` ASC, `machineDisplayNumber` ASC
+
+For `presence`:
+- Single: `status` ASC
