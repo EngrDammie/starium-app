@@ -235,6 +235,7 @@ export default function UserManagement() {
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Email</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">System Role</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Departments</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Approval Roles</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
@@ -274,6 +275,19 @@ export default function UserManagement() {
                         {deptRoles.length > 0 ? deptRoles.map(r => {
                           const badge = getBadgeFormat(r);
                           return <span key={r} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${badge.color}`}>{badge.label}</span>;
+                        }) : <span className="text-gray-600 italic text-sm">None</span>}
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="p-3">
+                    {sysRole === 'super_admin' ? (
+                      <span className="text-gray-500 italic text-sm">Full Access</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {(user.actionRoles || []).length > 0 ? (user.actionRoles || []).map(r => {
+                          const found = (config?.actionRoles || []).find(a => a.id === r);
+                          return <span key={r} className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#00BCD4]/50 bg-[#00BCD4]/20 text-[#00BCD4]">{found?.label || r.replace(/_/g, ' ')}</span>;
                         }) : <span className="text-gray-600 italic text-sm">None</span>}
                       </div>
                     )}

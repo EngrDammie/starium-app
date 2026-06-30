@@ -46,7 +46,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions (stored in `machine_issues` collection), click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid (normal/stopped/issues-cleared/running/started-with-issues), and dedicated real-time manager report. Supports appending additional issues to already-stopped machines — the UI filters out pre-existing issues and warns when typing a duplicate label.
 - **Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining <= available, wasted <= available, used + wasted <= allocated), running totals (allocated, used, wasted, waste%), and "Save & Next Machine" flow. Full report page with waste% by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts broadcast to Command Center and carton waste pages. Offline queue via `starium_carton_offline_queue`.
 - **Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (configurable small 80g / large 160g) and record gross weight each round. Total laminate used auto-computed from machine gram: `rollsPerShift x rollWeight[gram]`. Sac type dropdown, auto-calculated waste collected (gross - sac weight), running waste totals, 3-status machine grid, and full report page. Offline queue via `starium_laminate_offline_queue`.
-- **QC Sachet Production Checks**: Per-machine production quality monitoring with 3 action buttons per machine (String Weight Check, Bag Inspection, Carton Inspection). Each check type has a configurable cooldown interval and depends on String Weight Round 1 being completed first. All 3 share the same Batch Number (entered in String Weight Round 1, read-only thereafter). Each check type has independent round numbering, real-time subscriptions, history view, and offline queue.
+- **QC Sachet Production Checks**: Per-machine production quality monitoring with 3 action buttons per machine (String Weight Check, Bag Inspection, Carton Inspection). Each check type has a configurable cooldown interval and depends on String Weight Round 1 being completed first. All 3 share the same Batch Number (entered in String Weight Round 1, read-only thereafter). Each check type has independent round numbering, real-time subscriptions, history view, and offline queue. Shift-wide approval flow with dual approvers (QC Supervisor + Line Leader), broadcast on approval, and approval badges. Dedicated report page with Print/CSV export.
 
 ### QC Check Types Detail
 
@@ -66,7 +66,7 @@ Instead of rigid job titles, this app uses a **Modular Role-Based Access Control
 
 1. **`systemRole` (The Master Key)**: `super_admin` bypasses all checks. `standard` must rely on department keycards.
 2. **`departmentRoles` (Page Access)**: e.g. `qc_staff`, `qc_manager`, `prod_manager`, `hr_manager`. Controls sidebar visibility and page access via `ProtectedRoute`.
-3. **`actionRoles` (Button Powers)**: e.g. `plc_operator`, `buggy_supervisor`, `qc_supervisor`. Dictates which approval buttons appear on Executive Dashboards.
+3. **`actionRoles` (Button Powers)**: e.g. `plc_operator`, `buggy_supervisor`, `qc_supervisor`, `line_leader`. Dictates which approval buttons appear on Executive Dashboards and QC Sachet approval modal.
 
 ### Ghost Admin Fallback
 
@@ -175,7 +175,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 ```
 src/
 ├── main.jsx                         # Entry point, provider nesting
-├── App.jsx                          # Route definitions (20 routes)
+├── App.jsx                          # Route definitions (21 routes)
 ├── index.css                        # Tailwind directives + base styles
 ├── config/
 │   ├── firebase.js                  # Firebase init (env vars)
@@ -219,7 +219,8 @@ src/
 │   ├── CartonWasteReport.jsx        # Carton waste report with charts
 │   ├── LaminateWaste.jsx            # Laminate waste data entry
 │   ├── LaminateWasteReport.jsx      # Laminate waste report with charts
-│   └── QCSachetProductionChecks.jsx # QC monitoring with 3 check types
+│   ├── QCSachetProductionChecks.jsx # QC monitoring with 3 check types + approval flow
+│   └── QCSachetReport.jsx           # QC Sachet printable report with Print/CSV export
 └── services/
     ├── qcOperations.js              # QC Tests CRUD, shift approval, offline queue
     ├── cartonOperations.js          # Carton waste CRUD, validation, offline queue
@@ -240,7 +241,7 @@ src/
 3. **NetworkProvider** - Online/offline detection, offline queue auto-sync
 4. **ConfigProvider** - Live config subscription, DEFAULT_CONFIG fallback
 5. **AlertProvider** - Real-time alert subscription, broadcastAlert function
-6. **App** - Routes (20 protected + 1 public)
+6. **App** - Routes (21 protected + 1 public)
 
 ### Shift Boundary Logic
 
@@ -319,13 +320,12 @@ The workflow (.github/workflows/deploy.yml):
 
 - ✅ **Laminate Waste System**: Complete with reports, offline support, broadcasts
 - ✅ **Carton Waste System**: Complete with reports, offline support, broadcasts
-- ✅ **QC Sachet Production Checks**: String Weight, Bag Inspection, and Carton Inspection — all complete with cooldowns, dependencies, offline queues, and round history
+- ✅ **QC Sachet Production Checks**: String Weight, Bag Inspection, and Carton Inspection — all complete with cooldowns, dependencies, offline queues, round history, shift-wide approval flow (QC Supervisor + Line Leader), and dedicated report page
+- ✅ **QC Sachet Report**: Print-friendly report with 3-section tables (String Weights, Bag Inspection, Carton Inspection), date/shift/team/machine filters, approver badges, and CSV export
 - ✅ **Empty Silos System**: Complete with refill detection and broadcasts
 - ✅ **Stopped Machines System**: Complete with issue management and broadcasts
 - [ ] **Audit Trail**: Background logging system to record who modified settings, deleted users, or overrode machines
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices
-- [ ] **Shift-Wide Approval Flow**: Consolidated approval across all 3 QC check types
-- [ ] **QC Sachet Shift Summary**: Executive overview of all QC checks for a shift
 
 ---
 

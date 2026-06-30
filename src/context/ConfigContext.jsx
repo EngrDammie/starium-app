@@ -79,7 +79,8 @@ const DEFAULT_CONFIG = {
     { id: 'plc_operator', label: '⚡ PLC Operator' },
     { id: 'production_manager', label: '🏭 Production Manager' },
     { id: 'qc_manager', label: '✅ QC Manager' },
-    { id: 'qc_supervisor', label: '🔍 QC Supervisor' }
+    { id: 'qc_supervisor', label: '🔍 QC Supervisor' },
+    { id: 'line_leader', label: '👷 Line Leader' }
   ]
 };
 
@@ -107,7 +108,13 @@ export function ConfigProvider({ children }) {
           ),
           fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
           departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
-          actionRoles: data.actionRoles || DEFAULT_CONFIG.actionRoles
+          actionRoles: data.actionRoles
+            ? (() => {
+                const existingIds = new Set((data.actionRoles || []).map(r => r.id));
+                const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
+                return [...data.actionRoles, ...missing];
+              })()
+            : DEFAULT_CONFIG.actionRoles
         });
       } else {
         try {

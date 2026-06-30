@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
       if (!isAuthEnabled) {
         setSystemRole('super_admin');
         setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
-        setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor']);
+        setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor', 'line_leader']);
         
         setFirstName('Developer');
         setLastName('Admin');

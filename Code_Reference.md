@@ -405,7 +405,7 @@ Structure:
 
 `allowedRoles: []` means super_admin only. `getAllowedRolesForPath(path)` returns the `allowedRoles` array or `null`.
 
-### Route List (20 routes)
+### Route List (21 routes)
 
 | Path | Page Component | Roles |
 |---|---|---|
@@ -415,7 +415,8 @@ Structure:
 | `/powder-density` | `PowderDensity` | qc_staff, qc_manager, prod_staff, prod_manager |
 | `/level9-exec` | `Level9Exec` | qc_manager, prod_manager |
 | `/bot-exec` | `BotExec` | qc_manager, prod_manager |
-| `/qc-sachet-production-checks` | `QCSachetProductionChecks` | qc_staff, qc_manager, prod_staff, prod_manager |
+| `/qc-sachet-production-checks` | `QCSachetProductionChecks` | qc_staff, qc_manager |
+| `/qc-sachet-report` | `QCSachetReport` | qc_manager |
 | `/empty-silos` | `EmptySilos` | qc_staff, qc_manager |
 | `/stop-machine` | `StopMachine` | qc_staff, qc_manager |
 | `/carton-waste` | `CartonWaste` | prod_staff, prod_manager, qc_manager |
@@ -468,6 +469,18 @@ Each check type:
 - Shows previous round details when available
 - Shows first-round info banner when no previous record
 - Has configurable cooldown timer (countdown displayed on button; button disabled during cooldown)
+
+### Shift-Wide Approval Flow
+
+The QC Sachet Production Checks page includes a shift-wide approval system:
+
+1. **Visibility**: Approve Shift / View Reports buttons visible only to `super_admin` or users with `qc_manager` department role
+2. **Approvers**: Two approver types — QC Supervisor (`qc_supervisor` action role) and Line Leader (`line_leader` action role)
+3. **Modal**: Stats dialog showing per-machine record counts (SW/BI/CI rounds, batch numbers, status)
+4. **Role gating**: Each approval button only shows if the user has the matching action role (or is `super_admin`)
+5. **Broadcast**: On approval, broadcasts to Command Center (`/`) and QC Sachet page (`/qc-sachet-production-checks`)
+6. **Badges**: Approval badges displayed at top showing name, role, and time of each approver
+7. **Persistence**: Approvals stored on `shift_approvals` doc under `{ qc_supervisor: { name, role, timestamp }, line_leader: { name, role, timestamp } }`
 
 ---
 

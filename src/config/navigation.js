@@ -27,7 +27,7 @@ export const MENU_CONFIG = [
       { path: '/bot-exec', label: 'BOT Dashboard', icon: '🤖', allowedRoles: ['qc_manager', 'prod_manager'] },
       { path: '/empty-silos', label: 'Report Empty Silos', icon: '🛢️', allowedRoles: ['qc_staff', 'qc_manager'] },
       { path: '/stop-machine', label: 'Report Stopped Machine', icon: '🛑', allowedRoles: ['qc_staff', 'qc_manager'] },
-      { path: '/qc-sachet-production-checks', label: 'QC Sachet Production Checks', icon: '⚖️', allowedRoles: ['qc_staff', 'qc_manager', 'prod_staff', 'prod_manager'] }
+      { path: '/qc-sachet-production-checks', label: 'QC Sachet Production Checks', icon: '⚖️', allowedRoles: ['qc_staff', 'qc_manager'] }
     ]
   },
   {
@@ -47,7 +47,8 @@ export const MENU_CONFIG = [
       { path: '/carton-waste-report', label: 'Carton Waste Report', icon: '📦', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
       { path: '/laminate-waste-report', label: 'Laminate Waste Report', icon: '🗑️', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
       { path: '/empty-silos-report', label: 'Empty Silos Report', icon: '📋', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
-      { path: '/stopped-machines-report', label: 'Stopped Machines Report', icon: '📊', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] }
+      { path: '/stopped-machines-report', label: 'Stopped Machines Report', icon: '📊', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
+      { path: '/qc-sachet-report', label: 'QC Sachet Report', icon: '⚖️', allowedRoles: ['qc_manager'] }
     ]
   },
   {
