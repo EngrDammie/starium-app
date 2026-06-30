@@ -55,17 +55,41 @@
       font-size: clamp(2.8rem, 8vw, 6rem);
       font-weight: 900;
       line-height: 1;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+      transform-style: preserve-3d;
+      perspective: 1200px;
+    }
+    .hero h1 .glow-text {
+      display: block;
       background: linear-gradient(135deg, #00E676 0%, #00BCD4 50%, #7C4DFF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 20px;
-      letter-spacing: -2px;
+      transition: filter 0.3s ease;
+      filter: brightness(1);
+    }
+    .hero h1 .glow-text:hover {
+      filter: brightness(1.3) drop-shadow(0 0 40px rgba(0,230,118,0.3));
+    }
+    .hero h1 .title-line {
+      display: block;
+      font-size: 0.45em;
+      font-weight: 300;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      color: #888;
+      margin-top: 8px;
+      -webkit-text-fill-color: #888;
+    }
+    .hero .hero-tilt {
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
     }
     .hero p {
       font-size: clamp(1rem, 2vw, 1.3rem);
       color: #888;
-      max-width: 700px;
+      max-width: 750px;
       margin-bottom: 40px;
       line-height: 1.7;
     }
@@ -353,11 +377,20 @@
   <!-- Hero -->
   <header class="hero" id="hero">
     <div class="hero-badge reveal">Production-Ready · Never Loses Data · Real-Time</div>
-    <h1 class="reveal reveal-delay-1">Starium Rafa<br/>Enterprise ERP</h1>
+    <div class="hero-tilt reveal reveal-delay-1">
+      <h1>
+        <span class="glow-text">Starium Rafa</span>
+        <span class="glow-text">Enterprise ERP</span>
+        <span class="title-line">Your Factory Operating System</span>
+      </h1>
+    </div>
     <p class="reveal reveal-delay-2">
-      A complete factory operating system — built by one person,<br/>
-      designed to save you millions in operational waste.
+      Real-time production data, live dashboards, instant reports — from anywhere in the world.<br/>
+      Your factory never stops, and now neither does your visibility into it.
     </p>
+    <div class="reveal reveal-delay-2" style="color:#00BCD4;font-weight:600;letter-spacing:0.5px;margin-bottom:30px;font-size:clamp(0.85rem,1.4vw,1rem);">
+      🌍 Your location no longer matters. You are always connected to your floor.
+    </div>
     <div class="hero-cta reveal reveal-delay-3">
       <a href="#features" class="btn btn-primary">See What It Does ↓</a>
       <a href="#why" class="btn btn-outline">Why It Matters</a>
@@ -533,7 +566,8 @@
       <h2 class="section-title reveal reveal-delay-1">A Bird's-Eye View of<br/>Your Entire Factory</h2>
       <p class="section-desc reveal reveal-delay-2">
         The Command Center gives you a real-time snapshot of everything that matters —<br/>
-        live users, active tests, empty silos, stopped machines, and waste levels — all on one screen.
+        live users, active tests, empty silos, stopped machines, and waste levels — all on one screen.<br/>
+        <span style="color:#aaa;">And you can see it from Lagos, London, Dubai, or anywhere else on earth. Your factory travels with you.</span>
       </p>
       <div class="features-grid" style="margin-bottom:20px;">
         <div class="feature-card reveal" style="--accent:#00BCD4;">
@@ -582,7 +616,7 @@
         <div class="arch-item reveal reveal-delay-2"><div class="icon">🎨</div><h4>Premium Look and Feel</h4><p>Dark-themed professional interface that looks as good in the boardroom as it does on the factory floor. Print-ready reports for meetings.</p></div>
         <div class="arch-item reveal reveal-delay-3"><div class="icon">📈</div><h4>Beautiful Visual Reports</h4><p>Bar charts, line charts, and donut charts that make data easy to understand. No training required — executives can read them instantly.</p></div>
         <div class="arch-item reveal reveal-delay-4"><div class="icon">☁️</div><h4>Cloud-Hosted, Zero Maintenance</h4><p>No servers to manage. No software to install. Push updates automatically. The system runs on Firebase and GitHub Pages — enterprise infrastructure at a fraction of the cost.</p></div>
-        <div class="arch-item reveal reveal-delay-4"><div class="icon">📱</div><h4>Works on Any Device</h4><p>Designed for desktop, tablet, and mobile. Staff can enter data from the factory floor using any device with a browser.</p></div>
+        <div class="arch-item reveal reveal-delay-4"><div class="icon">📱</div><h4>Works on Any Device, Anywhere</h4><p>Designed for desktop, tablet, and mobile. Staff enter data from the factory floor. Managers monitor from home, a hotel, or another continent. Open a browser and you're connected — no VPN, no special setup.</p></div>
       </div>
     </div>
   </section>
@@ -595,7 +629,7 @@
       <p class="section-desc reveal reveal-delay-2">
         Every module listed here is already built, tested, and running. Nothing is "coming soon."<br/>
         This is the full system — deployed and ready for your factory.<br/>
-        <span style="color:#aaa;font-size:0.95rem;">And anything else you need — payroll, inventory, procurement, HR — the architect can build it once he's part of your team.</span>
+        <span style="color:#00BCD4;font-weight:600;font-size:1rem;">And here's the best part: anything else you need, just ask. Payroll, procurement, inventory, HR, custom reports — whatever your team dreams up, your in-house architect will build it.</span>
       </p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;">
         <div class="diff-item reveal"><div class="check">✓</div><div><strong>Command Center Dashboard</strong><span>8 live metric cards, each clickable. Real-time factory health in under 5 seconds. QC Sachet Command Center card shows live record counts per check type (SW/BI/CI) for all users; managers can link to reports.</span></div></div>
@@ -619,7 +653,7 @@
         <div class="diff-item reveal reveal-delay-3"><div class="check">✓</div><div><strong>Shift-Wide Approval Workflow</strong><span>Dual approver (QC Supervisor + Line Leader), timestamped, broadcasted, badge display.</span></div></div>
         <div class="diff-item reveal reveal-delay-4"><div class="check">✓</div><div><strong>User Management</strong><span>Full CRUD, Firebase Auth, system roles, department access, approval powers, name management.</span></div></div>
         <div class="diff-item reveal"><div class="check">✓</div><div><strong>Active Users Page</strong><span>Live table of all logged-in users with role, status, and current page.</span></div></div>
-        <div class="diff-item reveal reveal-delay-1" style="opacity:0.55;"><div class="check" style="background:rgba(255,255,255,0.1);color:#888;">🔄</div><div><strong>Employee Roster & Payroll</strong><span>Staff directory with role filtering and integrated payroll module. <em style="color:#aaa;">(Ready to build — this and any other feature management needs. Everything is extensible.)</em></span></div></div>
+        <div class="diff-item reveal reveal-delay-1" style="opacity:0.55;"><div class="check" style="background:rgba(255,255,255,0.1);color:#888;">🔄</div><div><strong>Employee Roster & Payroll</strong><span>Staff directory with role filtering and integrated payroll module. <em style="color:#aaa;">(Ready when you need it — your architect adds it on your timeline.)</em></span></div></div>
         <div class="diff-item reveal reveal-delay-2"><div class="check">✓</div><div><strong>System Configuration Panel</strong><span>9-tab admin panel — machines, lines, gram specs, roles, intervals, thresholds, import/export/reset.</span></div></div>
         <div class="diff-item reveal reveal-delay-3"><div class="check">✓</div><div><strong>Offline-First Architecture</strong><span>6 independent queues, auto-sync on reconnect, zero data loss guarantee.</span></div></div>
         <div class="diff-item reveal reveal-delay-4"><div class="check">✓</div><div><strong>3-Tier Security (RBAC)</strong><span>System role, department roles, action roles. Emergency kiosk failover if auth goes down.</span></div></div>
@@ -648,6 +682,8 @@
         <div class="diff-item reveal reveal-delay-3"><div class="check">✓</div><div><strong>Built for Scale</strong><span>Add machines. Add production lines. Add users. The system grows with your factory without needing to be rebuilt. Configuration changes take effect immediately.</span></div></div>
         <div class="diff-item reveal reveal-delay-4"><div class="check">✓</div><div><strong>Complete Ownership — No Licensing Fees</strong><span>This is a fully owned system. No per-user licensing, no subscription tiers, no surprise price increases. The factory owns everything.</span></div></div>
         <div class="diff-item reveal reveal-delay-4"><div class="check">✓</div><div><strong>Impressive Design That Builds Confidence</strong><span>A premium, polished interface that makes a statement to investors, partners, and auditors. The factory looks professional because the software looks professional.</span></div></div>
+        <div class="diff-item reveal"><div class="check">✓</div><div><strong>Your Vision, Your Features — On Your Timeline</strong><span>This is the real magic of having an in-house architect. Imagine any workflow, any report, any automation your team wishes existed. Describe it once, and it appears in the app. No bureaucracy, no contract negotiations, no "that's not in scope." Your in-house architect turns your ideas into reality — as fast as you can dream them up.</span></div></div>
+        <div class="diff-item reveal reveal-delay-1"><div class="check">✓</div><div><strong>Data When You Want It, However You Want It</strong><span>A dashboard at your desk. A push alert on your phone. A PDF report in your email. A live view on your laptop from a hotel room at midnight. The data is yours — you choose when, where, and how to see it. The system bends to your preferences, not the other way around.</span></div></div>
       </div>
     </div>
   </section>
@@ -660,7 +696,8 @@
       <p class="reveal reveal-delay-2">
         This platform was built by a single person who understands every layer of the technology —<br/>
         and every challenge of your factory floor. Not a team. Not an agency. One dedicated architect<br/>
-        who can own, evolve, and scale your entire factory operating system.
+        who can own, evolve, and scale your entire factory operating system.<br/><br/>
+        <span style="color:#aaa;">Imagine having any software tool your team needs — built exactly the way you want it —<br/>available from anywhere in the world, updated in real time, and maintained by one person who answers to you.</span>
       </p>
       <div class="reveal reveal-delay-3" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
         <a href="https://wa.me/2347053331253" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;"><span>💬</span> Hire the Architect — WhatsApp Dammie</a>
@@ -824,6 +861,8 @@
     });
 
     let clock = new THREE.Clock();
+    const heroTilt = document.querySelector('.hero-tilt');
+    const heroGlow = document.querySelector('.hero h1 .glow-text');
     function animate() {
       const t = clock.getElapsedTime();
 
@@ -839,6 +878,13 @@
       camera.position.x += (mouseX * 3 - camera.position.x) * 0.01;
       camera.position.y += (mouseY * 2 - camera.position.y) * 0.01;
       camera.lookAt(0, 0, 0);
+
+      // Title 3D tilt follows mouse
+      if (heroTilt) {
+        const rx = mouseY * -6;
+        const ry = mouseX * 6;
+        heroTilt.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      }
 
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
