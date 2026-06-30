@@ -56,6 +56,13 @@ When users log in, they land on the **Command Center**, providing a high-level o
 | **Bag Inspection** | 15 min | 6 criteria (Leakage, Dirt & Print, Completeness of Sachets, Freebies Presence, Perforation, Perfume Odour) | A / M / U | Pass (all A), Conditional (any M), Fail (any U) |
 | **Carton Inspection** | 60 min | 5 criteria (Detergent/Dust, Carton Print Quality, Seal Quality, Carton Damage, Carton Code Readability) | A / U | Pass (all A), Fail (any U) |
 
+### Command Center & Quick Actions
+
+- **Command Center Card**: Live shift summary card on the main page showing real-time record counts for all 3 check types (String Weight, Bag Inspection, Carton Inspection) plus total. Visible to all users. "View Reports" link shown only for super_admin and qc_manager.
+- **Quick Actions Bar**: Machine selector dropdown + per-check-type shortcut buttons (String Weight, Bag Inspection, Carton Inspection) with live cooldown status. Manager-only buttons for "Approve Shift" and "View Reports" shown beside the check buttons. All visible on the main page without clicking into a machine.
+
+Note: The "Approve Shift" and "View Reports" buttons were moved from the approval badges area into the Quick Actions bar (approval badges remain).
+
 ---
 
 ## Enterprise Security (The Keycard System)

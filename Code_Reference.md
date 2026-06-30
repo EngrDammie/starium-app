@@ -482,6 +482,36 @@ The QC Sachet Production Checks page includes a shift-wide approval system:
 6. **Badges**: Approval badges displayed at top showing name, role, and time of each approver
 7. **Persistence**: Approvals stored on `shift_approvals` doc under `{ qc_supervisor: { name, role, timestamp }, line_leader: { name, role, timestamp } }`
 
+### QCSachetProductionChecks Page State
+
+**State additions:**
+| Value | Type | Description |
+|---|---|---|
+| `qaSelectedMachineId` | `string \| null` | Machine selected in Quick Actions dropdown |
+| `currentTimestamp` | `number` | 1-second interval timer for cooldown displays |
+
+**Computed values:**
+| Value | Type | Description |
+|---|---|---|
+| `qaSwRecords` | `Array` | Filtered String Weight records for QA machine |
+| `qaBiRecords` | `Array` | Filtered Bag Inspection records for QA machine |
+| `qaCiRecords` | `Array` | Filtered Carton Inspection records for QA machine |
+| `qaSwTimeLeft` | `number` | Cooldown remaining for String Weight (seconds) |
+| `qaBiTimeLeft` | `number` | Cooldown remaining for Bag Inspection (seconds) |
+| `qaCiTimeLeft` | `number` | Cooldown remaining for Carton Inspection (seconds) |
+| `qaSwLocked` | `boolean` | String Weight button disabled during cooldown |
+| `qaBiLocked` | `boolean` | Bag Inspection button disabled during cooldown |
+| `qaCiLocked` | `boolean` | Carton Inspection button disabled during cooldown |
+
+**Function:**
+| Function | Description |
+|---|---|
+| `handleQuickAction(type)` | Sets selectedMachine + dialogType for quick access from Quick Actions bar |
+
+**UI additions:**
+- **Command Center Card**: 4-column grid stats showing real-time record counts per check type. Visible to all users; "View Reports" link visible only to super_admin and qc_manager.
+- **Quick Actions Bar**: Machine selector dropdown + per-check-type buttons (String Weight, Bag Inspection, Carton Inspection) with live cooldown status. Manager-only "Approve Shift" and "View Reports" buttons beside the check buttons. All visible on the main page.
+
 ---
 
 ## 8. Firestore Indexes Required
