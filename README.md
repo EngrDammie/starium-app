@@ -1,158 +1,278 @@
-# 🏭 Starium Rafa Enterprise Resource Planner (ERP)
+# Starium Rafa Enterprise Resource Planner (ERP)
 
-Welcome to the **Starium Rafa ERP**! This is an enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time. 
+Welcome to the **Starium Rafa ERP**! An enterprise-grade, offline-capable web application built to monitor, record, and analyze factory metrics in real-time.
 
-Built for Powder Density tracking and Carton Waste management, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
-
----
-
-## 📖 Table of Contents
-1. [About the Project](#-about-the-project)
-2. [Key Features](#-key-features)
-3. [Enterprise Security (The Keycard System)](#-enterprise-security-the-keycard-system)
-4. [Factory Modules](#-the-factory-modules)
-5. [Tech Stack](#-tech-stack)
-6. [For Developers: System Architecture](#-for-developers-system-architecture)
-7. [Local Setup & Installation](#-local-setup--installation)
-8. [Deployment (GitHub Pages)](#-deployment-github-pages)
-9. [Future Roadmap](#-future-roadmap)
+Built for Powder Density tracking, Carton/Laminate Waste management, and QC Sachet Production Checks, the platform is structured to scale into a full factory ERP system encompassing Production, Human Resources, and Quality Control.
 
 ---
 
-## 💡 About the Project
+## Table of Contents
 
-Factory floors often suffer from spotty internet connections. Standard web apps break when the Wi-Fi drops, causing lost data and frustrated workers. 
-
-This application solves that problem. It is built as an **Offline-First Application**. QC and Production staff can continuously enter density test results, carton waste data, and laminate waste data even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
-
-When users log in, they land on the **Command Center**, providing a high-level overview of active shifts and tests. Meanwhile, Factory Managers can watch data stream into their executive dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
-
----
-
-## ✨ Key Features
-
-- **🌐 Factory Command Center**: A centralized dashboard showing live metrics (e.g., active users, tests completed this shift) and quick-action navigation tailored to the user's role. Level 9 and BOT test cards are clickable for QC/Production managers, navigating to their respective executive dashboards. Super admins can click the Live Users card to view a detailed table of all active operators and their current page.
-- **📶 Offline-First Engine**: Never lose a test. Tests are queued locally and auto-synced with perfect timestamp preservation.
-- **⚡ Real-Time Executive Dashboards**: Live view of current factory density, visual machine grids, and moving trend charts.
-- **📢 Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens across the factory.
-- **📜 Shift History Modal**: Floor workers can instantly review all tests submitted during their active shift.
-- **⚙️ Dynamic Admin Panel**: Administrators can add machines, define production lines, edit roles, and change density thresholds without touching the code.
-- **📊 Automated Reporting**: Generates clean, printer-friendly (A4 Landscape) reports with Chart.js analytics and CSV exports.
-- **🛢️ Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts, auto-refill detection when powder density tests are saved, and a dedicated manager report with color-coded machine grid and refill counters.
-- **🛑 Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid, and dedicated real-time manager report. Supports appending additional issues to already-stopped machines via "Report More Issues" (which re-stops the machine), with automatic deduplication of already-attached issues — the UI filters out pre-existing issues and warns when typing a duplicate label.
-- **📦 Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining ≤ available, wasted ≤ available, used + wasted ≤ allocated), running totals, and "Save & Next Machine" flow. Includes a full report page with waste percentage by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison, shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts are broadcast to the command centre and carton waste pages in real-time. Full offline-queue support via dedicated localStorage key.
-- **🗑️ Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (small 80g / large 160g) and record gross weight each round. Total laminate used is auto-computed from the machine's gram setting: `rollsPerShift × rollWeight[gram]` (e.g., a 125g machine uses 53.70 kg/roll × 3 rolls = 161.10 kg per shift). Sac type dropdown with configurable weights, auto-calculated waste collected (gross − sac), running waste totals, and 3-status machine grid (green/gray/red). Full report page with waste % by machine bar chart, waste trend over rounds (top 5), cross-shift comparison, per-machine breakdown, round-by-round detail table, CSV export, and print. High waste alerts broadcast to command centre, laminate waste page, and report page. Offline-first with dedicated localStorage queue.
-45: - **⚖️ QC Sachet Production Checks**: Per-machine production quality monitoring with 3 action buttons per machine (String Weight Check, Bag Inspection — coming soon, Carton Inspection — coming soon). Each check type has a configurable cooldown interval (default: 15 min for String Weight, 15 min for Bag, 60 min for Carton) editable in System Config → QC Settings. The string weight dialog supports dynamic fill heads (2-4 per machine), real-time weight validation against configurable 5-level ranges (Too Low / Low / Target / High / Too High), per-machine batch numbers, round-based data entry with full history tracking (who checked what and when), and offline queue support via dedicated localStorage key. Machine grid shows green (passed) / red (issues) / gray (unchecked) per-machine status based on the latest round.
+1. [About the Project](#about-the-project)
+2. [Key Features](#key-features)
+3. [Enterprise Security (The Keycard System)](#enterprise-security-the-keycard-system)
+4. [Factory Modules](#factory-modules)
+5. [Firebase Collections](#firebase-collections)
+6. [localStorage Keys](#localstorage-keys)
+7. [Tech Stack](#tech-stack)
+8. [System Architecture](#system-architecture)
+9. [Service Layer Reference](#service-layer-reference)
+10. [Local Setup & Installation](#local-setup--installation)
+11. [Deployment](#deployment-github-pages--actions)
+12. [Future Roadmap](#future-roadmap)
 
 ---
 
-## 🔑 Enterprise Security (The Keycard System)
+## About the Project
 
-Instead of rigid job titles (like "Manager" or "Staff"), this app uses a highly scalable **Modular Role-Based Access Control (RBAC)** system. We treat permissions like "Keycards" on a worker's lanyard.
+Factory floors often suffer from spotty internet connections. Standard web apps break when the Wi-Fi drops, causing lost data and frustrated workers.
 
-A user's profile consists of three security layers:
+This application solves that problem. It is built as an **Offline-First Application**. QC and Production staff can continuously enter density test results, carton waste data, laminate waste data, and QC inspection checks even if the internet goes completely down. The app queues everything safely in the browser's memory and instantly uploads it to the cloud the millisecond the internet returns.
 
-1. **`systemRole` (The Master Key):** 
-   - `super_admin`: Bypasses all security checks. Has full access to everything.
-   - `standard`: Must rely on department keycards.
-2. **`departmentRoles` (Page Access):** 
-   - Example: `qc_staff`, `qc_manager`, `prod_manager`, `hr_manager`.
-   - These control what pages a user can navigate to, and dynamically builds their Sidebar Accordion Menu.
-3. **`actionRoles` (Button Powers):**
-   - Example: `plc_operator`, `buggy_supervisor`, `qc_supervisor`.
-   - These dictate which specific approval buttons a user is allowed to click on the Executive Dashboards.
-
-*Note: The app includes a "Ghost Admin" fallback. If the Master Auth Toggle is turned OFF in the settings, the app bypasses Firebase login and grants everyone temporary Super Admin access for emergency/kiosk use.*
+When users log in, they land on the **Command Center**, providing a high-level overview of active shifts and tests. Factory Managers can watch data stream into their executive dashboards in real-time, view automated charts, receive targeted alert broadcasts, and digitally sign off on shift approvals.
 
 ---
 
-## 🏭 The Factory Modules
+## Key Features
 
-The application has three core data entry and monitoring modules:
+- **Factory Command Center**: Centralized dashboard with 7 live metric cards (Live Users, Level 9 Tests, BOT Tests, Empty Silos, Stopped Machines, Carton Waste, Laminate Waste). Clickable links navigate managers to their respective executive dashboards. Super admins get a clickable Live Users card linking to the Active Users page. Quick Actions section provides role-based shortcuts to all factory modules.
+- **Offline-First Engine**: 6 independent offline queues with auto-sync on reconnect. Tests are queued locally with perfect timestamp preservation and synced via `writeBatch`.
+- **Real-Time Executive Dashboards**: Level 9 and BOT live views with Chart.js line charts showing density trends, shift approval workflows, and machine grid density matching.
+- **Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens (or all screens) across the factory. Three levels: Info (blue), Warning (orange), Critical (red with shake animation). Auto-dismisses after 15 seconds.
+- **Shift History Modal**: Floor workers can review all tests submitted during their active shift with exact timestamps and buggy numbers.
+- **Dynamic Admin Panel**: SystemConfig page with 9 tabs — add/edit/delete machines, define production lines, configure gram specs with pieces/bags/freebies breakdown, manage role definitions, toggle global settings (density rules, shift times, packaging teams), configure QC check intervals and string weight ranges, manage carton waste thresholds, laminate waste settings (sac types, roll weights), and import/export/reset configuration.
+- **Automated Reporting**: Printer-friendly (A4 Landscape) reports with Chart.js analytics (line charts, doughnut charts, bar charts), CSV exports per machine, and cross-shift comparison tables with vs-prev diff arrows.
+- **Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts to Command Center and data entry pages. Auto-refill detection when density tests are saved triggers the refill modal. Dedicated manager report with color-coded machine grid and refill counters (buggy numbers).
+- **Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions (stored in `machine_issues` collection), click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid (normal/stopped/issues-cleared/running/started-with-issues), and dedicated real-time manager report. Supports appending additional issues to already-stopped machines — the UI filters out pre-existing issues and warns when typing a duplicate label.
+- **Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining <= available, wasted <= available, used + wasted <= allocated), running totals (allocated, used, wasted, waste%), and "Save & Next Machine" flow. Full report page with waste% by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts broadcast to Command Center and carton waste pages. Offline queue via `starium_carton_offline_queue`.
+- **Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (configurable small 80g / large 160g) and record gross weight each round. Total laminate used auto-computed from machine gram: `rollsPerShift x rollWeight[gram]`. Sac type dropdown, auto-calculated waste collected (gross - sac weight), running waste totals, 3-status machine grid, and full report page. Offline queue via `starium_laminate_offline_queue`.
+- **QC Sachet Production Checks**: Per-machine production quality monitoring with 3 action buttons per machine (String Weight Check, Bag Inspection, Carton Inspection). Each check type has a configurable cooldown interval and depends on String Weight Round 1 being completed first. All 3 share the same Batch Number (entered in String Weight Round 1, read-only thereafter). Each check type has independent round numbering, real-time subscriptions, history view, and offline queue.
 
-1. **Level 9 Silos**: 
-   - Divides weight by `1580`.
-   - Requires assigning specific Buggy Numbers to specific Machines (1 through 30+).
-   - Tracks Appearance and Fragrance.
-2. **B.O.T. (Base Powder)**:
-   - Divides weight by `1680`.
-   - Focuses strictly on base powder metrics.
-   - Tracks Appearance and Flow Property (Free Flowing).
-3. **Carton Waste**:
-   - Per-machine tracking of allocated, remaining, used, and wasted cartons.
-   - Each independently tracks its own check rounds (no global round counter).
-   - Machine grid with 3 statuses: unchecked (gray), checked (green), high-waste (red — waste% > target).
-   - "Save & Next Machine" advances numerically, closes on last machine.
-   - Report page with waste% charts, cross-shift comparison, CSV export.
-4. **Laminate Waste**:
-   - Per-machine tracking of laminate waste using weight (kg) instead of carton counts.
-   - Two sac types: Small (80g) and Large (160g) — configurable via System Config.
-   - Total laminate used auto-computed from machine gram: `rollsPerShift × rollWeight[gram]`.
-   - Waste collected = gross weight − sac weight. Running totals and waste % displayed in real-time.
-   - Same 3-status machine grid and "Save & Next Machine" flow as Carton Waste.
-   - Report page with waste% charts, cross-shift comparison, per-machine breakdown, CSV export, print.
-5. **QC Sachet Production Checks**:
-   - Per-machine production quality monitoring with per-machine round numbering and check-type-specific buttons.
-   - String Weight Check dialog: dynamic fill heads (matching machine spec), real-time validation against 5-level weight ranges (configurable per gram in QC Settings), per-machine batch number (set in Round 1, read-only thereafter).
-   - Configurable cooldown intervals between checks (String Weight: 15 min, Bag Inspection: 15 min, Carton Inspection: 60 min — all editable in System Config → QC Settings).
-   - Full round history per machine showing weights, checker, result, and timestamp.
-   - 3-status machine grid: green (latest round passed), red (weights outside target or criteria not met), gray (unchecked).
-   - Offline queue support with dedicated localStorage key and Firestore `writeBatch` sync.
+### QC Check Types Detail
+
+| Check Type | Cooldown Default | Criteria | Grading | Overall Result |
+|---|---|---|---|---|
+| **String Weight Check** | 15 min | Fill head weights (2-4 per machine) | 5-level validation (Too Low / Low / Target / High / Too High) per gram config | All-in-target + Meets Criteria Y/N |
+| **Bag Inspection** | 15 min | 6 criteria (Leakage, Dirt & Print, Completeness of Sachets, Freebies Presence, Perforation, Perfume Odour) | A / M / U | Pass (all A), Conditional (any M), Fail (any U) |
+| **Carton Inspection** | 60 min | 5 criteria (Detergent/Dust, Carton Print Quality, Seal Quality, Carton Damage, Carton Code Readability) | A / U | Pass (all A), Fail (any U) |
 
 ---
 
-## 🛠️ Tech Stack
+## Enterprise Security (The Keycard System)
+
+Instead of rigid job titles, this app uses a **Modular Role-Based Access Control (RBAC)** system. Permissions are like "Keycards" on a worker's lanyard.
+
+### Three Security Layers
+
+1. **`systemRole` (The Master Key)**: `super_admin` bypasses all checks. `standard` must rely on department keycards.
+2. **`departmentRoles` (Page Access)**: e.g. `qc_staff`, `qc_manager`, `prod_manager`, `hr_manager`. Controls sidebar visibility and page access via `ProtectedRoute`.
+3. **`actionRoles` (Button Powers)**: e.g. `plc_operator`, `buggy_supervisor`, `qc_supervisor`. Dictates which approval buttons appear on Executive Dashboards.
+
+### Ghost Admin Fallback
+
+If the Master Auth Toggle is turned OFF in System Config, the app bypasses Firebase login and grants everyone temporary `super_admin` access for emergency/kiosk use. The user appears as "Developer Admin" with a local-dev-id UID.
+
+### Presence System
+
+Users' online status tracked via `presence` collection. 3-minute heartbeat interval. 5-minute stale-entry safety net in subscriptions. Tab close and logout both trigger offline status. Used by Dashboard Live Users card and Active Users page.
+
+---
+
+## Factory Modules
+
+### 1. Level 9 Silos
+- Density range: 0.200 - 0.310, Divisor: 1580
+- Requires assigning Buggy Numbers to specific Machines
+- Tracks Appearance and Fragrance
+
+### 2. B.O.T. (Base Powder)
+- Density range: 0.200 - 0.240, Divisor: 1680
+- Tracks Appearance and Flow Property (Free Flowing)
+
+### 3. Carton Waste
+- Per-machine allocated/remaining/used/wasted tracking
+- Per-machine round numbering, 3-status grid, smart validation
+- "Save & Next Machine" flow, report with charts and CSV export
+
+### 4. Laminate Waste
+- Per-machine weight-based tracking using sac types (small/large)
+- Auto-computed total laminate used from machine gram
+- 3-status grid, "Save & Next Machine", report with charts
+
+### 5. QC Sachet Production Checks
+- 3 check types: String Weight, Bag Inspection, Carton Inspection
+- Per-machine per-check-type round numbering
+- Dependency: Bag & Carton locked until String Weight R1 complete
+- Shared batch number, configurable cooldowns, offline queues
+
+### 6. Empty Silos
+- Mark machines as empty with real-time broadcasts
+- Auto-detect refill when density test saved for previously-empty machine
+- Cross-shift tracking with buggy number assignment
+
+### 7. Stopped Machines
+- Reusable issue definitions stored in `machine_issues`
+- Report, solve issues, start machines, append more issues
+- 4-color state grid, auto-filled Issue Selector dropdown
+
+---
+
+## Firebase Collections
+
+| Collection | Document ID Pattern | Purpose |
+|---|---|---|
+| `config/settings` | single doc | All app configuration (machines, lines, gramSpecs, qcCheckIntervals, fillHeadWeightRanges, cartonWaste, laminateWaste, roles) |
+| `config/auth_settings` | single doc | `{ authEnabled: boolean }` |
+| `user_roles` | `{uid}` | User profiles with systemRole, departmentRoles, actionRoles, firstName, lastName |
+| `shift_approvals` | `{mode}_{SHIFT}_{DATE}` | Shift boundary docs shared across check types. Modes: `level9`, `bot`, `carton_waste`, `laminate_waste`, `qc_string_weight` |
+| `qc_tests` | auto-ID | Powder density test results. Fields: approvalDocId, mode, machineId, density, weight, team, checkedBy, etc. |
+| `carton_records` | auto-ID | Carton waste check records. Fields: machineId, shiftApprovalDocId, allocated, remaining, wasted, used, wastePercent, running* |
+| `laminate_records` | auto-ID | Laminate waste check records. Fields: machineId, shiftApprovalDocId, sacType, grossWeight, wasteCollected, totalLaminateUsed, runningWasteCollected |
+| `presence` | `{uid}` | User online status. Fields: uid, email, status, lastSeen, currentPath |
+| `alerts` | auto-ID | Broadcast alerts. Fields: title, message, level, targetPages, localTimestamp |
+| `empty_silos` | auto-ID | Empty silo events. Fields: machineId, markedEmptyBy, markedEmptyAt, noLongerEmptyAt, buggyNumber, shiftApprovalDocId |
+| `stopped_machines` | auto-ID | Stopped machine records. Fields: machineId, stoppedBy, stoppedAt, startedBy, startedAt, issues[], isActive |
+| `machine_issues` | auto-ID | Reusable issue definitions. Fields: label, createdBy |
+| `qc_string_weight_checks` | auto-ID | String weight check records. Fields: machineId, approvalDocId, roundNumber, weights[], weightStatuses[], batchNumber, meetsCriteria, allInTarget, outOfRangeCount |
+| `qc_bag_inspection_checks` | auto-ID | Bag inspection check records. Fields: machineId, approvalDocId, roundNumber, leakage, dirtPrintQuality, completenessSachets, freebiesPresence, perforation, perfumeOdour, overallResult, batchNumber |
+| `qc_carton_inspection_checks` | auto-ID | Carton inspection check records. Fields: machineId, approvalDocId, roundNumber, detergentDust, cartonPrintQuality, sealQuality, cartonDamage, cartonCodeReadability, overallResult, batchNumber |
+
+---
+
+## localStorage Keys
+
+| Key | Module | Purpose |
+|---|---|---|
+| `starium_offline_queue` | QC Tests | Powder density test offline queue |
+| `starium_carton_offline_queue` | Carton Waste | Carton waste check offline queue |
+| `starium_laminate_offline_queue` | Laminate Waste | Laminate waste check offline queue |
+| `starium_qc_string_weight_queue` | String Weight | String weight check offline queue |
+| `starium_bag_inspection_queue` | Bag Inspection | Bag inspection check offline queue |
+| `starium_carton_inspection_queue` | Carton Inspection | Carton inspection check offline queue |
+| `starium_carton_team` | Carton Waste | Persisted team selection |
+| `starium_laminate_team` | Laminate Waste | Persisted team selection |
+| `starium_qc_sachet_team` | QC Sachet | Persisted team selection |
+| `qcTeam` | Powder Density | Persisted team selection (legacy) |
+
+---
+
+## Tech Stack
 
 - **Frontend Framework**: React 18 (via Vite)
 - **Styling**: Tailwind CSS v3
-- **Routing**: React Router v6 (using HashRouter for static hosting compatibility)
+- **Routing**: React Router v6 (HashRouter for static hosting)
 - **Database & Auth**: Firebase (Firestore V9 Modular SDK)
 - **Charts**: Chart.js & React-Chartjs-2
+- **Build Tool**: Vite / Rolldown
+- **CI/CD**: GitHub Actions (build & deploy to GitHub Pages)
 
 ---
 
-## 🧠 For Developers: System Architecture
+## System Architecture
 
-### 1. The Centralized Router (`src/config/navigation.js`)
-All page routing and security requirements are defined here. The `ProtectedRoute` component (The Bouncer) cross-references the user's `departmentRoles` against this file before allowing a page to render.
+### Directory Structure
 
-### 2. The Context Intercoms
-The app uses React Context to broadcast state globally:
-- **`AuthContext.jsx`**: Manages Firebase logins, fetches user keycards, and provides the Owner Fallback security net.
-- **`ConfigContext.jsx`**: Listens live to the `config/settings` document. If an admin edits a machine, this context updates the UI instantly across all connected screens.
-- **`NetworkContext.jsx`**: The heartbeat of the offline engine. It listens to `navigator.onLine` and automatically flushes `localStorage` queues (qc_tests, carton_records, laminate_records) to Firebase upon reconnection.
-- **`AlertContext.jsx`**: The global loudspeaker. Exposes the `broadcastAlert()` function which pushes real-time notifications to targeted factory screens.
+```
+src/
+├── main.jsx                         # Entry point, provider nesting
+├── App.jsx                          # Route definitions (20 routes)
+├── index.css                        # Tailwind directives + base styles
+├── config/
+│   ├── firebase.js                  # Firebase init (env vars)
+│   └── navigation.js                # MENU_CONFIG sidebar structure + role-based route protection rules
+├── context/
+│   ├── AuthContext.jsx              # Firebase auth, role management, presence heartbeat
+│   ├── ConfigContext.jsx            # Live Firestore config subscription, DEFAULT_CONFIG
+│   ├── NetworkContext.jsx           # Online/offline detection, 5 queue auto-sync
+│   └── AlertContext.jsx             # Real-time alert subscription, broadcastAlert()
+├── components/
+│   ├── Layout.jsx                   # Page shell: sidebar, authbar, syncbadge, alertbanner, footer
+│   ├── Sidebar.jsx                  # Accordion navigation with role-based visibility
+│   ├── ProtectedRoute.jsx           # Route guard: super_admin bypass, role check, redirect
+│   ├── AuthBar.jsx                  # Top-right user email + logout button
+│   ├── SyncBadge.jsx                # Online/offline indicator with pending queue count
+│   ├── AlertBanner.jsx              # Real-time toast notifications with page targeting
+│   ├── BroadcastModal.jsx           # Send alert form with level + page target selection
+│   ├── Footer.jsx                   # Hover-to-reveal contact info footer
+│   ├── MachineGrid.jsx              # Density-matching colored machine grid
+│   ├── MachineModal.jsx             # Machine detail modal with carton content
+│   ├── QCStringWeightDialog.jsx     # String weight check form dialog
+│   ├── QCBagInspectionDialog.jsx    # Bag inspection check form dialog
+│   └── QCCartonInspectionDialog.jsx # Carton inspection check form dialog
+├── pages/
+│   ├── Dashboard.jsx                # Command Center with 7 metric cards + quick actions
+│   ├── PowderDensity.jsx            # Data entry: Level 9 & BOT tests with machine grid
+│   ├── Level9Exec.jsx               # Level 9 executive dashboard with charts + approval
+│   ├── BotExec.jsx                  # BOT executive dashboard with charts + approval
+│   ├── Reports.jsx                  # QC Density Report with charts and filters
+│   ├── SystemConfig.jsx             # 9-tab admin panel for all factory configuration
+│   ├── UserManagement.jsx           # CRUD for user roles and profiles
+│   ├── ActiveUsers.jsx              # Real-time active user table
+│   ├── Login.jsx                    # Firebase email/password login + password reset
+│   ├── ChangePassword.jsx           # Re-authenticate + change password
+│   ├── EmptySilos.jsx               # Mark machines as empty
+│   ├── EmptySilosReport.jsx         # Empty silos manager report
+│   ├── StopMachine.jsx              # Report, solve, start, append issues
+│   ├── StoppedMachinesReport.jsx    # Stopped machines manager report
+│   ├── MachineDowntimeLog.jsx       # View machine downtime events by date/shift
+│   ├── CartonWaste.jsx              # Carton waste data entry
+│   ├── CartonWasteReport.jsx        # Carton waste report with charts
+│   ├── LaminateWaste.jsx            # Laminate waste data entry
+│   ├── LaminateWasteReport.jsx      # Laminate waste report with charts
+│   └── QCSachetProductionChecks.jsx # QC monitoring with 3 check types
+└── services/
+    ├── qcOperations.js              # QC Tests CRUD, shift approval, offline queue
+    ├── cartonOperations.js          # Carton waste CRUD, validation, offline queue
+    ├── laminateOperations.js        # Laminate waste CRUD, validation, offline queue
+    ├── qcStringWeightOperations.js  # String weight CRUD, offline queue, weight status
+    ├── qcBagInspectionOperations.js # Bag inspection CRUD, offline queue, overall result
+    ├── qcCartonInspectionOperations.js # Carton inspection CRUD, offline queue, overall result
+    ├── emptySiloOperations.js       # Empty silo CRUD, subscriptions, broadcasts
+    ├── stoppedMachineOperations.js  # Stopped machine CRUD, issue management
+    ├── machineDowntimeOperations.js # Machine downtime query by date/shift
+    └── presenceOperations.js        # User online/offline status, heartbeat, subscriptions
+```
 
-### 3. The Presence System (`src/services/presenceOperations.js`)
-Tracks who is online in real-time across the factory:
-- **`setOnlineStatus()`**: Called by AuthContext on login and every 3 minutes (heartbeat). Records the user's UID, email, and current page.
-- **`setOfflineStatus()`**: Called on logout or tab close to mark the user offline.
-- **`subscribeToActiveUsers()`**: Returns a live stream of online users (with a 5-minute stale-entry safety net). Used by the Dashboard for the Live Users counter and by the Active Users page for the full table.
+### Context Providers (Nesting Order)
 
-### 4. The Engine Room (`src/services/qcOperations.js`, `src/services/cartonOperations.js`, and `src/services/laminateOperations.js`)
+1. **HashRouter** - URL routing (hash-based for static hosting)
+2. **AuthProvider** - Firebase auth state, role fetching, presence heartbeat
+3. **NetworkProvider** - Online/offline detection, offline queue auto-sync
+4. **ConfigProvider** - Live config subscription, DEFAULT_CONFIG fallback
+5. **AlertProvider** - Real-time alert subscription, broadcastAlert function
+6. **App** - Routes (20 protected + 1 public)
 
-**`qcOperations.js`** handles all Powder Density Firestore operations:
-- Midnight boundary math for Night Shifts (e.g., tests submitted at 2 AM belong to yesterday's shift document).
-- Fetching and sorting tests from oldest to newest.
-- Processing the offline sync queue safely.
+### Shift Boundary Logic
 
-**`cartonOperations.js`** handles all Carton Waste operations:
-- `subscribeToShiftCartonRecords()` — real-time subscription to `carton_records` for the current shift.
-- `saveCartonRecord()` — online/offline-aware save with 4 validation rules (remaining ≤ maxAvailable, wasted ≤ maxAvailable, used ≥ 0, used + wasted ≤ maxAvailable).
-- `queueCartonOffline()` — dedicated localStorage queue under `starium_carton_offline_queue`.
-- `syncCartonOfflineQueue()` — bulk write-batch sync of queued records on reconnect.
-
-**`laminateOperations.js`** handles all Laminate Waste operations:
-- `subscribeToShiftLaminateRecords()` — real-time subscription to `laminate_records` for the current shift.
-- `computeTotalLaminateUsed()` — auto-computes total laminate used from machine gram: `rollsPerShift × rollWeight`.
-- `saveLaminateCheck()` — online/offline-aware save with 3 validation rules (sac type, gross ≥ sac weight, total > 0).
-- `queueLaminateCheckOffline()` — dedicated localStorage queue under `starium_laminate_offline_queue`.
-- `syncLaminateOfflineQueue()` — bulk write-batch sync of queued records on reconnect.
+All time-based modules share the same shift detection:
+- DAY shift: `dayShiftStart` (default 07:00) to `nightShiftStart` (default 19:00)
+- NIGHT shift: `nightShiftStart` (19:00) to next day's `dayShiftStart` (07:00)
+- Night shift dates roll back: tests submitted at 2AM belong to the previous day's shift
+- Doc ID pattern: `{mode}_{SHIFT}_{YYYY-MM-DD}` stored in `shift_approvals` collection
 
 ---
 
+## Service Layer Reference
 
-## 💻 Local Setup & Installation
+Each service module follows consistent patterns:
+
+### Offline Queue Pattern
+- Online: write to Firestore with `serverTimestamp()`, return `'saved'`
+- Offline/write fails: push to localStorage array, return `'queued'` or `'offline-queued'`
+- Sync on reconnect: read queue, `writeBatch.set()` with `localCreatedAt` preserved, clear queue
+
+### Subscription Pattern
+- `subscribeTo{Resource}(params, callback)` returns `unsubscribe` function
+- Callback receives sorted array of records
+- Error handler logs error and calls callback with `[]`
+
+### Validation Pattern
+- `validate{Check}()` returns `{ valid: boolean, message?: string }`
+- `save{Check}()` calls validation first, rejects with message if invalid
+
+---
+
+## Local Setup & Installation
 
 1. **Clone the repository:**
    ```bash
@@ -166,7 +286,7 @@ Tracks who is online in real-time across the factory:
    ```
 
 3. **Set up Environment Variables:**
-   Create a `.env` file in the root folder and add your Firebase keys:
+   Create a `.env` file in the root folder:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -183,31 +303,30 @@ Tracks who is online in real-time across the factory:
 
 ---
 
-## 🚀 Deployment (GitHub Pages + Actions)
+## Deployment (GitHub Pages + Actions)
 
-This app is deployed for **FREE** using GitHub Pages. Because it is a Vite React app, the code must be "baked" (built) before it can be hosted.
+This app is deployed via GitHub Actions. Push to `main` triggers build and deploy to GitHub Pages.
 
-We use **GitHub Actions** to automate this. 
-
-1. The workflow file (`.github/workflows/deploy.yml`) is triggered whenever code is pushed to the `main` branch.
-2. It securely injects the Firebase Environment variables stored in **GitHub Secrets**.
-3. It runs `npm run build` to compile the React code into optimized, static HTML/JS/CSS.
-4. It publishes the `dist/` folder to GitHub Pages.
-
-*Note: You never have to manually build or deploy. Just push to GitHub, and the robots do the rest!*
+The workflow (.github/workflows/deploy.yml):
+1. Checks out code
+2. Injects Firebase env vars from GitHub Secrets
+3. Runs `npm run build`
+4. Publishes `dist/` to GitHub Pages
 
 ---
 
-## 🔮 Future Roadmap
+## Future Roadmap
 
-- ✅ **Laminate Waste System**: Live per-machine laminate waste tracking (kg) with configurable sac types, auto-computed roll usage, offline support, reports, and broadcasts.
-- ✅ **Carton Waste System**: Live per-machine carton waste tracking with offline support, reports, and broadcasts.
-- ✅ **QC Sachet Production Checks**: Per-machine production quality monitoring with dynamic string weight dialog, configurable weight ranges, per-machine batch numbers, round-based history, cooldown intervals, and offline support. Additional check types (Bag Inspection, Carton Inspection) in development.
-- [ ] **Audit Trail**: A background logging system to record exactly *who* modified a setting, deleted a user, or overrode a machine, providing full factory accountability.
-- [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices for roaming QC staff.
-- [ ] **Bag Inspection Dialog**: Round-based bag integrity inspection with configurable pass/fail criteria.
-- [ ] **Carton Inspection Dialog**: Round-based carton seal integrity and visual inspection with configurable pass/fail criteria.
-- [ ] **Shift-Wide Approval Flow**: Consolidated approval system across all 3 check types for approver sign-off.
+- ✅ **Laminate Waste System**: Complete with reports, offline support, broadcasts
+- ✅ **Carton Waste System**: Complete with reports, offline support, broadcasts
+- ✅ **QC Sachet Production Checks**: String Weight, Bag Inspection, and Carton Inspection — all complete with cooldowns, dependencies, offline queues, and round history
+- ✅ **Empty Silos System**: Complete with refill detection and broadcasts
+- ✅ **Stopped Machines System**: Complete with issue management and broadcasts
+- [ ] **Audit Trail**: Background logging system to record who modified settings, deleted users, or overrode machines
+- [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices
+- [ ] **Shift-Wide Approval Flow**: Consolidated approval across all 3 QC check types
+- [ ] **QC Sachet Shift Summary**: Executive overview of all QC checks for a shift
 
 ---
-*Built with ❤️ and extreme attention to detail for the Starium Rafa Factory. Formerly Starium Rafa Quality Control Tool.*
+
+*Built with extreme attention to detail for the Starium Rafa Factory. Formerly Starium Rafa Quality Control Tool.*

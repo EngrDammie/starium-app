@@ -20,7 +20,7 @@ export default function SystemConfig() {
   // Form States
   const [machineForm, setMachineForm] = useState({ id: '', displayNumber: '', name: '', line: '', gram: 125, min: '', max: '', fillHeads: 2, isEdit: false });
   const [lineForm, setLineForm] = useState({ id: '', name: '', order: '', isEdit: false });
-  const [gramForm, setGramForm] = useState({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', isEdit: false });
+  const [gramForm, setGramForm] = useState({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', bags: '', freebies: '', isEdit: false });
   
   // Role Definition States
   const [newDeptRole, setNewDeptRole] = useState({ id: '', label: '', category: '' });
@@ -233,10 +233,17 @@ export default function SystemConfig() {
   const saveGramSpec = async (e) => {
     e.preventDefault();
     const newSpecs = { ...config.gramSpecs };
-    const { oldGram, gram, min, max, pieces, breakdown } = gramForm;
+    const { oldGram, gram, min, max, pieces, breakdown, bags, freebies } = gramForm;
+    const bagCount = parseInt(bags) || 0;
+    const freebieCount = parseInt(freebies) || 0;
 
     if (oldGram && oldGram !== gram) delete newSpecs[oldGram];
-    newSpecs[gram] = { min: parseFloat(min), max: parseFloat(max), piecesPerCarton: parseInt(pieces), piecesBreakdown: breakdown };
+    newSpecs[gram] = {
+      min: parseFloat(min), max: parseFloat(max),
+      piecesPerCarton: parseInt(pieces) || (bagCount + freebieCount),
+      piecesBreakdown: breakdown || `${bagCount} pcs + ${freebieCount} freebies`,
+      bagCount, freebieCount
+    };
 
     if (await updateDatabase({ gramSpecs: newSpecs }, 'Gram spec saved!')) setIsGramModalOpen(false);
   };
@@ -405,11 +412,11 @@ export default function SystemConfig() {
         { id: 30, displayNumber: 30, gram: 45, min: 0.210, max: 0.310, line: "3B", fillHeads: 2, name: "Machine 30" }
       ],
       gramSpecs: {
-        "22": { min: 0.200, max: 0.310, piecesPerCarton: 162 },
-        "45": { min: 0.210, max: 0.310, piecesPerCarton: 84 },
-        "85": { min: 0.240, max: 0.300, piecesPerCarton: 52 },
-        "125": { min: 0.200, max: 0.270, piecesPerCarton: 31 },
-        "850": { min: 0.200, max: 0.270, piecesPerCarton: 7 }
+        "22": { min: 0.200, max: 0.310, piecesPerCarton: 162, piecesBreakdown: "150 pcs + 12 freebies", bagCount: 150, freebieCount: 12 },
+        "45": { min: 0.210, max: 0.310, piecesPerCarton: 84, piecesBreakdown: "78 pcs + 6 freebies", bagCount: 78, freebieCount: 6 },
+        "85": { min: 0.240, max: 0.300, piecesPerCarton: 52, piecesBreakdown: "48 pcs + 4 freebies", bagCount: 48, freebieCount: 4 },
+        "125": { min: 0.200, max: 0.270, piecesPerCarton: 31, piecesBreakdown: "28 pcs + 3 freebies", bagCount: 28, freebieCount: 3 },
+        "850": { min: 0.200, max: 0.270, piecesPerCarton: 7, piecesBreakdown: "6 pouches + 1 freebie", bagCount: 6, freebieCount: 1 }
       },
       qcCheckIntervals: {
         stringWeight: 15,
@@ -550,18 +557,21 @@ export default function SystemConfig() {
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-primary">Gram Specifications</h2>
-            <button onClick={() => { setGramForm({ oldGram: '', gram: '', min: '', max: '', pieces: '', breakdown: '', isEdit: false }); setIsGramModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Gram Spec</button>
+            <button onClick={() => { setGramForm({ oldGram: '', gram: '', min: '', max: '', pieces: '', bags: '', freebies: '', isEdit: false }); setIsGramModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Gram Spec</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Gram</th><th className="p-3">Min Density</th><th className="p-3">Max Density</th><th className="p-3">Pieces / Carton</th><th className="p-3">Breakdown</th><th className="p-3">Actions</th></tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Gram</th><th className="p-3">Min Density</th><th className="p-3">Max Density</th><th className="p-3">Pieces</th><th className="p-3">Breakdown</th><th className="p-3">Bags</th><th className="p-3">Freebies</th><th className="p-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {Object.entries(config.gramSpecs || {}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([gram, spec]) => (
                   <tr key={gram} className="hover:bg-white/5">
-                    <td className="p-3 text-status-warning font-bold">{gram}g</td><td className="p-3 text-white">{spec.min.toFixed(3)}</td><td className="p-3 text-white">{spec.max.toFixed(3)}</td><td className="p-3 text-gray-300">{spec.piecesPerCarton || 'N/A'}</td><td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
-                    <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
+                    <td className="p-3 text-status-warning font-bold">{gram}g</td><td className="p-3 text-white">{spec.min.toFixed(3)}</td><td className="p-3 text-white">{spec.max.toFixed(3)}</td><td className="p-3 text-gray-300">{spec.piecesPerCarton || 'N/A'}</td>
+                    <td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
+                    <td className="p-3 text-white">{spec.bagCount ?? '-'}</td>
+                    <td className="p-3 text-white">{spec.freebieCount ?? '-'}</td>
+                    <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', bags: spec.bagCount||'', freebies: spec.freebieCount||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -1068,12 +1078,23 @@ export default function SystemConfig() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Pieces Per Carton</label>
-                <input type="number" required value={gramForm.pieces} onChange={e => setGramForm({...gramForm, pieces: e.target.value})} placeholder="e.g., 162" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+                <label className="text-xs text-gray-400 uppercase font-bold">Breakdown (Free Text)</label>
+                <input type="text" value={gramForm.breakdown} onChange={e => setGramForm({...gramForm, breakdown: e.target.value})} placeholder="e.g., 27 strings * 6 pcs" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 uppercase font-bold">Bags per Carton</label>
+                  <input type="number" min="0" value={gramForm.bags} onChange={e => setGramForm({...gramForm, bags: e.target.value})} placeholder="e.g., 150" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 uppercase font-bold">Freebies per Carton</label>
+                  <input type="number" min="0" value={gramForm.freebies} onChange={e => setGramForm({...gramForm, freebies: e.target.value})} placeholder="e.g., 12" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+                </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Breakdown (Optional)</label>
-                <input type="text" value={gramForm.breakdown} onChange={e => setGramForm({...gramForm, breakdown: e.target.value})} placeholder="e.g., 27 strings * 6 pcs" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+                <label className="text-xs text-gray-400 uppercase font-bold">Pieces Per Carton (bags + freebies)</label>
+                <input type="number" value={parseInt(gramForm.bags || 0) + parseInt(gramForm.freebies || 0) || gramForm.pieces} disabled
+                  className="w-full mt-1 p-3 bg-[#121212] text-gray-400 border border-[#444] rounded-lg cursor-not-allowed" />
               </div>
               <div className="flex gap-3 mt-4">
                 <button type="button" onClick={() => setIsGramModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>

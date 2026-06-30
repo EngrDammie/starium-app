@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import QCStringWeightDialog from '../components/QCStringWeightDialog';
+import QCBagInspectionDialog from '../components/QCBagInspectionDialog';
+import QCCartonInspectionDialog from '../components/QCCartonInspectionDialog';
 import { useConfig } from '../context/ConfigContext';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  getOrCreateStringWeightShift, getStringWeightShiftDocId,
+  getOrCreateStringWeightShift,
   saveStringWeightCheck, subscribeToMachineStringWeights, subscribeToAllStringWeights,
   getShiftDateInfo
 } from '../services/qcStringWeightOperations';
+import {
+  saveBagInspectionCheck, subscribeToMachineBagInspections
+} from '../services/qcBagInspectionOperations';
+import {
+  saveCartonInspectionCheck, subscribeToMachineCartonInspections
+} from '../services/qcCartonInspectionOperations';
 
 export default function QCSachetProductionChecks() {
   const { config, loadingConfig } = useConfig();
@@ -24,9 +32,19 @@ export default function QCSachetProductionChecks() {
   const [machineRecords, setMachineRecords] = useState([]);
   const [recordsUnsub, setRecordsUnsub] = useState(null);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(null);
+  const [swTimeLeft, setSwTimeLeft] = useState(null);
+
+  // Bag inspection state
+  const [bagRecords, setBagRecords] = useState([]);
+  const [bagUnsub, setBagUnsub] = useState(null);
+  const [biTimeLeft, setBiTimeLeft] = useState(null);
+
+  // Carton inspection state
+  const [ciRecords, setCiRecords] = useState([]);
+  const [ciUnsub, setCiUnsub] = useState(null);
+  const [ciTimeLeft, setCiTimeLeft] = useState(null);
 
   const lines = [...(config.productionLines || [])].sort((a, b) => b.order - a.order);
 
@@ -56,6 +74,7 @@ export default function QCSachetProductionChecks() {
     return () => unsub();
   }, [approvalDocId]);
 
+  // Subscribe to string weight records for selected machine
   useEffect(() => {
     if (!selectedMachine || !approvalDocId) {
       if (recordsUnsub) recordsUnsub();
@@ -68,19 +87,76 @@ export default function QCSachetProductionChecks() {
     return () => { if (unsub) unsub(); };
   }, [selectedMachine, approvalDocId]);
 
+  // Subscribe to bag inspection records for selected machine
   useEffect(() => {
-    if (!machineRecords.length) { setTimeLeft(null); return; }
+    if (!selectedMachine || !approvalDocId) {
+      if (bagUnsub) bagUnsub();
+      setBagRecords([]);
+      return;
+    }
+    if (bagUnsub) bagUnsub();
+    const unsub = subscribeToMachineBagInspections(approvalDocId, selectedMachine.id, (records) => setBagRecords(records));
+    setBagUnsub(() => unsub);
+    return () => { if (unsub) unsub(); };
+  }, [selectedMachine, approvalDocId]);
+
+  // Subscribe to carton inspection records for selected machine
+  useEffect(() => {
+    if (!selectedMachine || !approvalDocId) {
+      if (ciUnsub) ciUnsub();
+      setCiRecords([]);
+      return;
+    }
+    if (ciUnsub) ciUnsub();
+    const unsub = subscribeToMachineCartonInspections(approvalDocId, selectedMachine.id, (records) => setCiRecords(records));
+    setCiUnsub(() => unsub);
+    return () => { if (unsub) unsub(); };
+  }, [selectedMachine, approvalDocId]);
+
+  // String weight cooldown timer
+  useEffect(() => {
+    if (!machineRecords.length) { setSwTimeLeft(null); return; }
     const latest = machineRecords[machineRecords.length - 1];
     const intervalMs = (config?.qcCheckIntervals?.stringWeight ?? 15) * 60 * 1000;
 
     const tick = () => {
       const created = latest.createdAt?.toDate ? latest.createdAt.toDate() : new Date(latest.localCreatedAt || latest.createdAt);
-      setTimeLeft(Math.max(0, intervalMs - (Date.now() - created.getTime())));
+      setSwTimeLeft(Math.max(0, intervalMs - (Date.now() - created.getTime())));
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [machineRecords, config?.qcCheckIntervals?.stringWeight]);
+
+  // Bag inspection cooldown timer
+  useEffect(() => {
+    if (!bagRecords.length) { setBiTimeLeft(null); return; }
+    const latest = bagRecords[bagRecords.length - 1];
+    const intervalMs = (config?.qcCheckIntervals?.bagInspection ?? 15) * 60 * 1000;
+
+    const tick = () => {
+      const created = latest.createdAt?.toDate ? latest.createdAt.toDate() : new Date(latest.localCreatedAt || latest.createdAt);
+      setBiTimeLeft(Math.max(0, intervalMs - (Date.now() - created.getTime())));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [bagRecords, config?.qcCheckIntervals?.bagInspection]);
+
+  // Carton inspection cooldown timer
+  useEffect(() => {
+    if (!ciRecords.length) { setCiTimeLeft(null); return; }
+    const latest = ciRecords[ciRecords.length - 1];
+    const intervalMs = (config?.qcCheckIntervals?.cartonInspection ?? 60) * 60 * 1000;
+
+    const tick = () => {
+      const created = latest.createdAt?.toDate ? latest.createdAt.toDate() : new Date(latest.localCreatedAt || latest.createdAt);
+      setCiTimeLeft(Math.max(0, intervalMs - (Date.now() - created.getTime())));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [ciRecords, config?.qcCheckIntervals?.cartonInspection]);
 
   const formatCountdown = (ms) => {
     if (ms === null || ms <= 0) return null;
@@ -89,11 +165,26 @@ export default function QCSachetProductionChecks() {
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  const roundNumber = machineRecords.length > 0
+  const swRoundNumber = machineRecords.length > 0
     ? Math.max(...machineRecords.map(r => r.roundNumber)) + 1
     : 1;
-  const previousRecord = machineRecords.length > 0 ? machineRecords[machineRecords.length - 1] : null;
-  const isFirstRound = machineRecords.length === 0;
+  const swPreviousRecord = machineRecords.length > 0 ? machineRecords[machineRecords.length - 1] : null;
+
+  const biRoundNumber = bagRecords.length > 0
+    ? Math.max(...bagRecords.map(r => r.roundNumber)) + 1
+    : 1;
+  const biPreviousRecord = bagRecords.length > 0 ? bagRecords[bagRecords.length - 1] : null;
+
+  const ciRoundNumber = ciRecords.length > 0
+    ? Math.max(...ciRecords.map(r => r.roundNumber)) + 1
+    : 1;
+  const ciPreviousRecord = ciRecords.length > 0 ? ciRecords[ciRecords.length - 1] : null;
+
+  const stringWeightRecord = machineRecords.length > 0 ? machineRecords[machineRecords.length - 1] : null;
+  const batchNumber = stringWeightRecord?.batchNumber || '';
+
+  const cartonInspectionLocked = !stringWeightRecord;
+  const cartonInspectionReady = !cartonInspectionLocked && (ciTimeLeft === null || ciTimeLeft <= 0);
 
   const getMachineLatestRound = (machineId) => {
     return allRecords
@@ -110,11 +201,12 @@ export default function QCSachetProductionChecks() {
 
   const handleMachineClick = (machine) => {
     setSelectedMachine(machine);
+    setDialogType(null);
   };
 
   const handleBackToGrid = () => {
     setSelectedMachine(null);
-    setIsDialogOpen(false);
+    setDialogType(null);
   };
 
   const handleSaveStringWeight = async (data) => {
@@ -126,7 +218,7 @@ export default function QCSachetProductionChecks() {
         line: selectedMachine.line,
         gram: selectedMachine.gram,
         fillHeads: selectedMachine.fillHeads ?? 2,
-        roundNumber,
+        roundNumber: swRoundNumber,
         shift: shiftInfo.shift,
         date: shiftInfo.date,
         team,
@@ -142,7 +234,7 @@ export default function QCSachetProductionChecks() {
       };
       const result = await saveStringWeightCheck(record, isOnline);
       if (result === 'saved' || result === 'queued') {
-        setIsDialogOpen(false);
+        setDialogType(null);
       }
     } catch (err) {
       console.error(err);
@@ -150,6 +242,81 @@ export default function QCSachetProductionChecks() {
       setSaving(false);
     }
   };
+
+  const handleSaveBagInspection = async (data) => {
+    setSaving(true);
+    try {
+      const record = {
+        machineId: selectedMachine.id,
+        machineDisplayNumber: selectedMachine.displayNumber || selectedMachine.id,
+        line: selectedMachine.line,
+        gram: selectedMachine.gram,
+        fillHeads: selectedMachine.fillHeads ?? 2,
+        roundNumber: biRoundNumber,
+        shift: shiftInfo.shift,
+        date: shiftInfo.date,
+        team,
+        checkedBy: userFullName,
+        approvalDocId,
+        leakage: data.leakage,
+        dirtPrintQuality: data.dirtPrintQuality,
+        completenessSachets: data.completenessSachets,
+        freebiesPresence: data.freebiesPresence,
+        perforation: data.perforation,
+        perfumeOdour: data.perfumeOdour,
+        overallResult: data.overallResult,
+        remarks: data.remarks,
+        batchNumber: data.batchNumber
+      };
+      const result = await saveBagInspectionCheck(record, isOnline);
+      if (result === 'saved' || result === 'queued') {
+        setDialogType(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveCartonInspection = async (data) => {
+    setSaving(true);
+    try {
+      const record = {
+        machineId: selectedMachine.id,
+        machineDisplayNumber: selectedMachine.displayNumber || selectedMachine.id,
+        line: selectedMachine.line,
+        gram: selectedMachine.gram,
+        fillHeads: selectedMachine.fillHeads ?? 2,
+        roundNumber: ciRoundNumber,
+        shift: shiftInfo.shift,
+        date: shiftInfo.date,
+        team,
+        checkedBy: userFullName,
+        approvalDocId,
+        detergentDust: data.detergentDust,
+        cartonPrintQuality: data.cartonPrintQuality,
+        sealQuality: data.sealQuality,
+        cartonDamage: data.cartonDamage,
+        cartonCodeReadability: data.cartonCodeReadability,
+        overallResult: data.overallResult,
+        remarks: data.remarks,
+        batchNumber: data.batchNumber
+      };
+      const result = await saveCartonInspectionCheck(record, isOnline);
+      if (result === 'saved' || result === 'queued') {
+        setDialogType(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Bag Inspection button state
+  const bagInspectionLocked = !stringWeightRecord;
+  const bagInspectionReady = !bagInspectionLocked && (biTimeLeft === null || biTimeLeft <= 0);
 
   if (loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading...</div></Layout>;
 
@@ -169,7 +336,7 @@ export default function QCSachetProductionChecks() {
               </h2>
             </div>
             <div className="text-right">
-              <div className="text-primary font-bold text-lg">Round {roundNumber}</div>
+              <div className="text-primary font-bold text-lg">Round {swRoundNumber}</div>
               <div className="text-xs text-gray-500">{machineRecords.length} total round{machineRecords.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
@@ -205,30 +372,76 @@ export default function QCSachetProductionChecks() {
           )}
 
           <div className="flex gap-3">
-            <button onClick={() => timeLeft > 0 ? null : setIsDialogOpen(true)}
-              className={`flex-1 py-4 rounded-xl font-bold transition-all ${timeLeft > 0 ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
-              {timeLeft > 0
-                ? `⏳ String Weight Check (${formatCountdown(timeLeft)})`
+            <button onClick={() => swTimeLeft > 0 ? null : setDialogType('stringWeight')}
+              className={`flex-1 py-4 rounded-xl font-bold transition-all ${swTimeLeft > 0 ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
+              {swTimeLeft > 0
+                ? `⏳ String Weight Check (${formatCountdown(swTimeLeft)})`
                 : '✅ String Weight Check'}
             </button>
-            <button disabled
-              className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
-              ⏳ Bag Inspection <span className="text-[10px] block">(coming soon)</span>
-            </button>
-            <button disabled
-              className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
-              ⏳ Carton Inspection <span className="text-[10px] block">(coming soon)</span>
-            </button>
+
+            {bagInspectionLocked ? (
+              <button disabled
+                className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
+                🔒 Bag Inspection <span className="text-[10px] block">requires String Weight R1</span>
+              </button>
+            ) : (
+              <button onClick={() => bagInspectionReady ? setDialogType('bagInspection') : null}
+                className={`flex-1 py-4 rounded-xl font-bold transition-all ${!bagInspectionReady ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
+                {biTimeLeft > 0
+                  ? `⏳ Bag Inspection (${formatCountdown(biTimeLeft)})`
+                  : '✅ Bag Inspection'}
+              </button>
+            )}
+
+            {cartonInspectionLocked ? (
+              <button disabled
+                className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
+                🔒 Carton Inspection <span className="text-[10px] block">requires String Weight R1</span>
+              </button>
+            ) : (
+              <button onClick={() => cartonInspectionReady ? setDialogType('cartonInspection') : null}
+                className={`flex-1 py-4 rounded-xl font-bold transition-all ${!cartonInspectionReady ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
+                {ciTimeLeft > 0
+                  ? `⏳ Carton Inspection (${formatCountdown(ciTimeLeft)})`
+                  : '✅ Carton Inspection'}
+              </button>
+            )}
           </div>
         </div>
 
-        {isDialogOpen && (
+        {dialogType === 'stringWeight' && (
           <QCStringWeightDialog
             machine={selectedMachine}
-            roundNumber={roundNumber}
-            previousRecord={previousRecord}
+            roundNumber={swRoundNumber}
+            previousRecord={swPreviousRecord}
             onSave={handleSaveStringWeight}
-            onClose={() => setIsDialogOpen(false)}
+            onClose={() => setDialogType(null)}
+            saving={saving}
+          />
+        )}
+
+        {dialogType === 'bagInspection' && (
+          <QCBagInspectionDialog
+            machine={selectedMachine}
+            roundNumber={biRoundNumber}
+            previousRecord={biPreviousRecord}
+            batchNumber={batchNumber}
+            stringWeightRecord={stringWeightRecord}
+            onSave={handleSaveBagInspection}
+            onClose={() => setDialogType(null)}
+            saving={saving}
+          />
+        )}
+
+        {dialogType === 'cartonInspection' && (
+          <QCCartonInspectionDialog
+            machine={selectedMachine}
+            roundNumber={ciRoundNumber}
+            previousRecord={ciPreviousRecord}
+            batchNumber={batchNumber}
+            stringWeightRecord={stringWeightRecord}
+            onSave={handleSaveCartonInspection}
+            onClose={() => setDialogType(null)}
             saving={saving}
           />
         )}

@@ -4,6 +4,7 @@ import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { syncCartonOfflineQueue } from '../services/cartonOperations';
 import { syncLaminateOfflineQueue } from '../services/laminateOperations';
+import { syncCartonInspectionQueue } from '../services/qcCartonInspectionOperations';
 
 const NetworkContext = createContext();
 
@@ -12,9 +13,11 @@ export function NetworkProvider({ children }) {
   const [queueCount, setQueueCount] = useState(0);
   const [cartonQueueCount, setCartonQueueCount] = useState(0);
   const [laminateQueueCount, setLaminateQueueCount] = useState(0);
+  const [cartonInspectionQueueCount, setCartonInspectionQueueCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCartonSyncing, setIsCartonSyncing] = useState(false);
   const [isLaminateSyncing, setIsLaminateSyncing] = useState(false);
+  const [isCartonInspectionSyncing, setIsCartonInspectionSyncing] = useState(false);
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
@@ -22,9 +25,11 @@ export function NetworkProvider({ children }) {
       const q = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
       const cq = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
       const lq = JSON.parse(localStorage.getItem('starium_laminate_offline_queue') || '[]');
+      const ciq = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]');
       setQueueCount(q.length);
       setCartonQueueCount(cq.length);
       setLaminateQueueCount(lq.length);
+      setCartonInspectionQueueCount(ciq.length);
     };
 
     const handleOnline = () => {
@@ -126,8 +131,24 @@ export function NetworkProvider({ children }) {
     }
   }, [isOnline, laminateQueueCount, isLaminateSyncing]);
 
+  // 5. Auto-Sync trigger for carton inspection queue
+  useEffect(() => {
+    const syncCiQueue = async () => {
+      setIsCartonInspectionSyncing(true);
+      const result = await syncCartonInspectionQueue();
+      if (result?.synced > 0) {
+        setCartonInspectionQueueCount(0);
+      }
+      setIsCartonInspectionSyncing(false);
+    };
+
+    if (isOnline && cartonInspectionQueueCount > 0 && !isCartonInspectionSyncing) {
+      syncCiQueue();
+    }
+  }, [isOnline, cartonInspectionQueueCount, isCartonInspectionSyncing]);
+
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing }}>
       {children}
     </NetworkContext.Provider>
   );

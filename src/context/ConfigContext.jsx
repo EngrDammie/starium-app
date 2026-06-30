@@ -25,11 +25,11 @@ const DEFAULT_CONFIG = {
     { id: 6, displayNumber: 6, gram: 125, min: 0.200, max: 0.270, line: "1B", name: "Machine 6", fillHeads: 2 }
   ],
   gramSpecs: {
-    "22": { min: 0.200, max: 0.310, piecesPerCarton: 162 },
-    "45": { min: 0.210, max: 0.310, piecesPerCarton: 84 },
-    "85": { min: 0.240, max: 0.300, piecesPerCarton: 52 },
-    "125": { min: 0.200, max: 0.270, piecesPerCarton: 31 },
-    "850": { min: 0.200, max: 0.270, piecesPerCarton: 7 }
+    "22": { min: 0.200, max: 0.310, piecesPerCarton: 162, piecesBreakdown: "150 pcs + 12 freebies", bagCount: 150, freebieCount: 12 },
+    "45": { min: 0.210, max: 0.310, piecesPerCarton: 84, piecesBreakdown: "78 pcs + 6 freebies", bagCount: 78, freebieCount: 6 },
+    "85": { min: 0.240, max: 0.300, piecesPerCarton: 52, piecesBreakdown: "48 pcs + 4 freebies", bagCount: 48, freebieCount: 4 },
+    "125": { min: 0.200, max: 0.270, piecesPerCarton: 31, piecesBreakdown: "28 pcs + 3 freebies", bagCount: 28, freebieCount: 3 },
+    "850": { min: 0.200, max: 0.270, piecesPerCarton: 7, piecesBreakdown: "6 pouches + 1 freebie", bagCount: 6, freebieCount: 1 }
   },
   // 🎯 Carton Waste Tracking Config
   cartonWaste: {
@@ -100,7 +100,11 @@ export function ConfigProvider({ children }) {
           laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
           machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
           productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
-          gramSpecs: data.gramSpecs || DEFAULT_CONFIG.gramSpecs,
+          gramSpecs: Object.fromEntries(
+            Object.entries(data.gramSpecs || DEFAULT_CONFIG.gramSpecs).map(([gram, spec]) => [
+              gram, { ...(DEFAULT_CONFIG.gramSpecs[gram] || {}), ...spec }
+            ])
+          ),
           fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
           departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
           actionRoles: data.actionRoles || DEFAULT_CONFIG.actionRoles
