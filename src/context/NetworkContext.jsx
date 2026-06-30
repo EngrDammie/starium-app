@@ -5,6 +5,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { syncCartonOfflineQueue } from '../services/cartonOperations';
 import { syncLaminateOfflineQueue } from '../services/laminateOperations';
 import { syncCartonInspectionQueue } from '../services/qcCartonInspectionOperations';
+import { syncBagInspectionQueue } from '../services/qcBagInspectionOperations';
+import { syncStringWeightQueue } from '../services/qcStringWeightOperations';
 
 const NetworkContext = createContext();
 
@@ -14,10 +16,14 @@ export function NetworkProvider({ children }) {
   const [cartonQueueCount, setCartonQueueCount] = useState(0);
   const [laminateQueueCount, setLaminateQueueCount] = useState(0);
   const [cartonInspectionQueueCount, setCartonInspectionQueueCount] = useState(0);
+  const [bagInspectionQueueCount, setBagInspectionQueueCount] = useState(0);
+  const [stringWeightQueueCount, setStringWeightQueueCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCartonSyncing, setIsCartonSyncing] = useState(false);
   const [isLaminateSyncing, setIsLaminateSyncing] = useState(false);
   const [isCartonInspectionSyncing, setIsCartonInspectionSyncing] = useState(false);
+  const [isBagInspectionSyncing, setIsBagInspectionSyncing] = useState(false);
+  const [isStringWeightSyncing, setIsStringWeightSyncing] = useState(false);
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
@@ -26,10 +32,14 @@ export function NetworkProvider({ children }) {
       const cq = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
       const lq = JSON.parse(localStorage.getItem('starium_laminate_offline_queue') || '[]');
       const ciq = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]');
+      const biq = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]');
+      const swq = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]');
       setQueueCount(q.length);
       setCartonQueueCount(cq.length);
       setLaminateQueueCount(lq.length);
       setCartonInspectionQueueCount(ciq.length);
+      setBagInspectionQueueCount(biq.length);
+      setStringWeightQueueCount(swq.length);
     };
 
     const handleOnline = () => {
@@ -147,8 +157,40 @@ export function NetworkProvider({ children }) {
     }
   }, [isOnline, cartonInspectionQueueCount, isCartonInspectionSyncing]);
 
+  // 6. Auto-Sync trigger for bag inspection queue
+  useEffect(() => {
+    const syncBiQueue = async () => {
+      setIsBagInspectionSyncing(true);
+      const result = await syncBagInspectionQueue();
+      if (result?.synced > 0) {
+        setBagInspectionQueueCount(0);
+      }
+      setIsBagInspectionSyncing(false);
+    };
+
+    if (isOnline && bagInspectionQueueCount > 0 && !isBagInspectionSyncing) {
+      syncBiQueue();
+    }
+  }, [isOnline, bagInspectionQueueCount, isBagInspectionSyncing]);
+
+  // 7. Auto-Sync trigger for string weight queue
+  useEffect(() => {
+    const syncSwQueue = async () => {
+      setIsStringWeightSyncing(true);
+      const result = await syncStringWeightQueue();
+      if (result?.synced > 0) {
+        setStringWeightQueueCount(0);
+      }
+      setIsStringWeightSyncing(false);
+    };
+
+    if (isOnline && stringWeightQueueCount > 0 && !isStringWeightSyncing) {
+      syncSwQueue();
+    }
+  }, [isOnline, stringWeightQueueCount, isStringWeightSyncing]);
+
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, bagInspectionQueueCount, setBagInspectionQueueCount, stringWeightQueueCount, setStringWeightQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing, isBagInspectionSyncing, setIsBagInspectionSyncing, isStringWeightSyncing, setIsStringWeightSyncing }}>
       {children}
     </NetworkContext.Provider>
   );
