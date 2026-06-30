@@ -926,6 +926,49 @@
     animate();
   </script>
 
+  <a href="#" class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </a>
+
+  <style>
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 999;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00E676;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,230,118,0.25);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 0 rgba(0,230,118,0);
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(16px) scale(0.9);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
+      pointer-events: none;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .back-to-top:hover {
+      box-shadow: 0 4px 32px rgba(0,230,118,0.2), 0 0 0 1px rgba(0,230,118,0.15);
+      border-color: rgba(0,230,118,0.5);
+      transform: translateY(-2px) scale(1);
+    }
+    .back-to-top:active {
+      transform: translateY(0) scale(0.95);
+    }
+  </style>
+
   <script>
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -937,6 +980,18 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+      const backBtn = document.getElementById('backToTop');
+      let lastScroll = 0;
+      window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        if (y > 500) {
+          backBtn.classList.add('visible');
+        } else {
+          backBtn.classList.remove('visible');
+        }
+        lastScroll = y;
+      }, { passive: true });
     });
   </script>
 </body>
