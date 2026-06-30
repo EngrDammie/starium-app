@@ -671,7 +671,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 ### QCSachetProductionChecks (`src/pages/QCSachetProductionChecks.jsx`) — QC Sachet Production Checks
 - Guarded: QC staff, QC managers, Production staff, Production managers
 - **Grid view**: Machine grid with 3 statuses — green (latest round all-in-target + meets criteria), red (weights outside target or criteria not met), gray (unchecked). Teams dropdown (persisted to localStorage), shift/date display.
-- **Detail view**: Clicking a machine shows the machine detail page with Round History table (round, weights, result, staff, time) and 3 action buttons: String Weight Check, Bag Inspection (coming soon), Carton Inspection (coming soon).
+- **Detail view**: Clicking a machine shows the machine detail page with Round History table (round, weights, result, staff, time) and 3 action buttons: String Weight Check, Bag Inspection, Carton Inspection.
 - **Cooldown timer**: String Weight Check button has a live countdown (configured via `config.qcCheckIntervals.stringWeight`, default 15 min) — disabled until cooldown expires.
 - Per-machine round numbering: `Math.max(...existingRoundNumbers) + 1`.
 - Round History table shows all previous rounds with weights, meets-criteria status, checked-by, and timestamp.
