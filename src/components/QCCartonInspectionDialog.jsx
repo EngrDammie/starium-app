@@ -160,7 +160,7 @@ export default function QCCartonInspectionDialog({
         )}
 
         <div className="mb-6">
-          <label className="text-gray-300 text-sm font-bold block mb-2">Remarks (optional):</label>
+          <label className="text-gray-300 text-sm font-bold block mb-2">📝 Remarks (optional):</label>
           <textarea value={remarks} onChange={e => setRemarks(e.target.value)}
             rows={2}
             className="w-full p-3 bg-[#121212] text-white border border-[#444] rounded-lg outline-none focus:border-primary resize-none" />
@@ -169,11 +169,11 @@ export default function QCCartonInspectionDialog({
         <div className="flex gap-3">
           <button onClick={onClose} disabled={saving}
             className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors disabled:opacity-50">
-            Cancel
+            ✖️ Cancel
           </button>
           <button onClick={handleSave} disabled={!canSave || saving}
             className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? '⏳ Saving...' : '💾 Save'}
           </button>
         </div>
       </div>

@@ -69,11 +69,11 @@ export default function EmptySilos() {
         <div className="flex items-center gap-6 mb-6 text-sm">
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded bg-status-success"></span>
-            <span className="text-gray-400">Filled</span>
+            <span className="text-gray-400">✅ Filled</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded bg-status-danger"></span>
-            <span className="text-gray-400">Empty</span>
+            <span className="text-gray-400">🔴 Empty</span>
           </div>
           <div className="text-gray-500 ml-auto">
             <span className="text-status-danger font-bold">{emptyRecords.filter(r => !r.noLongerEmptyAt).length}</span>

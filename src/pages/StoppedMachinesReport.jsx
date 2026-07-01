@@ -93,19 +93,19 @@ export default function StoppedMachinesReport() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-[fadeIn_0.3s_ease-out]">
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Stopped</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🛑 Stopped</h3>
           <div className="text-5xl font-black text-status-danger mb-1">{stoppedCount}</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Machines with issues</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Started with Issues</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">⚠️ Started with Issues</h3>
           <div className="text-5xl font-black text-status-warning mb-1">{startedWithIssuesCount}</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Running but unresolved</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Issues Cleared</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">✅ Issues Cleared</h3>
           <div className="text-5xl font-black text-white mb-1">{issuesClearedCount}</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Ready to start</div>
         </div>

@@ -141,7 +141,7 @@ export default function QCBagInspectionDialog({
 
         {gramSpec?.bagCount != null && (
           <div className="bg-[#1a1a1a] border border-[#444] p-3 rounded-xl mb-4 text-center">
-            <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">Packing Standard for {machine.gram}g</span>
+            <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">📦 Packing Standard for {machine.gram}g</span>
             <div className="text-white font-bold text-sm mt-1">
               {gramSpec.bagCount} bags + {gramSpec.freebieCount} freebies = {gramSpec.bagCount + gramSpec.freebieCount} pieces per carton
             </div>
@@ -185,7 +185,7 @@ export default function QCBagInspectionDialog({
         )}
 
         <div className="mb-6">
-          <label className="text-gray-300 text-sm font-bold block mb-2">Remarks (optional):</label>
+          <label className="text-gray-300 text-sm font-bold block mb-2">📝 Remarks (optional):</label>
           <textarea value={remarks} onChange={e => setRemarks(e.target.value)}
             rows={2}
             className="w-full p-3 bg-[#121212] text-white border border-[#444] rounded-lg outline-none focus:border-primary resize-none" />
@@ -194,11 +194,11 @@ export default function QCBagInspectionDialog({
         <div className="flex gap-3">
           <button onClick={onClose} disabled={saving}
             className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors disabled:opacity-50">
-            Cancel
+            ✖️ Cancel
           </button>
           <button onClick={handleSave} disabled={!canSave || saving}
             className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? '⏳ Saving...' : '💾 Save'}
           </button>
         </div>
       </div>

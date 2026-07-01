@@ -209,7 +209,7 @@ export default function Reports() {
               </div>
               <div className="w-full md:w-auto mt-4 md:mt-0">
                 <button onClick={generateReport} disabled={loading} className="w-full bg-primary text-black font-bold py-3 px-8 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50">
-                  {loading ? '⏳ Generating...' : 'Generate Report'}
+                  {loading ? '⏳ Generating...' : '📊 Generate Report'}
                 </button>
               </div>
             </div>

@@ -494,13 +494,13 @@ export default function SystemConfig() {
       {activeTab === 'machines' && (
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-primary">Machine Management</h2>
-            <button onClick={() => handleOpenMachineModal()} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Machine</button>
+             <h2 className="text-xl font-bold text-primary">🏭 Machine Management</h2>
+            <button onClick={() => handleOpenMachineModal()} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">➕ Add Machine</button>
           </div>
 
           <div className="flex gap-4 md:gap-6 mb-6">
-            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{config.machines?.length || 0}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Total Machines</div></div>
-            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{[...new Set((config.machines || []).map(m => m.line))].length}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">Production Lines</div></div>
+            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{config.machines?.length || 0}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">🏭 Total Machines</div></div>
+            <div className="bg-[#1a1a1a] p-5 rounded-lg border border-[#444] text-center flex-1 shadow-inner"><div className="text-4xl font-bold text-primary">{[...new Set((config.machines || []).map(m => m.line))].length}</div><div className="text-xs text-gray-400 uppercase tracking-wider mt-2 font-bold">📋 Production Lines</div></div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -514,13 +514,13 @@ export default function SystemConfig() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">ID</th><th className="p-3">Display #</th><th className="p-3">Name</th><th className="p-3">Line</th><th className="p-3">Gram</th><th className="p-3">Heads</th><th className="p-3">Min</th><th className="p-3">Max</th><th className="p-3">Actions</th></tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">🔢 ID</th><th className="p-3">🖥️ Display #</th><th className="p-3">📛 Name</th><th className="p-3">📋 Line</th><th className="p-3">⚖️ Gram</th><th className="p-3">🔩 Heads</th><th className="p-3">⬇️ Min</th><th className="p-3">⬆️ Max</th><th className="p-3">⚡ Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {filteredMachines.map(m => (
                   <tr key={m.id} className="hover:bg-white/5">
                     <td className="p-3 text-white">{m.id}</td><td className="p-3 text-primary font-bold">M{m.displayNumber || m.id}</td><td className="p-3 text-white">{m.name}</td><td className="p-3 text-gray-300">{m.line}</td><td className="p-3 text-status-warning font-bold">{m.gram}g</td><td className="p-3 text-status-warning font-bold">{m.fillHeads ?? 2}H</td><td className="p-3 text-gray-300">{m.min.toFixed(3)}</td><td className="p-3 text-gray-300">{m.max.toFixed(3)}</td>
-                    <td className="p-3 flex gap-2"><button onClick={() => handleOpenMachineModal(m)} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteMachine(m.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
+                    <td className="p-3 flex gap-2"><button onClick={() => handleOpenMachineModal(m)} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">✏️ Edit</button><button onClick={() => deleteMachine(m.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -532,19 +532,19 @@ export default function SystemConfig() {
       {activeTab === 'lines' && (
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-primary">Production Lines</h2>
-            <button onClick={() => { setLineForm({ id: '', name: '', order: (config.productionLines?.length || 0) + 1, isEdit: false }); setIsLineModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Line</button>
+            <h2 className="text-xl font-bold text-primary">📋 Production Lines</h2>
+            <button onClick={() => { setLineForm({ id: '', name: '', order: (config.productionLines?.length || 0) + 1, isEdit: false }); setIsLineModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">➕ Add Line</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Order</th><th className="p-3">Line ID</th><th className="p-3">Name</th><th className="p-3">Machine Count</th><th className="p-3">Actions</th></tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">🔢 Order</th><th className="p-3">🆔 Line ID</th><th className="p-3">📛 Name</th><th className="p-3">🏭 Count</th><th className="p-3">⚡ Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {[...(config.productionLines || [])].sort((a,b)=>a.order-b.order).map(l => (
                   <tr key={l.id} className="hover:bg-white/5">
                     <td className="p-3 text-white">{l.order}</td><td className="p-3 text-primary font-bold">{l.id}</td><td className="p-3 text-white">{l.name}</td><td className="p-3 text-gray-300">{(config.machines || []).filter(m => m.line === l.id).length}</td>
-                    <td className="p-3 flex gap-2"><button onClick={() => { setLineForm({ ...l, isEdit: true }); setIsLineModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteLine(l.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
+                    <td className="p-3 flex gap-2"><button onClick={() => { setLineForm({ ...l, isEdit: true }); setIsLineModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">✏️ Edit</button><button onClick={() => deleteLine(l.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -556,13 +556,13 @@ export default function SystemConfig() {
       {activeTab === 'gramspecs' && (
         <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-primary">Gram Specifications</h2>
-            <button onClick={() => { setGramForm({ oldGram: '', gram: '', min: '', max: '', pieces: '', bags: '', freebies: '', isEdit: false }); setIsGramModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">+ Add Gram Spec</button>
+            <h2 className="text-xl font-bold text-primary">⚖️ Gram Specifications</h2>
+            <button onClick={() => { setGramForm({ oldGram: '', gram: '', min: '', max: '', pieces: '', bags: '', freebies: '', isEdit: false }); setIsGramModalOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">➕ Add Gram Spec</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">Gram</th><th className="p-3">Min Density</th><th className="p-3">Max Density</th><th className="p-3">Pieces</th><th className="p-3">Breakdown</th><th className="p-3">Bags</th><th className="p-3">Freebies</th><th className="p-3">Actions</th></tr>
+                <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">⚖️ Gram</th><th className="p-3">⬇️ Min Density</th><th className="p-3">⬆️ Max Density</th><th className="p-3">📦 Pieces</th><th className="p-3">📝 Breakdown</th><th className="p-3">🛍️ Bags</th><th className="p-3">🎁 Freebies</th><th className="p-3">⚡ Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#333]">
                 {Object.entries(config.gramSpecs || {}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([gram, spec]) => (
@@ -571,7 +571,7 @@ export default function SystemConfig() {
                     <td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
                     <td className="p-3 text-white">{spec.bagCount ?? '-'}</td>
                     <td className="p-3 text-white">{spec.freebieCount ?? '-'}</td>
-                    <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', bags: spec.bagCount||'', freebies: spec.freebieCount||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">Delete</button></td>
+                    <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', bags: spec.bagCount||'', freebies: spec.freebieCount||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">✏️ Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -596,7 +596,7 @@ export default function SystemConfig() {
                 <input type="text" placeholder="Label (e.g., HR Staff)" required value={newDeptRole.label} onChange={e=>setNewDeptRole({...newDeptRole, label: e.target.value})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
               </div>
 
-              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">Add Department Role</button>
+              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">➕ Add Department Role</button>
             </form>
 
             <div className="space-y-4">
@@ -630,7 +630,7 @@ export default function SystemConfig() {
                 <input type="text" placeholder="ID (e.g., forklift_op)" required value={newActionRole.id} onChange={e=>setNewActionRole({...newActionRole, id: e.target.value.toLowerCase().replace(/\s+/g, '_')})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
                 <input type="text" placeholder="Label (e.g., 🚜 Forklift)" required value={newActionRole.label} onChange={e=>setNewActionRole({...newActionRole, label: e.target.value})} className="flex-1 bg-[#121212] text-white border border-[#444] p-3 rounded outline-none focus:border-primary text-sm"/>
               </div>
-              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">Add Action Role</button>
+              <button type="submit" className="w-full bg-primary text-black font-bold px-4 py-3 mt-1 rounded hover:bg-primary-dark transition-all">⚡ Add Action Role</button>
             </form>
 
             <ul className="space-y-2">
@@ -651,29 +651,29 @@ export default function SystemConfig() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Level 9 Density Rules</h3>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Min Density:</label><input type="number" name="level9MinDensity" step="0.001" value={globalSettings.level9MinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Max Density:</label><input type="number" name="level9MaxDensity" step="0.001" value={globalSettings.level9MaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
-              <div className="flex justify-between items-center"><label className="text-gray-300">Divisor:</label><input type="number" name="level9Divisor" step="1" value={globalSettings.level9Divisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">📊 Level 9 Density Rules</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">⬇️ Min Density:</label><input type="number" name="level9MinDensity" step="0.001" value={globalSettings.level9MinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">⬆️ Max Density:</label><input type="number" name="level9MaxDensity" step="0.001" value={globalSettings.level9MaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">➗ Divisor:</label><input type="number" name="level9Divisor" step="1" value={globalSettings.level9Divisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">BOT Density Rules</h3>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Min Density:</label><input type="number" name="botMinDensity" step="0.001" value={globalSettings.botMinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Max Density:</label><input type="number" name="botMaxDensity" step="0.001" value={globalSettings.botMaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
-              <div className="flex justify-between items-center"><label className="text-gray-300">Divisor:</label><input type="number" name="botDivisor" step="1" value={globalSettings.botDivisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">🤖 BOT Density Rules</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">⬇️ Min Density:</label><input type="number" name="botMinDensity" step="0.001" value={globalSettings.botMinDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">⬆️ Max Density:</label><input type="number" name="botMaxDensity" step="0.001" value={globalSettings.botMaxDensity} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">➗ Divisor:</label><input type="number" name="botDivisor" step="1" value={globalSettings.botDivisor} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Shift Times (24h)</h3>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Day Shift Start:</label><input type="number" name="dayShiftStart" min="0" max="23" value={globalSettings.dayShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
-              <div className="flex justify-between items-center"><label className="text-gray-300">Night Shift Start:</label><input type="number" name="nightShiftStart" min="0" max="23" value={globalSettings.nightShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">🕐 Shift Times (24h)</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">☀️ Day Shift Start:</label><input type="number" name="dayShiftStart" min="0" max="23" value={globalSettings.dayShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <div className="flex justify-between items-center"><label className="text-gray-300">🌙 Night Shift Start:</label><input type="number" name="nightShiftStart" min="0" max="23" value={globalSettings.nightShiftStart} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Packaging Teams</h3>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">👥 Packaging Teams</h3>
               <div className="mb-3">
-                <label className="text-gray-300">Team Labels (comma-separated):</label>
+                <label className="text-gray-300">🏷️ Team Labels (comma-separated):</label>
                 <input type="text"
                   value={packagingTeamsSettings.labels}
                   onChange={e => setPackagingTeamsSettings(prev => ({ ...prev, labels: e.target.value }))}
@@ -681,7 +681,7 @@ export default function SystemConfig() {
                   className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
               <div className="mb-3">
-                <label className="text-gray-300">Default Team:</label>
+                <label className="text-gray-300">⭐ Default Team:</label>
                 <input type="text"
                   value={packagingTeamsSettings.defaultTeam}
                   onChange={e => setPackagingTeamsSettings(prev => ({ ...prev, defaultTeam: e.target.value }))}
@@ -691,8 +691,8 @@ export default function SystemConfig() {
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">UI Settings</h3>
-              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">Machine Grid Columns:</label><input type="number" name="machineGridColumns" min="1" max="12" value={globalSettings.machineGridColumns} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">🖥️ UI Settings</h3>
+              <div className="flex justify-between items-center mb-3"><label className="text-gray-300">📐 Machine Grid Columns:</label><input type="number" name="machineGridColumns" min="1" max="12" value={globalSettings.machineGridColumns} onChange={handleGlobalSettingsChange} className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" /></div>
             </div>
           </div>
           
@@ -725,9 +725,9 @@ export default function SystemConfig() {
             <p className="text-sm text-gray-400 mb-4">Minimum time (in minutes) between consecutive checks per machine. Prevents overly frequent inspections.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { key: 'stringWeight', label: 'String Weight Check', default: 15 },
-                { key: 'bagInspection', label: 'Bag Inspection', default: 15 },
-                { key: 'cartonInspection', label: 'Carton Inspection', default: 60 }
+                { key: 'stringWeight', label: '🔬 String Weight Check', default: 15 },
+                { key: 'bagInspection', label: '🛍️ Bag Inspection', default: 15 },
+                { key: 'cartonInspection', label: '📦 Carton Inspection', default: 60 }
               ].map(item => (
                 <div key={item.key} className="bg-[#1a1a1a] border border-[#444] p-4 rounded-xl">
                   <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">{item.label}</label>
@@ -755,7 +755,7 @@ export default function SystemConfig() {
                   <h3 className="text-status-warning font-bold text-lg mb-4 border-b border-[#333] pb-2">{gram}g Settings</h3>
 
                   <div className="mb-3">
-                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Too Low (max)</label>
+                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📉 Too Low (max)</label>
                     <input type="number" value={range.tooLow.max}
                       onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooLow: { max: Number(e.target.value) } } } }))}
                       className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
@@ -763,13 +763,13 @@ export default function SystemConfig() {
 
                   <div className="flex gap-3 mb-3">
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Low (min)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📉 Low (min)</label>
                       <input type="number" value={range.low.min}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Low (max)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 Low (max)</label>
                       <input type="number" value={range.low.max}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
@@ -778,13 +778,13 @@ export default function SystemConfig() {
 
                   <div className="flex gap-3 mb-3">
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Target (min)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">🎯 Target (min)</label>
                       <input type="number" value={range.target.min}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Target (max)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">🎯 Target (max)</label>
                       <input type="number" value={range.target.max}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
@@ -793,13 +793,13 @@ export default function SystemConfig() {
 
                   <div className="flex gap-3 mb-3">
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">High (min)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 High (min)</label>
                       <input type="number" value={range.high.min}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">High (max)</label>
+                      <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 High (max)</label>
                       <input type="number" value={range.high.max}
                         onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
@@ -807,7 +807,7 @@ export default function SystemConfig() {
                   </div>
 
                   <div className="mb-3">
-                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">Too High (min)</label>
+                    <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 Too High (min)</label>
                     <input type="number" value={range.tooHigh.min}
                       onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooHigh: { ...prev.weightRanges[gram].tooHigh, min: Number(e.target.value) } } } }))}
                       className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
@@ -831,9 +831,9 @@ export default function SystemConfig() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Waste Thresholds</h3>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">⚠️ Waste Thresholds</h3>
               <div className="flex justify-between items-center mb-3">
-                <label className="text-gray-300">Target Waste %:</label>
+                <label className="text-gray-300">🎯 Target Waste %:</label>
                 <input type="number" min="0" max="100" step="0.5"
                   value={cartonWasteSettings.targetWastePercent}
                   onChange={e => setCartonWasteSettings(prev => ({ ...prev, targetWastePercent: Number(e.target.value) }))}
@@ -841,7 +841,7 @@ export default function SystemConfig() {
               </div>
               <div className="text-xs text-gray-500 mt-1">Machines above this % turn red.</div>
               <div className="flex justify-between items-center mt-4 mb-3">
-                <label className="text-gray-300">Alert Threshold %:</label>
+                <label className="text-gray-300">🔔 Alert Threshold %:</label>
                 <input type="number" min="0" max="100" step="0.5"
                   value={cartonWasteSettings.wasteAlertThreshold}
                   onChange={e => setCartonWasteSettings(prev => ({ ...prev, wasteAlertThreshold: Number(e.target.value) }))}
@@ -870,9 +870,9 @@ export default function SystemConfig() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Waste Thresholds</h3>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">⚠️ Waste Thresholds</h3>
               <div className="flex justify-between items-center mb-3">
-                <label className="text-gray-300">Target Waste %:</label>
+                <label className="text-gray-300">🎯 Target Waste %:</label>
                 <input type="number" min="0" max="100" step="0.5"
                   value={laminateWasteSettings.targetWastePercent}
                   onChange={e => setLaminateWasteSettings(prev => ({ ...prev, targetWastePercent: Number(e.target.value) }))}
@@ -880,7 +880,7 @@ export default function SystemConfig() {
               </div>
               <div className="text-xs text-gray-500 mt-1">Machines above this % turn red.</div>
               <div className="flex justify-between items-center mt-4 mb-3">
-                <label className="text-gray-300">Alert Threshold %:</label>
+                <label className="text-gray-300">🔔 Alert Threshold %:</label>
                 <input type="number" min="0" max="100" step="0.5"
                   value={laminateWasteSettings.wasteAlertThreshold}
                   onChange={e => setLaminateWasteSettings(prev => ({ ...prev, wasteAlertThreshold: Number(e.target.value) }))}
@@ -890,15 +890,15 @@ export default function SystemConfig() {
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Roll Settings</h3>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">🧻 Roll Settings</h3>
               <div className="mb-3">
-                <label className="text-gray-300">Rolls per Shift:</label>
+                <label className="text-gray-300">📦 Rolls per Shift:</label>
                 <input type="number" min="1" step="0.5"
                   value={laminateWasteSettings.rollsPerShift}
                   onChange={e => setLaminateWasteSettings(prev => ({ ...prev, rollsPerShift: Number(e.target.value) }))}
                   className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
-              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mt-4 mb-2 border-b border-[#333] pb-1">Roll Weight per Gram Setting (kg)</div>
+              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mt-4 mb-2 border-b border-[#333] pb-1">⚖️ Roll Weight per Gram Setting (kg)</div>
               {['22', '45', '85', '125', '850'].map(gram => (
                 <div key={gram} className="flex justify-between items-center mb-2">
                   <label className="text-gray-300">{gram}g:</label>
@@ -911,16 +911,16 @@ export default function SystemConfig() {
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
-              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">Sac Types</h3>
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">🛄 Sac Types</h3>
               <div className="mb-3">
-                <label className="text-gray-300">Small Sac Weight (g):</label>
+                <label className="text-gray-300">🟢 Small Sac Weight (g):</label>
                 <input type="number" min="0" step="1"
                   value={laminateWasteSettings.smallSacWeight}
                   onChange={e => setLaminateWasteSettings(prev => ({ ...prev, smallSacWeight: Number(e.target.value) }))}
                   className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
               <div className="mb-3">
-                <label className="text-gray-300">Large Sac Weight (g):</label>
+                <label className="text-gray-300">🟡 Large Sac Weight (g):</label>
                 <input type="number" min="0" step="1"
                   value={laminateWasteSettings.largeSacWeight}
                   onChange={e => setLaminateWasteSettings(prev => ({ ...prev, largeSacWeight: Number(e.target.value) }))}
@@ -977,32 +977,32 @@ export default function SystemConfig() {
       {isMachineModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIsMachineModalOpen(false)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-lg shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{machineForm.isEdit ? 'Edit Machine' : 'Add Machine'}</h2>
+            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{machineForm.isEdit ? '✏️ Edit Machine' : '➕ Add Machine'}</h2>
             <form onSubmit={saveMachine} className="flex flex-col gap-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Internal ID</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">🔢 Internal ID</label>
                   <input type="number" required disabled={machineForm.isEdit} value={machineForm.id} onChange={e => setMachineForm({...machineForm, id: e.target.value})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary disabled:opacity-50" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Display Number (M#)</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">🖥️ Display Number (M#)</label>
                   <input type="number" required value={machineForm.displayNumber} onChange={e => setMachineForm({...machineForm, displayNumber: e.target.value})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Machine Name</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">📛 Machine Name</label>
                 <input type="text" required value={machineForm.name} onChange={e => setMachineForm({...machineForm, name: e.target.value})} placeholder="e.g., Machine 1" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Production Line</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">📋 Production Line</label>
                   <select required value={machineForm.line} onChange={e => setMachineForm({...machineForm, line: e.target.value})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary">
                     <option value="" disabled>Select Line</option>
                     {(config.productionLines || []).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Gram Setting</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">⚖️ Gram Setting</label>
                   <select required value={machineForm.gram} onChange={e => handleMachineGramChange(e.target.value)} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary">
                     {Object.keys(config.gramSpecs || {}).sort((a,b)=>Number(a)-Number(b)).map(g => <option key={g} value={g}>{g}g</option>)}
                   </select>
@@ -1010,22 +1010,22 @@ export default function SystemConfig() {
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Fill Heads</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">🔩 Fill Heads</label>
                   <input type="number" min="1" required value={machineForm.fillHeads} onChange={e => setMachineForm({...machineForm, fillHeads: Number(e.target.value)})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Min Density</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">⬇️ Min Density</label>
                   <input type="number" step="0.001" disabled value={machineForm.min} className="w-full mt-1 p-3 bg-[#1a1a1a] text-gray-500 border border-[#333] rounded-lg cursor-not-allowed" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Max Density</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">⬆️ Max Density</label>
                   <input type="number" step="0.001" disabled value={machineForm.max} className="w-full mt-1 p-3 bg-[#1a1a1a] text-gray-500 border border-[#333] rounded-lg cursor-not-allowed" />
                 </div>
               </div>
               <div className="text-xs text-status-warning mt-[-10px] mb-2 text-center">Min/Max auto-filled from Gram Specs</div>
               <div className="flex gap-3 mt-2">
-                <button type="button" onClick={() => setIsMachineModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Save Machine</button>
+                <button type="button" onClick={() => setIsMachineModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">💾 Save Machine</button>
               </div>
             </form>
           </div>
@@ -1035,23 +1035,23 @@ export default function SystemConfig() {
       {isLineModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIsLineModalOpen(false)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-sm shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{lineForm.isEdit ? 'Edit Line' : 'Add Line'}</h2>
+            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{lineForm.isEdit ? '✏️ Edit Line' : '➕ Add Line'}</h2>
             <form onSubmit={saveLine} className="flex flex-col gap-4">
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Line ID</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">🆔 Line ID</label>
                 <input type="text" required disabled={lineForm.isEdit} value={lineForm.id} onChange={e => setLineForm({...lineForm, id: e.target.value.toUpperCase()})} placeholder="e.g., 4A" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary disabled:opacity-50" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Line Name</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">📛 Line Name</label>
                 <input type="text" required value={lineForm.name} onChange={e => setLineForm({...lineForm, name: e.target.value})} placeholder="e.g., Line 4A" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Display Order (1=Rightmost)</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">🔢 Display Order (1=Rightmost)</label>
                 <input type="number" required value={lineForm.order} onChange={e => setLineForm({...lineForm, order: e.target.value})} className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
               </div>
               <div className="flex gap-3 mt-4">
-                <button type="button" onClick={() => setIsLineModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Save</button>
+                <button type="button" onClick={() => setIsLineModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">💾 Save</button>
               </div>
             </form>
           </div>
@@ -1061,44 +1061,44 @@ export default function SystemConfig() {
       {isGramModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIsGramModalOpen(false)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[90%] max-w-sm shadow-[0_0_30px_rgba(0,188,212,0.3)]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{gramForm.isEdit ? 'Edit Gram Spec' : 'Add Gram Spec'}</h2>
+            <h2 className="text-primary text-xl font-bold mb-6 text-center uppercase tracking-wider">{gramForm.isEdit ? '✏️ Edit Gram Spec' : '➕ Add Gram Spec'}</h2>
             <form onSubmit={saveGramSpec} className="flex flex-col gap-4">
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Gram Setting</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">⚖️ Gram Setting</label>
                 <input type="number" required value={gramForm.gram} onChange={e => setGramForm({...gramForm, gram: e.target.value})} placeholder="e.g., 55" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Min Density</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">⬇️ Min Density</label>
                   <input type="number" required step="0.001" value={gramForm.min} onChange={e => setGramForm({...gramForm, min: e.target.value})} placeholder="0.200" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Max Density</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">⬆️ Max Density</label>
                   <input type="number" required step="0.001" value={gramForm.max} onChange={e => setGramForm({...gramForm, max: e.target.value})} placeholder="0.310" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Breakdown (Free Text)</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">📝 Breakdown (Free Text)</label>
                 <input type="text" value={gramForm.breakdown} onChange={e => setGramForm({...gramForm, breakdown: e.target.value})} placeholder="e.g., 27 strings * 6 pcs" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Bags per Carton</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">🛍️ Bags per Carton</label>
                   <input type="number" min="0" value={gramForm.bags} onChange={e => setGramForm({...gramForm, bags: e.target.value})} placeholder="e.g., 150" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 uppercase font-bold">Freebies per Carton</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">🎁 Freebies per Carton</label>
                   <input type="number" min="0" value={gramForm.freebies} onChange={e => setGramForm({...gramForm, freebies: e.target.value})} placeholder="e.g., 12" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold">Pieces Per Carton (bags + freebies)</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">📦 Pieces Per Carton (bags + freebies)</label>
                 <input type="number" value={parseInt(gramForm.bags || 0) + parseInt(gramForm.freebies || 0) || gramForm.pieces} disabled
                   className="w-full mt-1 p-3 bg-[#121212] text-gray-400 border border-[#444] rounded-lg cursor-not-allowed" />
               </div>
               <div className="flex gap-3 mt-4">
-                <button type="button" onClick={() => setIsGramModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">Save</button>
+                <button type="button" onClick={() => setIsGramModalOpen(false)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors">💾 Save</button>
               </div>
             </form>
           </div>

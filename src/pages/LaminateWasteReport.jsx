@@ -313,12 +313,12 @@ export default function LaminateWasteReport() {
           <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6 animate-[fadeIn_0.3s]">
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <div className="flex-1 w-full">
-                <label className="block text-primary font-bold mb-2">Date</label>
+                  <label className="block text-primary font-bold mb-2">📅 Date</label>
                 <input type="date" value={date} onChange={e => setDate(e.target.value)}
                   className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
               </div>
               <div className="flex-1 w-full">
-                <label className="block text-primary font-bold mb-2">Shift</label>
+                  <label className="block text-primary font-bold mb-2">🔄 Shift</label>
                 <select value={shift} onChange={e => setShift(e.target.value)}
                   className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary">
                   <option value="DAY">DAY</option>
@@ -326,7 +326,7 @@ export default function LaminateWasteReport() {
                 </select>
               </div>
               <div className="flex-1 w-full">
-                <label className="block text-primary font-bold mb-2">Team</label>
+                  <label className="block text-primary font-bold mb-2">👥 Team</label>
                 <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
                   className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary">
                   <option value="all">All Teams</option>
@@ -336,7 +336,7 @@ export default function LaminateWasteReport() {
                 </select>
               </div>
               <div className="flex-1 w-full">
-                <label className="block text-primary font-bold mb-2">Machine</label>
+                  <label className="block text-primary font-bold mb-2">🏭 Machine</label>
                 <select value={machineFilter} onChange={e => setMachineFilter(e.target.value)}
                   className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary">
                   <option value="all">All Machines</option>
@@ -348,7 +348,7 @@ export default function LaminateWasteReport() {
               <div className="w-full md:w-auto">
                 <button onClick={generateReport} disabled={loading}
                   className="w-full bg-primary text-black font-bold py-3 px-8 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50">
-                  {loading ? 'Generating...' : 'Generate Report'}
+                  {loading ? '⏳ Generating...' : '📊 Generate Report'}
                 </button>
               </div>
             </div>
@@ -373,17 +373,17 @@ export default function LaminateWasteReport() {
       ) : (
         <div className="animate-[fadeIn_0.5s_ease-out]">
           <div className="flex justify-end gap-3 mb-4 print:hidden">
-            <button onClick={() => window.print()} className="bg-[#333] text-white px-4 py-2 rounded font-bold hover:bg-[#444]">Print</button>
-            <button onClick={exportToCSV} className="bg-[#2196F3] text-white px-4 py-2 rounded font-bold hover:bg-blue-600">Export CSV</button>
+            <button onClick={() => window.print()} className="bg-[#333] text-white px-4 py-2 rounded font-bold hover:bg-[#444]">🖨️ Print</button>
+            <button onClick={exportToCSV} className="bg-[#2196F3] text-white px-4 py-2 rounded font-bold hover:bg-blue-600">📥 Export CSV</button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 print:grid-cols-4 print:gap-3">
             <div className="bg-dark-card p-5 rounded-xl border border-[#333] text-center">
-              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Laminate Used</div>
+              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">📦 Total Laminate Used</div>
               <div className="text-3xl font-bold text-primary">{totalLaminateUsed.toFixed(2)} kg</div>
             </div>
             <div className="bg-dark-card p-5 rounded-xl border border-[#333] text-center">
-              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Waste Collected</div>
+              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">🗑️ Total Waste Collected</div>
               <div className="text-3xl font-bold text-status-warning">{totalWasteCollected.toFixed(3)} kg</div>
             </div>
             <div className="bg-dark-card p-5 rounded-xl border border-[#333] text-center">
@@ -401,7 +401,7 @@ export default function LaminateWasteReport() {
           {summary.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 print:flex print:flex-row print:gap-4 print:break-inside-avoid">
               <div className="bg-dark-card p-5 rounded-xl border border-[#333]">
-                <h3 className="text-center font-bold text-primary mb-4 uppercase text-sm tracking-wider">Waste % by Machine</h3>
+                <h3 className="text-center font-bold text-primary mb-4 uppercase text-sm tracking-wider">📊 Waste % by Machine</h3>
                 <div className="h-[300px]"><Bar data={barChartData} options={barChartOptions} /></div>
               </div>
 

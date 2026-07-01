@@ -14,7 +14,7 @@ export default function AuthBar() {
         onClick={logout} 
         className="bg-status-danger text-white border-none py-1.5 px-4 rounded-md cursor-pointer text-xs uppercase font-bold tracking-wider transition-all hover:bg-red-600 hover:shadow-[0_0_10px_rgba(244,67,54,0.5)]"
       >
-        Logout
+        🚪 Logout
       </button>
     </div>
   );

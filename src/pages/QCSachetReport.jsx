@@ -225,12 +225,12 @@ export default function QCSachetReport() {
       <div className="no-print bg-dark-card p-4 md:p-6 rounded-xl border border-[#333] shadow-lg mb-6">
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Date</label>
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">📅 Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
               className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-2 rounded-lg text-sm outline-none focus:border-primary" />
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Shift</label>
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">🔄 Shift</label>
             <select value={shift} onChange={e => setShift(e.target.value)}
               className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-2 rounded-lg text-sm outline-none focus:border-primary">
               <option value="DAY">Day</option>
@@ -238,7 +238,7 @@ export default function QCSachetReport() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Team</label>
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">👥 Team</label>
             <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
               className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-2 rounded-lg text-sm outline-none focus:border-primary">
               <option value="all">All Teams</option>
@@ -246,7 +246,7 @@ export default function QCSachetReport() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Machine</label>
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">🏭 Machine</label>
             <select value={machineFilter} onChange={e => setMachineFilter(e.target.value)}
               className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-2 rounded-lg text-sm outline-none focus:border-primary">
               <option value="all">All Machines</option>
@@ -257,7 +257,7 @@ export default function QCSachetReport() {
           </div>
           <button onClick={fetchData} disabled={loading}
             className="bg-primary text-black font-bold px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50">
-            {loading ? 'Loading...' : 'Generate Report'}
+            {loading ? '⏳ Loading...' : '📊 Generate Report'}
           </button>
         </div>
       </div>
@@ -280,23 +280,23 @@ export default function QCSachetReport() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-6">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Date</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">📅 Date</span>
               <span className="text-white font-bold text-lg">{date}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Shift</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">🔄 Shift</span>
               <span className="text-primary font-bold text-lg">{shift}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Team</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">👥 Team</span>
               <span className="text-white font-bold text-lg">{teamFilter === 'all' ? 'All' : `Team ${teamFilter}`}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Machine</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">🏭 Machine</span>
               <span className="text-white font-bold text-lg">{machineFilter === 'all' ? 'All' : machines.find(m => String(m.id) === machineFilter)?.displayNumber || machineFilter}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Total Checks</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">📋 Total Checks</span>
               <span className="text-white font-bold text-lg">{swRecords.length + biRecords.length + ciRecords.length}</span>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function QCSachetReport() {
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-400 py-20 text-lg">Loading report data...</div>
+        <div className="text-center text-gray-400 py-20 text-lg">⏳ Loading report data...</div>
       ) : (
         <>
           {/* ===== SECTION 1: STRING WEIGHTS ===== */}
@@ -328,20 +328,20 @@ export default function QCSachetReport() {
             <SectionHeader icon="🔬" title="String Weight Checks" count={swRecords.length} />
 
             {swRecords.length === 0 ? (
-              <div className="text-gray-600 text-sm italic py-8 text-center">No string weight records found for the selected filters.</div>
+              <div className="text-gray-600 text-sm italic py-8 text-center">📭 No string weight records found for the selected filters.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-500 uppercase tracking-wider border-b border-[#333]">
-                      <th className="text-left py-2 pr-2">Time</th>
-                      <th className="text-left px-2">Machine</th>
-                      <th className="text-center px-2">Round</th>
-                      <th className="text-left px-2">Weights</th>
-                      <th className="text-center px-2">Result</th>
-                      <th className="text-center px-2">Batch</th>
-                      <th className="text-center px-2">Team</th>
-                      <th className="text-center px-2">Staff</th>
+                      <th className="text-left py-2 pr-2">⏰ Time</th>
+                      <th className="text-left px-2">🏭 Machine</th>
+                      <th className="text-center px-2">🔢 Round</th>
+                      <th className="text-left px-2">⚖️ Weights</th>
+                      <th className="text-center px-2">📊 Result</th>
+                      <th className="text-center px-2">🔢 Batch</th>
+                      <th className="text-center px-2">👥 Team</th>
+                      <th className="text-center px-2">👤 Staff</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -386,24 +386,24 @@ export default function QCSachetReport() {
             <SectionHeader icon="🛍️" title="Bag Inspection Checks" count={biRecords.length} />
 
             {biRecords.length === 0 ? (
-              <div className="text-gray-600 text-sm italic py-8 text-center">No bag inspection records found for the selected filters.</div>
+              <div className="text-gray-600 text-sm italic py-8 text-center">📭 No bag inspection records found for the selected filters.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-500 uppercase tracking-wider border-b border-[#333]">
-                      <th className="text-left py-2 pr-2">Time</th>
-                      <th className="text-left px-2">Machine</th>
-                      <th className="text-center px-2">Round</th>
-                      <th className="text-center px-2">Leakage</th>
-                      <th className="text-center px-2">Dirt/Print</th>
-                      <th className="text-center px-2">Completeness</th>
-                      <th className="text-center px-2">Freebies</th>
-                      <th className="text-center px-2">Perforation</th>
-                      <th className="text-center px-2">Perfume</th>
-                      <th className="text-center px-2">Overall</th>
-                      <th className="text-center px-2">Team</th>
-                      <th className="text-center px-2">Staff</th>
+                      <th className="text-left py-2 pr-2">⏰ Time</th>
+                      <th className="text-left px-2">🏭 Machine</th>
+                      <th className="text-center px-2">🔢 Round</th>
+                      <th className="text-center px-2">💧 Leakage</th>
+                      <th className="text-center px-2">🖨️ Dirt/Print</th>
+                      <th className="text-center px-2">📦 Completeness</th>
+                      <th className="text-center px-2">🎁 Freebies</th>
+                      <th className="text-center px-2">✂️ Perforation</th>
+                      <th className="text-center px-2">🌸 Perfume</th>
+                      <th className="text-center px-2">📊 Overall</th>
+                      <th className="text-center px-2">👥 Team</th>
+                      <th className="text-center px-2">👤 Staff</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -438,23 +438,23 @@ export default function QCSachetReport() {
             <SectionHeader icon="📦" title="Carton Inspection Checks" count={ciRecords.length} />
 
             {ciRecords.length === 0 ? (
-              <div className="text-gray-600 text-sm italic py-8 text-center">No carton inspection records found for the selected filters.</div>
+              <div className="text-gray-600 text-sm italic py-8 text-center">📭 No carton inspection records found for the selected filters.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-500 uppercase tracking-wider border-b border-[#333]">
-                      <th className="text-left py-2 pr-2">Time</th>
-                      <th className="text-left px-2">Machine</th>
-                      <th className="text-center px-2">Round</th>
-                      <th className="text-center px-2">Detergent/Dust</th>
-                      <th className="text-center px-2">Carton Print</th>
-                      <th className="text-center px-2">Seal Quality</th>
-                      <th className="text-center px-2">Carton Damage</th>
-                      <th className="text-center px-2">Code Read</th>
-                      <th className="text-center px-2">Overall</th>
-                      <th className="text-center px-2">Team</th>
-                      <th className="text-center px-2">Staff</th>
+                      <th className="text-left py-2 pr-2">⏰ Time</th>
+                      <th className="text-left px-2">🏭 Machine</th>
+                      <th className="text-center px-2">🔢 Round</th>
+                      <th className="text-center px-2">🧹 Detergent/Dust</th>
+                      <th className="text-center px-2">🖨️ Carton Print</th>
+                      <th className="text-center px-2">🔒 Seal Quality</th>
+                      <th className="text-center px-2">📦 Carton Damage</th>
+                      <th className="text-center px-2">👁️ Code Read</th>
+                      <th className="text-center px-2">📊 Overall</th>
+                      <th className="text-center px-2">👥 Team</th>
+                      <th className="text-center px-2">👤 Staff</th>
                     </tr>
                   </thead>
                   <tbody>

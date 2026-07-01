@@ -55,11 +55,11 @@ export default function ChangePassword() {
       <div className="flex flex-col items-center justify-center flex-1 w-full p-4">
         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] p-10 rounded-2xl border-2 border-primary shadow-[0_0_30px_rgba(255,107,0,0.3)] max-w-md w-full animate-[fadeIn_0.5s_ease-out]">
           
-          <h1 className="text-primary text-2xl font-bold mb-1 uppercase tracking-widest text-center">Change Password</h1>
+          <h1 className="text-primary text-2xl font-bold mb-1 uppercase tracking-widest text-center">🔐 Change Password</h1>
           <p className="text-gray-400 text-center mb-6 text-sm">Update your account password</p>
 
           <div className="bg-primary/10 border border-primary p-3 rounded-lg mb-6 text-center text-primary text-sm">
-            Changing password for: <br/><span className="font-bold">{currentUser?.email}</span>
+            👤 Changing password for: <br/><span className="font-bold">{currentUser?.email}</span>
           </div>
 
           {message.text && (
@@ -70,20 +70,20 @@ export default function ChangePassword() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-primary font-bold mb-2 text-sm">Current Password</label>
+              <label className="block text-primary font-bold mb-2 text-sm">🔒 Current Password</label>
               <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-3 bg-[#1a1a1a] text-white border-2 border-gray-800 rounded-lg outline-none focus:border-primary" required />
             </div>
             <div>
-              <label className="block text-primary font-bold mb-2 text-sm">New Password</label>
+              <label className="block text-primary font-bold mb-2 text-sm">🆕 New Password</label>
               <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-3 bg-[#1a1a1a] text-white border-2 border-gray-800 rounded-lg outline-none focus:border-primary" required />
             </div>
             <div>
-              <label className="block text-primary font-bold mb-2 text-sm">Confirm New Password</label>
+              <label className="block text-primary font-bold mb-2 text-sm">✅ Confirm New Password</label>
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-3 bg-[#1a1a1a] text-white border-2 border-gray-800 rounded-lg outline-none focus:border-primary" required />
             </div>
 
             <div className="bg-primary/5 border-l-4 border-primary p-3 rounded-r-lg mt-2 mb-2">
-              <h4 className="text-primary text-xs font-bold mb-1">Requirements:</h4>
+              <h4 className="text-primary text-xs font-bold mb-1">📋 Requirements:</h4>
               <ul className="text-gray-400 text-xs list-disc list-inside pl-4">
                 <li>Minimum 6 characters</li>
                 <li>Must differ from current</li>
@@ -91,12 +91,12 @@ export default function ChangePassword() {
             </div>
 
             <button type="submit" disabled={loading} className="w-full p-4 bg-gradient-to-br from-primary to-[#e55a00] text-white rounded-lg font-bold uppercase tracking-wide hover:from-[#ff7a1a] hover:to-primary disabled:opacity-50">
-              {loading ? 'Processing...' : 'Change Password'}
+              {loading ? '⏳ Processing...' : '🔑 Change Password'}
             </button>
           </form>
 
           <div className="text-center mt-6 text-sm">
-            <Link to="/" className="text-gray-400 hover:text-primary transition-colors">← Back to App</Link>
+            <Link to="/" className="text-gray-400 hover:text-primary transition-colors">⬅️ Back to App</Link>
           </div>
         </div>
       </div>

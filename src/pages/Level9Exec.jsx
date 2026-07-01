@@ -161,13 +161,13 @@ export default function Level9Exec() {
       <style>{`@keyframes alertBlink { 0%, 100% { opacity: 1; } 25%, 75% { opacity: 0.4; } 50% { opacity: 0; } } .animate-alert-blink { animation: alertBlink 1.5s linear infinite; }`}</style>
 
       <div className="flex flex-wrap justify-center gap-4 mb-6">
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Mode</div><div className="text-primary font-bold text-lg">Level 9</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Shift</div><div className="text-primary font-bold text-lg">{shiftInfo.shift}</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Date</div><div className="text-primary font-bold text-lg">{shiftInfo.date}</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Tests</div><div className="text-primary font-bold text-lg">{shiftTests.length}</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">QC Staff</div><div className="text-primary font-bold text-lg">{latestTest?.qcName || '--'}</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Team</div><div className="text-primary font-bold text-lg">{latestTest?.team || '--'}</div></div>
-        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">Last Test</div><div className="text-primary font-bold text-lg">{latestTest ? formatTime(latestTest.createdAt) : '--'}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">🏭 Mode</div><div className="text-primary font-bold text-lg">Level 9</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">🔄 Shift</div><div className="text-primary font-bold text-lg">{shiftInfo.shift}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">📅 Date</div><div className="text-primary font-bold text-lg">{shiftInfo.date}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">📋 Tests</div><div className="text-primary font-bold text-lg">{shiftTests.length}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">👤 QC Staff</div><div className="text-primary font-bold text-lg">{latestTest?.qcName || '--'}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">👥 Team</div><div className="text-primary font-bold text-lg">{latestTest?.team || '--'}</div></div>
+        <div className="bg-dark-card border border-[#333] px-5 py-2 rounded-lg text-center"><div className="text-[10px] text-gray-400 uppercase">⏰ Last Test</div><div className="text-primary font-bold text-lg">{latestTest ? formatTime(latestTest.createdAt) : '--'}</div></div>
       </div>
 
       <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border-2 border-primary rounded-xl p-8 text-center mb-6 shadow-[0_0_30px_rgba(0,188,212,0.15)]">

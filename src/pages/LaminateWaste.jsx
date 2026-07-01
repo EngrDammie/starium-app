@@ -226,14 +226,14 @@ export default function LaminateWaste() {
           <div className="flex items-center gap-3">
             {uncheckedCount > 0 && (
               <span className="bg-gray-600/30 text-gray-400 px-3 py-1 rounded-full text-xs font-bold">
-                {uncheckedCount} unchecked
+                {uncheckedCount} ⬜ unchecked
               </span>
             )}
             <button
               onClick={() => navigate('/laminate-waste-report')}
               className="bg-primary text-black px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary-dark transition-colors"
             >
-              View Report →
+              📊 View Report →
             </button>
           </div>
         </div>
@@ -241,11 +241,11 @@ export default function LaminateWaste() {
         <div className="flex items-center gap-4 mb-6 text-sm">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-status-success"></span>
-            <span className="text-gray-400">Checked</span>
+            <span className="text-gray-400">✅ Checked</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-status-danger"></span>
-            <span className="text-gray-400">High Waste</span>
+            <span className="text-gray-400">⚠️ High Waste</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-gray-600"></span>
@@ -355,7 +355,7 @@ export default function LaminateWaste() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Sac Type</label>
+                    <label className="block text-sm text-gray-300 mb-1">🛄 Sac Type</label>
                     <select
                       value={sacType}
                       onChange={e => { setSacType(e.target.value); setError(''); }}
@@ -367,7 +367,7 @@ export default function LaminateWaste() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Gross Weight (kg) — sac + collected waste</label>
+                    <label className="block text-sm text-gray-300 mb-1">⚖️ Gross Weight (kg) — sac + collected waste</label>
                     <input
                       type="number"
                       min="0"
@@ -441,14 +441,14 @@ export default function LaminateWaste() {
                     disabled={saving}
                     className="flex-[2] py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
                   >
-                    {saving ? 'Saving...' : 'Save & Next Machine'}
+                    {saving ? '⏳ Saving...' : '💾 Save & Next Machine'}
                   </button>
                   <button
                     onClick={() => handleSave(false)}
                     disabled={saving}
                     className="flex-1 py-3 bg-status-success/20 text-status-success border border-status-success rounded-lg font-bold hover:bg-status-success hover:text-black transition-colors disabled:opacity-50"
                   >
-                    {saving ? 'Saving...' : 'Save & Close'}
+                    {saving ? '⏳ Saving...' : '✅ Save & Close'}
                   </button>
                 </div>
               </>

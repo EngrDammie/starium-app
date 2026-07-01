@@ -108,10 +108,10 @@ export default function ActiveUsers() {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-[#333]">
-                  <th className="p-4 font-bold">Name</th>
-                  <th className="p-4 font-bold">Email</th>
-                  <th className="p-4 font-bold">Current Page</th>
-                  <th className="p-4 font-bold">Last Heartbeat</th>
+                  <th className="p-4 font-bold">👤 Name</th>
+                  <th className="p-4 font-bold">📧 Email</th>
+                  <th className="p-4 font-bold">📍 Current Page</th>
+                  <th className="p-4 font-bold">⏰ Last Heartbeat</th>
                 </tr>
               </thead>
               <tbody>

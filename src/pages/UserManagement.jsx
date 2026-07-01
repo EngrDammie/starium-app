@@ -167,16 +167,16 @@ export default function UserManagement() {
         <form onSubmit={handleAddUser} className="flex flex-col gap-6">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="First Name" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
-            <input type="text" placeholder="Last Name" value={newLastName} onChange={e => setNewLastName(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
+            <input type="text" placeholder="👤 First Name" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
+            <input type="text" placeholder="👤 Last Name" value={newLastName} onChange={e => setNewLastName(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="email" placeholder="Email Address" value={newEmail} onChange={e => setNewEmail(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
-            <input type="password" placeholder="Temp Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
+            <input type="email" placeholder="📧 Email Address" value={newEmail} onChange={e => setNewEmail(e.target.value)} required className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
+            <input type="password" placeholder="🔒 Temp Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} className="bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
             
             <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-2 flex items-center gap-2">
-              <label className="text-gray-400 text-sm font-bold pl-2">System Role:</label>
+              <label className="text-gray-400 text-sm font-bold pl-2">🔐 System Role:</label>
               <select value={newSystemRole} onChange={e => setNewSystemRole(e.target.value)} className="bg-transparent text-white font-bold outline-none flex-1">
                 <option value="standard">Standard User</option>
                 <option value="super_admin">Super Admin (God Mode)</option>
@@ -186,7 +186,7 @@ export default function UserManagement() {
 
           {newSystemRole !== 'super_admin' && (
             <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
-              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access</h3>
+                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">🏢 Department Access</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.entries(groupedDeptRoles).map(([deptName, roles]) => (
                   <div key={deptName} className="bg-dark-card p-4 rounded-lg border border-[#333]">
@@ -207,7 +207,7 @@ export default function UserManagement() {
 
           {newSystemRole !== 'super_admin' && (
             <div className="bg-[#1a1a1a] border border-[#333] p-5 rounded-lg">
-              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers</h3>
+                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">⚡ Approval Powers</h3>
               <div className="flex flex-wrap gap-3">
                 {(config?.actionRoles || []).map(role => (
                   <label key={role.id} className="flex items-center gap-2 p-2 px-4 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
@@ -220,7 +220,7 @@ export default function UserManagement() {
           )}
 
           <button type="submit" className="bg-primary text-black font-bold py-3 px-8 rounded-lg hover:bg-primary-dark transition-colors self-start shadow-[0_0_15px_rgba(0,188,212,0.3)]">
-            Create User
+            👤 Create User
           </button>
         </form>
       </div>
@@ -231,12 +231,12 @@ export default function UserManagement() {
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Name</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Email</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">System Role</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Departments</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Approval Roles</th>
-              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider text-right">Actions</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">👤 Name</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">📧 Email</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">🔐 System Role</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">🏢 Departments</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">⚡ Approval Roles</th>
+              <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider text-right">⚡ Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#333]">
@@ -294,8 +294,8 @@ export default function UserManagement() {
                   </td>
 
                   <td className="p-3 flex gap-2 justify-end">
-                    <button onClick={() => setEditUser({...user, systemRole: sysRole, departmentRoles: deptRoles, actionRoles: user.actionRoles || user.approvalRoles || [], firstName: user.firstName || '', lastName: user.lastName || ''})} className="bg-[#2196F3] text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">Edit</button>
-                    <button onClick={() => setDeleteUser(user)} className="bg-status-danger text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-red-600 transition-colors">Delete</button>
+                    <button onClick={() => setEditUser({...user, systemRole: sysRole, departmentRoles: deptRoles, actionRoles: user.actionRoles || user.approvalRoles || [], firstName: user.firstName || '', lastName: user.lastName || ''})} className="bg-[#2196F3] text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">✏️ Edit</button>
+                    <button onClick={() => setDeleteUser(user)} className="bg-status-danger text-white px-4 py-1.5 rounded font-bold text-xs hover:bg-red-600 transition-colors">🗑️ Delete</button>
                   </td>
                 </tr>
               );
@@ -308,22 +308,22 @@ export default function UserManagement() {
       {editUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setEditUser(null)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[95%] max-w-2xl shadow-[0_0_30px_rgba(0,188,212,0.3)] overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-primary text-xl font-bold mb-2 text-center uppercase tracking-wider">Edit User Profile</h2>
+            <h2 className="text-primary text-xl font-bold mb-2 text-center uppercase tracking-wider">✏️ Edit User Profile</h2>
             <p className="text-center text-gray-500 mb-6">{editUser.email}</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold block mb-1">First Name</label>
+                <label className="text-xs text-gray-400 uppercase font-bold block mb-1">👤 First Name</label>
                 <input type="text" value={editUser.firstName} onChange={e => setEditUser({...editUser, firstName: e.target.value})} className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase font-bold block mb-1">Last Name</label>
+                <label className="text-xs text-gray-400 uppercase font-bold block mb-1">👤 Last Name</label>
                 <input type="text" value={editUser.lastName} onChange={e => setEditUser({...editUser, lastName: e.target.value})} className="w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary" />
               </div>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-4 flex items-center justify-between mb-6">
-              <label className="text-gray-400 text-sm font-bold uppercase">System Role:</label>
+              <label className="text-gray-400 text-sm font-bold uppercase">🔐 System Role:</label>
               <select value={editUser.systemRole} onChange={e => setEditUser({...editUser, systemRole: e.target.value})} className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary">
                 <option value="standard">Standard User</option>
                 <option value="super_admin">Super Admin (God Mode)</option>
@@ -333,7 +333,7 @@ export default function UserManagement() {
             {editUser.systemRole !== 'super_admin' && (
               <>
                 <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
-                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Department Access</h3>
+              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">🏢 Department Access</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Object.entries(groupedDeptRoles).map(([deptName, roles]) => (
                       <div key={deptName}>
@@ -352,7 +352,7 @@ export default function UserManagement() {
                 </div>
 
                 <div className="mb-6 border border-[#333] p-4 rounded-lg bg-[#1a1a1a]">
-                  <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Approval Powers</h3>
+              <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">⚡ Approval Powers</h3>
                   <div className="flex flex-wrap gap-3">
                     {(config?.actionRoles || []).map(role => (
                       <label key={role.id} className="flex items-center gap-2 p-2 px-3 bg-dark-card rounded-full cursor-pointer hover:bg-[#252525] border border-[#333] transition-colors">
@@ -366,8 +366,8 @@ export default function UserManagement() {
             )}
 
             <div className="flex gap-4 mt-6">
-              <button onClick={() => setEditUser(null)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-              <button onClick={handleSaveEdit} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors shadow-[0_0_15px_rgba(0,188,212,0.3)]">Save Profile</button>
+              <button onClick={() => setEditUser(null)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+              <button onClick={handleSaveEdit} className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors shadow-[0_0_15px_rgba(0,188,212,0.3)]">💾 Save Profile</button>
             </div>
           </div>
         </div>
@@ -377,11 +377,11 @@ export default function UserManagement() {
       {deleteUser && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setDeleteUser(null)}>
           <div className="bg-dark-card p-8 rounded-2xl border-2 border-status-danger w-[90%] max-w-sm shadow-[0_0_30px_rgba(244,67,54,0.3)]" onClick={e => e.stopPropagation()}>
-            <h2 className="text-status-danger text-xl font-bold mb-2 text-center uppercase tracking-wider">Delete User?</h2>
+            <h2 className="text-status-danger text-xl font-bold mb-2 text-center uppercase tracking-wider">🗑️ Delete User?</h2>
             <p className="text-center text-gray-400 mb-6">Are you sure you want to remove <br/><strong className="text-white">{deleteUser.email}</strong>?</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteUser(null)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">Cancel</button>
-              <button onClick={confirmDelete} className="flex-1 py-3 bg-status-danger text-white rounded-lg font-bold hover:bg-red-600 transition-colors">Delete</button>
+              <button onClick={() => setDeleteUser(null)} className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+              <button onClick={confirmDelete} className="flex-1 py-3 bg-status-danger text-white rounded-lg font-bold hover:bg-red-600 transition-colors">🗑️ Delete</button>
             </div>
           </div>
         </div>

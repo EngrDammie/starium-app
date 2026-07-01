@@ -97,19 +97,19 @@ export default function EmptySilosReport() {
     <Layout title="Empty Silos Report" subtitle={`Real-time overview • ${currentShift} Shift`} maxWidth="max-w-6xl">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-[fadeIn_0.3s_ease-out]">
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Empty Machines</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🛢️ Empty Machines</h3>
           <div className="text-5xl font-black text-white mb-1">{emptyCount}<span className="text-2xl text-gray-500">/{totalMachines}</span></div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Total Machines</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Empty Percentage</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📊 Empty Percentage</h3>
           <div className={`text-5xl font-black mb-1 ${parseFloat(emptyPercent) > 20 ? 'text-status-danger' : parseFloat(emptyPercent) > 10 ? 'text-status-warning' : 'text-status-success'}`}>{emptyPercent}%</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">of all machines</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Refilled This Shift</h3>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔄 Refilled This Shift</h3>
           <div className="text-5xl font-black text-white mb-1">{refilledCount}</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Machines restored</div>
         </div>

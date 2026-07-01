@@ -155,15 +155,15 @@ export default function StopMachine() {
         <div className="flex items-center gap-6 mb-6 text-sm flex-wrap">
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded" style={{ background: COLORS.normal }}></span>
-            <span className="text-gray-400">Normal</span>
+            <span className="text-gray-400">✅ Normal</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded" style={{ background: COLORS.stopped }}></span>
-            <span className="text-gray-400">Stopped</span>
+            <span className="text-gray-400">🛑 Stopped</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded animate-cycle"></span>
-            <span className="text-gray-400">Started with issues</span>
+            <span className="text-gray-400">⚠️ Started with issues</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded" style={{ background: COLORS['issues-cleared'] }}></span>

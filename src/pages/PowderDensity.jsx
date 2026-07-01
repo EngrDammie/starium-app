@@ -250,18 +250,18 @@ export default function PowderDensity() {
       
       <div className="flex flex-wrap justify-center gap-4 mb-6 animate-[fadeIn_0.5s_ease-out]">
         <div className="flex items-center gap-2">
-          <label className="text-primary font-bold">Mode:</label>
+          <label className="text-primary font-bold">📊 Mode:</label>
           <select value={mode} onChange={(e) => handleModeChange(e.target.value)} className="bg-dark-card text-white border-[3px] border-primary rounded-lg px-3 py-2 font-bold outline-none cursor-pointer focus:shadow-[0_0_15px_rgba(0,188,212,0.5)]">
-            <option value="level9">Level 9 Silo Densities</option>
-            <option value="bot">BOT Densities</option>
+            <option value="level9">🏭 Level 9 Silo Densities</option>
+            <option value="bot">🤖 BOT Densities</option>
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-primary font-bold">Shift:</label>
+          <label className="text-primary font-bold">🔄 Shift:</label>
           <select disabled value={shift} className="bg-[#1a1a1a] text-gray-500 border-2 border-[#555] rounded-lg px-3 py-2 cursor-not-allowed"><option>{shift}</option></select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-primary font-bold">Team:</label>
+          <label className="text-primary font-bold">👥 Team:</label>
           <select value={team} onChange={(e) => setTeam(e.target.value)} className="bg-dark-card text-white border-2 border-primary rounded-lg px-3 py-2 outline-none cursor-pointer focus:border-status-success">
             <option value="" disabled>Select Team</option>{(config?.packagingTeams?.labels || ['A', 'B', 'C']).map(t => (<option key={t} value={t}>Team {t}</option>))}
           </select>
@@ -282,7 +282,7 @@ export default function PowderDensity() {
       <div className="bg-dark-card p-6 md:p-8 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.6s_ease-out_0.2s_both]">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex flex-col gap-2 flex-1">
-            <label className="text-primary font-bold">Powder Weight (g)</label>
+            <label className="text-primary font-bold">📏 Powder Weight (g)</label>
             <input type="number" value={weight} onFocus={resetFormFields} onChange={(e) => setWeight(e.target.value)} placeholder="Enter powder weight" className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success focus:shadow-[0_0_15px_rgba(0,188,212,0.5)] transition-all"/>
           </div>
         </div>
@@ -308,26 +308,26 @@ export default function PowderDensity() {
         <div className="flex flex-col gap-4">
           {mode === 'bot' && (
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Appearance</label><select value={appearance} onChange={(e) => setAppearance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${appearance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
-              <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Free Flowing</label><select value={freeFlowing} onChange={(e) => setFreeFlowing(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${freeFlowing === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
+              <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">👁️ Appearance</label><select value={appearance} onChange={(e) => setAppearance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${appearance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
+              <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">🌊 Free Flowing</label><select value={freeFlowing} onChange={(e) => setFreeFlowing(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${freeFlowing === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
             </div>
           )}
 
           {mode === 'level9' && (
             <>
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Buggy Number</label><input type="text" value={buggyNumber} onChange={(e) => setBuggyNumber(e.target.value)} placeholder="e.g., B001" className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success"/></div>
-                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Silo/Machine Numbers</label><input type="text" value={siloMachine} onChange={handleSiloChange} placeholder="e.g., 1,2,3 or click grid" className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success"/></div>
+                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">🚛 Buggy Number</label><input type="text" value={buggyNumber} onChange={(e) => setBuggyNumber(e.target.value)} placeholder="e.g., B001" className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success"/></div>
+                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">🏭 Silo/Machine Numbers</label><input type="text" value={siloMachine} onChange={handleSiloChange} placeholder="e.g., 1,2,3 or click grid" className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success"/></div>
               </div>
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Appearance</label><select value={appearance} onChange={(e) => setAppearance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${appearance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
-                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">Fragrance</label><select value={fragrance} onChange={(e) => setFragrance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${fragrance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
+                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">👁️ Appearance</label><select value={appearance} onChange={(e) => setAppearance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${appearance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
+                <div className="flex flex-col gap-2 flex-1"><label className="text-primary font-bold">🌸 Fragrance</label><select value={fragrance} onChange={(e) => setFragrance(e.target.value)} className={`bg-[#2d2d2d] text-white border-2 rounded-lg p-3 outline-none ${fragrance === 'U' ? 'border-status-danger' : 'border-status-success'}`}><option value="A">Acceptable</option><option value="U">Unacceptable</option></select></div>
               </div>
             </>
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-primary font-bold">Remarks</label>
+            <label className="text-primary font-bold">📝 Remarks</label>
             <textarea value={remarksText} onChange={(e) => setRemarksText(e.target.value)} placeholder="Enter additional remarks..." className="bg-[#2d2d2d] text-white border-2 border-primary rounded-lg p-3 outline-none focus:border-status-success min-h-[100px] resize-y"></textarea>
           </div>
         </div>
@@ -342,7 +342,7 @@ export default function PowderDensity() {
 
       {showTestCounter && (
         <button onClick={() => setIsHistoryModalOpen(true)} className="fixed bottom-5 right-5 bg-[#1a1a1a] px-6 py-3 rounded-full flex items-center gap-3 z-40 shadow-[0_0_20px_rgba(0,188,212,0.4)] border-2 border-primary hover:scale-105 hover:bg-primary/20 transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]">
-          <span className="text-gray-400 text-sm font-medium">Tests this shift:</span>
+          <span className="text-gray-400 text-sm font-medium">📋 Tests this shift:</span>
           <span className="text-primary text-2xl font-black">{shiftTests.length}</span>
           <span className="bg-status-success/20 text-status-success px-2 py-1 rounded-md text-xs uppercase tracking-wider font-bold ml-1">{mode === 'level9' ? 'LEVEL 9' : 'BOT'}</span>
         </button>
@@ -358,11 +358,11 @@ export default function PowderDensity() {
                   <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                       <tr className="bg-black/40">
-                        <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Time</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Weight</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Density</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Status</th>
-                        {mode === 'level9' && <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Buggy</th>}
-                        {mode === 'level9' && <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Machine</th>}
-                        <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Appr.</th>
-                        {mode === 'level9' ? <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Frag.</th> : <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">Flow</th>}
+                        <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">⏰ Time</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">⚖️ Weight</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">📊 Density</th><th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">📈 Status</th>
+                        {mode === 'level9' && <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">🚛 Buggy</th>}
+                        {mode === 'level9' && <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">🏭 Machine</th>}
+                        <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">👁️ Appr.</th>
+                        {mode === 'level9' ? <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">🌸 Frag.</th> : <th className="p-4 border-b-2 border-primary text-primary text-xs uppercase tracking-wider font-bold">🌊 Flow</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#333]">

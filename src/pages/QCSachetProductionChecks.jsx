@@ -530,10 +530,10 @@ export default function QCSachetProductionChecks() {
       <div className="bg-dark-card p-4 md:p-6 rounded-xl border border-[#333] shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div><span className="text-gray-400">Date:</span> <span className="text-white font-bold">{shiftInfo.dateFormatted}</span></div>
-            <div><span className="text-gray-400">Shift:</span> <span className="text-primary font-bold">{shiftInfo.shift}</span></div>
+            <div><span className="text-gray-400">📅 Date:</span> <span className="text-white font-bold">{shiftInfo.dateFormatted}</span></div>
+            <div><span className="text-gray-400">🔄 Shift:</span> <span className="text-primary font-bold">{shiftInfo.shift}</span></div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-400">Team:</span>
+              <span className="text-gray-400">👥 Team:</span>
               <select value={team} onChange={e => { setTeam(e.target.value); localStorage.setItem('starium_qc_sachet_team', e.target.value); }}
                 className="bg-[#1a1a1a] text-white border border-[#444] px-3 py-1.5 rounded-lg text-sm outline-none focus:border-primary">
                 <option value="">Select Team</option>
@@ -542,7 +542,7 @@ export default function QCSachetProductionChecks() {
                 ))}
               </select>
             </div>
-            <div><span className="text-gray-400">User:</span> <span className="font-bold text-primary">{userFullName || 'Unknown'}</span></div>
+            <div><span className="text-gray-400">👤 User:</span> <span className="font-bold text-primary">{userFullName || 'Unknown'}</span></div>
           </div>
 
           {/* Approval badges + action buttons */}
@@ -569,9 +569,9 @@ export default function QCSachetProductionChecks() {
         </div>
 
         <div className="flex items-center gap-4 mb-4 text-xs">
-          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-success to-[#00C853]"></span><span className="text-gray-400">Checked</span></div>
-          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-danger to-[#D50000]"></span><span className="text-gray-400">Issues</span></div>
-          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600"></span><span className="text-gray-400">Unchecked</span></div>
+          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-success to-[#00C853]"></span><span className="text-gray-400">✅ Checked</span></div>
+          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-danger to-[#D50000]"></span><span className="text-gray-400">⚠️ Issues</span></div>
+          <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600"></span><span className="text-gray-400">⬜ Unchecked</span></div>
         </div>
 
         <div className="flex gap-2 md:gap-3 max-w-4xl mx-auto justify-between mt-4">

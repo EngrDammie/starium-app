@@ -67,7 +67,7 @@ export default function QCStringWeightDialog({
 
         {isFirstRound ? (
           <div className="mb-4">
-            <label className="text-gray-300 text-sm font-bold">Batch Number:</label>
+            <label className="text-gray-300 text-sm font-bold">🔢 Batch Number:</label>
             <input type="text" required value={batchInput}
               onChange={e => setBatchInput(e.target.value)}
               placeholder="Enter batch number for this machine"
@@ -121,7 +121,7 @@ export default function QCStringWeightDialog({
         </div>
 
         <div className="mb-4">
-          <label className="text-gray-300 text-sm font-bold mb-2 block">String Weights (grams):</label>
+          <label className="text-gray-300 text-sm font-bold mb-2 block">⚖️ String Weights (grams):</label>
           <div className="flex gap-3 justify-center flex-wrap">
             {Array.from({ length: fillHeads }).map((_, i) => {
               const status = weightStatuses[i];
@@ -150,7 +150,7 @@ export default function QCStringWeightDialog({
         </div>
 
         <div className="mb-4">
-          <label className="text-gray-300 text-sm font-bold block mb-2">Meets success criteria?</label>
+          <label className="text-gray-300 text-sm font-bold block mb-2">✅ Meets success criteria?</label>
           <select value={meetsCriteria} onChange={e => setMeetsCriteria(e.target.value)}
             className="w-full p-3 bg-[#121212] text-white border border-[#444] rounded-lg outline-none focus:border-primary">
             <option value="">Select...</option>
@@ -160,7 +160,7 @@ export default function QCStringWeightDialog({
         </div>
 
         <div className="mb-6">
-          <label className="text-gray-300 text-sm font-bold block mb-2">Remarks (optional):</label>
+          <label className="text-gray-300 text-sm font-bold block mb-2">📝 Remarks (optional):</label>
           <textarea value={remarks} onChange={e => setRemarks(e.target.value)}
             rows={2}
             className="w-full p-3 bg-[#121212] text-white border border-[#444] rounded-lg outline-none focus:border-primary resize-none" />
@@ -169,11 +169,11 @@ export default function QCStringWeightDialog({
         <div className="flex gap-3">
           <button onClick={onClose} disabled={saving}
             className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors disabled:opacity-50">
-            Cancel
+            ✖️ Cancel
           </button>
           <button onClick={handleSave} disabled={!canSave || saving}
             className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? '⏳ Saving...' : '💾 Save'}
           </button>
         </div>
       </div>

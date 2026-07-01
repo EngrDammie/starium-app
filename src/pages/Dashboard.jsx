@@ -182,14 +182,14 @@ export default function Dashboard() {
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager'].includes(r)) ? (
           <Link to="/level9-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Level 9 Tests</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🏭 Level 9 Tests</h3>
             <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Level 9 Tests</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🏭 Level 9 Tests</h3>
             <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </div>
@@ -199,62 +199,62 @@ export default function Dashboard() {
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager'].includes(r)) ? (
           <Link to="/bot-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">BOT Tests</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🤖 BOT Tests</h3>
             <div className="text-5xl font-black text-white mb-1">{botCount}</div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">BOT Tests</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🤖 BOT Tests</h3>
             <div className="text-5xl font-black text-white mb-1">{botCount}</div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </div>
         )}
 
-        {/* Metric 4: Empty Silos */}
+        {/* Metric 4: Empty Silos 🛢️ */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (
           <Link to="/empty-silos-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.8s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛢️</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${emptySilosCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
-              Empty Silos
+              <span className="w-2.5 h-2.5 rounded-full bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]"></span>
+              🛢️ Empty Silos
             </h3>
-            <div className="text-5xl font-black text-white mb-1">{emptySilosCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
-            <div className={`text-xs font-bold uppercase tracking-wider ${emptySilosCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{emptySilosCount > 0 ? '⚠️ Needs Attention' : 'All Filled'}</div>
+            <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
+            <div className="text-status-danger text-xs font-bold uppercase tracking-wider">Needs Fill</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.8s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛢️</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${emptySilosCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
-              Empty Silos
+              <span className="w-2.5 h-2.5 rounded-full bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]"></span>
+              🛢️ Empty Silos
             </h3>
             <div className="text-5xl font-black text-white mb-1">{emptySilosCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
-            <div className={`text-xs font-bold uppercase tracking-wider ${emptySilosCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{emptySilosCount > 0 ? '⚠️ Needs Attention' : 'All Filled'}</div>
+            <div className="text-status-danger text-xs font-bold uppercase tracking-wider">Needs Fill</div>
           </div>
         )}
 
-        {/* Metric 5: Stopped Machines */}
+        {/* Metric 5: Stopped Machines 🛑 */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r)) ? (
           <Link to="/stopped-machines-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛑</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${stoppedCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
-              Stopped Machines
+              <span className="w-2.5 h-2.5 rounded-full bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]"></span>
+              🛑 Stopped Machines
             </h3>
             <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
-            <div className={`text-xs font-bold uppercase tracking-wider ${stoppedCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{stoppedCount > 0 ? '⚠️ Needs Attention' : 'All Running'}</div>
+            <div className="text-status-danger text-xs font-bold uppercase tracking-wider">Not Running</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-status-danger/50 transition-colors animate-[fadeIn_0.9s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🛑</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${stoppedCount > 0 ? 'bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]' : 'bg-status-success'}`}></span>
-              Stopped Issues
+              <span className="w-2.5 h-2.5 rounded-full bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]"></span>
+              🛑 Stopped Machines
             </h3>
             <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
-            <div className={`text-xs font-bold uppercase tracking-wider ${stoppedCount > 0 ? 'text-status-danger' : 'text-status-success'}`}>{stoppedCount > 0 ? '⚠️ Needs Attention' : 'All Running'}</div>
+            <div className="text-status-danger text-xs font-bold uppercase tracking-wider">Not Running</div>
           </div>
         )}
 
@@ -263,7 +263,7 @@ export default function Dashboard() {
         {systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'qc_manager', 'packaging_manager'].includes(r)) ? (
           <Link to="/carton-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Carton Waste</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Carton Waste</h3>
             <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {cartonWaste.wastePercent}%
@@ -273,7 +273,7 @@ export default function Dashboard() {
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Carton Waste</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Carton Waste</h3>
             <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {cartonWaste.wastePercent}%
@@ -286,7 +286,7 @@ export default function Dashboard() {
         {systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'qc_manager', 'packaging_manager'].includes(r)) ? (
           <Link to="/laminate-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Laminate Waste</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🗑️ Laminate Waste</h3>
             <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {laminateWaste.wastePercent}%
@@ -296,7 +296,7 @@ export default function Dashboard() {
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Laminate Waste</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🗑️ Laminate Waste</h3>
             <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {laminateWaste.wastePercent}%
@@ -309,7 +309,7 @@ export default function Dashboard() {
         {isAdminOrQcManager ? (
           <Link to="/qc-sachet-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">QC Sachet Checks</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔬 QC Sachet Checks</h3>
             <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
             <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
               <span>SW: <strong className="text-white">{swCount}</strong></span>
@@ -322,7 +322,7 @@ export default function Dashboard() {
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">QC Sachet Checks</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔬 QC Sachet Checks</h3>
             <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
             <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
               <span>SW: <strong className="text-white">{swCount}</strong></span>

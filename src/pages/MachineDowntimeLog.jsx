@@ -257,7 +257,7 @@ export default function MachineDowntimeLog() {
       <div className="bg-dark-card border border-[#333] rounded-2xl p-4 md:p-6 mb-6 animate-[fadeIn_0.3s_ease-out]">
         <div className="flex flex-col md:flex-row items-end gap-4">
           <div className="flex-1 w-full">
-            <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1.5">Date</label>
+            <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1.5">📅 Date</label>
             <input
               type="date"
               value={date}
@@ -278,7 +278,7 @@ export default function MachineDowntimeLog() {
             </select>
           </div>
           <div className="flex-1 w-full">
-            <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1.5">Machine Number</label>
+            <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1.5">🔍 Machine Number</label>
             <input
               type="text"
               value={machineNumber}
@@ -308,15 +308,15 @@ export default function MachineDowntimeLog() {
       {generated && !loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 animate-[fadeIn_0.3s_ease-out]">
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Events</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">📋 Total Events</h3>
             <div className="text-3xl font-black text-white">{events.length}</div>
           </div>
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Machines Affected</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">🏭 Machines Affected</h3>
             <div className="text-3xl font-black text-white">{machinesAffected}</div>
           </div>
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Longest Downtime</h3>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">⏱️ Longest Downtime</h3>
             <div className="text-3xl font-black text-white">{formatDelta(longestDowntime)}</div>
           </div>
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-5 rounded-2xl shadow-lg">
