@@ -1822,6 +1822,771 @@ curl -s -H "Authorization: Bearer TOKEN" https://chat.factory.com/api/v4/users |
 
 ---
 
+# Section 15 — The 100% Free Option: Zulip (No Paid Feature Gates)
+
+**Why this section matters:** The Mattermost Team Edition recommended in the main document is free ($0 licensing). However, some enterprise features (LDAP/SSO, compliance exports, custom roles, guest accounts) require a paid Mattermost license. The sync service workarounds described in Phases 1-5 handle all of these — but if you want a platform where **literally every feature is included with zero paid upgrades ever**, Zulip is the answer.
+
+---
+
+## 15.1 What Makes Zulip the Best Totally Free Option
+
+Zulip is 100% open source under the Apache 2.0 license. There is no "open core" catch — no features are gated behind a paid enterprise edition. The self-hosted version includes everything:
+
+| Feature | Mattermost Team Edition (Free) | Zulip Self-Hosted (Free) |
+|---|---|---|
+| **License** | MIT (some features paid) | Apache 2.0 (everything included) |
+| **SAML / SSO** | ❌ Enterprise-only ($) | ✅ Free |
+| **LDAP / AD authentication** | ❌ Enterprise-only ($) | ✅ Free |
+| **SCIM provisioning** | ❌ Enterprise-only ($) | ✅ Free (Business tier) |
+| **Guest accounts** | ❌ Enterprise-only ($) | ✅ Free |
+| **Custom roles** | ❌ Enterprise-only ($) | ✅ Free |
+| **Compliance exports** | ❌ Enterprise-only ($) | ✅ Free |
+| **Message retention policies** | ❌ Enterprise-only ($) | ✅ Free |
+| **Data exports** | ✅ Free | ✅ Free |
+| **REST API** | ✅ Excellent | ✅ Excellent |
+| **Mobile apps** | ✅ Polished | ✅ Good |
+| **Topic-based threading** | ❌ Linear chat only | ✅ Unique topic model |
+| **Built-in video calls** | ❌ Needs separate Jitsi | ❌ Needs separate Jitsi |
+
+**Bottom line:** If you want to pay exactly $0 for software licensing and never worry about "this feature requires an upgrade," Zulip is the platform. The only cost is the server hardware (~$15-25/month for a VPS).
+
+---
+
+## 15.2 The Trade-Off: Zulip's Topic Model
+
+Zulip organizes conversations differently than WhatsApp, Mattermost, or Slack. Instead of a linear scroll of messages, Zulip uses **streams** (like channels) and **topics** (like subject lines).
+
+### How it looks to a user:
+
+```
+Stream: #production-line-2
+─────────────────────────────────────────────
+◉ Machine 4 down — need maintenance   3:42 PM
+  2 replies (Last: On my way — John)
+◉ Shift end report — June 30           4:01 PM
+  5 replies (Last: Output was 9,200 units)
+◉ QC alert: Head 2 weight too low      2:15 PM
+  8 replies (Last: Retest shows 19.8g ✅)
+```
+
+Each topic is a separate conversation. You read topics that matter to you, skip ones that don't. When you come back from a day off, you see 5 topics with unread messages instead of 200 individual messages to scroll through.
+
+### Why this is better for a factory:
+- A floor worker only reads "Machine 4 down" and "Shift end report" — skips the rest
+- A QC supervisor reads "QC alert" topics but skips production chatter
+- A manager scans all topic titles in 30 seconds to know what happened
+
+### Why this is harder to adopt:
+- New users must learn to use topics. You cannot just type into a stream — you must pick or create a topic for every message.
+- Some users will find this restrictive. They want to treat chat like WhatsApp — type and send.
+- Enforcement is needed: if users put everything in "(no topic)" or a single "general chat" topic, the benefit is lost.
+
+---
+
+## 15.3 Deploying Zulip
+
+### Option A: Docker (Quick Start)
+
+```bash
+# 1. Clone the Zulip Docker repository
+git clone https://github.com/zulip/docker-zulip.git
+cd docker-zulip
+
+# 2. Create configuration directory
+mkdir -p ~/zulip-data
+
+# 3. Create environment file
+cat > ~/zulip-data/zulip.env << 'EOF'
+DOMAIN=chat.factory.com
+EXTERNAL_HOST=chat.factory.com
+ZULIP_EMAIL_DELIVERER=sendmail
+SECRETS_email_password=your-email-password
+SECRETS_secret_key=$(openssl rand -hex 32)
+EOF
+
+# 4. Start Zulip
+docker compose up -d
+```
+
+**Note:** The Docker setup for Zulip is more involved than Mattermost. Zulip officially recommends installing on Ubuntu 22.04 directly for production.
+
+### Option B: Ubuntu Direct Install (Production-Ready)
+
+```bash
+# 1. Provision a server (2 CPU, 4 GB RAM minimum)
+# Ubuntu 22.04 LTS is required
+
+# 2. Download and run the install script
+wget https://raw.githubusercontent.com/zulip/zulip/main/scripts/setup/install
+chmod +x install
+
+# 3. Run the installer (this takes 10-15 minutes)
+sudo ./install \
+  --hostname=chat.factory.com \
+  --email=admin@factory.com
+
+# 4. Create the first organization and admin account
+# Visit https://chat.factory.com and complete the setup wizard
+```
+
+### Post-Install Checklist
+
+| Task | Command / Action |
+|---|---|
+| Check service status | `sudo systemctl status zulip` |
+| View logs | `sudo journalctl -u zulip` |
+| Restart Zulip | `sudo systemctl restart zulip` |
+| Upgrade Zulip | `sudo /home/zulip/deployments/current/scripts/upgrade-zulip` |
+| Run backups | `sudo /home/zulip/deployments/current/scripts/backup` |
+| Configure SSL | Let's Encrypt auto-configured during install |
+
+### Resource Requirements
+
+| Resource | Zulip | Mattermost |
+|---|---|---|
+| RAM | 2-4 GB minimum | 512 MB minimum |
+| vCPUs | 2 recommended | 1 minimum |
+| Backend | Python (heavier) | Go (lighter) |
+| Disk (messages) | ~10 GB | ~5 GB |
+| Monthly server cost | $15-25/month | $10-15/month |
+
+---
+
+## 15.4 Zulip API — User and Stream Management
+
+Zulip has a well-documented REST API with official Python and JavaScript SDKs.
+
+### API Authentication
+
+All API calls use **Basic Auth** with a bot's email and API key:
+
+```bash
+curl -sSX GET https://chat.factory.com/api/v1/users \
+  -u BOT_EMAIL:BOT_API_KEY
+```
+
+### Creating a Bot Account for the Sync Service
+
+```bash
+# Use Zulip's CLI to create a bot
+sudo /home/zulip/deployments/current/manage.py \
+  create_bot \
+  --bot-email=sync-bot@chat.factory.com \
+  --bot-type=generic \
+  --full-name="Sync Service Bot" \
+  --admin
+```
+
+Save the API key — this is used by the sync service.
+
+### User Management API
+
+```python
+import zulip
+
+client = zulip.Client(
+    email="sync-bot@chat.factory.com",
+    api_key="YOUR_API_KEY",
+    site="https://chat.factory.com"
+)
+
+# Create a new user
+result = client.create_user(
+    email="jane.doe@factory.com",
+    password="temporary-password",
+    full_name="Jane Doe",
+    streams=[
+        {"name": "All Announcements"},
+        {"name": "QC Team"}
+    ]
+)
+
+# Deactivate a user (remove all access instantly)
+result = client.deactivate_user(user_id=42)
+
+# Update a user
+result = client.update_user_by_id(
+    user_id=42,
+    full_name="Jane Doe-Smith",
+    role=400  # 400 = Member, 200 = Administrator
+)
+```
+
+### Stream (Channel) Management API
+
+```python
+# Create a stream with initial subscribers
+result = client.create_stream(
+    name="QC Team",
+    description="Quality Control team discussions",
+    invite_only=False,
+    subscribers=[42, 43, 44]
+)
+
+# Get all streams with subscribers
+result = client.get_streams(include_subscribers=True)
+for stream in result["streams"]:
+    print(f"{stream['name']}: {len(stream['subscribers'])} members")
+
+# Subscribe users
+result = client.add_subscriptions(
+    streams=[{"name": "QC Team"}],
+    principals=[42, 43]
+)
+
+# Unsubscribe users
+result = client.remove_subscriptions(
+    streams=[{"name": "QC Team"}],
+    principals=[44]
+)
+```
+
+### Sending Messages
+
+```python
+# Send to a stream with a topic
+result = client.send_message({
+    "type": "stream",
+    "to": "QC Team",
+    "subject": "QC Alert — String Weight Out of Spec",
+    "content": """🚨 **QC ALERT — Line 2, Head 4**
+- **Reading:** 18.2g (Target: 20-22g)
+- **Status:** Too Low
+- **Operator:** John Smith
+- **Time:** 14:32
+
+Immediate QC review required. [View in ERP](https://erp.factory.com/qc-sachet-production-checks)"""
+})
+
+# Send a direct message
+result = client.send_message({
+    "type": "private",
+    "to": [42],
+    "content": "Please check Machine 4 on Line 2."
+})
+```
+
+---
+
+## 15.5 Full Implementation — Zulip Sync Service
+
+### Directory Structure
+
+```
+zulip-sync-service/
+├── requirements.txt
+├── config.py
+├── sync_service.py
+├── user_sync.py
+├── stream_sync.py
+├── notification_router.py
+└── Dockerfile
+```
+
+### Configuration
+
+```python
+# config.py
+import os
+
+ZULIP_SITE = os.getenv("ZULIP_SITE", "https://chat.factory.com")
+ZULIP_EMAIL = os.getenv("ZULIP_EMAIL", "sync-bot@chat.factory.com")
+ZULIP_API_KEY = os.getenv("ZULIP_API_KEY")
+ERP_DATABASE_URL = os.getenv(
+    "ERP_DATABASE_URL",
+    "postgresql://user:password@localhost:5432/erp"
+)
+SYNC_INTERVAL = int(os.getenv("SYNC_INTERVAL", "60"))
+```
+
+### Stream Definitions with Membership Rules
+
+```python
+# stream_definitions.py
+
+STREAM_DEFINITIONS = [
+    {
+        "name": "All Announcements",
+        "description": "Company-wide announcements and notices.",
+        "invite_only": False,
+        "member_filter": "SELECT zulip_user_id FROM users WHERE is_active = TRUE"
+    },
+    {
+        "name": "Production Line 1",
+        "description": "Line 1 production team communication.",
+        "invite_only": False,
+        "member_filter": """
+            SELECT zulip_user_id FROM users
+            WHERE is_active = TRUE
+              AND (production_line_id = 1
+                OR role IN ('super_admin', 'prod_manager'))
+        """
+    },
+    {
+        "name": "QC Team",
+        "description": "Quality Control team discussions and alerts.",
+        "invite_only": False,
+        "member_filter": """
+            SELECT zulip_user_id FROM users
+            WHERE is_active = TRUE
+              AND role IN ('qc_manager', 'qc_staff', 'super_admin')
+        """
+    },
+    {
+        "name": "Night Shift",
+        "description": "Night shift coordination.",
+        "invite_only": False,
+        "member_filter": """
+            SELECT zulip_user_id FROM users
+            WHERE is_active = TRUE AND shift = 'night'
+        """
+    },
+    {
+        "name": "Management",
+        "description": "Management-level discussions.",
+        "invite_only": True,
+        "member_filter": """
+            SELECT zulip_user_id FROM users
+            WHERE is_active = TRUE
+              AND role IN ('super_admin', 'qc_manager', 'prod_manager')
+        """
+    },
+    {
+        "name": "Maintenance",
+        "description": "Equipment maintenance and downtime coordination.",
+        "invite_only": False,
+        "member_filter": """
+            SELECT zulip_user_id FROM users
+            WHERE is_active = TRUE AND department = 'maintenance'
+        """
+    }
+]
+```
+
+### Complete Sync Service
+
+```python
+# sync_service.py
+import time
+import logging
+import secrets
+import zulip
+import psycopg2
+from config import ZULIP_SITE, ZULIP_EMAIL, ZULIP_API_KEY, ERP_DATABASE_URL, SYNC_INTERVAL
+from stream_definitions import STREAM_DEFINITIONS
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+def get_erp_connection():
+    return psycopg2.connect(ERP_DATABASE_URL)
+
+def get_zulip_client():
+    return zulip.Client(email=ZULIP_EMAIL, api_key=ZULIP_API_KEY, site=ZULIP_SITE)
+
+def sync_users(zulip_client, erp_conn):
+    cursor = erp_conn.cursor()
+
+    cursor.execute("""
+        SELECT id, email, first_name, last_name, is_active
+        FROM users WHERE deleted_at IS NULL
+    """)
+    erp_users = cursor.fetchall()
+
+    zulip_response = zulip_client.get_members()
+    zulip_users = zulip_response.get("members", [])
+
+    erp_by_email = {u[1].lower(): u for u in erp_users}
+    zulip_by_email = {u["email"].lower(): u for u in zulip_users}
+
+    created = deactivated = updated = 0
+
+    for email_lower, erp_user in erp_by_email.items():
+        if email_lower not in zulip_by_email:
+            temp_password = secrets.token_hex(16)
+            result = zulip_client.create_user(
+                email=erp_user[1],
+                password=temp_password,
+                full_name=f"{erp_user[2]} {erp_user[3]}"
+            )
+            if result.get("result") == "success":
+                user_id = result["user_id"]
+                cursor.execute(
+                    "UPDATE users SET zulip_user_id = %s WHERE id = %s",
+                    (user_id, erp_user[0])
+                )
+                erp_conn.commit()
+                zulip_client.add_subscriptions(
+                    streams=[{"name": "All Announcements"}],
+                    principals=[user_id]
+                )
+                logger.info(f"Created Zulip user: {erp_user[1]} (ID: {user_id})")
+                created += 1
+
+    for email_lower, zulip_user in zulip_by_email.items():
+        if email_lower in erp_by_email:
+            erp_user = erp_by_email[email_lower]
+            if not erp_user[4]:
+                zulip_client.deactivate_user(zulip_user["user_id"])
+                logger.info(f"Deactivated: {zulip_user['email']}")
+                deactivated += 1
+        else:
+            if not zulip_user.get("is_bot", False):
+                zulip_client.deactivate_user(zulip_user["user_id"])
+                logger.info(f"Deactivated (not in ERP): {zulip_user['email']}")
+                deactivated += 1
+
+    for email_lower, zulip_user in zulip_by_email.items():
+        if email_lower not in erp_by_email:
+            continue
+        erp_user = erp_by_email[email_lower]
+        expected_name = f"{erp_user[2]} {erp_user[3]}"
+        if zulip_user.get("full_name") != expected_name:
+            zulip_client.update_user_by_id(zulip_user["user_id"], full_name=expected_name)
+            updated += 1
+
+    cursor.close()
+    return created, deactivated, updated
+
+def sync_streams(zulip_client, erp_conn):
+    cursor = erp_conn.cursor()
+    streams_response = zulip_client.get_streams(include_subscribers=True)
+    existing_streams = {s["name"]: s for s in streams_response.get("streams", [])}
+
+    for definition in STREAM_DEFINITIONS:
+        stream_name = definition["name"]
+
+        if stream_name not in existing_streams:
+            result = zulip_client.create_stream(
+                name=stream_name,
+                description=definition["description"],
+                invite_only=definition.get("invite_only", False)
+            )
+            if result.get("result") != "success":
+                logger.error(f"Failed to create stream '{stream_name}': {result}")
+                continue
+            streams_response = zulip_client.get_streams(include_subscribers=True)
+            existing_streams = {s["name"]: s for s in streams_response.get("streams", [])}
+
+        stream = existing_streams.get(stream_name)
+        if not stream:
+            continue
+
+        cursor.execute(definition["member_filter"])
+        desired = {row[0] for row in cursor.fetchall() if row[0] is not None}
+        current = set(stream.get("subscribers", []))
+
+        to_add = desired - current
+        to_remove = current - desired
+
+        if to_add:
+            zulip_client.add_subscriptions(
+                streams=[{"name": stream_name}],
+                principals=list(to_add)
+            )
+            logger.info(f"Added {len(to_add)} to '{stream_name}'")
+
+        if to_remove:
+            zulip_client.remove_subscriptions(
+                streams=[{"name": stream_name}],
+                principals=list(to_remove)
+            )
+            logger.info(f"Removed {len(to_remove)} from '{stream_name}'")
+
+    cursor.close()
+
+def main():
+    logger.info("Starting Zulip Sync Service...")
+    zulip_client = get_zulip_client()
+    erp_conn = get_erp_connection()
+
+    try:
+        resp = zulip_client.get_members()
+        if resp.get("result") != "success":
+            logger.error(f"Cannot connect to Zulip: {resp}")
+            return
+        logger.info("Connected to Zulip API")
+    except Exception as e:
+        logger.error(f"Zulip connection failed: {e}")
+        return
+
+    while True:
+        try:
+            logger.info("=== Sync Cycle Start ===")
+            c, d, u = sync_users(zulip_client, erp_conn)
+            logger.info(f"Users: {c} created, {d} deactivated, {u} updated")
+            sync_streams(zulip_client, erp_conn)
+            logger.info(f"=== Sync Cycle Complete (next in {SYNC_INTERVAL}s) ===")
+        except Exception as e:
+            logger.error(f"Sync cycle failed: {e}", exc_info=True)
+            try:
+                erp_conn.close()
+            except:
+                pass
+            erp_conn = get_erp_connection()
+
+        time.sleep(SYNC_INTERVAL)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Deploying the Sync Service
+
+```dockerfile
+# Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir zulip psycopg2-binary
+COPY . .
+CMD ["python", "sync_service.py"]
+```
+
+```txt
+# requirements.txt
+zulip>=0.9.0
+psycopg2-binary>=2.9.9
+```
+
+```bash
+# Build and run
+docker build -t zulip-sync-service .
+docker run -d \
+  --name zulip-sync \
+  --restart unless-stopped \
+  -e ZULIP_SITE=https://chat.factory.com \
+  -e ZULIP_EMAIL=sync-bot@chat.factory.com \
+  -e ZULIP_API_KEY=your-api-key \
+  -e ERP_DATABASE_URL=postgresql://... \
+  zulip-sync-service
+```
+
+---
+
+## 15.6 Integrating Zulip with the ERP
+
+### Sending Notifications — Python (Direct API)
+
+```python
+import zulip
+
+client = zulip.Client(
+    email="qc-bot@chat.factory.com",
+    api_key="QC_BOT_API_KEY",
+    site="https://chat.factory.com"
+)
+
+client.send_message({
+    "type": "stream",
+    "to": "QC Team",
+    "subject": f"QC Alert — Machine {machine_id} Head {head_number}",
+    "content": f"""
+🚨 **String Weight Out of Spec**
+
+| Detail | Value |
+|---|---|
+| **Machine** | {machine.name} |
+| **Head** | {check.head_number} |
+| **Reading** | {check.weight}g |
+| **Target** | {spec.min}g — {spec.max}g |
+| **Status** | {check.status} |
+| **Operator** | {check.operator_name} |
+| **Time** | {check.created_at} |
+
+[View in ERP](https://erp.factory.com/qc-sachet-production-checks)
+"""
+})
+```
+
+### Sending Notifications — Webhooks
+
+```bash
+curl -X POST \
+  https://chat.factory.com/api/v1/messages \
+  -u "webhook-bot@chat.factory.com:API_KEY" \
+  -d "type=stream" \
+  -d "to=QC Team" \
+  -d "subject=QC Alert" \
+  -d "content=⚠️ Line 2, Head 4 — String weight TOO LOW (18.2g)"
+```
+
+### ERP Dashboard Widget
+
+```python
+client = zulip.Client(email="erp-bot@...", api_key="...", site="https://chat.factory.com")
+
+result = client.get_stream_id("QC Team")
+stream_id = result["stream_id"]
+
+result = client.get_messages({
+    "anchor": "newest",
+    "num_before": 10,
+    "num_after": 0,
+    "narrow": [{"operator": "stream", "operand": "QC Team"}]
+})
+
+messages = [{
+    "topic": m["subject"],
+    "content": m["content"],
+    "timestamp": m["timestamp"],
+    "sender": m["sender_full_name"]
+} for m in result["messages"]]
+```
+
+---
+
+## 15.7 Zulip Single Sign-On (Free, Built-in)
+
+Unlike Mattermost where SSO requires a paid Enterprise license, **Zulip includes SAML and OAuth for free**.
+
+### Option A: SAML Authentication
+
+```bash
+sudo nano /etc/zulip/settings.py
+```
+
+```python
+AUTHENTICATION_BACKENDS = (
+    'zulip_builtins.backends.saml.SAMLAuthBackend',
+    'zulip_builtins.backends.EmailAuthBackend',
+)
+
+SOCIAL_AUTH_SAML_ENABLED_IDPS = {
+    'erp': {
+        'entity_id': 'https://erp.factory.com/auth/realms/starium',
+        'url': 'https://erp.factory.com/auth/realms/starium/protocol/saml',
+        'x509cert': '''-----BEGIN CERTIFICATE-----
+MIID...certificate here...ZXhhbXBsZS5jb20=
+-----END CERTIFICATE-----''',
+        'attr_user_permanent_id': 'user_id',
+        'attr_first_name': 'first_name',
+        'attr_last_name': 'last_name',
+        'attr_email': 'email'
+    }
+}
+```
+
+```bash
+sudo systemctl restart zulip
+```
+
+### Option B: OAuth 2.0 / OpenID Connect
+
+```bash
+sudo nano /etc/zulip/settings.py
+```
+
+```python
+AUTHENTICATION_BACKENDS = (
+    'zulip_builtins.backends.oauth.GoogleOAuth2Backend',
+    'zulip_builtins.backends.EmailAuthBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'your-client-id'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'your-client-secret'
+```
+
+**Result:** Users log into the ERP once, click "Log in with ERP" on Zulip, and are authenticated instantly. No separate password needed.
+
+---
+
+## 15.8 Zulip Backup & Disaster Recovery
+
+```bash
+# Backup (built-in script — creates a .tar.gz)
+sudo /home/zulip/deployments/current/scripts/backup \
+  --output=/backups/zulip-backup-$(date +%Y-%m-%d).tar.gz
+
+# Restore
+sudo /home/zulip/deployments/current/scripts/restore \
+  /backups/zulip-backup-2026-07-01.tar.gz
+
+# Automate with cron (run daily at 2 AM):
+# 0 2 * * * /home/zulip/deployments/current/scripts/backup \
+#   --output=/backups/zulip-$(date +\%Y-\%m-\%d).tar.gz
+```
+
+---
+
+## 15.9 Zulip Complete Cost Breakdown
+
+| Item | Cost |
+|---|---|
+| **Zulip software license** | $0 (Apache 2.0 — everything included) |
+| **VPS (2 CPU, 4 GB RAM, 40 GB SSD)** | $15-25/month ($180-300/year) |
+| **Domain name** | $1-2/month ($12-24/year) |
+| **SSL certificate** | $0 (Let's Encrypt) |
+| **SMTP (email notifications)** | $0-5/month |
+| **Push notifications (mobile)** | $0 (free for self-hosted up to 10 users; $5/month beyond that for Zulip's hosted push gateway, or host your own for free) |
+| **Architect development time** | ~20-25 days (same class as Mattermost) |
+| **Total first-year cash cost** | **~$200-380/year** |
+
+### Annual Cost Comparison
+
+| Platform | Annual License | Annual Hosting | Annual Total | Paid Features Hidden? |
+|---|---|---|---|---|
+| **Slack Pro (200 users)** | $21,000 | $0 | **$21,000+** | No |
+| **Microsoft Teams (200 users)** | $14,400 | $0 | **$14,400+** | No |
+| **Mattermost Team Edition** | $0 | $120-240 | **$120-240** | Yes — SSO, LDAP, compliance are paid |
+| **Mattermost + custom workarounds** | $0 | $120-240 | **$120-240** | No — all workarounds are custom code |
+| **Zulip Self-Hosted** | $0 | $180-300 | **$180-300** | **No — everything is free** |
+
+---
+
+## 15.10 Comparison: Zulip vs Mattermost for the Architect
+
+| Aspect | Mattermost | Zulip |
+|---|---|---|
+| **Sync service language** | Node.js / any HTTP client | Python (official SDK) |
+| **Bulk membership API** | ✅ One call to set exact membership | ❌ Must diff and add/remove individually |
+| **Creating users** | `POST /api/v4/users` | `client.create_user()` |
+| **Deactivating users** | `DELETE /api/v4/users/{id}` | `client.deactivate_user(id)` |
+| **Creating channels** | `POST /api/v4/channels` | `client.create_stream()` |
+| **Message organization** | Linear (like Slack/WhatsApp) | Topic-based (stream + subject) |
+| **SSO** | Paid license required | Free (SAML, OAuth built-in) |
+| **LDAP** | Paid license required | Free (built-in) |
+| **Mobile app quality** | ★★★★★ Very polished | ★★★★ Good |
+| **Resource usage** | Low (~512 MB RAM) | Medium (~2-4 GB RAM) |
+| **Deployment complexity** | Low (Docker, 5 min) | Medium (Ubuntu script, 15 min) |
+| **Learning curve for users** | Low (Slack-like) | Medium (must learn topics) |
+
+---
+
+## 15.11 Verdict — Which One Should You Pick?
+
+### Pick Mattermost if:
+
+1. **Your users need zero learning curve.** Mattermost looks and works exactly like WhatsApp/Slack — linear chat, channels on the left, messages on the right. Everyone gets it immediately.
+
+2. **You want the simplest possible deployment.** Docker Compose in 5 minutes. Updates are `docker compose pull && docker compose up -d`. The lowest maintenance burden.
+
+3. **The bulk membership API matters to you.** The `PUT /channels/{id}/members` endpoint is the cleanest way to reconcile channel memberships from the ERP. Zulip requires manual diffing.
+
+4. **You are fine with the workarounds.** SSO can be solved with an OAuth proxy (Phase 5 in the implementation plan). LDAP may not be needed since the sync service handles user management via the ERP database directly.
+
+### Pick Zulip if:
+
+1. **You want zero paid features, ever.** No enterprise gate. No "this feature requires an upgrade." Everything is included in the free self-hosted version.
+
+2. **Your team can adopt the topic model.** If your factory teams are disciplined and can organize messages into topics, Zulip's model is superior for asynchronous communication and catching up after time away.
+
+3. **You want built-in SSO without writing code.** SAML and OAuth are included for free. No OAuth proxy to build and maintain.
+
+4. **You prefer Python over Node.js.** Zulip's official Python SDK is excellent. If the architect is more comfortable in Python, Zulip is more natural.
+
+### The Honest Recommendation
+
+**For this specific factory, Mattermost is still the better choice.**
+
+The reason: **adoption is the #1 risk.** A chat platform is useless if people do not use it. Mattermost's Slack-like interface means zero learning curve for everyone. The sync service workarounds for SSO and LDAP are straightforward code that the architect can write once and forget about. The bulk membership API makes channel reconciliation trivially simple.
+
+**But** — if you want the peace of mind that comes with knowing you will never see a "this feature requires an upgrade" message, Zulip is the right choice. It is a fantastic platform with a passionate community and a genuinely unique approach to organized communication.
+
+Both options are **excellent** and **completely free**. You cannot make a wrong choice here.
+
+---
+
 > **Document prepared by:** In-house Architecture Team
 > **Date:** July 2026
 > **Status:** Research and implementation plan complete — ready to begin Phase 0
