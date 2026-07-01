@@ -78,7 +78,7 @@ A company-wide chat system that:
 | **A server (VPS)** | Mattermost needs a computer that runs 24/7 | Rent one for ~$10-15/month from DigitalOcean, Linode, Hetzner, or any provider |
 | **A domain name** | So users access chat at `chat.yourfactory.com` instead of an IP address | Buy one for ~$10/year from Namecheap, GoDaddy, or Cloudflare |
 | **Node.js installed** | To write the sync service | Download from https://nodejs.org (use version 18 or 20 LTS) |
-| **PostgreSQL access** | To read employee data from the ERP | The ERP already uses PostgreSQL — you just need read access |
+| **Firebase Admin SDK key** | To read employee data from Firestore | Firebase Console → Project Settings → Service Accounts → Generate New Private Key |
 | **Basic familiarity with** | | |
 | — Terminal / command line | Running commands | Any online bash tutorial (30 minutes) |
 | — JavaScript | Writing the sync service | Any JavaScript basics tutorial |
@@ -101,7 +101,7 @@ A company-wide chat system that:
 | **Docker** | Packages Mattermost so it runs the same everywhere |
 | **curl** | A command-line tool to test API calls |
 | **Node.js** | JavaScript runtime — runs your sync service code |
-| **PostgreSQL client** | Connects to your ERP database to read user data |
+| **Firebase Admin SDK** | Reads employee data from Firestore — install via `npm install firebase-admin` |
 | **Nginx** | A web server that handles HTTPS and routing |
 
 ---
@@ -377,7 +377,7 @@ mkdir ~/sync-service && cd ~/sync-service
 npm init -y
 
 # Install the libraries we need
-npm install axios pg dotenv
+npm install axios firebase-admin dotenv
 
 # Create the folder structure
 mkdir src
@@ -388,7 +388,7 @@ mkdir src
 | Library | Purpose |
 |---|---|
 | `axios` | Makes HTTP requests to the Mattermost API |
-| `pg` | Connects to your PostgreSQL database (the ERP) |
+| `firebase-admin` | Reads/writes employee data from Firebase Firestore |
 | `dotenv` | Loads configuration from a `.env` file |
 
 ## Step B2: Create the Configuration File
@@ -412,16 +412,20 @@ MATTERMOST_BOT_TOKEN=your-bot-token-here
 # The team ID from Step A8
 MATTERMOST_TEAM_ID=your-team-id-here
 
-# === ERP DATABASE CONFIGURATION ===
-# Connection string to your ERP's PostgreSQL database
-# Format: postgresql://username:password@host:port/database
-ERP_DATABASE_URL=postgresql://erp_user:erp_password@localhost:5432/starium_erp
+# === FIREBASE / FIRESTORE CONFIGURATION ===
+# Path to your Firebase service account key file.
+# Download this from: Firebase Console → Project Settings → Service Accounts
+# Click "Generate New Private Key" and save the JSON file as service-account.json
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+
+# Your Firebase project ID (find it in Firebase Console → Project Settings)
+FIREBASE_PROJECT_ID=your-firebase-project-id
 
 # How often to sync (in seconds)
 SYNC_INTERVAL=60
 ```
 
-**What is a connection string?** It is a single line that tells PostgreSQL how to connect. For example: `postgresql://admin:secret123@10.0.0.5:5432/starium_erp` means "connect as user 'admin' with password 'secret123' to the server at IP 10.0.0.5 on port 5432, and use the database named 'starium_erp'."
+**What is the service account key?** It is a JSON file downloaded from Firebase Console that gives the sync service permission to read Firestore data. Think of it as a password file for your code. **Never commit this file to git** — add `service-account.json` to your `.gitignore`.
 
 ## Step B3: Create the Mattermost API Client
 
@@ -614,162 +618,210 @@ class MattermostClient {
 module.exports = MattermostClient;
 ```
 
-## Step B4: Create the Database Connection
+## Step B4: Create the Firestore Data Access Layer
 
-Create `src/database.js`:
+The ERP stores employee data in **Firebase Firestore** (not a SQL database). Instead of `database.js` we create `firestore.js` to query Firestore collections.
+
+Create `src/firestore.js`:
 
 ```javascript
-// src/database.js
-// This file manages the connection to your ERP's PostgreSQL database.
-// The ERP stores employee information: names, emails, roles, departments, etc.
+// src/firestore.js
+// This file reads employee data from Firebase Firestore.
+// It uses the Firebase Admin SDK to connect to your project.
+//
+// Firestore is a NoSQL document database — data is stored in
+// "collections" (like folders) and "documents" (like files).
+// Instead of SQL queries like "SELECT * FROM users", we use
+// Firestore queries like: db.collection('users').where('is_active', '==', true)
 
-const { Pool } = require('pg');
+const admin = require('firebase-admin');
 
-class Database {
+class FirestoreDB {
   /**
-   * Create a new database connection pool.
-   * A "pool" is a group of reusable database connections.
+   * Initialize the Firebase Admin SDK.
    * 
-   * @param {string} connectionString - PostgreSQL connection string
+   * The service account key file (service-account.json) is loaded
+   * automatically if you set the GOOGLE_APPLICATION_CREDENTIALS
+   * environment variable in your .env file.
+   * 
+   * @param {string} projectId - Your Firebase project ID
    */
-  constructor(connectionString) {
-    this.pool = new Pool({ connectionString });
+  constructor(projectId) {
+    // Check if Firebase is already initialized (prevents duplicate init errors)
+    if (admin.apps.length === 0) {
+      admin.initializeApp({
+        projectId,
+        // The SDK automatically finds service-account.json
+        // via the GOOGLE_APPLICATION_CREDENTIALS env var
+      });
+    }
+    
+    this.db = admin.firestore();
   }
 
   /**
-   * Get all active employees from the ERP.
+   * Get all active employees from Firestore.
    * 
-   * This SQL query selects employees who:
-   * - Have not been deleted (deleted_at IS NULL)
-   * - Are currently active (is_active = true)
+   * This queries the 'users' collection for documents where:
+   * - is_active == true (employee is currently employed)
    * 
-   * You may need to modify this query based on your ERP's actual table structure.
-   * Ask your database administrator for the correct table and column names.
+   * IMPORTANT: Adjust the collection name and field names to match
+   * your actual Firestore data structure. Common variations:
+   * - Collection might be called 'employees' instead of 'users'
+   * - The active flag might be called 'status' instead of 'is_active'
+   * - Name fields might be in a 'profile' sub-object
    * 
-   * @returns {Array} Array of employee objects
+   * @returns {Array} Array of employee objects with firestoreId
    */
   async getActiveEmployees() {
-    const result = await this.pool.query(`
-      SELECT 
-        id,
-        email,
-        first_name,
-        last_name,
-        role,
-        department,
-        shift,
-        production_line_id,
-        is_active
-      FROM users
-      WHERE deleted_at IS NULL
-        AND is_active = true
-    `);
-    return result.rows;
+    const snapshot = await this.db
+      .collection('users')
+      .where('is_active', '==', true)
+      .get();
+
+    const employees = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      employees.push({
+        firestoreId: doc.id,           // The Firestore document ID
+        email: data.email,
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+        role: data.role || data.role_name || '',
+        department: data.department || '',
+        shift: data.shift || '',
+        production_line_id: data.production_line_id || data.production_line || null,
+        is_active: data.is_active,
+        mattermost_user_id: data.mattermost_user_id || null
+      });
+    });
+
+    return employees;
   }
 
   /**
-   * Get all employees that should be in a specific channel.
-   * Each channel has different membership rules.
+   * Get employees that should be members of a specific channel.
+   * 
+   * Each channel has different membership rules. This method
+   * runs the appropriate Firestore query based on the channel name.
    * 
    * @param {string} channelName - The channel name (e.g., "qc-team", "production-line-1")
-   * @returns {Array} Array of employee objects with their Mattermost user IDs
+   * @returns {Array} Array of user IDs (Mattermost user IDs)
    */
-  async getChannelMembers(channelName) {
-    // Each channel has its own membership logic.
-    // We use a switch statement to define the rules.
-    // 
-    // IMPORTANT: Modify these SQL queries to match your ERP's actual
-    // table and column names. The examples below assume a "users" table
-    // with columns like role, department, shift, and production_line_id.
-    
-    let query;
+  async getChannelMemberIds(channelName) {
+    const baseQuery = this.db
+      .collection('users')
+      .where('is_active', '==', true);
 
+    let mainQuery;
+    
     switch (channelName) {
       case 'all-announcements':
-        // EVERY active employee should be in this channel
-        query = `SELECT id, mattermost_user_id FROM users WHERE is_active = true AND deleted_at IS NULL`;
+        // ALL active employees
+        mainQuery = baseQuery;
         break;
 
       case 'general':
-        // EVERY active employee should be in this channel
-        query = `SELECT id, mattermost_user_id FROM users WHERE is_active = true AND deleted_at IS NULL`;
-        break;
-
-      case 'qc-team':
-        // Only QC staff and managers should be in this channel
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND role IN ('qc_manager', 'qc_staff', 'super_admin')`;
+        // ALL active employees
+        mainQuery = baseQuery;
         break;
 
       case 'production-line-1':
-        // Only Line 1 workers and production managers
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND (production_line_id = 1 
-                    OR role IN ('prod_manager', 'super_admin'))`;
+        // Employees assigned to production line 1
+        mainQuery = baseQuery.where('production_line_id', '==', 1);
         break;
 
       case 'production-line-2':
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND (production_line_id = 2 
-                    OR role IN ('prod_manager', 'super_admin'))`;
+        mainQuery = baseQuery.where('production_line_id', '==', 2);
+        break;
+
+      case 'qc-team':
+        // QC staff and managers
+        mainQuery = baseQuery.where('role', 'in', ['qc_manager', 'qc_staff']);
         break;
 
       case 'night-shift':
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND shift = 'night'`;
+        mainQuery = baseQuery.where('shift', '==', 'night');
         break;
 
       case 'management':
-        // Only managers — this channel is private
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND role IN ('super_admin', 'qc_manager', 'prod_manager')`;
+        // Management-level roles only
+        mainQuery = baseQuery.where('role', 'in', ['super_admin', 'qc_manager', 'prod_manager']);
         break;
 
       case 'maintenance':
-        query = `SELECT id, mattermost_user_id FROM users 
-                 WHERE is_active = true AND deleted_at IS NULL
-                   AND department = 'maintenance'`;
+        mainQuery = baseQuery.where('department', '==', 'maintenance');
         break;
 
       default:
-        // If the channel name is not recognized, return an empty list
         return [];
     }
 
-    const result = await this.pool.query(query);
-    return result.rows;
+    // Run the main query
+    const snapshot = await mainQuery.get();
+    const memberIds = new Set();
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.mattermost_user_id) {
+        memberIds.add(data.mattermost_user_id);
+      }
+    });
+
+    // For production line channels, also add managers and admins
+    // who may not be assigned to that specific line
+    if (channelName.startsWith('production-line-')) {
+      const adminSnapshot = await this.db
+        .collection('users')
+        .where('is_active', '==', true)
+        .where('role', 'in', ['super_admin', 'prod_manager'])
+        .get();
+
+      adminSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.mattermost_user_id) {
+          memberIds.add(data.mattermost_user_id);
+        }
+      });
+    }
+
+    // For management channel, ensure super_admin is always included
+    if (channelName === 'management') {
+      const superAdminSnapshot = await this.db
+        .collection('users')
+        .where('is_active', '==', true)
+        .where('role', '==', 'super_admin')
+        .get();
+
+      superAdminSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.mattermost_user_id) {
+          memberIds.add(data.mattermost_user_id);
+        }
+      });
+    }
+
+    return [...memberIds]; // Convert Set to Array
   }
 
   /**
-   * Store the Mattermost user ID in the ERP database.
+   * Store the Mattermost user ID in Firestore.
    * After creating a user in Mattermost, we save their Mattermost ID
-   * so we can reference it later (for channel membership, deactivation, etc.).
+   * so we can reference it later (channel membership, deactivation, etc.).
    * 
-   * @param {number} erpUserId - The employee's ID in the ERP
+   * @param {string} firestoreDocId - The Firestore document ID of the employee
    * @param {string} mattermostUserId - The user's ID in Mattermost
    */
-  async storeMattermostUserId(erpUserId, mattermostUserId) {
-    await this.pool.query(
-      'UPDATE users SET mattermost_user_id = $1 WHERE id = $2',
-      [mattermostUserId, erpUserId]
-    );
-  }
-
-  /**
-   * Close all database connections.
-   * Call this when shutting down the sync service.
-   */
-  async close() {
-    await this.pool.end();
+  async storeMattermostUserId(firestoreDocId, mattermostUserId) {
+    await this.db
+      .collection('users')
+      .doc(firestoreDocId)
+      .update({ mattermost_user_id: mattermostUserId });
   }
 }
 
-module.exports = Database;
+module.exports = FirestoreDB;
 ```
 
 ## Step B5: Create the Sync Engine
@@ -791,12 +843,12 @@ const crypto = require('crypto');
 class SyncEngine {
   /**
    * @param {MattermostClient} mattermost - The Mattermost API client
-   * @param {Database} database - The ERP database connection
+   * @param {FirestoreDB} firestore - The Firestore data access layer
    * @param {string} teamId - The Mattermost team ID
    */
-  constructor(mattermost, database, teamId) {
+  constructor(mattermost, firestore, teamId) {
     this.mm = mattermost;
-    this.db = database;
+    this.firestore = firestore;
     this.teamId = teamId;
   }
 
@@ -840,7 +892,7 @@ class SyncEngine {
    */
   async syncUsers() {
     // Step 1: Get employees from ERP
-    const employees = await this.db.getActiveEmployees();
+    const employees = await this.firestore.getActiveEmployees();
     console.log(`Found ${employees.length} active employees in ERP`);
 
     // Step 2: Get users from Mattermost
@@ -881,8 +933,8 @@ class SyncEngine {
           password: tempPassword
         });
 
-        // Save the Mattermost user ID in the ERP database
-        await this.db.storeMattermostUserId(employee.id, newUser.id);
+        // Save the Mattermost user ID in Firestore
+        await this.firestore.storeMattermostUserId(employee.firestoreId, newUser.id);
 
         console.log(`  ✓ Created user: ${employee.email} (MM ID: ${newUser.id})`);
         created++;
@@ -1032,11 +1084,8 @@ class SyncEngine {
         console.log(`  ✓ Created channel: ${channelDef.name}`);
       }
 
-      // Get the list of users who SHOULD be in this channel
-      const members = await this.db.getChannelMembers(channelDef.name);
-      const memberIds = members
-        .map(m => m.mattermost_user_id)
-        .filter(id => id !== null); // Skip users without a Mattermost ID
+      // Get the list of users who SHOULD be in this channel (from Firestore)
+      const memberIds = await this.firestore.getChannelMemberIds(channelDef.name);
 
       if (memberIds.length === 0) {
         console.log(`  - Skipped channel ${channelDef.name}: no members found`);
@@ -1079,7 +1128,7 @@ Create `src/index.js` — this is the file you run to start the sync service:
 require('dotenv').config();
 
 const MattermostClient = require('./mattermost-client');
-const Database = require('./database');
+const FirestoreDB = require('./firestore');
 const SyncEngine = require('./sync-engine');
 
 /**
@@ -1091,7 +1140,7 @@ function validateConfig() {
     'MATTERMOST_URL',
     'MATTERMOST_BOT_TOKEN',
     'MATTERMOST_TEAM_ID',
-    'ERP_DATABASE_URL'
+    'FIREBASE_PROJECT_ID'
   ];
 
   let missing = false;
@@ -1103,13 +1152,21 @@ function validateConfig() {
     }
   }
 
+  // Check that the Firebase service account file exists
+  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.error(`ERROR: Missing GOOGLE_APPLICATION_CREDENTIALS`);
+    console.error(`  Set this to the path of your service-account.json file`);
+    missing = true;
+  }
+
   if (missing) {
     console.error('\nYour .env file should look like:');
     console.error(`
 MATTERMOST_URL=https://chat.yourfactory.com
 MATTERMOST_BOT_TOKEN=your-bot-token
 MATTERMOST_TEAM_ID=your-team-id
-ERP_DATABASE_URL=postgresql://user:password@host:5432/database
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project-id
 SYNC_INTERVAL=60
     `);
     process.exit(1); // Exit with error code
@@ -1133,13 +1190,13 @@ async function main() {
     process.env.MATTERMOST_BOT_TOKEN
   );
 
-  // Step 3: Create the database connection
-  const database = new Database(process.env.ERP_DATABASE_URL);
+  // Step 3: Create the Firestore data access layer
+  const firestore = new FirestoreDB(process.env.FIREBASE_PROJECT_ID);
 
   // Step 4: Create the sync engine
   const engine = new SyncEngine(
     mattermost,
-    database,
+    firestore,
     process.env.MATTERMOST_TEAM_ID
   );
 
@@ -1185,13 +1242,22 @@ curl -s https://chat.yourfactory.com/api/v4/users/me \
 # If you get an error, check that your token is correct
 ```
 
-### Test the database connection:
+### Test the Firebase connection:
 
 ```bash
-# Test that you can connect to your ERP database
-psql "$ERP_DATABASE_URL" -c "SELECT count(*) FROM users WHERE is_active = true"
+# Test that your Firebase service account can read Firestore
+# Create a quick test script:
+node -e "
+const admin = require('firebase-admin');
+admin.initializeApp({ projectId: 'YOUR_PROJECT_ID' });
+const db = admin.firestore();
+db.collection('users').limit(5).get().then(snapshot => {
+  console.log('Connected to Firestore! Found', snapshot.size, 'documents');
+  snapshot.forEach(doc => console.log(' -', doc.data().email));
+}).catch(err => console.error('Firestore error:', err.message));
+"
 
-# If successful, you will see the number of active users
+# If successful, you will see a list of employee emails
 ```
 
 ### Run the sync service:

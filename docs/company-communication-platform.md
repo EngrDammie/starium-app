@@ -322,7 +322,7 @@ The learning curve is measured in minutes, not days. This matters because adopti
 - **RAM:** ~512 MB minimum, 2 GB recommended for 200 users
 - **CPU:** 1-2 cores
 - **Storage:** ~10 GB for messages (text is tiny; files depend on usage)
-- **Database:** PostgreSQL (likely already used by the ERP!)
+- **Database:** Firebase Firestore (the ERP platform already uses this)
 
 Contrast with Synapse (Matrix) which needs 4-8 GB RAM for the same load. Mattermost runs comfortably on a $10-15/month VPS.
 
@@ -338,12 +338,12 @@ Mattermost has:
 ### Reason 6: The "In-House Architect" Multiplier
 
 The person building the ERP (the in-house architect) already knows:
-- **PostgreSQL** — Mattermost uses it too
+- **Firebase/Firestore** — the sync service reads from the same database
 - **REST APIs** — same pattern as the ERP's own APIs
 - **React** — Mattermost's frontend is React (same as the ERP)
 
 This means the architect can:
-- Write the sync service quickly (it is just REST API calls)
+- Write the sync service quickly (Firebase Admin SDK is straightforward)
 - Customize Mattermost if needed (React plugins)
 - Troubleshoot issues without learning a new stack
 
@@ -532,49 +532,75 @@ The sync service then sets a "reset password on next login" flag so the user cho
 // They cannot log in, receive push notifications, or access any data.
 ```
 
-#### Code Sketch — Sync Service (Node.js)
+#### Code Sketch — Sync Service (Node.js with Firebase Firestore)
+
+The ERP uses **Firebase Firestore** as its database. The sync service reads employee data from Firestore collections instead of a SQL database.
 
 ```javascript
 // sync-service/index.js — simplified skeleton
 const axios = require('axios');
-const { Pool } = require('pg');
+const admin = require('firebase-admin');
 
-const erpDb = new Pool({ /* ERP PostgreSQL connection */ });
+// Initialize Firebase Admin SDK using your service account key
+// This gives the sync service permission to read Firestore data.
+// 
+// How to get the service account key:
+// 1. Go to Firebase Console → Project Settings → Service Accounts
+// 2. Click "Generate New Private Key"
+// 3. Save the downloaded JSON file as service-account.json
+admin.initializeApp({
+  credential: admin.credential.cert(require('./service-account.json'))
+});
+
+const db = admin.firestore();
 const mmApi = axios.create({
   baseURL: 'https://chat.factory.com/api/v4',
   headers: { Authorization: 'Bearer YOUR_BOT_TOKEN' }
 });
 
 async function syncUsers() {
-  // 1. Get active users from ERP
-  const erpUsers = await erpDb.query(`
-    SELECT id, email, full_name, role, is_active
-    FROM users WHERE is_active = true
-  `);
+  // 1. Get active users from ERP (Firestore)
+  const usersSnapshot = await db
+    .collection('users')
+    .where('is_active', '==', true)
+    .get();
+
+  const erpUsers = [];
+  usersSnapshot.forEach(doc => {
+    const data = doc.data();
+    erpUsers.push({ id: doc.id, ...data });
+  });
 
   // 2. Get users from Mattermost
   const mmUsers = await mmApi.get('/users?per_page=200');
 
-  const erpEmails = new Set(erpUsers.rows.map(u => u.email));
+  const erpEmails = new Set(erpUsers.map(u => u.email));
   const mmEmails = new Set(mmUsers.data.map(u => u.email));
 
   // 3. Create users in MM that exist in ERP but not in MM
-  for (const erpUser of erpUsers.rows) {
+  for (const erpUser of erpUsers) {
     if (!mmEmails.has(erpUser.email)) {
-      await mmApi.post('/users', {
+      const newUser = await mmApi.post('/users', {
         email: erpUser.email,
         username: erpUser.email.split('@')[0],
-        first_name: erpUser.full_name.split(' ')[0],
-        last_name: erpUser.full_name.split(' ').slice(1).join(' ') || '',
+        first_name: (erpUser.first_name || erpUser.full_name?.split(' ')[0] || ''),
+        last_name: (erpUser.last_name || erpUser.full_name?.split(' ').slice(1).join(' ') || ''),
         password: generateTempPassword()
       });
+
+      // Save the Mattermost user ID back into Firestore
+      await db.collection('users').doc(erpUser.id).update({
+        mattermost_user_id: newUser.data.id
+      });
+
       console.log(`Created Mattermost user: ${erpUser.email}`);
     }
   }
 
   // 4. Deactivate users in MM that are not in ERP
+  const erpEmailsSet = new Set(erpUsers.map(u => u.email));
   for (const mmUser of mmUsers.data) {
-    if (!erpEmails.has(mmUser.email) && mmUser.delete_at === 0) {
+    if (!erpEmailsSet.has(mmUser.email) && mmUser.delete_at === 0) {
       await mmApi.delete(`/users/${mmUser.id}`);
       console.log(`Deactivated Mattermost user: ${mmUser.email}`);
     }
@@ -632,10 +658,24 @@ async function syncChannelMemberships() {
   
   for (const rule of rules) {
     // rule.channelId = Mattermost channel ID
-    // rule.memberFilter = SQL query to get members
-    const members = await erpDb.query(rule.memberFilter);
-    const userIds = members.rows.map(m => m.mattermost_user_id);
-    
+    // rule.memberFilter = Firestore query to get members
+    const snapshot = await db.collection('users')
+      .where('is_active', '==', true)
+      .where('role', 'in', rule.allowedRoles)
+      .get();
+
+    const userIds = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.mattermost_user_id) {
+        userIds.push(data.mattermost_user_id);
+      }
+    });
+
+    await reconcileChannel(rule.channelId, userIds);
+  }
+}
+```
     await reconcileChannel(rule.channelId, userIds);
   }
 }
@@ -643,12 +683,12 @@ async function syncChannelMemberships() {
 
 #### Channel Membership Rules — Defined Once in the ERP
 
-| Channel | Membership SQL (conceptual) |
+| Channel | Firestore Query (conceptual) |
 |---|---|
-| `#qc-team` | `SELECT user_id FROM users WHERE role IN ('qc_manager', 'qc_staff')` |
-| `#production-line-1` | `SELECT user_id FROM users WHERE production_line = 1 OR role IN ('prod_manager', 'super_admin')` |
-| `#night-shift` | `SELECT user_id FROM users WHERE shift = 'night'` |
-| `#all-announcements` | `SELECT user_id FROM users WHERE is_active = true` |
+| `#qc-team` | `db.collection('users').where('role', 'in', ['qc_manager', 'qc_staff']).where('is_active', '==', true)` |
+| `#production-line-1` | `db.collection('users').where('production_line', '==', 1).where('is_active', '==', true)` (also includes `prod_manager` and `super_admin` roles) |
+| `#night-shift` | `db.collection('users').where('shift', '==', 'night').where('is_active', '==', true)` |
+| `#all-announcements` | `db.collection('users').where('is_active', '==', true)` |
 
 ---
 
@@ -816,8 +856,8 @@ Through the Mattermost UI or API:
 
 | Option | Pros | Cons |
 |---|---|---|
-| **Node.js** | Same stack as the ERP (if ERP uses Node). Async I/O is perfect for API calls. NPM has excellent HTTP client libraries (axios). | Requires Node runtime (likely already installed for the ERP). |
-| **Python** | Simple, readable. The cron-like pattern is natural. Excellent PostgreSQL support (psycopg2). | Slower for high-frequency sync loops (not relevant here — we sync every 60 seconds). |
+| **Node.js** | Same stack as the ERP (if ERP uses Node). Async I/O is perfect for API calls. NPM has excellent HTTP client libraries (axios) and the Firebase Admin SDK. | Requires Node runtime (likely already installed for the ERP). |
+| **Python** | Simple, readable. The Firebase Admin SDK for Python is mature. | Slower for high-frequency sync loops (not relevant here — we sync every 60 seconds). |
 | **Go** | Fast, compiles to a single binary. Excellent for long-running services. | More complex to write. Not necessary for this use case. |
 
 **Recommendation: Node.js** — because the ERP frontend is React and the backend may already be Node.js. The architect can reuse skills.
@@ -827,10 +867,11 @@ Through the Mattermost UI or API:
 ```
 sync-service/
 ├── package.json
+├── service-account.json   # 🔑 Downloaded from Firebase Console (DO NOT commit to git!)
 ├── src/
 │   ├── index.js              # Entry point — starts the sync loop
-│   ├── config.js             # Configuration (database URL, MM API URL, token)
-│   ├── db.js                 # Database connection and queries
+│   ├── config.js             # Configuration (Firebase project, MM API URL, token)
+│   ├── firestore.js          # Firestore queries for user and channel data
 │   ├── mattermost-client.js  # Mattermost API wrapper
 │   ├── user-sync.js          # User provisioning/deprovisioning logic
 │   ├── channel-sync.js       # Channel membership reconciliation
@@ -930,17 +971,40 @@ module.exports = MattermostClient;
 
 #### Core Logic — User Sync
 
+The ERP stores employee data in **Firebase Firestore**, not a SQL database. The sync service reads from Firestore collections instead of running SQL queries.
+
 ```javascript
 // user-sync.js
-async function syncUsers(db, mmClient) {
-  // 1. Fetch all active ERP users
-  const erpUsers = await db.query(`
-    SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
-           r.name as role_name
-    FROM users u
-    LEFT JOIN user_roles r ON r.id = u.role_id
-    WHERE u.deleted_at IS NULL
-  `);
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin SDK
+// The service-account.json file is downloaded from:
+// Firebase Console → Project Settings → Service Accounts → Generate New Private Key
+admin.initializeApp({
+  credential: admin.credential.cert(require('./service-account.json'))
+});
+
+const firestore = admin.firestore();
+
+async function syncUsers(mmClient) {
+  // 1. Fetch all active ERP users from Firestore
+  const usersSnapshot = await firestore
+    .collection('users')
+    .where('is_active', '==', true)
+    .get();
+
+  const erpUsers = [];
+  usersSnapshot.forEach(doc => {
+    const data = doc.data();
+    erpUsers.push({
+      firestoreId: doc.id,
+      email: data.email,
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      role: data.role || '',
+      is_active: data.is_active
+    });
+  });
 
   // 2. Fetch all Mattermost users (paginated)
   let mmUsers = [];
@@ -957,8 +1021,8 @@ async function syncUsers(db, mmClient) {
   const mmByEmail = new Map(mmUsers.map(u => [u.email.toLowerCase(), u]));
 
   // 4. Create users in Mattermost that don't exist yet
-  for (const erpUser of erpUsers) {
-    if (!mmByEmail.has(erpUser.email.toLowerCase())) {
+  for (const [email, erpUser] of erpByEmail) {
+    if (!mmByEmail.has(email)) {
       const tempPassword = crypto.randomBytes(12).toString('hex');
       const newUser = await mmClient.createUser({
         email: erpUser.email,
@@ -966,14 +1030,14 @@ async function syncUsers(db, mmClient) {
         firstName: erpUser.first_name,
         lastName: erpUser.last_name,
         password: tempPassword,
-        position: erpUser.role_name
+        position: erpUser.role
       });
 
-      // Store the Mattermost user ID in the ERP database
-      await db.query(
-        'UPDATE users SET mattermost_user_id = $1 WHERE id = $2',
-        [newUser.id, erpUser.id]
-      );
+      // Store the Mattermost user ID back into Firestore
+      await firestore
+        .collection('users')
+        .doc(erpUser.firestoreId)
+        .update({ mattermost_user_id: newUser.id });
 
       // Send welcome email with login instructions
       await sendWelcomeEmail(erpUser.email, tempPassword);
@@ -983,9 +1047,8 @@ async function syncUsers(db, mmClient) {
 
   // 5. Deactivate users in Mattermost who are deactivated/fired in ERP
   for (const mmUser of mmUsers) {
-    if (mmUser.delete_at !== 0) continue; // Already deactivated
+    if (mmUser.delete_at !== 0) continue;
 
-    // Check if this MM user exists in ERP at all
     const erpUser = erpByEmail.get(mmUser.email.toLowerCase());
     if (!erpUser || !erpUser.is_active) {
       await mmClient.deactivateUser(mmUser.id);
@@ -1013,85 +1076,109 @@ async function syncUsers(db, mmClient) {
 }
 ```
 
-#### Core Logic — Channel Sync
+#### Core Logic — Channel Sync (Firestore)
+
+Channel membership rules query Firestore collections instead of SQL tables. Each channel definition specifies which Firestore query to run.
 
 ```javascript
 // channel-sync.js
-const CHANNEL_DEFINITIONS = [
-  {
-    name: 'all-announcements',
-    display_name: 'All Announcements',
-    purpose: 'Company-wide announcements and notices.',
-    type: 'O', // Public
-    memberFilter: 'SELECT mm_id FROM users WHERE is_active = true'
-  },
-  {
-    name: 'production-line-1',
-    display_name: 'Production Line 1',
-    purpose: 'Line 1 production team communication.',
-    type: 'O',
-    memberFilter: `
-      SELECT mm_id FROM users
-      WHERE is_active = true
-        AND (production_line_id = 1
-          OR role IN ('super_admin', 'prod_manager'))
-    `
-  },
-  {
-    name: 'qc-team',
-    display_name: 'QC Team',
-    purpose: 'Quality Control team discussions and alerts.',
-    type: 'O', // Public within the team
-    memberFilter: `
-      SELECT mm_id FROM users
-      WHERE is_active = true
-        AND role IN ('qc_manager', 'qc_staff', 'super_admin')
-    `
-  },
-  {
-    name: 'night-shift',
-    display_name: 'Night Shift',
-    purpose: 'Night shift coordination.',
-    type: 'O',
-    memberFilter: `
-      SELECT mm_id FROM users
-      WHERE is_active = true
-        AND shift = 'night'
-    `
-  },
-  {
-    name: 'management',
-    display_name: 'Management',
-    purpose: 'Management-level discussions.',
-    type: 'P', // Private — only managers
-    memberFilter: `
-      SELECT mm_id FROM users
-      WHERE is_active = true
-        AND role IN ('super_admin', 'qc_manager', 'prod_manager')
-    `
-  },
-  {
-    name: 'maintenance',
-    display_name: 'Maintenance Team',
-    purpose: 'Equipment maintenance and downtime coordination.',
-    type: 'O',
-    memberFilter: `
-      SELECT mm_id FROM users
-      WHERE is_active = true
-        AND department = 'maintenance'
-    `
-  }
-];
+const admin = require('firebase-admin');
+const firestore = admin.firestore();
 
-async function syncChannels(db, mmClient, teamId) {
-  // 1. Get existing channels from Mattermost
+/**
+ * Get Firestore query for channel members based on channel name.
+ * Each channel has different membership rules.
+ * Modify these queries to match your Firestore data structure.
+ */
+async function getChannelMemberIds(channelName) {
+  let query = firestore.collection('users').where('is_active', '==', true);
+
+  switch (channelName) {
+    case 'all-announcements':
+      // Every active employee
+      break;
+
+    case 'production-line-1':
+      query = query.where('production_line', '==', 1);
+      break;
+
+    case 'production-line-2':
+      query = query.where('production_line', '==', 2);
+      break;
+
+    case 'qc-team':
+      query = query.where('role', 'in', ['qc_manager', 'qc_staff', 'super_admin']);
+      break;
+
+    case 'night-shift':
+      query = query.where('shift', '==', 'night');
+      break;
+
+    case 'management':
+      query = query.where('role', 'in', ['super_admin', 'qc_manager', 'prod_manager']);
+      break;
+
+    case 'maintenance':
+      query = query.where('department', '==', 'maintenance');
+      break;
+
+    default:
+      return [];
+  }
+
+  const snapshot = await query.get();
+  const memberIds = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.mattermost_user_id) {
+      memberIds.push(data.mattermost_user_id);
+    }
+  });
+
+  // Additionally include super_admin and prod_manager in production line channels
+  if (channelName.startsWith('production-line-')) {
+    const adminSnapshot = await firestore
+      .collection('users')
+      .where('is_active', '==', true)
+      .where('role', 'in', ['super_admin', 'prod_manager'])
+      .get();
+
+    adminSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.mattermost_user_id && !memberIds.includes(data.mattermost_user_id)) {
+        memberIds.push(data.mattermost_user_id);
+      }
+    });
+  }
+
+  // Include super_admin in management channel
+  if (channelName === 'management') {
+    const superAdminSnapshot = await firestore
+      .collection('users')
+      .where('is_active', '==', true)
+      .where('role', '==', 'super_admin')
+      .get();
+
+    superAdminSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.mattermost_user_id && !memberIds.includes(data.mattermost_user_id)) {
+        memberIds.push(data.mattermost_user_id);
+      }
+    });
+  }
+
+  return memberIds;
+}
+
+async function syncChannels(mmClient, teamId) {
+  // Existing channels from Mattermost
   const existingChannels = await mmClient.getChannels(teamId);
   const existingByName = new Map(existingChannels.map(c => [c.name, c]));
 
   for (const def of CHANNEL_DEFINITIONS) {
     let channel = existingByName.get(def.name);
 
-    // 2. Create channel if it doesn't exist
+    // Create channel if it doesn't exist
     if (!channel) {
       channel = await mmClient.createChannel(teamId, {
         name: def.name,
@@ -1102,13 +1189,10 @@ async function syncChannels(db, mmClient, teamId) {
       logger.info(`Created channel: ${def.name}`);
     }
 
-    // 3. Get desired members from ERP
-    const members = await db.query(def.memberFilter);
-    const memberIds = members.rows
-      .map(r => r.mm_id)
-      .filter(id => id !== null);
+    // Get desired members from Firestore
+    const memberIds = await getChannelMemberIds(def.name);
 
-    // 4. Reconcile channel membership (bulk API)
+    // Reconcile membership (bulk API)
     if (memberIds.length > 0) {
       await mmClient.setChannelMembers(channel.id, memberIds);
       logger.info(`Synced ${memberIds.length} members to channel: ${def.name}`);
@@ -2070,6 +2154,8 @@ result = client.send_message({
 
 ## 15.5 Full Implementation — Zulip Sync Service
 
+> **Firestore note:** Just like the Mattermost sync service (Part B), the Zulip sync service below reads employee data from Firebase Firestore — NOT a SQL database. The Python code uses `firebase-admin` SDK instead of `psycopg2`. The SQL `member_filter` queries in the stream definitions should be replaced with Firestore queries matching your data structure (see the Mattermost sync service in Part B for Firestore query patterns).
+
 ### Directory Structure
 
 ```
@@ -2092,10 +2178,12 @@ import os
 ZULIP_SITE = os.getenv("ZULIP_SITE", "https://chat.factory.com")
 ZULIP_EMAIL = os.getenv("ZULIP_EMAIL", "sync-bot@chat.factory.com")
 ZULIP_API_KEY = os.getenv("ZULIP_API_KEY")
-ERP_DATABASE_URL = os.getenv(
-    "ERP_DATABASE_URL",
-    "postgresql://user:password@localhost:5432/erp"
-)
+
+# Firebase service account key file path
+# Download from: Firebase Console → Project Settings → Service Accounts
+FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS", "./service-account.json")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+
 SYNC_INTERVAL = int(os.getenv("SYNC_INTERVAL", "60"))
 ```
 
@@ -2170,33 +2258,46 @@ STREAM_DEFINITIONS = [
 import time
 import logging
 import secrets
+import json
 import zulip
-import psycopg2
-from config import ZULIP_SITE, ZULIP_EMAIL, ZULIP_API_KEY, ERP_DATABASE_URL, SYNC_INTERVAL
+import firebase_admin
+from firebase_admin import credentials, firestore
+from config import ZULIP_SITE, ZULIP_EMAIL, ZULIP_API_KEY, FIREBASE_CREDENTIALS, FIREBASE_PROJECT_ID, SYNC_INTERVAL
 from stream_definitions import STREAM_DEFINITIONS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def get_erp_connection():
-    return psycopg2.connect(ERP_DATABASE_URL)
+def get_firestore_db():
+    """Initialize and return a Firestore client using the service account key."""
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+    firebase_admin.initialize_app(cred, {'projectId': FIREBASE_PROJECT_ID})
+    return firestore.client()
 
 def get_zulip_client():
     return zulip.Client(email=ZULIP_EMAIL, api_key=ZULIP_API_KEY, site=ZULIP_SITE)
 
-def sync_users(zulip_client, erp_conn):
-    cursor = erp_conn.cursor()
+def sync_users(zulip_client, db):
+    """Sync users from Firestore to Zulip."""
+    users_ref = db.collection('users').where('is_active', '==', True)
+    users_snapshot = users_ref.get()
 
-    cursor.execute("""
-        SELECT id, email, first_name, last_name, is_active
-        FROM users WHERE deleted_at IS NULL
-    """)
-    erp_users = cursor.fetchall()
+    erp_users = []
+    for doc in users_snapshot:
+        data = doc.to_dict()
+        erp_users.append({
+            'firestore_id': doc.id,
+            'email': data.get('email'),
+            'first_name': data.get('first_name', ''),
+            'last_name': data.get('last_name', ''),
+            'is_active': data.get('is_active', True),
+            'zulip_user_id': data.get('zulip_user_id')
+        })
 
     zulip_response = zulip_client.get_members()
     zulip_users = zulip_response.get("members", [])
 
-    erp_by_email = {u[1].lower(): u for u in erp_users}
+    erp_by_email = {u['email'].lower(): u for u in erp_users if u['email']}
     zulip_by_email = {u["email"].lower(): u for u in zulip_users}
 
     created = deactivated = updated = 0
@@ -2205,28 +2306,26 @@ def sync_users(zulip_client, erp_conn):
         if email_lower not in zulip_by_email:
             temp_password = secrets.token_hex(16)
             result = zulip_client.create_user(
-                email=erp_user[1],
+                email=erp_user['email'],
                 password=temp_password,
-                full_name=f"{erp_user[2]} {erp_user[3]}"
+                full_name=f"{erp_user['first_name']} {erp_user['last_name']}".strip()
             )
             if result.get("result") == "success":
                 user_id = result["user_id"]
-                cursor.execute(
-                    "UPDATE users SET zulip_user_id = %s WHERE id = %s",
-                    (user_id, erp_user[0])
-                )
-                erp_conn.commit()
+                db.collection('users').doc(erp_user['firestore_id']).update({
+                    'zulip_user_id': user_id
+                })
                 zulip_client.add_subscriptions(
                     streams=[{"name": "All Announcements"}],
                     principals=[user_id]
                 )
-                logger.info(f"Created Zulip user: {erp_user[1]} (ID: {user_id})")
+                logger.info(f"Created Zulip user: {erp_user['email']} (ID: {user_id})")
                 created += 1
 
     for email_lower, zulip_user in zulip_by_email.items():
         if email_lower in erp_by_email:
             erp_user = erp_by_email[email_lower]
-            if not erp_user[4]:
+            if not erp_user['is_active']:
                 zulip_client.deactivate_user(zulip_user["user_id"])
                 logger.info(f"Deactivated: {zulip_user['email']}")
                 deactivated += 1
@@ -2240,16 +2339,15 @@ def sync_users(zulip_client, erp_conn):
         if email_lower not in erp_by_email:
             continue
         erp_user = erp_by_email[email_lower]
-        expected_name = f"{erp_user[2]} {erp_user[3]}"
+        expected_name = f"{erp_user['first_name']} {erp_user['last_name']}".strip()
         if zulip_user.get("full_name") != expected_name:
             zulip_client.update_user_by_id(zulip_user["user_id"], full_name=expected_name)
             updated += 1
 
-    cursor.close()
     return created, deactivated, updated
 
-def sync_streams(zulip_client, erp_conn):
-    cursor = erp_conn.cursor()
+def sync_streams(zulip_client, db):
+    """Sync stream memberships from Firestore to Zulip."""
     streams_response = zulip_client.get_streams(include_subscribers=True)
     existing_streams = {s["name"]: s for s in streams_response.get("streams", [])}
 
@@ -2272,8 +2370,20 @@ def sync_streams(zulip_client, erp_conn):
         if not stream:
             continue
 
-        cursor.execute(definition["member_filter"])
-        desired = {row[0] for row in cursor.fetchall() if row[0] is not None}
+        # Query Firestore for desired members (replace with your actual query logic)
+        users_ref = db.collection('users').where('is_active', '==', True)
+        if stream_name == 'QC Team':
+            users_ref = users_ref.where('role', 'in', ['qc_manager', 'qc_staff', 'super_admin'])
+        elif stream_name == 'Management':
+            users_ref = users_ref.where('role', 'in', ['super_admin', 'qc_manager', 'prod_manager'])
+
+        snapshot = users_ref.get()
+        desired = set()
+        for doc in snapshot:
+            data = doc.to_dict()
+            if data.get('zulip_user_id'):
+                desired.add(data['zulip_user_id'])
+
         current = set(stream.get("subscribers", []))
 
         to_add = desired - current
@@ -2293,12 +2403,10 @@ def sync_streams(zulip_client, erp_conn):
             )
             logger.info(f"Removed {len(to_remove)} from '{stream_name}'")
 
-    cursor.close()
-
 def main():
     logger.info("Starting Zulip Sync Service...")
     zulip_client = get_zulip_client()
-    erp_conn = get_erp_connection()
+    db = get_firestore_db()
 
     try:
         resp = zulip_client.get_members()
@@ -2338,7 +2446,7 @@ if __name__ == "__main__":
 FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir zulip psycopg2-binary
+RUN pip install --no-cache-dir zulip firebase-admin
 COPY . .
 CMD ["python", "sync_service.py"]
 ```
@@ -2346,7 +2454,7 @@ CMD ["python", "sync_service.py"]
 ```txt
 # requirements.txt
 zulip>=0.9.0
-psycopg2-binary>=2.9.9
+firebase-admin>=6.0.0
 ```
 
 ```bash
@@ -2358,7 +2466,8 @@ docker run -d \
   -e ZULIP_SITE=https://chat.factory.com \
   -e ZULIP_EMAIL=sync-bot@chat.factory.com \
   -e ZULIP_API_KEY=your-api-key \
-  -e ERP_DATABASE_URL=postgresql://... \
+  -e FIREBASE_CREDENTIALS=./service-account.json \
+  -e FIREBASE_PROJECT_ID=your-project-id \
   zulip-sync-service
 ```
 
