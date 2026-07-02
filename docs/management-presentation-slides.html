@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>Starium Rafa ERP • Factory Operating System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;background:#05050a;color:#fff;-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-user-select:none;user-select:none}
+    #three{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+    /* Slides */
+    #slides{position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:40px 32px;opacity:0;transform:scale(0.92);transition:opacity 1.2s cubic-bezier(0.22,1,0.36,1),transform 1.2s cubic-bezier(0.22,1,0.36,1);pointer-events:none}
+    .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+    .slide-inner{max-width:1000px;width:100%;text-align:center;padding:clamp(24px,5vw,60px) clamp(20px,4vw,48px);border-radius:clamp(16px,3vw,32px);background:rgba(5,5,10,0.65);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border:1px solid rgba(255,255,255,0.06);box-shadow:0 32px 120px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.04);position:relative;overflow:hidden}
+    .slide-inner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent,#00E676),transparent);opacity:0.6}
+    .slide-badge{display:inline-block;padding:6px 18px;border-radius:100px;font-size:clamp(10px,1.1vw,12px);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:clamp(12px,2vw,24px);border:1px solid;background:rgba(255,255,255,0.04)}
+    .slide h2{font-size:clamp(1.6rem,4.5vw,3.4rem);font-weight:900;line-height:1.1;margin-bottom:clamp(10px,1.5vw,20px);letter-spacing:-1px;background:linear-gradient(135deg,var(--accent,#00E676),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .slide h2 .hl{display:block;font-size:clamp(0.9rem,2vw,1.6rem);font-weight:300;letter-spacing:4px;text-transform:uppercase;margin-top:6px;background:linear-gradient(135deg,#888,#bbb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .slide p{color:rgba(255,255,255,0.7);font-size:clamp(0.85rem,1.6vw,1.2rem);line-height:1.7;max-width:850px;margin:0 auto 0}
+    .slide p strong{color:#fff;font-weight:600}
+    .slide .stat-row{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(8px,1.5vw,16px);margin-top:clamp(16px,2.5vw,32px)}
+    .slide .stat{flex:1;min-width:100px;max-width:180px;padding:clamp(12px,1.5vw,20px) 12px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)}
+    .slide .stat .num{font-size:clamp(1.4rem,2.5vw,2.4rem);font-weight:900;background:linear-gradient(135deg,var(--accent,#00E676),#00BCD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .slide .stat .lbl{font-size:clamp(0.65rem,0.9vw,0.8rem);color:rgba(255,255,255,0.5);margin-top:4px;font-weight:500}
+    .slide .tag-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:clamp(12px,2vw,20px)}
+    .slide .tag{padding:4px 14px;border-radius:100px;font-size:clamp(9px,0.9vw,11px);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border:1px solid}
+    .slide .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.2vw,14px);margin-top:clamp(16px,2.5vw,28px);text-align:left}
+    .slide .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(8px,1.2vw,14px);margin-top:clamp(16px,2.5vw,28px);text-align:left}
+    .slide .card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:clamp(12px,1.2vw,18px);transition:transform 0.3s ease;font-size:clamp(0.75rem,1vw,0.9rem)}
+    .slide .card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.1)}
+    .slide .card .icon{font-size:clamp(1.2rem,2vw,1.8rem);margin-bottom:6px}
+    .slide .card strong{display:block;color:#fff;margin-bottom:4px;font-size:clamp(0.8rem,1.1vw,0.95rem)}
+    .slide .card span{color:rgba(255,255,255,0.5);font-size:clamp(0.7rem,0.9vw,0.82rem);line-height:1.5}
+
+    .slide .pill{display:inline-block;padding:8px 24px;border-radius:100px;font-size:clamp(12px,1.2vw,14px);font-weight:700;margin-top:clamp(16px,2.5vw,28px);background:linear-gradient(135deg,var(--accent,#00E676),#00BCD4);color:#000;box-shadow:0 0 40px rgba(0,230,118,0.15);border:none;cursor:pointer;pointer-events:auto;text-decoration:none;transition:transform 0.3s ease,box-shadow 0.3s ease}
+    .slide .pill:hover{transform:scale(1.04);box-shadow:0 0 60px rgba(0,230,118,0.25)}
+
+    .slide .contact-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:clamp(16px,2.5vw,24px)}
+    .slide .contact-row a{display:inline-flex;align-items:center;gap:8px;padding:clamp(8px,1vw,12px) clamp(16px,2vw,24px);border-radius:100px;font-size:clamp(12px,1.1vw,14px);font-weight:600;text-decoration:none;transition:all 0.3s ease;pointer-events:auto}
+
+    /* Progress */
+    #progress{position:fixed;bottom:clamp(16px,3vh,40px);left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:clamp(6px,1vw,12px);pointer-events:none}
+    .dot{width:clamp(6px,0.6vw,10px);height:clamp(6px,0.6vw,10px);border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.6s cubic-bezier(0.22,1,0.36,1);cursor:pointer;pointer-events:auto}
+    .dot.active{background:var(--accent,#00E676);box-shadow:0 0 16px rgba(0,230,118,0.4);width:clamp(20px,2vw,32px);border-radius:6px}
+    .dot.passed{background:rgba(0,230,118,0.3)}
+    #counter{color:rgba(255,255,255,0.25);font-size:clamp(11px,0.9vw,13px);font-weight:600;font-family:'JetBrains Mono',monospace;margin-left:clamp(4px,0.5vw,8px);letter-spacing:1px;pointer-events:none}
+
+    /* Pause indicator */
+    #pause-indicator{position:fixed;top:clamp(16px,3vh,32px);right:clamp(16px,3vw,32px);z-index:20;pointer-events:none;opacity:0;transition:opacity 0.4s ease;font-size:clamp(12px,1.2vw,14px);color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);padding:6px 14px;border-radius:100px;border:1px solid rgba(255,255,255,0.05)}
+    #pause-indicator.show{opacity:1}
+
+    /* Loading */
+    #loading{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#05050a;transition:opacity 1.2s ease}
+    #loading.hidden{opacity:0;pointer-events:none}
+    #loading .spinner{width:48px;height:48px;border-radius:50%;border:2px solid rgba(0,230,118,0.1);border-top-color:#00E676;animation:spin 0.8s linear infinite;margin-bottom:20px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #loading p{color:rgba(255,255,255,0.3);font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+
+    @media(max-width:768px){
+      .slide{padding:16px 12px}
+      .slide-inner{padding:20px 16px;border-radius:16px}
+      .slide .grid-2,.slide .grid-3{grid-template-columns:1fr}
+      .slide .stat{min-width:70px;max-width:140px}
+      .slide .stat-row{gap:6px}
+      .slide .stat .num{font-size:1.1rem}
+      .slide .stat .lbl{font-size:0.6rem}
+      #pause-indicator{top:10px;right:10px;font-size:10px;padding:4px 10px}
+    }
+    @media(max-width:480px){
+      .slide .stat{min-width:60px;max-width:110px;padding:8px 6px}
+      .slide .stat .num{font-size:0.95rem}
+      .slide .stat .lbl{font-size:0.55rem}
+      .slide .contact-row{flex-direction:column;align-items:center}
+    }
+    @media(min-width:1600px){
+      .slide-inner{max-width:1200px}
+    }
+    @media(orientation:landscape)and(max-height:500px){
+      .slide{padding:8px 24px}
+      .slide-inner{padding:12px 20px;border-radius:12px;max-width:900px}
+      .slide h2{font-size:1.4rem;margin-bottom:8px}
+      .slide p{font-size:0.75rem}
+      .slide .stat-row{margin-top:8px}
+      .slide .stat{padding:6px 8px;min-width:60px}
+      .slide .stat .num{font-size:0.9rem}
+      .slide .grid-2,.slide .grid-3{grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+      .slide .card{padding:6px 8px}
+      .slide .card .icon{font-size:0.9rem;margin-bottom:2px}
+      .slide .card strong{font-size:0.7rem}
+      .slide .card span{font-size:0.6rem}
+      #progress{bottom:8px}
+      #counter{font-size:9px}
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><p>Loading Factory&hellip;</p></div>
+<div id="three"></div>
+
+<div id="slides"></div>
+<div id="progress"></div>
+<div id="pause-indicator">⏸ Paused</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ── DATA ──
+const COLORS = {green:0x00E676,cyan:0x00BCD4,purple:0x7C4DFF,orange:0xFF9800,pink:0xE91E63,white:0xffffff};
+const ACCENTS = ['#00E676','#00BCD4','#7C4DFF','#FF9800','#E91E63','#00E676'];
+
+const slides = [
+  {
+    badge:'Starium Rafa Enterprise ERP',
+    title:'Your Factory Operating System',
+    sub:'Built by One Architect. Runs Your Entire Floor.',
+    text:'Real-time production data, live dashboards, instant reports — from anywhere in the world. Your factory never stops, and now neither does your visibility into it.',
+    accent:0,
+    stats:[['21','Modules'],['15+','Ops Covered'],['100%','Uptime'],['1','Architect'],['Zero','Data Loss']]
+  },
+  {
+    badge:'No More Paper Chases',
+    title:'Data Should Not Be Hard',
+    text:'Right now your team jumps between notebooks, spreadsheets, WhatsApp, and standalone apps just to track one shift. This system replaces all of that. One app. One source of truth. Zero gymnastics.',
+    accent:1,
+    highlight:'You are a factory manager — not a programmer. The data you need should appear the moment you need it. That is exactly what this system delivers.'
+  },
+  {
+    badge:'The Engine Under the Hood',
+    title:'Never Loses Data',
+    sub:'Even When the Internet Goes Down',
+    text:'Factory internet is never 100% reliable. This system was built for that reality. It works offline, saves everything locally, and uploads automatically when the connection returns. <strong>Zero data loss. Zero rework. Zero frustrated staff.</strong>',
+    accent:0,
+    tags:['Reliability','Offline-First','Auto-Sync']
+  },
+  {
+    badge:'Quality Control',
+    title:'Every Check. Every Machine. Every Shift.',
+    text:'<strong>Powder Density Testing</strong> — Two test modes (Level 9 & BOT) with color-coded machine grids. <strong>Sachet Production Checks</strong> — String Weight, Bag Inspection, Carton Inspection with configurable timing and dual-approval sign-off. <strong>QC Reports</strong> — Filter by date, shift, team, machine. Print or export to CSV.',
+    accent:2,
+    tags:['Quality','Approval Workflow','Digital Sign-Off'],
+    cards:[
+      {icon:'⚖️',title:'String Weight',desc:'Per-machine, per-round with 5-level validation'},
+      {icon:'🛍️',title:'Bag Inspection',desc:'6 criteria with Acceptable/Marginal/Unacceptable'},
+      {icon:'📦',title:'Carton Inspection',desc:'5 criteria with automated pass/fail logic'},
+      {icon:'📊',title:'QC Reports',desc:'Printable, filterable, exportable — boardroom-ready'}
+    ]
+  },
+  {
+    badge:'Production & Waste',
+    title:'Track Every Gram. Save Every Naira.',
+    text:'<strong>Carton Waste Tracking</strong> — Real-time per-machine tracking with threshold alerts. <strong>Laminate Waste Tracking</strong> — Weight-based with auto-calculated usage. <strong>Waste Reports</strong> — Beautiful visual charts comparing waste across shifts, machines, and teams.',
+    accent:3,
+    tags:['Waste Reduction','Cost Savings','Data-Driven'],
+    cards:[
+      {icon:'📦',title:'Carton Waste',desc:'Allocated vs used vs wasted — live per machine'},
+      {icon:'🗑️',title:'Laminate Waste',desc:'Sac-type weight tracking, auto-calculated'},
+      {icon:'📈',title:'Bar & Line Charts',desc:'Cross-shift comparison, CSV export, print'}
+    ]
+  },
+  {
+    badge:'Factory Floor',
+    title:'Stop Problems Before They Stop Production',
+    text:'<strong>Empty Silos</strong> — Automatic detection and refill tracking with broadcast alerts. <strong>Stopped Machines</strong> — Structured issue logging, resolution tracking, 4-color state grid. <strong>Downtime History</strong> — Search by date, shift, machine for root cause analysis.',
+    accent:4,
+    tags:['Uptime','Downtime Reduction','Issue Tracking'],
+    cards:[
+      {icon:'🛢️',title:'Empty Silos',desc:'Auto-detect, auto-refill, broadcast alerts'},
+      {icon:'🛑',title:'Stopped Machines',desc:'Click-solve, append issues, 4-color grid'},
+      {icon:'⏱️',title:'Downtime Log',desc:'Root cause analysis made simple'}
+    ]
+  },
+  {
+    badge:'For Senior Management',
+    title:"A Bird's-Eye View of Your Entire Factory",
+    text:'The <strong>Command Center Dashboard</strong> gives you 8 live metric cards — Live Users, Active Tests, Empty Silos, Stopped Machines, Waste Levels, QC Checks. Click any card to drill down. <strong>Know the health of your factory in under 5 seconds.</strong>',
+    accent:1,
+    highlight:'And you can see it from Lagos, London, Dubai, or anywhere else on earth. Your factory travels with you.',
+    tags:['Executive Dashboard','Real-Time','Anywhere']
+  },
+  {
+    badge:'People & Security',
+    title:'Right People. Right Access. Full Control.',
+    text:'<strong>User Management</strong> — Create accounts, assign roles, manage passwords. <strong>3-Tier Security</strong> (System Role + Department Roles + Action Roles). <strong>Live Presence Tracking</strong> — See who is logged in, what page they are on. <strong>Emergency Kiosk Mode</strong> if auth ever goes down.',
+    accent:4,
+    tags:['RBAC','Administration','Live Visibility']
+  },
+  {
+    badge:'Why Hire the Architect',
+    title:'One Person Built It. One Person Maintains It.',
+    sub:'No Agency. No Team. No Finger-Pointing.',
+    text:'<strong>Zero Data Loss, Even Offline</strong> — Factory internet goes down. Work never stops. <strong>Boardroom-Ready Reports</strong> — Walk into any meeting with printed, verified data. <strong>Complete Ownership — No Licensing Fees</strong> — No per-user fees, no surprise increases. <strong>Built for Scale</strong> — Add machines, lines, users instantly.',
+    accent:5,
+    highlight:'This is not a vendor relationship. This is a partnership. When you hire this architect, you get someone who eats, sleeps, and breathes your factory\'s success.',
+    tags:['Strategic Investment','Zero Licensing','In-House Ownership']
+  },
+  {
+    badge:'The Bottom Line',
+    title:'One Architect. One System. Infinite Possibilities.',
+    text:'This platform was built by a single person who understands every layer of the technology — and every challenge of your factory floor. Not a team. Not an agency. One dedicated architect who can own, evolve, and scale your entire factory operating system.',
+    sub:'Getting the data you need to make confident decisions should be the easiest part of your day. With this system and this architect, it is.',
+    accent:0,
+    contact:true,
+    final:'Dammie (Optimus) Ayodele · +234 705 333 1253'
+  }
+];
+
+// ── RENDER SLIDES ──
+const container = document.getElementById('slides');
+const progress = document.getElementById('progress');
+
+slides.forEach((s,i)=>{
+  const div = document.createElement('div');
+  div.className = 'slide'+(i===0?' active':'');
+  const accent = ACCENTS[s.accent];
+  let html = '<div class="slide-inner" style="--accent:'+accent+'">';
+  html += '<div class="slide-badge" style="border-color:'+accent+'40;color:'+accent+'">'+s.badge+'</div>';
+  html += '<h2>'+s.title+(s.sub?'<span class="hl">'+s.sub+'</span>':'')+'</h2>';
+  html += '<p>'+s.text+'</p>';
+  if(s.highlight) html += '<div style="margin-top:clamp(12px,2vw,20px);padding:clamp(10px,1.2vw,16px) clamp(14px,2vw,24px);background:rgba(0,230,118,0.06);border-radius:12px;border:1px solid rgba(0,230,118,0.1);display:inline-block;max-width:800px"><span style="color:'+accent+';font-weight:600;font-size:clamp(0.8rem,1.3vw,1.05rem);line-height:1.6">'+s.highlight+'</span></div>';
+  if(s.stats){
+    html += '<div class="stat-row">';
+    s.stats.forEach(st=>{html+='<div class="stat"><div class="num">'+st[0]+'</div><div class="lbl">'+st[1]+'</div></div>'});
+    html += '</div>';
+  }
+  if(s.tags){
+    html += '<div class="tag-row">';
+    s.tags.forEach(t=>{html+='<div class="tag" style="border-color:'+accent+'30;color:'+accent+';background:'+accent+'0a">'+t+'</div>'});
+    html += '</div>';
+  }
+  if(s.cards){
+    const cols = s.cards.length===4?'grid-2':'grid-3';
+    html += '<div class="'+cols+'">';
+    s.cards.forEach(c=>{html+='<div class="card"><div class="icon">'+c.icon+'</div><strong>'+c.title+'</strong><span>'+c.desc+'</span></div>'});
+    html += '</div>';
+  }
+  if(s.contact){
+    html += '<div class="contact-row">';
+    html += '<a href="https://wa.me/2347053331253" target="_blank" class="pill" style="background:linear-gradient(135deg,#00E676,#00BCD4);color:#000">💬 Hire the Architect — WhatsApp Dammie</a>';
+    html += '<a href="tel:+2347053331253" style="color:#fff;border:1px solid rgba(255,255,255,0.2)">📞 Call +234 705 333 1253</a>';
+    html += '</div>';
+    html += '<div style="margin-top:16px;color:rgba(255,255,255,0.25);font-size:clamp(10px,0.9vw,12px);letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">'+s.final+'</div>';
+  }
+  if(s.final && !s.contact) html += '<div style="margin-top:20px;color:rgba(255,255,255,0.2);font-size:clamp(10px,0.8vw,11px);font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px">'+s.final+'</div>';
+  html += '</div>';
+  div.innerHTML = html;
+  container.appendChild(div);
+
+  const dot = document.createElement('div');
+  dot.className = 'dot'+(i===0?' active':'');
+  dot.dataset.idx = i;
+  dot.addEventListener('click',()=>goTo(i));
+  dot.addEventListener('touchend',(e)=>{e.preventDefault();goTo(i)});
+  progress.appendChild(dot);
+});
+const counter = document.createElement('span');
+counter.id = 'counter';
+counter.textContent = '1 / '+slides.length;
+progress.appendChild(counter);
+
+// ── SLIDE CONTROL ──
+let current = 0;
+let autoTimer = null;
+let paused = false;
+const AUTO_DELAY = 9000;
+const pauseIndicator = document.getElementById('pause-indicator');
+
+function goTo(idx){
+  if(idx===current) return;
+  document.querySelectorAll('.slide')[current].classList.remove('active');
+  document.querySelectorAll('.dot')[current].classList.remove('active');
+  document.querySelectorAll('.dot')[idx].classList.remove('passed');
+  current = idx;
+  document.querySelectorAll('.slide')[current].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('active',i===current);
+    d.classList.toggle('passed',i<current);
+  });
+  counter.textContent = (current+1)+' / '+slides.length;
+  resetTimer();
+}
+
+function nextSlide(){if(current<slides.length-1) goTo(current+1);else{paused=true;pauseIndicator.classList.add('show')}}
+function prevSlide(){if(current>0) goTo(current-1)}
+
+function resetTimer(){
+  if(autoTimer) clearInterval(autoTimer);
+  if(!paused) autoTimer = setInterval(nextSlide,AUTO_DELAY);
+}
+
+function togglePause(){
+  paused = !paused;
+  pauseIndicator.classList.toggle('show',paused);
+  if(paused){if(autoTimer) clearInterval(autoTimer);autoTimer=null}
+  else resetTimer();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') {e.preventDefault();nextSlide()}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') {e.preventDefault();prevSlide()}
+  if(e.key==='p'||e.key==='P') togglePause();
+});
+
+let touchStartX=0,touchStartY=0;
+document.addEventListener('touchstart',e=>{
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx = (e.changedTouches[0]?.clientX||0) - touchStartX;
+  const dy = (e.changedTouches[0]?.clientY||0) - touchStartY;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){dx>0?prevSlide():nextSlide()}
+  else if(Math.abs(dy)>80&&Math.abs(dy)>Math.abs(dx)*1.5){dy>0?prevSlide():nextSlide()}
+},{passive:true});
+document.addEventListener('click',e=>{
+  if(e.target.closest('.slide-inner')&&!e.target.closest('a')) togglePause();
+});
+
+// ── THREE.JS FACTORY SCENE ──
+const canvas = document.getElementById('three');
+const w = window.innerWidth, h = window.innerHeight;
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05050a,0.0012);
+const camera = new THREE.PerspectiveCamera(55,w/h,0.1,500);
+camera.position.set(0,18,42);
+camera.lookAt(0,0,0);
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setSize(w,h);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+canvas.appendChild(renderer.domElement);
+
+// Lights
+const ambient = new THREE.AmbientLight(0x112244,0.4);
+scene.add(ambient);
+const dir = new THREE.DirectionalLight(0xffffff,1.2);
+dir.position.set(10,30,20);
+scene.add(dir);
+const fill = new THREE.DirectionalLight(0x00BCD4,0.3);
+fill.position.set(-15,10,-10);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0x00E676,0.2);
+rim.position.set(0,-20,10);
+scene.add(rim);
+
+// Ground
+const groundGeo = new THREE.PlaneGeometry(120,120);
+const groundMat = new THREE.MeshStandardMaterial({
+  color:0x080810,
+  roughness:0.9,
+  metalness:0.1,
+  transparent:true,
+  opacity:0.6
+});
+const ground = new THREE.Mesh(groundGeo,groundMat);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -2;
+scene.add(ground);
+
+// Grid
+const grid = new THREE.GridHelper(80,40,0x00BCD4,0x00E676);
+grid.position.y = -1.9;
+grid.material.transparent = true;
+grid.material.opacity = 0.15;
+scene.add(grid);
+
+// ── FACTORY BUILDINGS ──
+const buildings = [];
+
+function createBuilding(x,z,w,d,h,color,emissiveIntensity=0.08){
+  const geo = new THREE.BoxGeometry(w,h,d);
+  const mat = new THREE.MeshStandardMaterial({
+    color,roughness:0.6,metalness:0.3,
+    emissive:color,emissiveIntensity,
+    transparent:true,opacity:0.7
+  });
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.position.set(x,h/2-2,z);
+  scene.add(mesh);
+  // Edge glow
+  const edges = new THREE.EdgesGeometry(geo);
+  const edgeMat = new THREE.LineBasicMaterial({color,transparent:true,opacity:0.12});
+  const line = new THREE.LineSegments(edges,edgeMat);
+  line.position.copy(mesh.position);
+  scene.add(line);
+  buildings.push({mesh,line,baseY:h/2-2});
+  return mesh;
+}
+
+// Factory layout - rows of buildings
+const layout = [
+  [-16,-10,5,5,6,COLORS.cyan],
+  [-6,-10,5,5,5,COLORS.cyan],
+  [4,-10,5,5,7,COLORS.cyan],
+  [14,-10,5,5,5,COLORS.cyan],
+  [-16,4,5,5,7,COLORS.green],
+  [-6,4,5,5,5,COLORS.green],
+  [4,4,5,5,6,COLORS.green],
+  [14,4,5,5,5,COLORS.green],
+  [-16,-2,8,3,4,COLORS.purple],
+  [12,-2,8,3,4,COLORS.purple],
+];
+layout.forEach(([x,z,w,d,h,c])=>createBuilding(x,z,w,d,h,c));
+
+// Silo towers
+[-16,0,16].forEach((x,i)=>{
+  const geo = new THREE.CylinderGeometry(1.8,2.2,8,12);
+  const mat = new THREE.MeshStandardMaterial({color:COLORS.cyan,roughness:0.5,metalness:0.4,emissive:COLORS.cyan,emissiveIntensity:0.06,transparent:true,opacity:0.5});
+  const m = new THREE.Mesh(geo,mat);
+  m.position.set(x,2,-18+i*7);
+  scene.add(m);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(2.2,0.08,8,16),new THREE.MeshStandardMaterial({color:COLORS.cyan,emissive:COLORS.cyan,emissiveIntensity:0.2,transparent:true,opacity:0.4}));
+  ring.position.set(x,5.8,-18+i*7);
+  ring.rotation.x=Math.PI/2;
+  scene.add(ring);
+});
+
+// Conveyor belts
+function createConveyor(x,z,length){
+  const beltGeo = new THREE.BoxGeometry(length,0.15,0.8);
+  const beltMat = new THREE.MeshStandardMaterial({color:0x222233,roughness:0.8,metalness:0.2});
+  const belt = new THREE.Mesh(beltGeo,beltMat);
+  belt.position.set(x,-1.6,z);
+  scene.add(belt);
+  // Segments
+  for(let i=-length/2+0.5; i<length/2; i+=0.8){
+    const seg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05,0.08,0.6),
+      new THREE.MeshStandardMaterial({color:0x00BCD4,emissive:0x00BCD4,emissiveIntensity:0.15,transparent:true,opacity:0.3})
+    );
+    seg.position.set(x+i,-1.5,z);
+    scene.add(seg);
+  }
+}
+createConveyor(-10,-8,12);
+createConveyor(6,-8,12);
+createConveyor(-10,0,12);
+createConveyor(6,0,12);
+
+// Floating hexagons
+const hexColors = [0x00E676,0x00BCD4,0x7C4DFF,0xFF9800];
+const hexes = [];
+for(let i=0;i<30;i++){
+  const size = 0.3+Math.random()*0.8;
+  const geo = new THREE.CylinderGeometry(size,size,size*0.15,6);
+  const col = hexColors[i%hexColors.length];
+  const mat = new THREE.MeshStandardMaterial({
+    color:col,emissive:col,emissiveIntensity:0.2,
+    transparent:true,opacity:0.15+Math.random()*0.15,
+    roughness:0.3,metalness:0.5
+  });
+  const m = new THREE.Mesh(geo,mat);
+  const angle = Math.random()*Math.PI*2;
+  const rad = 12+Math.random()*20;
+  m.position.set(Math.cos(angle)*rad,-2+Math.random()*8,Math.sin(angle)*rad);
+  m.rotation.x = Math.random()*Math.PI;
+  m.rotation.y = Math.random()*Math.PI;
+  scene.add(m);
+  hexes.push({mesh:m,angle:angle,rad:rad,speed:0.002+Math.random()*0.004,phase:Math.random()*Math.PI*2,rotX:Math.random()*0.005,rotY:Math.random()*0.005,floatA:Math.random()*0.5+0.2,floatF:0.3+Math.random()*0.4});
+}
+
+// Particles
+const pc = 3000;
+const pos = new Float32Array(pc*3);
+const cols = new Float32Array(pc*3);
+const sizes = new Float32Array(pc);
+const pal = [new THREE.Color(0x00E676),new THREE.Color(0x00BCD4),new THREE.Color(0x7C4DFF),new THREE.Color(0x00E676).multiplyScalar(0.5)];
+for(let i=0;i<pc;i++){
+  const r = 15+Math.random()*45;
+  const theta = Math.random()*Math.PI*2;
+  const phi = Math.acos(2*Math.random()-1);
+  pos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+  pos[i*3+1]=r*Math.sin(phi)*Math.sin(theta)-2;
+  pos[i*3+2]=r*Math.cos(phi);
+  const c = pal[Math.floor(Math.random()*pal.length)];
+  cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b;
+  sizes[i]=0.5+Math.random()*2;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(cols,3));
+pGeo.setAttribute('size',new THREE.BufferAttribute(sizes,1));
+
+const pTex = (()=>{
+  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const ctx=c.getContext('2d');
+  const g=ctx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.15,'rgba(255,255,255,0.8)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+})();
+
+const pMat = new THREE.PointsMaterial({
+  size:0.25,map:pTex,blending:THREE.AdditiveBlending,
+  depthWrite:false,transparent:true,vertexColors:true,opacity:0.4
+});
+const particles = new THREE.Points(pGeo,pMat);
+scene.add(particles);
+
+// Subtle data-lines on ground
+const dataMat = new THREE.LineBasicMaterial({color:0x00E676,transparent:true,opacity:0.02});
+for(let i=0;i<15;i++){
+  const pts=[];
+  const y=-1.85;
+  const z=-18+Math.random()*36;
+  for(let x=-30;x<=30;x+=1.5) pts.push(new THREE.Vector3(x,y+Math.sin(x*0.2+i*0.7)*0.15,z));
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo,dataMat);
+  scene.add(line);
+}
+
+// Data nodes floating
+const nodeMat = new THREE.MeshStandardMaterial({
+  color:0x00E676,emissive:0x00E676,emissiveIntensity:0.3,
+  transparent:true,opacity:0.15,roughness:0.2,metalness:0.8
+});
+const nodes = [];
+for(let i=0;i<12;i++){
+  const geo = new THREE.OctahedronGeometry(0.2+Math.random()*0.2);
+  const m = new THREE.Mesh(geo,nodeMat);
+  const a = Math.random()*Math.PI*2;
+  const rad = 10+Math.random()*15;
+  m.position.set(Math.cos(a)*rad,1+Math.random()*6,Math.sin(a)*rad);
+  scene.add(m);
+  nodes.push({mesh:m,angle:a,rad:rad,speed:0.001+Math.random()*0.003,phase:Math.random()*Math.PI*2});
+}
+
+// Mouse
+let mx=0,my=0;
+document.addEventListener('mousemove',e=>{mx=(e.clientX/w)*2-1;my=-(e.clientY/h)*2+1});
+document.addEventListener('touchmove',e=>{const t=e.touches[0];mx=(t.clientX/w)*2-1;my=-(t.clientY/h)*2+1},{passive:true});
+window.addEventListener('resize',()=>{
+  const w2=window.innerWidth,h2=window.innerHeight;
+  camera.aspect=w2/h2;camera.updateProjectionMatrix();
+  renderer.setSize(w2,h2);
+});
+
+// ── ANIMATE ──
+let clock = new THREE.Clock();
+let slideTime = 0;
+let targetCamX = 0, targetCamY = 18;
+
+function animate(){
+  const t = clock.getElapsedTime();
+  slideTime += 0.016;
+
+  // Slow camera orbit
+  const orbitAngle = t * 0.04;
+  const orbitRadius = 42;
+  const baseX = Math.sin(orbitAngle) * orbitRadius * 0.3;
+  const baseZ = 42 - Math.abs(Math.sin(orbitAngle)) * 10 + Math.cos(orbitAngle) * 5;
+
+  camera.position.x += ((baseX + mx * 2) - camera.position.x) * 0.008;
+  camera.position.y += ((16 + my * 2) - camera.position.y) * 0.008;
+  camera.position.z += ((baseZ) - camera.position.z) * 0.008;
+  camera.lookAt(0,0,0);
+
+  // Particles
+  particles.rotation.y = t * 0.012;
+  particles.rotation.x = Math.sin(t * 0.003) * 0.03;
+
+  // Hexes orbit
+  hexes.forEach(h=>{
+    h.angle += h.speed;
+    const yOff = Math.sin(t * h.floatF + h.phase) * h.floatA;
+    h.mesh.position.x = Math.cos(h.angle + t*0.001) * h.rad;
+    h.mesh.position.z = Math.sin(h.angle + t*0.001) * h.rad;
+    h.mesh.position.y = yOff;
+    h.mesh.rotation.x += h.rotX;
+    h.mesh.rotation.y += h.rotY;
+  });
+
+  // Data nodes orbit
+  nodes.forEach(n=>{
+    n.angle += n.speed;
+    n.mesh.position.x = Math.cos(n.angle + t*0.002) * n.rad;
+    n.mesh.position.z = Math.sin(n.angle + t*0.002) * n.rad;
+    n.mesh.position.y = 6 + Math.sin(t*0.5 + n.phase) * 2;
+    n.mesh.rotation.x += 0.01;
+    n.mesh.rotation.y += 0.01;
+  });
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ── START ──
+document.getElementById('loading').classList.add('hidden');
+setTimeout(()=>{document.getElementById('loading').style.display='none'},1200);
+resetTimer();
+
+</script>
+</body>
+</html>
