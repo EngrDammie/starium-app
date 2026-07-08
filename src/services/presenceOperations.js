@@ -14,7 +14,9 @@ export const setOnlineStatus = async (uid, email, path = '/') => {
       currentPath: path
     }, { merge: true });
   } catch (error) {
-    console.error("Error setting online status:", error);
+    if (error.code !== 'permission-denied') {
+      console.error("Error setting online status:", error);
+    }
   }
 };
 
@@ -27,7 +29,9 @@ export const setOfflineStatus = async (uid) => {
       lastSeen: serverTimestamp()
     }, { merge: true });
   } catch (error) {
-    console.error("Error setting offline status:", error);
+    if (error.code !== 'permission-denied') {
+      console.error("Error setting offline status:", error);
+    }
   }
 };
 

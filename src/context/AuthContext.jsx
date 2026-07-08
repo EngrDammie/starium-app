@@ -29,87 +29,129 @@ export function AuthProvider({ children }) {
   // --- 1. CORE AUTHENTICATION ENGINE ---
   useEffect(() => {
     let unsubscribeAuth = () => {};
+    let unsubscribeSettings = () => {};
 
-    const unsubscribeSettings = onSnapshot(doc(db, 'config', 'auth_settings'), (docSnap) => {
-      const isAuthEnabled = docSnap.exists() ? (docSnap.data().authEnabled !== false) : true;
-      setAuthEnabled(isAuthEnabled);
+    const handleUserLoggedIn = async (user) => {
+      setLoading(true);
+      try {
+        const roleDoc = await getDoc(doc(db, "user_roles", user.uid));
+        const data = roleDoc.exists() ? roleDoc.data() : {};
 
-      if (!isAuthEnabled) {
-        setSystemRole('super_admin');
-        setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
-        setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor', 'line_leader']);
-        
-        setFirstName('Developer');
-        setLastName('Admin');
-        setUserFullName('Developer Admin');
-        setCurrentUser({ email: 'development@local', uid: 'local-dev-id' }); 
-        
-        setLoading(false);
-      } else {
-        unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            setLoading(true); 
-            try {
-              const roleDoc = await getDoc(doc(db, "user_roles", user.uid));
-              const data = roleDoc.exists() ? roleDoc.data() : {};
-              
-              let sysRole = data.systemRole || (data.role === 'admin' ? 'super_admin' : 'standard');
-              let deptRoles = data.departmentRoles || (data.role === 'admin' || data.role === 'manager' ? ['qc_manager'] : ['qc_staff']);
-              let actRoles = data.actionRoles || data.approvalRoles || [];
+        let sysRole = data.systemRole || (data.role === 'admin' ? 'super_admin' : 'standard');
+        let deptRoles = data.departmentRoles || (data.role === 'admin' || data.role === 'manager' ? ['qc_manager'] : ['qc_staff']);
+        let actRoles = data.actionRoles || data.approvalRoles || [];
 
-              let fName = data.firstName || '';
-              let lName = data.lastName || '';
-              let displayFirst = '';
-              let full = '';
+        let fName = data.firstName || '';
+        let lName = data.lastName || '';
+        let displayFirst = '';
+        let full = '';
 
-              if (fName && lName) {
-                displayFirst = toTitleCase(fName);
-                full = `${displayFirst} ${toTitleCase(lName)}`;
-              } else {
-                displayFirst = user.email.split('@')[0];
-                displayFirst = displayFirst.charAt(0).toUpperCase() + displayFirst.slice(1);
-                full = displayFirst;
-              }
+        if (fName && lName) {
+          displayFirst = toTitleCase(fName);
+          full = `${displayFirst} ${toTitleCase(lName)}`;
+        } else {
+          displayFirst = user.email.split('@')[0];
+          displayFirst = displayFirst.charAt(0).toUpperCase() + displayFirst.slice(1);
+          full = displayFirst;
+        }
 
-              if (user.email === 'dammieoptimus@gmail.com') {
-                sysRole = 'super_admin';
-                if (!deptRoles.includes('qc_manager')) deptRoles.push('qc_manager');
-                if (!deptRoles.includes('prod_manager')) deptRoles.push('prod_manager');
-                if (!deptRoles.includes('hr_manager')) deptRoles.push('hr_manager');
-              }
-              console.log("====================================");
-              console.log(`👤 USER LOGGED IN: ${full} (${user.email})`);
-              console.log("👑 System Role:", sysRole);
-              console.log("🏢 Department Roles:", deptRoles);
-              console.log("⚡ Action Roles:", actRoles);
-              console.log("====================================");
+        if (user.email === 'dammieoptimus@gmail.com') {
+          sysRole = 'super_admin';
+          if (!deptRoles.includes('qc_manager')) deptRoles.push('qc_manager');
+          if (!deptRoles.includes('prod_manager')) deptRoles.push('prod_manager');
+          if (!deptRoles.includes('hr_manager')) deptRoles.push('hr_manager');
+        }
+        console.log("====================================");
+        console.log(`👤 USER LOGGED IN: ${full} (${user.email})`);
+        console.log("👑 System Role:", sysRole);
+        console.log("🏢 Department Roles:", deptRoles);
+        console.log("⚡ Action Roles:", actRoles);
+        console.log("====================================");
 
-              setSystemRole(sysRole);
-              setDepartmentRoles(deptRoles);
-              setActionRoles(actRoles);
-              setFirstName(displayFirst);
-              setLastName(toTitleCase(lName));
-              setUserFullName(full);
-              
-              setCurrentUser(user);
-            } catch (error) {
-              console.error("Error fetching role:", error);
-              setSystemRole('standard'); setDepartmentRoles(['qc_staff']); setActionRoles([]);
-              setFirstName(''); setLastName(''); setUserFullName('');
-              setCurrentUser(user);
-            }
-          } else {
-            setCurrentUser(null);
-            setSystemRole('standard'); setDepartmentRoles([]); setActionRoles([]);
-            setFirstName(''); setLastName(''); setUserFullName('');
-          }
-          setLoading(false);
-        });
+        setSystemRole(sysRole);
+        setDepartmentRoles(deptRoles);
+        setActionRoles(actRoles);
+        setFirstName(displayFirst);
+        setLastName(toTitleCase(lName));
+        setUserFullName(full);
+
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Error fetching role:", error);
+        setSystemRole('standard'); setDepartmentRoles(['qc_staff']); setActionRoles([]);
+        setFirstName(''); setLastName(''); setUserFullName('');
+        setCurrentUser(user);
       }
-    }, (error) => {
-      console.error("Error reading auth settings:", error);
       setLoading(false);
-    });
+    };
+
+    const setupSettingsListener = () => {
+      unsubscribeSettings = onSnapshot(doc(db, 'config', 'auth_settings'), (snap) => {
+        const enabled = snap.exists() ? (snap.data().authEnabled !== false) : true;
+        setAuthEnabled(enabled);
+      }, (err) => {
+        if (err.code !== 'permission-denied') {
+          console.error("Error reading auth settings:", err);
+        }
+      });
+    };
+
+    const user = auth.currentUser;
+    if (user) {
+      getDoc(doc(db, 'config', 'auth_settings')).then((docSnap) => {
+        const isAuthEnabled = docSnap.exists() ? (docSnap.data().authEnabled !== false) : true;
+        setAuthEnabled(isAuthEnabled);
+        if (!isAuthEnabled) {
+          setSystemRole('super_admin');
+          setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
+          setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor', 'line_leader']);
+          setFirstName('Developer');
+          setLastName('Admin');
+          setUserFullName('Developer Admin');
+          setCurrentUser({ email: 'development@local', uid: 'local-dev-id' });
+          setLoading(false);
+          return;
+        }
+        setupSettingsListener();
+        handleUserLoggedIn(user);
+      }).catch(() => {
+        setAuthEnabled(true);
+        setupSettingsListener();
+        handleUserLoggedIn(user);
+      });
+    } else {
+      setAuthEnabled(true);
+      unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
+        if (authUser) {
+          getDoc(doc(db, 'config', 'auth_settings')).then((docSnap) => {
+            const isAuthEnabled = docSnap.exists() ? (docSnap.data().authEnabled !== false) : true;
+            setAuthEnabled(isAuthEnabled);
+            if (!isAuthEnabled) {
+              setSystemRole('super_admin');
+              setDepartmentRoles(['qc_manager', 'prod_manager', 'hr_manager']);
+              setActionRoles(['buggy_supervisor', 'plc_operator', 'production_manager', 'qc_manager', 'qc_supervisor', 'line_leader']);
+              setFirstName('Developer');
+              setLastName('Admin');
+              setUserFullName('Developer Admin');
+              setCurrentUser({ email: 'development@local', uid: 'local-dev-id' });
+              setLoading(false);
+              return;
+            }
+            setupSettingsListener();
+            handleUserLoggedIn(authUser);
+          }).catch(() => {
+            setAuthEnabled(true);
+            setupSettingsListener();
+            handleUserLoggedIn(authUser);
+          });
+        } else {
+          setCurrentUser(null);
+          setSystemRole('standard'); setDepartmentRoles([]); setActionRoles([]);
+          setFirstName(''); setLastName(''); setUserFullName('');
+          setLoading(false);
+        }
+      });
+    }
 
     return () => {
       unsubscribeSettings();

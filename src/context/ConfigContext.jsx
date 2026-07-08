@@ -1,6 +1,6 @@
 // src/context/ConfigContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
-import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const ConfigContext = createContext();
@@ -90,43 +90,85 @@ export function ConfigProvider({ children }) {
 
   useEffect(() => {
     const configRef = doc(db, 'config', 'settings');
-    const unsubscribe = onSnapshot(configRef, async (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setConfig({ 
-          ...DEFAULT_CONFIG, 
-          ...data,
-          packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
-          cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
-          laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
-          machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
-          productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
-          gramSpecs: Object.fromEntries(
-            Object.entries(data.gramSpecs || DEFAULT_CONFIG.gramSpecs).map(([gram, spec]) => [
-              gram, { ...(DEFAULT_CONFIG.gramSpecs[gram] || {}), ...spec }
-            ])
-          ),
-          fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
-          departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
-          actionRoles: data.actionRoles
-            ? (() => {
-                const existingIds = new Set((data.actionRoles || []).map(r => r.id));
-                const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
-                return [...data.actionRoles, ...missing];
-              })()
-            : DEFAULT_CONFIG.actionRoles
-        });
-      } else {
-        try {
-          await setDoc(configRef, { ...DEFAULT_CONFIG, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-        } catch (err) { console.error(err); }
+    let unsubscribe = () => {};
+
+    const loadConfig = async () => {
+      try {
+        const docSnap = await getDoc(configRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setConfig({ 
+            ...DEFAULT_CONFIG, 
+            ...data,
+            packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
+            cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
+            laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
+            machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
+            productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
+            gramSpecs: Object.fromEntries(
+              Object.entries(data.gramSpecs || DEFAULT_CONFIG.gramSpecs).map(([gram, spec]) => [
+                gram, { ...(DEFAULT_CONFIG.gramSpecs[gram] || {}), ...spec }
+              ])
+            ),
+            fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
+            departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
+            actionRoles: data.actionRoles
+              ? (() => {
+                  const existingIds = new Set((data.actionRoles || []).map(r => r.id));
+                  const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
+                  return [...data.actionRoles, ...missing];
+                })()
+              : DEFAULT_CONFIG.actionRoles
+          });
+        } else {
+          try {
+            await setDoc(configRef, { ...DEFAULT_CONFIG, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+          } catch (err) { console.error(err); }
+        }
+      } catch (err) {
+        if (err.code !== 'permission-denied') {
+          console.error("Error reading config:", err);
+        }
       }
       setLoadingConfig(false);
-    }, (error) => {
-      console.error("Error listening to config:", error);
-      setLoadingConfig(false);
+    };
+
+    loadConfig().then(() => {
+      unsubscribe = onSnapshot(configRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setConfig({
+            ...DEFAULT_CONFIG,
+            ...data,
+            packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
+            cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
+            laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
+            machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
+            productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
+            gramSpecs: Object.fromEntries(
+              Object.entries(data.gramSpecs || DEFAULT_CONFIG.gramSpecs).map(([gram, spec]) => [
+                gram, { ...(DEFAULT_CONFIG.gramSpecs[gram] || {}), ...spec }
+              ])
+            ),
+            fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
+            departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
+            actionRoles: data.actionRoles
+              ? (() => {
+                  const existingIds = new Set((data.actionRoles || []).map(r => r.id));
+                  const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
+                  return [...data.actionRoles, ...missing];
+                })()
+              : DEFAULT_CONFIG.actionRoles
+          });
+        }
+      }, (error) => {
+        if (error.code !== 'permission-denied') {
+          console.error("Error listening to config:", error);
+        }
+      });
     });
-    return unsubscribe;
+
+    return () => unsubscribe();
   }, []);
 
   return (
