@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MENU_CONFIG } from '../config/navigation';
+import rafaLogo from '../assets/rafa-logo.svg';
 
 export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
   const { systemRole, departmentRoles } = useAuth();
@@ -41,8 +42,9 @@ export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
       <div className={`fixed top-0 left-0 h-full w-80 bg-[#121212] border-r border-[#333] shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-[100] transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Header */}
-        <div className="p-6 border-b border-[#333] flex justify-between items-center bg-gradient-to-br from-[#1E1E1E] to-[#252525]">
-          <h2 className="text-primary font-black text-xl uppercase tracking-widest">Navigation</h2>
+        <div className="p-6 border-b border-[#333] flex items-center gap-3 bg-gradient-to-br from-[#1E1E1E] to-[#252525]">
+          <img src={rafaLogo} alt="Rafa" className="h-6 opacity-90" />
+          <h2 className="text-primary font-black text-xl uppercase tracking-widest flex-1">Navigation</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
         </div>
 

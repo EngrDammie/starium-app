@@ -1,4 +1,6 @@
 // src/components/Footer.jsx
+import rafaLogo from '../assets/rafa-logo.svg';
+
 export default function Footer() {
   return (
     // 🎯 FIX: Added print:hidden
@@ -6,7 +8,8 @@ export default function Footer() {
     <footer className="print:hidden group relative w-full text-center py-5 bg-[#0a0a0a] border-t border-[#222] mt-auto cursor-default overflow-hidden">
       
       {/* This text hides when the footer is hovered (group-hover:opacity-0) */}
-      <div className="text-[#666] text-sm transition-opacity duration-300 group-hover:opacity-0">
+      <div className="flex items-center justify-center gap-2 text-[#666] text-sm transition-opacity duration-300 group-hover:opacity-0">
+        <img src={rafaLogo} alt="Rafa" className="h-4 opacity-60" />
         Starium Rafa ERP
       </div>
 

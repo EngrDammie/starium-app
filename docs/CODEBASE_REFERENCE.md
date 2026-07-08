@@ -501,6 +501,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Does NOT navigate after sign-in — relies on `useEffect` watching `currentUser` from AuthContext to redirect to `/`
 - Password reset modal using `sendPasswordResetEmail`
 - Links to `/change-password`
+- RAFa logo displayed above "Starium Rafa" heading
+- Emoji-enhanced form labels (📧 Email, 🔒 Password) and buttons (🔑 Sign In, 🔐 Forgot Password)
 
 ### ChangePassword (`src/pages/ChangePassword.jsx`)
 - Requires re-authentication via `reauthenticateWithCredential` before allowing password change
@@ -839,12 +841,13 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Wraps every page (except Login/ChangePassword)
 - Hamburger menu button (top-left) → opens Sidebar
 - Contains: AuthBar (top-right), SyncBadge (top-left), AlertBanner (top-right below auth bar)
-- Page header with title + subtitle (slide-down animation)
-- Footer at bottom
+- Page header with RAFa logo + title + subtitle (slide-down animation)
+- Footer at bottom with small RAFa logo
 - `print:hidden` on all chrome elements
 
 ### Sidebar (`src/components/Sidebar.jsx`)
 - Full-screen backdrop + sliding left panel (w-80)
+- RAFa logo in header alongside "Navigation" title
 - Accordion-style categories (default: Quality Control open)
 - Each category expands to show child links (uses `max-h-[2000px]` for open state to support long lists)
 - Active link highlighted with primary color + glow
@@ -895,7 +898,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Adding a new route to `MENU_CONFIG` automatically makes it targetable — no manual BroadcastModal update needed
 
 ### Footer (`src/components/Footer.jsx`)
-- Default text: "Starium Rafa ERP"
+- Default text: "Starium Rafa ERP" with small RAFa logo
 - On hover: "WhatsApp Dammie Optimus Solutions on 07053331253"
 
 ---
