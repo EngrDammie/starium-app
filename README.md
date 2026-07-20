@@ -36,7 +36,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 ## Key Features
 
 - **Factory Command Center**: Centralized dashboard with 8 live metric cards (Live Users, Level 9 Tests, BOT Tests, Empty Silos, Stopped Machines, Carton Waste, Laminate Waste, QC Sachet Checks). Clickable links navigate managers to their respective executive dashboards. Super admins get a clickable Live Users card linking to the Active Users page. Quick Actions section provides role-based shortcuts to all factory modules.
-- **Offline-First Engine**: 6 independent offline queues with auto-sync on reconnect. Tests are queued locally with perfect timestamp preservation and synced via `writeBatch`.
+- **Offline-First Engine**: 8 independent offline queues with auto-sync on reconnect. Tests are queued locally with perfect timestamp preservation and synced via `writeBatch`.
 - **Real-Time Executive Dashboards**: Level 9 and BOT live views with Chart.js line charts showing density trends, shift approval workflows, and machine grid density matching.
 - **Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens (or all screens) across the factory. Three levels: Info (blue), Warning (orange), Critical (red with shake animation). Auto-dismisses after 15 seconds.
 - **Shift History Modal**: Floor workers can review all tests submitted during their active shift with exact timestamps and buggy numbers.
@@ -123,6 +123,13 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - Report, solve issues, start machines, append more issues
 - 4-color state grid, auto-filled Issue Selector dropdown
 
+### 8. Pallet Transfer
+- Per-shift tracking of pallet transfers from production floor to warehouse
+- Records gram/SKU, pallet size (cartons per pallet), pallet count, team
+- Auto-calculated total cartons with real-time per-gram summary cards
+- Offline queue via `starium_pallet_transfer_queue`, auto-sync on reconnect
+- Dedicated report page with 7-day data, filters, and Day vs Night chart
+
 ---
 
 ## Firebase Collections
@@ -144,6 +151,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 | `qc_string_weight_checks` | auto-ID | String weight check records. Fields: machineId, approvalDocId, roundNumber, weights[], weightStatuses[], batchNumber, meetsCriteria, allInTarget, outOfRangeCount |
 | `qc_bag_inspection_checks` | auto-ID | Bag inspection check records. Fields: machineId, approvalDocId, roundNumber, leakage, dirtPrintQuality, completenessSachets, freebiesPresence, perforation, perfumeOdour, overallResult, batchNumber |
 | `qc_carton_inspection_checks` | auto-ID | Carton inspection check records. Fields: machineId, approvalDocId, roundNumber, detergentDust, cartonPrintQuality, sealQuality, cartonDamage, cartonCodeReadability, overallResult, batchNumber |
+| `pallet_transfers` | auto-ID | Pallet transfer records. Fields: gram, palletSize, palletCount, totalCartons, team, recordedBy, recordedByUid, shiftApprovalDocId, shift, date, createdAt |
 
 ---
 
@@ -157,6 +165,8 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 | `starium_qc_string_weight_queue` | String Weight | String weight check offline queue |
 | `starium_bag_inspection_queue` | Bag Inspection | Bag inspection check offline queue |
 | `starium_carton_inspection_queue` | Carton Inspection | Carton inspection check offline queue |
+| `starium_pallet_transfer_queue` | Pallet Transfer | Pallet transfer offline queue |
+| `starium_pallet_team` | Pallet Transfer | Persisted team selection |
 | `starium_carton_team` | Carton Waste | Persisted team selection |
 | `starium_laminate_team` | Laminate Waste | Persisted team selection |
 | `starium_qc_sachet_team` | QC Sachet | Persisted team selection |
@@ -191,7 +201,7 @@ src/
 ├── context/
 │   ├── AuthContext.jsx              # Firebase auth, role management, presence heartbeat
 │   ├── ConfigContext.jsx            # Live Firestore config subscription, DEFAULT_CONFIG
-│   ├── NetworkContext.jsx           # Online/offline detection, 5 queue auto-sync
+│   ├── NetworkContext.jsx           # Online/offline detection, 8 queue auto-sync
 │   └── AlertContext.jsx             # Real-time alert subscription, broadcastAlert()
 ├── components/
 │   ├── Layout.jsx                   # Page shell: sidebar, authbar, syncbadge, alertbanner, footer
@@ -227,6 +237,8 @@ src/
 │   ├── CartonWasteReport.jsx        # Carton waste report with charts
 │   ├── LaminateWaste.jsx            # Laminate waste data entry
 │   ├── LaminateWasteReport.jsx      # Laminate waste report with charts
+│   ├── PalletTransfer.jsx           # Pallet transfer data entry
+│   ├── PalletTransferReport.jsx     # Pallet transfer report with charts
 │   ├── QCSachetProductionChecks.jsx # QC monitoring with 3 check types + approval flow
 │   └── QCSachetReport.jsx           # QC Sachet printable report with Print/CSV export
 └── services/
@@ -238,6 +250,7 @@ src/
     ├── qcCartonInspectionOperations.js # Carton inspection CRUD, offline queue, overall result
     ├── emptySiloOperations.js       # Empty silo CRUD, subscriptions, broadcasts
     ├── stoppedMachineOperations.js  # Stopped machine CRUD, issue management
+    ├── palletTransferOperations.js  # Pallet transfer CRUD, offline queue, sync
     ├── machineDowntimeOperations.js # Machine downtime query by date/shift
     └── presenceOperations.js        # User online/offline status, heartbeat, subscriptions
 ```
@@ -246,7 +259,7 @@ src/
 
 1. **HashRouter** - URL routing (hash-based for static hosting)
 2. **AuthProvider** - Firebase auth state, role fetching, presence heartbeat
-3. **NetworkProvider** - Online/offline detection, offline queue auto-sync
+3. **NetworkProvider** - Online/offline detection, 8 offline queue auto-sync
 4. **ConfigProvider** - Live config subscription, DEFAULT_CONFIG fallback
 5. **AlertProvider** - Real-time alert subscription, broadcastAlert function
 6. **App** - Routes (21 protected + 1 public)
@@ -332,6 +345,7 @@ The workflow (.github/workflows/deploy.yml):
 - ✅ **QC Sachet Report**: Print-friendly report with 3-section tables (String Weights, Bag Inspection, Carton Inspection), date/shift/team/machine filters, approver badges, and CSV export
 - ✅ **Empty Silos System**: Complete with refill detection and broadcasts
 - ✅ **Stopped Machines System**: Complete with issue management and broadcasts
+- ✅ **Pallet Transfer System**: Complete with data entry, offline queue, report with Day vs Night chart
 - [ ] **Audit Trail**: Background logging system to record who modified settings, deleted users, or overrode machines
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices
 

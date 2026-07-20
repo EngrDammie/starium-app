@@ -55,6 +55,7 @@ jobs:
         run: |
           cp docs/management-presentation.html dist/
           cp docs/management-presentation-slides.html dist/
+          cp docs/rafa-logo.svg dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

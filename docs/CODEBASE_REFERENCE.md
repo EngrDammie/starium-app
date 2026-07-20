@@ -83,6 +83,8 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/carton-waste-report` | CartonWasteReport | Production managers, QC managers, Packaging managers |
 | `/laminate-waste` | LaminateWaste | Production staff & managers, QC managers |
 | `/laminate-waste-report` | LaminateWasteReport | Production managers, QC managers, Packaging managers |
+| `/pallet-transfer` | PalletTransfer | Production staff, Packaging staff, Production/Packaging managers |
+| `/pallet-transfer-report` | PalletTransferReport | Production managers, Packaging managers, QC managers |
 | `/qc-sachet-production-checks` | QCSachetProductionChecks | QC staff & managers, Production staff & managers |
 
 Future routes exist in `MENU_CONFIG` but have no components yet: `/machine-downtime-log`, `/employees`, `/payroll`.
@@ -167,6 +169,7 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - `/laminate-waste-report` (🗑️) — `['prod_manager', 'qc_manager', 'packaging_manager']`
 - `/empty-silos-report` (📋) — `['qc_manager', 'prod_manager', 'packaging_manager']`
 - `/stopped-machines-report` (📊) — `['qc_manager', 'prod_manager', 'packaging_manager']`
+- `/pallet-transfer-report` (📋) — `['prod_manager', 'packaging_manager', 'qc_manager']`
 
 **Important**: Admin routes (`/system-config`, `/user-management`, `/active-users`) have `allowedRoles: []` — meaning ONLY super_admin can access them. Standard users are always denied. Other routes use explicit role arrays.
 
@@ -254,15 +257,15 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### NetworkContext (`src/context/NetworkContext.jsx`)
 
-**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`
+**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `palletQueueCount`, `setPalletQueueCount`, `emptySiloQueueCount`, `setEmptySiloQueueCount`, `stoppedMachineQueueCount`, `setStoppedMachineQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`, `isPalletSyncing`, `setIsPalletSyncing`, `isEmptySiloSyncing`, `setIsEmptySiloSyncing`, `isStoppedMachineSyncing`, `setIsStoppedMachineSyncing`
 
 **String Weight Queue**: `starium_qc_string_weight_queue` — synced via `syncStringWeightQueue()` in `qcStringWeightOperations.js` using Firestore `writeBatch`. Queue count is tracked locally in the page (not exposed in NetworkContext yet).
 
 **Offline Engine**:
 1. Initializes `isOnline` from `navigator.onLine`
 2. Listens to `online`/`offline` browser events
-3. Reads `localStorage.getItem('starium_offline_queue')`, `localStorage.getItem('starium_carton_offline_queue')`, and `localStorage.getItem('starium_laminate_offline_queue')` to get queue counts
-4. When `isOnline` becomes `true` AND `queueCount > 0` → triggers `syncLocalQueue()` (for qc_tests), `syncCartonOfflineQueue()` (for carton_records), and `syncLaminateOfflineQueue()` (for laminate_records)
+3. Reads `localStorage.getItem('starium_offline_queue')`, `localStorage.getItem('starium_carton_offline_queue')`, `localStorage.getItem('starium_laminate_offline_queue')`, `localStorage.getItem('starium_pallet_transfer_queue')`, `localStorage.getItem('starium_empty_silo_queue')`, and `localStorage.getItem('starium_stopped_machine_queue')` to get queue counts
+4. When `isOnline` becomes `true` AND respective queue counts > 0 → triggers sync for each queue: `syncLocalQueue()` (qc_tests), `syncCartonOfflineQueue()` (carton_records), `syncLaminateOfflineQueue()` (laminate_records), `syncPalletTransferOfflineQueue()` (pallet_transfers), `syncEmptySiloQueue()` (empty_silos), `syncStoppedMachineQueue()` (stopped_machines)
 
 **QC Sync Logic** (`syncLocalQueue()`):
 - Iterates queued items, adds each to `qc_tests` collection
@@ -283,6 +286,12 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - Uses Firestore `writeBatch` for atomic batch writes to `laminate_records`
 - Each record includes all original fields plus `syncedAt: serverTimestamp()`
 - On success → clears laminate queue from localStorage; on failure → keeps for retry
+
+**Pallet Transfer Sync Logic** (`syncPalletTransferOfflineQueue()`):
+- Reads `starium_pallet_transfer_queue` from localStorage
+- Uses Firestore `writeBatch` for atomic batch writes to `pallet_transfers`
+- Preserves `createdAt` via `localCreatedAt` for offline records
+- On success → clears pallet queue; on failure → keeps for retry
 
 ### AlertContext (`src/context/AlertContext.jsx`)
 
@@ -369,6 +378,15 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Uses `new Date()` instead of `serverTimestamp()` to avoid Firestore errors inside array mutations. Returns `'all-solved'` if the last issue was just cleared.
 - **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state and disappears from the stopped list).
 - **`appendIssuesToMachine(docId, issues, userFullName)`**: Reads the existing stopped_machines doc, deduplicates by issue ID (skips if already present), appends new issue objects, and resets `startedAt/startedBy` to null (effectively re-stopping the machine so the Start button reappears). Always sets `isActive: true`. This powers the "Report More Issues" flow.
+
+### palletTransferOperations (`src/services/palletTransferOperations.js`)
+- **`getPalletTransferDocId(config)`**: Returns `pallet_transfer_{shift}_{date}` as the shift-scoped document ID.
+- **`getOrCreatePalletTransferShift(config, isOnline)`**: Creates/gets a `shift_approvals` doc with `mode: 'pallet_transfer'`. If offline, returns docId without Firestore call.
+- **`savePalletTransfer(record, config, isOnline)`**: Saves a pallet transfer with gram, palletSize, palletCount, totalCartons, team, recordedBy. Online: `addDoc` to `pallet_transfers` with `serverTimestamp()`. On failure/offline: queues to `starium_pallet_transfer_queue` with `_queued: true` and `localCreatedAt`. Returns `{ status: 'saved' }` or `{ status: 'queued' }`.
+- **`subscribeToShiftPalletTransfers(config, callback)`**: Real-time subscription to current shift's `pallet_transfers` where `shiftApprovalDocId == pallet_transfer_{shift}_{date}`. Returns sorted records with `synced: true` metadata.
+- **`getQueuedPalletTransfers(config)`**: Reads `starium_pallet_transfer_queue` from localStorage, filters to current shift's `shiftApprovalDocId`, returns entries with `synced: false`.
+- **`syncPalletTransferOfflineQueue()`**: Reads queue from localStorage, uses `writeBatch` to sync all records to `pallet_transfers` collection. Preserves `createdAt` for queued records. Clears queue on success.
+- **`subscribeToPalletTransfersByDateRange(startDate, endDate, callback)`**: Queries `pallet_transfers` for records between `startDate` and `endDate`, ordered by date then createdAt ascending. Used by report page.
 
 ### laminateOperations (`src/services/laminateOperations.js`)
 
@@ -519,7 +537,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
    5. **Stopped Issues** — live count from `subscribeToActiveStoppedMachines` (cross-shift, red pulse if > 0); clickable `<Link to="/stopped-machines-report">` for QC/managers; shows "All Running" or "⚠️ Needs Attention"
    6. **Carton Waste** — live count from `subscribeToShiftCartonRecords()` (current shift only); shows total wasted cartons + waste% (color-coded green/red vs target); clickable `<Link to="/carton-waste-report">` for prod/qc managers; label "This Shift" in cyan
    7. **Laminate Waste** — live data from `subscribeToShiftLaminateRecords()` (current shift only); shows total waste collected (kg) + waste% (color-coded green/red vs target); clickable `<Link to="/laminate-waste-report">` for prod/qc managers; label "This Shift" in cyan
-    8. **QC Sachet Checks** — live counts from `subscribeToAllStringWeights`/`subscribeToAllBagInspections`/`subscribeToAllCartonInspections` showing SW/BI/CI/Total; visible to all users; clickable `<Link to="/qc-sachet-report">` only for `super_admin` and `qc_manager`; renders as plain `<div>` otherwise
+   8. **Pallet Transfer** — live count from `subscribeToShiftPalletTransfers()` (current shift only); shows total cartons transferred; clickable `<Link to="/pallet-transfer-report">` for prod/packaging/qc managers
+   9. **QC Sachet Checks** — live counts from `subscribeToAllStringWeights`/`subscribeToAllBagInspections`/`subscribeToAllCartonInspections` showing SW/BI/CI/Total; visible to all users; clickable `<Link to="/qc-sachet-report">` only for `super_admin` and `qc_manager`; renders as plain `<div>` otherwise
 - Welcome banner showing user's name, email, systemRole, and department categories
 - Quick action links filtered by user roles (includes Carton Waste Tracking + Carton Waste Report for relevant roles)
 - Categories dynamically derived from `config.departmentRoles` (not hardcoded)
@@ -534,6 +553,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - "📦 Carton Waste Report" → `/carton-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
 - "🗑️ Laminate Waste Tracking" → `/laminate-waste` for `prod_staff`, `prod_manager`, `qc_manager`
 - "🗑️ Laminate Waste Report" → `/laminate-waste-report` for `prod_manager`, `qc_manager`, `packaging_manager`
+- "📦 Pallet Transfer" → `/pallet-transfer` for `prod_staff`, `packaging_staff`, `prod_manager`, `packaging_manager`
+- "📋 Pallet Transfer Report" → `/pallet-transfer-report` for `prod_manager`, `packaging_manager`, `qc_manager`
 - "🧪 QC Sachet Production Checks" → `/qc-sachet-production-checks` for `qc_staff`, `qc_manager`
 - "🧪 QC Sachet Report" → `/qc-sachet-report` for `qc_manager`
 
@@ -632,6 +653,28 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - **Broadcast**: High waste (> `wasteAlertThreshold` default 10%) fires a `warning`-level alert targeted to `['/', '/laminate-waste', '/laminate-waste-report']`
 - **Offline**: Falls back to `starium_laminate_offline_queue` if offline or Firestore write fails
 - **Date display**: Shows current date as "Tuesday, 24 Jun 2026" (en-GB locale)
+
+### PalletTransfer (`src/pages/PalletTransfer.jsx`) — Record Pallet Transfers
+- Guarded: Production staff, Packaging staff, Production managers, Packaging managers
+- Shift-aware: detects DAY/NIGHT from config shift times
+- **Form fields**: Gram/SKU dropdown (from `config.gramSpecs`), Cartons per Pallet (auto-remembered per gram), Pallet Count (stepper buttons −/+, min 1)
+- **Auto-calculated**: Total Cartons = pallet size × pallet count (displayed prominently)
+- Team dropdown (persisted to localStorage `starium_pallet_team`)
+- Recorded By auto-populated from current user
+- **Per-gram summary cards**: real-time total pallets and cartons grouped by gram
+- **History modal**: floating button showing total transfers count + pending count badge → opens full table with time, gram, pallet size, pallets, cartons, team, recorder, sync status
+- **Offline**: Queues to `starium_pallet_transfer_queue` if offline or Firestore write fails; updates `palletQueueCount` in NetworkContext
+- **Date display**: Shows current date with weekday in en-GB locale
+
+### PalletTransferReport (`src/pages/PalletTransferReport.jsx`) — Pallet Transfer Report
+- Guarded: Production managers, Packaging managers, QC managers
+- 7-day default range with date picker, shift filter (DAY/NIGHT/all), gram filter (all/specific), team filter (all/specific) + Reset button
+- **Summary cards**: Total Pallets, Total Cartons, Total Transfers, Unique Grams
+- **Chart 1 — Cartons per Gram**: Horizontal bar chart, one bar per gram
+- **Chart 2 — Distribution by Gram**: Doughnut chart, share by gram
+- **Per-gram summary table**: gram, pallets, cartons
+- **Detailed transfer log**: time, shift (DAY☀️/NIGHT🌙 with colored badge), date, gram, pallet size, pallets, cartons, team, recorded by
+- **Day vs Night chart**: Grouped bar chart showing DAY vs NIGHT carton totals per date over 7 days
 
 ### LaminateWasteReport (`src/pages/LaminateWasteReport.jsx`) — Laminate Waste Report
 - Guarded: Production managers, QC managers, Packaging managers
@@ -1035,6 +1078,25 @@ Doc ID: auto-generated via `addDoc`
 ```
 Doc ID: auto-generated via `addDoc`
 
+**`pallet_transfers`** (Pallet transfer records):
+```
+{
+  gram: string,                // e.g. "250"
+  palletSize: number,          // cartons per pallet
+  palletCount: number,         // number of pallets
+  totalCartons: number,        // auto-calculated: palletSize × palletCount
+  team: string,                // e.g. "A"
+  recordedBy: string,          // userFullName
+  recordedByUid: string,       // Firebase UID
+  shiftApprovalDocId: string,  // "pallet_transfer_DAY_2026-06-11"
+  shift: 'DAY' | 'NIGHT',
+  date: 'YYYY-MM-DD',
+  createdAt: Timestamp,
+  syncedAt: Timestamp
+}
+```
+Doc ID: auto-generated via `addDoc`
+
 **`empty_silos`** (Empty silo/machine records):
 ```
 {
@@ -1366,6 +1428,7 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 - ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
 - ✅ **Carton Waste System** — Per-machine carton waste tracking with offline support, report with charts, CSV export, and targeted broadcasts. See full documentation in CartonWaste, CartonWasteReport pages and cartonOperations service.
+- ✅ **Pallet Transfer System** — Per-shift pallet transfer tracking with gram/SKU selection, pallet count stepper, auto-calculated total cartons, offline queue, and report with Day vs Night chart.
 - ℹ️ **Old Reports route** — `/reports` was renamed to `/qc-density-report`. The old path will 404. All navigation references, PAGE_LABELS, and menu config entries have been updated.
 
 ---
@@ -1392,6 +1455,10 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | Laminate waste data entry | `src/pages/LaminateWaste.jsx` |
 | Laminate waste report | `src/pages/LaminateWasteReport.jsx` |
 | Laminate waste config | `src/context/ConfigContext.jsx` (`laminateWaste` object), `src/pages/SystemConfig.jsx` (Laminate Waste tab) |
+| Pallet transfer logic | `src/services/palletTransferOperations.js` |
+| Pallet transfer data entry | `src/pages/PalletTransfer.jsx` |
+| Pallet transfer report | `src/pages/PalletTransferReport.jsx` |
+| Pallet transfer config | `src/context/ConfigContext.jsx` (`palletTransfer` object), `src/pages/SystemConfig.jsx` (Packaging & Transfers tab) |
 | QC Sachet Production Checks data entry | `src/pages/QCSachetProductionChecks.jsx` |
 | QC String Weight Check dialog | `src/components/QCStringWeightDialog.jsx` |
 | QC String Weight operations | `src/services/qcStringWeightOperations.js` |
@@ -1541,6 +1608,9 @@ Each check type:
 | `starium_qc_string_weight_queue` | String Weight | `syncStringWeightQueue()` | `qc_string_weight_checks` |
 | `starium_bag_inspection_queue` | Bag Inspection | `syncBagInspectionQueue()` | `qc_bag_inspection_checks` |
 | `starium_carton_inspection_queue` | Carton Inspection | `syncCartonInspectionQueue()` | `qc_carton_inspection_checks` |
+| `starium_pallet_transfer_queue` | Pallet Transfer | `syncPalletTransferOfflineQueue()` | `pallet_transfers` |
+| `starium_empty_silo_queue` | Empty Silos | `syncEmptySiloQueue()` | `empty_silos` |
+| `starium_stopped_machine_queue` | Stopped Machines | `syncStoppedMachineQueue()` | `stopped_machines` |
 
 All sync functions: write batch to Firestore with `localCreatedAt` + `syncedAt: serverTimestamp()`, clear queue on success.
 
