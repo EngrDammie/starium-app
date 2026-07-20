@@ -3,14 +3,17 @@ import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
-import { subscribeToActiveEmptySilos, markMachineEmpty } from '../services/emptySiloOperations';
+import { useNetwork } from '../context/NetworkContext';
+import { subscribeToActiveEmptySilos, markMachineEmpty, getQueuedEmptySilos } from '../services/emptySiloOperations';
 
 export default function EmptySilos() {
   const { config, loadingConfig } = useConfig();
   const { systemRole, departmentRoles, userFullName } = useAuth();
   const { broadcastAlert } = useAlerts();
+  const { isOnline } = useNetwork();
 
   const [emptyRecords, setEmptyRecords] = useState([]);
+  const [queuedMachines, setQueuedMachines] = useState([]);
   const [currentShift, setCurrentShift] = useState('--');
   const [modalMachine, setModalMachine] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,6 +34,11 @@ export default function EmptySilos() {
     return () => unsub();
   }, [canMark]);
 
+  useEffect(() => {
+    const q = getQueuedEmptySilos();
+    setQueuedMachines(q.filter(r => !r.noLongerEmptyAt).map(r => r.machineId));
+  }, [emptyRecords]);
+
   const getEmptyRecordForMachine = (machineId) => {
     return emptyRecords.find(r => r.machineId === machineId && !r.noLongerEmptyAt);
   };
@@ -44,10 +52,14 @@ export default function EmptySilos() {
 
   const handleMarkEmpty = async () => {
     if (!modalMachine) return;
-    const result = await markMachineEmpty(modalMachine, userFullName, config, broadcastAlert);
-    if (result === 'saved') {
+    const result = await markMachineEmpty(modalMachine, userFullName, config, broadcastAlert, isOnline);
+    if (result === 'saved' || result === 'queued' || result === 'already-queued') {
       setIsModalOpen(false);
       setModalMachine(null);
+    }
+    if (result === 'queued') {
+      const q = getQueuedEmptySilos();
+      setQueuedMachines(q.filter(r => !r.noLongerEmptyAt).map(r => r.machineId));
     }
   };
 
@@ -78,6 +90,9 @@ export default function EmptySilos() {
           <div className="text-gray-500 ml-auto">
             <span className="text-status-danger font-bold">{emptyRecords.filter(r => !r.noLongerEmptyAt).length}</span>
             <span className="text-gray-600"> / {config?.machines?.length || 0} empty</span>
+            {queuedMachines.length > 0 && (
+              <span className="ml-3 bg-status-warning/20 text-status-warning px-2 py-0.5 rounded-md text-xs uppercase tracking-wider font-bold">⏳ {queuedMachines.length} pending</span>
+            )}
           </div>
         </div>
 
@@ -94,18 +109,21 @@ export default function EmptySilos() {
                 {lineMachines.map(m => {
                   const emptyRecord = getEmptyRecordForMachine(m.id);
                   const isEmpty = !!emptyRecord;
+                  const isPending = queuedMachines.includes(m.id);
 
-                  let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative ";
+                  let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all relative ";
                   if (isEmpty) {
-                    btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] hover:scale-105";
+                    btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] cursor-default";
+                  } else if (isPending) {
+                    btnClass += "bg-gradient-to-br from-status-warning to-[#e68900] text-white border-2 border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] cursor-default";
                   } else {
-                    btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105";
+                    btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] cursor-pointer hover:scale-105";
                   }
 
                   return (
                     <button
                       key={m.id}
-                      onClick={() => handleMachineClick(m)}
+                      onClick={isEmpty || isPending ? undefined : () => handleMachineClick(m)}
                       className={btnClass}
                     >
                       M{m.displayNumber || m.id}

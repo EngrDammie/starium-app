@@ -22,6 +22,8 @@ import CartonWaste from './pages/CartonWaste';
 import CartonWasteReport from './pages/CartonWasteReport';
 import LaminateWaste from './pages/LaminateWaste';
 import LaminateWasteReport from './pages/LaminateWasteReport';
+import PalletTransfer from './pages/PalletTransfer';
+import PalletTransferReport from './pages/PalletTransferReport';
 import Reports from './pages/Reports';
 import QCSachetProductionChecks from './pages/QCSachetProductionChecks';
 import QCSachetReport from './pages/QCSachetReport';
@@ -52,6 +54,8 @@ function App() {
       <Route path="/carton-waste-report" element={<ProtectedRoute><CartonWasteReport /></ProtectedRoute>} />
       <Route path="/laminate-waste" element={<ProtectedRoute><LaminateWaste /></ProtectedRoute>} />
       <Route path="/laminate-waste-report" element={<ProtectedRoute><LaminateWasteReport /></ProtectedRoute>} />
+      <Route path="/pallet-transfer" element={<ProtectedRoute><PalletTransfer /></ProtectedRoute>} />
+      <Route path="/pallet-transfer-report" element={<ProtectedRoute><PalletTransferReport /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/qc-sachet-report" element={<ProtectedRoute><QCSachetReport /></ProtectedRoute>} />
     </Routes>

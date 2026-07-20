@@ -8,11 +8,11 @@ import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
 import { getOrCreateShiftApproval, saveQCTest, subscribeToShiftTests } from '../services/qcOperations';
-import { subscribeToActiveEmptySilos, markMachineNoLongerEmpty, getEmptySilosDocId } from '../services/emptySiloOperations';
+import { subscribeToActiveEmptySilos, markMachineNoLongerEmpty, getQueuedEmptySilos, getEmptySilosDocId } from '../services/emptySiloOperations';
 
 export default function PowderDensity() {
   const { config, loadingConfig } = useConfig();
-  const { isOnline, setQueueCount } = useNetwork();
+  const { isOnline, setQueueCount, setEmptySiloQueueCount } = useNetwork();
   
   // 🎯 NEW: Pull the user's exact verified full name
   const { systemRole, departmentRoles, userFullName } = useAuth(); 
@@ -58,10 +58,26 @@ export default function PowderDensity() {
     if (!hasAccess) return;
     if (loadingConfig) return;
 
-    const unsubTests = subscribeToShiftTests(mode, config, (tests) => setShiftTests(tests));
+    const unsubTests = subscribeToShiftTests(mode, config, (tests) => {
+      const synced = tests.map(t => ({ ...t, synced: true }));
+      const queued = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]')
+        .filter(q => q.mode === mode)
+        .map(q => ({ ...q, synced: false, id: q.syncId || q.localCreatedAt }));
+      const merged = [...synced, ...queued].sort((a, b) => {
+        const ta = a.createdAt?.toDate?.()?.getTime() || new Date(a.localCreatedAt || a.createdAt).getTime();
+        const tb = b.createdAt?.toDate?.()?.getTime() || new Date(b.localCreatedAt || b.createdAt).getTime();
+        return ta - tb;
+      });
+      setShiftTests(merged);
+    });
 
     const unsubEmpty = subscribeToActiveEmptySilos((records) => {
-      setEmptyRecords(records);
+      const q = getQueuedEmptySilos();
+      const merged = [
+        ...records,
+        ...q.filter(qe => !records.some(r => r.machineId === qe.machineId)).map(qe => ({ ...qe, id: qe.syncId || null }))
+      ];
+      setEmptyRecords(merged);
     });
 
     return () => { unsubTests(); unsubEmpty(); };
@@ -189,14 +205,26 @@ export default function PowderDensity() {
             const emptyRecord = emptyRecords.find(r => r.machineId === machineId && !r.noLongerEmptyAt);
             if (emptyRecord && buggy) {
               const machine = config.machines?.find(m => m.id === machineId);
-              markMachineNoLongerEmpty(emptyRecord.id, buggy, userFullName, config, broadcastAlert, machine);
+              await markMachineNoLongerEmpty(emptyRecord.id, buggy, userFullName, config, broadcastAlert, machine, isOnline, setEmptySiloQueueCount);
             }
           }
         }
       }
 
-      if (result === 'offline-queued') setSaveStatus({ state: 'saved', message: '📱 Saved Offline!' });
-      else if (result === 'saved') setSaveStatus({ state: 'saved', message: '✅ Saved!' });
+      if (result === 'offline-queued') {
+        setSaveStatus({ state: 'saved', message: '📱 Saved Offline!' });
+        const queued = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]')
+          .filter(q => q.mode === mode)
+          .map(q => ({ ...q, synced: false, id: q.syncId || q.localCreatedAt }));
+        setShiftTests(prev => {
+          const synced = prev.filter(t => t.synced);
+          return [...synced, ...queued].sort((a, b) => {
+            const ta = a.createdAt?.toDate?.()?.getTime() || new Date(a.localCreatedAt || a.createdAt).getTime();
+            const tb = b.createdAt?.toDate?.()?.getTime() || new Date(b.localCreatedAt || b.createdAt).getTime();
+            return ta - tb;
+          });
+        });
+      } else if (result === 'saved') setSaveStatus({ state: 'saved', message: '✅ Saved!' });
 
       setTimeout(() => { resetFormFields(); setSaveStatus({ state: 'idle', message: '' }); }, 2000);
     } catch (error) {
@@ -367,8 +395,8 @@ export default function PowderDensity() {
                     </thead>
                     <tbody className="divide-y divide-[#333]">
                       {shiftTests.map((test) => (
-                        <tr key={test.id} className="hover:bg-primary/5 transition-colors">
-                          <td className="p-4 text-gray-300 font-medium">{formatTime(test.createdAt || test.localCreatedAt)}</td>
+                        <tr key={test.id} className={`hover:bg-primary/5 transition-colors ${!test.synced ? 'opacity-50' : ''}`}>
+                          <td className="p-4 text-gray-300 font-medium">{formatTime(test.createdAt || test.localCreatedAt)}{!test.synced && <span className="ml-2 text-status-warning" title="Pending sync">⏳</span>}</td>
                           <td className="p-4 text-white font-bold">{test.weight}g</td>
                           <td className="p-4 text-white font-bold">{parseFloat(test.density).toFixed(3)}</td>
                           <td className="p-4">{getModalDensityBadge(parseFloat(test.density))}</td>

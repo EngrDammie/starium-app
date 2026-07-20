@@ -5,10 +5,11 @@ import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToShiftTests } from '../services/qcOperations';
 import { subscribeToActiveUsers } from '../services/presenceOperations';
-import { subscribeToActiveEmptySilos } from '../services/emptySiloOperations';
+import { subscribeToActiveEmptySilos, getQueuedEmptySilos } from '../services/emptySiloOperations';
 import { subscribeToActiveStoppedMachines } from '../services/stoppedMachineOperations';
 import { subscribeToShiftCartonRecords } from '../services/cartonOperations';
 import { subscribeToShiftLaminateRecords } from '../services/laminateOperations';
+import { subscribeToShiftPalletTransfers } from '../services/palletTransferOperations';
 import { Link } from 'react-router-dom';
 import { subscribeToAllStringWeights, getShiftDateInfo } from '../services/qcStringWeightOperations';
 import { subscribeToAllBagInspections } from '../services/qcBagInspectionOperations';
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [swCount, setSwCount] = useState(0);
   const [biCount, setBiCount] = useState(0);
   const [ciCount, setCiCount] = useState(0);
+  const [palletTransfer, setPalletTransfer] = useState({ totalPallets: 0, totalCartons: 0, perGram: {} });
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -52,7 +54,8 @@ export default function Dashboard() {
     });
 
     const unsubEmpty = subscribeToActiveEmptySilos((records) => {
-      setEmptySilosCount(records.length);
+      const queued = getQueuedEmptySilos();
+      setEmptySilosCount(records.length + queued.filter(r => !r.noLongerEmptyAt).length);
     });
 
     const unsubStopped = subscribeToActiveStoppedMachines((records) => {
@@ -87,6 +90,21 @@ export default function Dashboard() {
       });
     });
 
+    const unsubPallet = subscribeToShiftPalletTransfers(config, (records) => {
+      const syncedRecords = records.filter(r => r.synced);
+      const perGram = {};
+      let pallets = 0;
+      let cartons = 0;
+      for (const r of syncedRecords) {
+        pallets += r.palletCount || 0;
+        cartons += r.totalCartons || 0;
+        if (!perGram[r.gram]) perGram[r.gram] = { pallets: 0, cartons: 0 };
+        perGram[r.gram].pallets += r.palletCount || 0;
+        perGram[r.gram].cartons += r.totalCartons || 0;
+      }
+      setPalletTransfer({ totalPallets: pallets, totalCartons: cartons, perGram });
+    });
+
     return () => {
       unsubLevel9();
       unsubBot();
@@ -95,6 +113,7 @@ export default function Dashboard() {
       unsubStopped();
       unsubCarton();
       unsubLaminate();
+      unsubPallet();
     };
   }, [config, loadingConfig]);
 
@@ -220,7 +239,7 @@ export default function Dashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-status-danger animate-pulse shadow-[0_0_8px_rgba(244,67,54,0.8)]"></span>
               🛢️ Empty Silos
             </h3>
-            <div className="text-5xl font-black text-white mb-1">{stoppedCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
+            <div className="text-5xl font-black text-white mb-1">{emptySilosCount}<span className="text-2xl text-gray-500">/{config?.machines?.length || 0}</span></div>
             <div className="text-status-danger text-xs font-bold uppercase tracking-wider">Needs Fill</div>
           </Link>
         ) : (
@@ -305,7 +324,36 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Metric 8: QC Sachet Checks */}
+        {/* Metric 8: Pallet Transfer */}
+        {systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'packaging_manager', 'qc_manager'].includes(r)) ? (
+          <Link to="/pallet-transfer-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Cartons → Warehouse</h3>
+            <div className="text-4xl font-black text-white mb-1">{palletTransfer.totalPallets} pallet{palletTransfer.totalPallets > 1 ? 's' : ''}</div>
+            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} cartons</div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {Object.entries(palletTransfer.perGram).sort(([a],[b]) => Number(a)-Number(b)).map(([g, t]) => (
+                <span key={g} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{g}g: {t.cartons}</span>
+              ))}
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">📊 View Report →</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Cartons → Warehouse</h3>
+            <div className="text-4xl font-black text-white mb-1">{palletTransfer.totalPallets} pallet{palletTransfer.totalPallets > 1 ? 's' : ''}</div>
+            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} cartons</div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {Object.entries(palletTransfer.perGram).sort(([a],[b]) => Number(a)-Number(b)).map(([g, t]) => (
+                <span key={g} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{g}g: {t.cartons}</span>
+              ))}
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
+          </div>
+        )}
+
+        {/* Metric 9: QC Sachet Checks */}
         {isAdminOrQcManager ? (
           <Link to="/qc-sachet-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
@@ -409,6 +457,16 @@ export default function Dashboard() {
                 </div>
               </Link>
             )}
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['prod_staff', 'packaging_staff', 'prod_manager', 'packaging_manager'].includes(r))) && (
+              <Link to="/pallet-transfer" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">📦</div>
+                <div>
+                  <div className="text-white font-bold text-lg">Pallet Transfer</div>
+                  <div className="text-gray-400 text-sm">Record carton transfers to warehouse</div>
+                </div>
+              </Link>
+            )}
           </>
         )}
 
@@ -465,6 +523,16 @@ export default function Dashboard() {
                 <div className="text-gray-400 text-sm">Laminate waste analysis & cross-shift comparison</div>
               </div>
             </Link>
+
+            {(systemRole === 'super_admin' || departmentRoles.some(r => ['prod_manager', 'packaging_manager', 'qc_manager'].includes(r))) && (
+              <Link to="/pallet-transfer-report" className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl flex items-center gap-4 hover:border-primary hover:bg-[#222] transition-all group">
+                <div className="text-3xl group-hover:scale-110 transition-transform">📊</div>
+                <div>
+                  <div className="text-white font-bold text-lg">Pallet Transfer Report</div>
+                  <div className="text-gray-400 text-sm">Carton transfer analysis & weekly trends</div>
+                </div>
+              </Link>
+            )}
           </>
         )}
       </div>

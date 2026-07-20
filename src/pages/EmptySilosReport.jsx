@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
-import { subscribeToActiveEmptySilos, subscribeToShiftEmptySilos } from '../services/emptySiloOperations';
+import { subscribeToActiveEmptySilos, subscribeToShiftEmptySilos, getQueuedEmptySilos } from '../services/emptySiloOperations';
 
 function timeAgo(date) {
   if (!date) return 'Unknown';
@@ -31,6 +31,8 @@ export default function EmptySilosReport() {
 
   const [emptyRecords, setEmptyRecords] = useState([]);
   const [refilledCount, setRefilledCount] = useState(0);
+  const [queuedMachines, setQueuedMachines] = useState([]);
+  const [queuedRefilledCount, setQueuedRefilledCount] = useState(0);
   const [currentShift, setCurrentShift] = useState('--');
   const [modalRecord, setModalRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,18 +50,27 @@ export default function EmptySilosReport() {
     if (loadingConfig || !canView) return;
     const unsubActive = subscribeToActiveEmptySilos((records) => {
       setEmptyRecords(records);
+      const q = getQueuedEmptySilos();
+      setQueuedMachines(q.filter(r => !r.noLongerEmptyAt).map(r => r.machineId));
+      setQueuedRefilledCount(q.filter(r => r.noLongerEmptyAt).length);
     });
 
     const unsubShift = subscribeToShiftEmptySilos(config, (records) => {
       setRefilledCount(records.filter(r => r.noLongerEmptyAt).length);
     });
 
-    return () => { unsubActive(); unsubShift(); };
+    const interval = setInterval(() => {
+      const q = getQueuedEmptySilos();
+      setQueuedMachines(q.filter(r => !r.noLongerEmptyAt).map(r => r.machineId));
+      setQueuedRefilledCount(q.filter(r => r.noLongerEmptyAt).length);
+    }, 3000);
+
+    return () => { unsubActive(); unsubShift(); clearInterval(interval); };
   }, [canView, config]);
 
   const currentlyEmpty = emptyRecords.filter(r => !r.noLongerEmptyAt);
   const totalMachines = config?.machines?.length || 0;
-  const emptyCount = currentlyEmpty.length;
+  const emptyCount = currentlyEmpty.length + queuedMachines.length;
   const emptyPercent = totalMachines > 0 ? ((emptyCount / totalMachines) * 100).toFixed(1) : '0.0';
 
   const lines = [...(config.productionLines || [])].sort((a, b) => b.order - a.order);
@@ -110,7 +121,7 @@ export default function EmptySilosReport() {
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg">
           <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔄 Refilled This Shift</h3>
-          <div className="text-5xl font-black text-white mb-1">{refilledCount}</div>
+          <div className="text-5xl font-black text-white mb-1">{refilledCount + queuedRefilledCount}</div>
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Machines restored</div>
         </div>
       </div>
@@ -125,6 +136,12 @@ export default function EmptySilosReport() {
             <span className="w-4 h-4 rounded bg-status-danger"></span>
             <span className="text-gray-400">Empty — click for details</span>
           </div>
+          {queuedMachines.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-status-warning"></span>
+              <span className="text-gray-400">⏳ Pending ({queuedMachines.length})</span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 md:gap-3 max-w-4xl mx-auto justify-between mt-4">
@@ -139,10 +156,13 @@ export default function EmptySilosReport() {
               <div key={lineObj.id} className="flex flex-col gap-2 md:gap-3 flex-1">
                 {lineMachines.map(m => {
                   const isEmpty = !!getEmptyRecordForMachine(m.id);
+                  const isPending = queuedMachines.includes(m.id);
 
                   let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all relative ";
                   if (isEmpty) {
                     btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] cursor-pointer hover:scale-105";
+                  } else if (isPending) {
+                    btnClass += "bg-gradient-to-br from-status-warning to-[#e68900] text-white border-2 border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] cursor-default";
                   } else {
                     btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] cursor-default";
                   }

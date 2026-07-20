@@ -7,6 +7,9 @@ import { syncLaminateOfflineQueue } from '../services/laminateOperations';
 import { syncCartonInspectionQueue } from '../services/qcCartonInspectionOperations';
 import { syncBagInspectionQueue } from '../services/qcBagInspectionOperations';
 import { syncStringWeightQueue } from '../services/qcStringWeightOperations';
+import { syncPalletTransferOfflineQueue } from '../services/palletTransferOperations';
+import { syncEmptySiloQueue } from '../services/emptySiloOperations';
+import { syncStoppedMachineQueue } from '../services/stoppedMachineOperations';
 
 const NetworkContext = createContext();
 
@@ -24,6 +27,12 @@ export function NetworkProvider({ children }) {
   const [isCartonInspectionSyncing, setIsCartonInspectionSyncing] = useState(false);
   const [isBagInspectionSyncing, setIsBagInspectionSyncing] = useState(false);
   const [isStringWeightSyncing, setIsStringWeightSyncing] = useState(false);
+  const [palletQueueCount, setPalletQueueCount] = useState(0);
+  const [isPalletSyncing, setIsPalletSyncing] = useState(false);
+  const [emptySiloQueueCount, setEmptySiloQueueCount] = useState(0);
+  const [isEmptySiloSyncing, setIsEmptySiloSyncing] = useState(false);
+  const [stoppedMachineQueueCount, setStoppedMachineQueueCount] = useState(0);
+  const [isStoppedMachineSyncing, setIsStoppedMachineSyncing] = useState(false);
 
   // 1. Listen for Wi-Fi changes
   useEffect(() => {
@@ -34,12 +43,18 @@ export function NetworkProvider({ children }) {
       const ciq = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]');
       const biq = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]');
       const swq = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]');
+      const pq = JSON.parse(localStorage.getItem('starium_pallet_transfer_queue') || '[]');
+      const esq = JSON.parse(localStorage.getItem('starium_empty_silo_queue') || '[]');
+      const smq = JSON.parse(localStorage.getItem('starium_stopped_machine_queue') || '[]');
       setQueueCount(q.length);
       setCartonQueueCount(cq.length);
       setLaminateQueueCount(lq.length);
       setCartonInspectionQueueCount(ciq.length);
       setBagInspectionQueueCount(biq.length);
       setStringWeightQueueCount(swq.length);
+      setPalletQueueCount(pq.length);
+      setEmptySiloQueueCount(esq.length);
+      setStoppedMachineQueueCount(smq.length);
     };
 
     const handleOnline = () => {
@@ -189,8 +204,47 @@ export function NetworkProvider({ children }) {
     }
   }, [isOnline, stringWeightQueueCount, isStringWeightSyncing]);
 
+  // 8. Auto-Sync trigger for pallet transfer queue
+  useEffect(() => {
+    const syncPalletQueue = async () => {
+      setIsPalletSyncing(true);
+      await syncPalletTransferOfflineQueue();
+      setPalletQueueCount(0);
+      setIsPalletSyncing(false);
+    };
+    if (isOnline && palletQueueCount > 0 && !isPalletSyncing) {
+      syncPalletQueue();
+    }
+  }, [isOnline, palletQueueCount, isPalletSyncing]);
+
+  // 9. Auto-Sync trigger for empty silo queue
+  useEffect(() => {
+    const syncEsQueue = async () => {
+      setIsEmptySiloSyncing(true);
+      const result = await syncEmptySiloQueue();
+      if (result?.synced > 0) setEmptySiloQueueCount(0);
+      setIsEmptySiloSyncing(false);
+    };
+    if (isOnline && emptySiloQueueCount > 0 && !isEmptySiloSyncing) {
+      syncEsQueue();
+    }
+  }, [isOnline, emptySiloQueueCount, isEmptySiloSyncing]);
+
+  // 10. Auto-Sync trigger for stopped machine queue
+  useEffect(() => {
+    const syncSmQueue = async () => {
+      setIsStoppedMachineSyncing(true);
+      const result = await syncStoppedMachineQueue();
+      if (result?.synced > 0) setStoppedMachineQueueCount(0);
+      setIsStoppedMachineSyncing(false);
+    };
+    if (isOnline && stoppedMachineQueueCount > 0 && !isStoppedMachineSyncing) {
+      syncSmQueue();
+    }
+  }, [isOnline, stoppedMachineQueueCount, isStoppedMachineSyncing]);
+
   return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, bagInspectionQueueCount, setBagInspectionQueueCount, stringWeightQueueCount, setStringWeightQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing, isBagInspectionSyncing, setIsBagInspectionSyncing, isStringWeightSyncing, setIsStringWeightSyncing }}>
+    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, bagInspectionQueueCount, setBagInspectionQueueCount, stringWeightQueueCount, setStringWeightQueueCount, palletQueueCount, setPalletQueueCount, emptySiloQueueCount, setEmptySiloQueueCount, stoppedMachineQueueCount, setStoppedMachineQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing, isBagInspectionSyncing, setIsBagInspectionSyncing, isStringWeightSyncing, setIsStringWeightSyncing, isPalletSyncing, setIsPalletSyncing, isEmptySiloSyncing, setIsEmptySiloSyncing, isStoppedMachineSyncing, setIsStoppedMachineSyncing }}>
       {children}
     </NetworkContext.Provider>
   );

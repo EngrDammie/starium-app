@@ -36,6 +36,16 @@ const DEFAULT_CONFIG = {
     targetWastePercent: 5,
     wasteAlertThreshold: 10
   },
+  // 🎯 Pallet Transfer Tracking Config
+  palletTransfer: {
+    palletSizes: {
+      "22": 100,
+      "45": 90,
+      "85": 80,
+      "125": 60,
+      "850": 40
+    }
+  },
   // 🎯 Laminate Waste Tracking Config
   laminateWaste: {
     targetWastePercent: 5,
@@ -71,6 +81,8 @@ const DEFAULT_CONFIG = {
     { id: 'qc_manager', label: 'QC Manager', category: 'Quality Control' },
     { id: 'prod_staff', label: 'Production Staff', category: 'Production' },
     { id: 'prod_manager', label: 'Production Manager', category: 'Production' },
+    { id: 'packaging_staff', label: 'Packaging Staff', category: 'Production' },
+    { id: 'packaging_manager', label: 'Packaging Manager', category: 'Production' },
     { id: 'hr_staff', label: 'HR Staff', category: 'Human Resources' },
     { id: 'hr_manager', label: 'HR Manager', category: 'Human Resources' }
   ],
@@ -102,6 +114,7 @@ export function ConfigProvider({ children }) {
             ...data,
             packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
             cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
+            palletTransfer: { ...DEFAULT_CONFIG.palletTransfer, ...(data.palletTransfer || {}) },
             laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
             machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
             productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,
@@ -142,6 +155,7 @@ export function ConfigProvider({ children }) {
             ...data,
             packagingTeams: { ...DEFAULT_CONFIG.packagingTeams, ...(data.packagingTeams || {}) },
             cartonWaste: { ...DEFAULT_CONFIG.cartonWaste, ...(data.cartonWaste || {}), teams: undefined, defaultTeam: undefined },
+            palletTransfer: { ...DEFAULT_CONFIG.palletTransfer, ...(data.palletTransfer || {}) },
             laminateWaste: { ...DEFAULT_CONFIG.laminateWaste, ...(data.laminateWaste || {}), teams: undefined, defaultTeam: undefined },
             machines: (data.machines || DEFAULT_CONFIG.machines).map(m => ({ fillHeads: 2, ...m })),
             productionLines: data.productionLines || DEFAULT_CONFIG.productionLines,

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
-import { subscribeToActiveStoppedMachines, subscribeToMachineIssues, reportStoppedMachine, markIssueSolved, startMachine, addMachineIssue, appendIssuesToMachine } from '../services/stoppedMachineOperations';
+import { useNetwork } from '../context/NetworkContext';
+import { subscribeToActiveStoppedMachines, subscribeToMachineIssues, reportStoppedMachine, markIssueSolved, startMachine, addMachineIssue, appendIssuesToMachine, getQueuedStoppedMachines } from '../services/stoppedMachineOperations';
 
 const toTitleCase = str => str.replace(/\b\w/g, c => c.toUpperCase());
 
@@ -30,6 +31,7 @@ const COLORS = {
 export default function StopMachine() {
   const { config, loadingConfig } = useConfig();
   const { systemRole, departmentRoles, userFullName } = useAuth();
+  const { isOnline } = useNetwork();
   const [stoppedRecords, setStoppedRecords] = useState([]);
   const [machineIssues, setMachineIssues] = useState([]);
   const [modalMachine, setModalMachine] = useState(null);
@@ -38,6 +40,7 @@ export default function StopMachine() {
   const [selectedIssueIds, setSelectedIssueIds] = useState([]);
   const [newIssueText, setNewIssueText] = useState('');
   const [sparkle, setSparkle] = useState(false);
+  const [queuedMachines, setQueuedMachines] = useState([]);
 
   const canReport = systemRole === 'super_admin' || departmentRoles.some(r => ['qc_staff', 'qc_manager'].includes(r));
 
@@ -51,6 +54,11 @@ export default function StopMachine() {
     });
     return () => { unsubRecords(); unsubIssues(); };
   }, [canReport]);
+
+  useEffect(() => {
+    const q = getQueuedStoppedMachines();
+    setQueuedMachines(q.map(r => r.machineId));
+  }, [stoppedRecords]);
 
   const lines = [...(config.productionLines || [])].sort((a, b) => b.order - a.order);
 
@@ -92,11 +100,15 @@ export default function StopMachine() {
     if (currentRecord) {
       result = await appendIssuesToMachine(currentRecord.id, issues, userFullName);
     } else {
-      result = await reportStoppedMachine(modalMachine, issues, userFullName);
+      result = await reportStoppedMachine(modalMachine, issues, userFullName, isOnline);
     }
-    if (result === 'saved') {
+    if (result === 'saved' || result === 'queued') {
       setIsReportModalOpen(false);
       setIsModalOpen(false);
+      if (result === 'queued') {
+        const q = getQueuedStoppedMachines();
+        setQueuedMachines(q.map(r => r.machineId));
+      }
     } else {
       alert('Failed to save issues. Please try again.');
     }
@@ -169,9 +181,18 @@ export default function StopMachine() {
             <span className="w-4 h-4 rounded" style={{ background: COLORS['issues-cleared'] }}></span>
             <span className="text-gray-400">Issues cleared</span>
           </div>
+          {queuedMachines.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-status-warning"></span>
+              <span className="text-gray-400">⏳ Pending sync</span>
+            </div>
+          )}
           <div className="text-gray-500 ml-auto">
-            <span className="text-status-danger font-bold">{stoppedRecords.filter(r => !r.startedAt).length}</span>
+            <span className="text-status-danger font-bold">{stoppedRecords.filter(r => !r.startedAt).length + queuedMachines.length}</span>
             <span className="text-gray-600"> stopped</span>
+            {queuedMachines.length > 0 && (
+              <span className="ml-3 bg-status-warning/20 text-status-warning px-2 py-0.5 rounded-md text-xs uppercase tracking-wider font-bold">⏳ {queuedMachines.length} pending</span>
+            )}
           </div>
         </div>
 
@@ -188,11 +209,14 @@ export default function StopMachine() {
                 {lineMachines.map(m => {
                   const status = getMachineStatus(m.id, stoppedRecords);
                   const isActive = status.type !== 'normal';
+                  const isPending = queuedMachines.includes(m.id);
 
                   let style = {};
                   let className = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative border-2 ";
 
-                  if (status.type === 'normal') {
+                  if (status.type === 'normal' && isPending) {
+                    className += 'bg-gradient-to-br from-status-warning to-[#e68900] text-white border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] hover:scale-105';
+                  } else if (status.type === 'normal') {
                     style = { background: 'linear-gradient(to bottom right, #00E676, #00C853)', borderColor: COLORS.normal, color: 'black' };
                     className += 'shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105';
                   } else if (status.type === 'stopped') {

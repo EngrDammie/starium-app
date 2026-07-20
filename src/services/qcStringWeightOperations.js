@@ -127,6 +127,7 @@ export async function syncStringWeightQueue() {
     batch.set(newRef, {
       ...record,
       localCreatedAt: record.localCreatedAt || new Date().toISOString(),
+      createdAt: record.localCreatedAt ? new Date(record.localCreatedAt) : serverTimestamp(),
       syncedAt: serverTimestamp()
     });
   }

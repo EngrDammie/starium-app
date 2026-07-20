@@ -1,5 +1,7 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, query, where, onSnapshot, writeBatch } from 'firebase/firestore';
+
+const STOPPED_MACHINE_QUEUE_KEY = 'starium_stopped_machine_queue';
 
 export function subscribeToMachineIssues(callback) {
   return onSnapshot(collection(db, 'machine_issues'), (snapshot) => {
@@ -38,7 +40,30 @@ export function subscribeToActiveStoppedMachines(callback) {
   });
 }
 
-export async function reportStoppedMachine(machine, issues, userFullName) {
+export async function reportStoppedMachine(machine, issues, userFullName, isOnline = true) {
+  if (!isOnline) {
+    const queue = JSON.parse(localStorage.getItem(STOPPED_MACHINE_QUEUE_KEY) || '[]');
+    queue.push({
+      type: 'reportStopped',
+      machineId: machine.id,
+      machineDisplayNumber: machine.displayNumber || machine.id || '',
+      machineName: machine.name || '',
+      line: machine.line || '',
+      gram: machine.gram || 0,
+      stoppedBy: userFullName,
+      issues: issues.map(issue => ({
+        id: issue.id,
+        label: issue.label,
+        createdAt: new Date().toISOString(),
+        solvedAt: null,
+        solvedBy: null,
+      })),
+      localCreatedAt: new Date().toISOString()
+    });
+    localStorage.setItem(STOPPED_MACHINE_QUEUE_KEY, JSON.stringify(queue));
+    return 'queued';
+  }
+
   try {
     await addDoc(collection(db, 'stopped_machines'), {
       machineId: machine.id,
@@ -147,5 +172,47 @@ export async function appendIssuesToMachine(docId, issues, userFullName) {
   } catch (error) {
     console.error("Error appending issues:", error);
     return 'error';
+  }
+}
+
+export function getQueuedStoppedMachines() {
+  return JSON.parse(localStorage.getItem(STOPPED_MACHINE_QUEUE_KEY) || '[]');
+}
+
+export async function syncStoppedMachineQueue() {
+  const queue = JSON.parse(localStorage.getItem(STOPPED_MACHINE_QUEUE_KEY) || '[]');
+  if (queue.length === 0) return { synced: 0 };
+  const batch = writeBatch(db);
+  const ref = collection(db, 'stopped_machines');
+  for (const record of queue) {
+    if (record.type === 'reportStopped') {
+      const newRef = doc(ref);
+      batch.set(newRef, {
+        machineId: record.machineId,
+        machineDisplayNumber: record.machineDisplayNumber,
+        machineName: record.machineName,
+        line: record.line,
+        gram: record.gram,
+        stoppedBy: record.stoppedBy,
+        stoppedAt: record.localCreatedAt ? new Date(record.localCreatedAt) : serverTimestamp(),
+        startedAt: null,
+        startedBy: null,
+        issues: (record.issues || []).map(i => ({
+          ...i,
+          createdAt: new Date(i.createdAt),
+        })),
+        isActive: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+  }
+  try {
+    await batch.commit();
+    localStorage.removeItem(STOPPED_MACHINE_QUEUE_KEY);
+    return { synced: queue.length };
+  } catch (err) {
+    console.error('[StoppedMachine] Sync error:', err);
+    throw err;
   }
 }

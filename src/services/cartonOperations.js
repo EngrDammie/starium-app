@@ -179,6 +179,9 @@ export async function syncCartonOfflineQueue() {
     batch.set(newDocRef, {
       ...record,
       localCreatedAt: record.localCreatedAt || new Date().toISOString(),
+      checkedAt: record.localCreatedAt ? new Date(record.localCreatedAt) : serverTimestamp(),
+      createdAt: record.localCreatedAt ? new Date(record.localCreatedAt) : serverTimestamp(),
+      updatedAt: serverTimestamp(),
       syncedAt: serverTimestamp()
     });
   }

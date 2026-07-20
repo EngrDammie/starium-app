@@ -1,6 +1,6 @@
 // src/pages/SystemConfig.jsx
 import { useState, useEffect, useRef } from 'react';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
@@ -76,6 +76,11 @@ export default function SystemConfig() {
     rollWeight850: 49.90
   });
 
+  // Pallet Transfer Settings State
+  const [palletTransferSettings, setPalletTransferSettings] = useState({
+    palletSizes: { "22": 100, "45": 100, "85": 80, "125": 60, "850": 20 }
+  });
+
   // Filters
   const [machineSearch, setMachineSearch] = useState('');
   const [machineLineFilter, setMachineLineFilter] = useState('');
@@ -122,19 +127,30 @@ export default function SystemConfig() {
     }
     if (config?.laminateWaste) {
       const lw = config.laminateWaste;
-      setLaminateWasteSettings({
+      const currentGrams = Object.keys(config?.gramSpecs || {});
+      const updates = {
         targetWastePercent: lw.targetWastePercent ?? 5,
         wasteAlertThreshold: lw.wasteAlertThreshold ?? 10,
         rollsPerShift: lw.rollsPerShift ?? 3,
         smallSacWeight: (lw.sacTypes?.find(s => s.id === 'small')?.weight || 0.080) * 1000,
-        largeSacWeight: (lw.sacTypes?.find(s => s.id === 'large')?.weight || 0.160) * 1000,
-        rollWeight22: lw.rollWeights?.['22'] ?? 51.32,
-        rollWeight45: lw.rollWeights?.['45'] ?? 54.40,
-        rollWeight85: lw.rollWeights?.['85'] ?? 51.60,
-        rollWeight125: lw.rollWeights?.['125'] ?? 53.70,
-        rollWeight850: lw.rollWeights?.['850'] ?? 49.90
-      });
+        largeSacWeight: (lw.sacTypes?.find(s => s.id === 'large')?.weight || 0.160) * 1000
+      };
+      for (const gram of currentGrams) {
+        updates[`rollWeight${gram}`] = lw.rollWeights?.[gram] ?? 0;
+      }
+      setLaminateWasteSettings(updates);
     }
+if (config?.palletTransfer) {
+  const pt = config.palletTransfer;
+  const currentGrams = Object.keys(config?.gramSpecs || {});
+  const reconciled = {};
+  for (const gram of currentGrams) {
+    reconciled[gram] = pt.palletSizes?.[gram] || 80;
+  }
+  setPalletTransferSettings({
+    palletSizes: reconciled
+  });
+}
   }, [config]);
 
   const showToast = (message, isError = false) => {
@@ -245,14 +261,62 @@ export default function SystemConfig() {
       bagCount, freebieCount
     };
 
-    if (await updateDatabase({ gramSpecs: newSpecs }, 'Gram spec saved!')) setIsGramModalOpen(false);
+    try {
+      const configRef = doc(db, 'config', 'settings');
+      const savedSizes = config.palletTransfer?.palletSizes || {};
+      const savedRanges = config.fillHeadWeightRanges || {};
+      const savedRollWeights = config.laminateWaste?.rollWeights || {};
+      const updates = { gramSpecs: newSpecs, updatedAt: serverTimestamp() };
+
+      if (oldGram && oldGram !== gram) {
+        if (oldGram in savedSizes) {
+          updates[`palletTransfer.palletSizes.${oldGram}`] = deleteField();
+          updates[`palletTransfer.palletSizes.${gram}`] = savedSizes[oldGram];
+        }
+        if (oldGram in savedRanges) {
+          updates[`fillHeadWeightRanges.${oldGram}`] = deleteField();
+          updates[`fillHeadWeightRanges.${gram}`] = savedRanges[oldGram];
+        }
+        if (oldGram in savedRollWeights) {
+          updates[`laminateWaste.rollWeights.${oldGram}`] = deleteField();
+          updates[`laminateWaste.rollWeights.${gram}`] = savedRollWeights[oldGram];
+        }
+      } else {
+        if (!(gram in savedSizes)) updates[`palletTransfer.palletSizes.${gram}`] = 80;
+        if (!(gram in savedRanges)) {
+          updates[`fillHeadWeightRanges.${gram}`] = {
+            tooLow: { max: 0 }, low: { min: 0, max: 0 },
+            target: { min: 0, max: 0 }, high: { min: 0, max: 0 }, tooHigh: { min: 0 }
+          };
+        }
+        if (!(gram in savedRollWeights)) updates[`laminateWaste.rollWeights.${gram}`] = 0;
+      }
+
+      await updateDoc(configRef, updates);
+      showToast('Gram spec saved!');
+      setIsGramModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      showToast('Error saving gram spec', true);
+    }
   };
 
   const deleteGramSpec = async (gram) => {
     if (!window.confirm(`Delete spec for ${gram}g?`)) return;
-    const newSpecs = { ...config.gramSpecs };
-    delete newSpecs[gram];
-    await updateDatabase({ gramSpecs: newSpecs }, 'Gram spec deleted');
+    try {
+      const configRef = doc(db, 'config', 'settings');
+      await updateDoc(configRef, {
+        [`gramSpecs.${gram}`]: deleteField(),
+        [`palletTransfer.palletSizes.${gram}`]: deleteField(),
+        [`fillHeadWeightRanges.${gram}`]: deleteField(),
+        [`laminateWaste.rollWeights.${gram}`]: deleteField(),
+        updatedAt: serverTimestamp()
+      });
+      showToast('Gram spec deleted');
+    } catch (error) {
+      console.error(error);
+      showToast('Error deleting gram spec', true);
+    }
   };
 
   // --- ROLE DEFINITIONS LOGIC ---
@@ -472,7 +536,7 @@ export default function SystemConfig() {
       </div>
 
       <div className="flex overflow-x-auto gap-2 mb-6 border-b border-[#333] pb-2 custom-scrollbar">
-        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'qc', 'cartonwaste', 'laminatewaste', 'importexport'].map(tab => (
+        {['machines', 'lines', 'gramspecs', 'roles', 'settings', 'qc', 'cartonwaste', 'laminatewaste', 'palletransfer', 'importexport'].map(tab => (
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab)}
@@ -486,6 +550,7 @@ export default function SystemConfig() {
             {tab === 'qc' && '🔬 QC Settings'}
             {tab === 'cartonwaste' && '📦 Carton Waste'}
             {tab === 'laminatewaste' && '🗑️ Laminate Waste'}
+            {tab === 'palletransfer' && '📦 Pallet Transfer'}
             {tab === 'importexport' && '💾 Import / Export'}
           </button>
         ))}
@@ -747,9 +812,8 @@ export default function SystemConfig() {
           <p className="text-sm text-gray-400 mb-4">Configure the acceptable weight ranges per gram setting for sachet string checks.</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-            {['22', '45', '85', '125', '850'].map(gram => {
-              const range = qcSettings.weightRanges[gram];
-              if (!range) return null;
+            {Object.keys(config.gramSpecs || {}).sort((a,b)=>Number(a)-Number(b)).map(gram => {
+              const range = { tooLow: { max: 0 }, low: { min: 0, max: 0 }, target: { min: 0, max: 0 }, high: { min: 0, max: 0 }, tooHigh: { min: 0 }, ...(qcSettings.weightRanges[gram] || {}) };
               return (
                 <div key={gram} className="bg-[#1a1a1a] border border-[#444] p-5 rounded-xl">
                   <h3 className="text-status-warning font-bold text-lg mb-4 border-b border-[#333] pb-2">{gram}g Settings</h3>
@@ -757,7 +821,7 @@ export default function SystemConfig() {
                   <div className="mb-3">
                     <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📉 Too Low (max)</label>
                     <input type="number" value={range.tooLow.max}
-                      onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooLow: { max: Number(e.target.value) } } } }))}
+                      onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooLow: { max: Number(e.target.value) } } } }))}
                       className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                   </div>
 
@@ -765,13 +829,13 @@ export default function SystemConfig() {
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📉 Low (min)</label>
                       <input type="number" value={range.low.min}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, min: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram]?.low, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 Low (max)</label>
                       <input type="number" value={range.low.max}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram].low, max: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], low: { ...prev.weightRanges[gram]?.low, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                   </div>
@@ -780,13 +844,13 @@ export default function SystemConfig() {
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">🎯 Target (min)</label>
                       <input type="number" value={range.target.min}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, min: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram]?.target, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">🎯 Target (max)</label>
                       <input type="number" value={range.target.max}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram].target, max: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], target: { ...prev.weightRanges[gram]?.target, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                   </div>
@@ -795,13 +859,13 @@ export default function SystemConfig() {
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 High (min)</label>
                       <input type="number" value={range.high.min}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, min: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram]?.high, min: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                     <div className="flex-1">
                       <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 High (max)</label>
                       <input type="number" value={range.high.max}
-                        onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram].high, max: Number(e.target.value) } } } }))}
+                        onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], high: { ...prev.weightRanges[gram]?.high, max: Number(e.target.value) } } } }))}
                         className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                     </div>
                   </div>
@@ -809,7 +873,7 @@ export default function SystemConfig() {
                   <div className="mb-3">
                     <label className="text-gray-400 text-xs uppercase tracking-wider font-bold">📈 Too High (min)</label>
                     <input type="number" value={range.tooHigh.min}
-                      onChange={e => setQcSettings(prev => ({ weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooHigh: { ...prev.weightRanges[gram].tooHigh, min: Number(e.target.value) } } } }))}
+                      onChange={e => setQcSettings(prev => ({ ...prev, weightRanges: { ...prev.weightRanges, [gram]: { ...prev.weightRanges[gram], tooHigh: { ...prev.weightRanges[gram]?.tooHigh, min: Number(e.target.value) } } } }))}
                       className="w-full mt-1 p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                   </div>
                 </div>
@@ -899,7 +963,7 @@ export default function SystemConfig() {
                   className="w-full mt-1 p-3 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
               <div className="text-xs text-gray-400 uppercase font-bold tracking-wider mt-4 mb-2 border-b border-[#333] pb-1">⚖️ Roll Weight per Gram Setting (kg)</div>
-              {['22', '45', '85', '125', '850'].map(gram => (
+              {Object.keys(config.gramSpecs || {}).sort((a,b)=>Number(a)-Number(b)).map(gram => (
                 <div key={gram} className="flex justify-between items-center mb-2">
                   <label className="text-gray-300">{gram}g:</label>
                   <input type="number" min="0" step="0.01"
@@ -930,6 +994,11 @@ export default function SystemConfig() {
           </div>
 
           <button onClick={async () => {
+            const currentGrams = Object.keys(config.gramSpecs || {});
+            const rollWeights = {};
+            for (const gram of currentGrams) {
+              rollWeights[gram] = laminateWasteSettings[`rollWeight${gram}`] || 0;
+            }
             await updateDatabase({
               laminateWaste: {
                 targetWastePercent: laminateWasteSettings.targetWastePercent,
@@ -939,17 +1008,55 @@ export default function SystemConfig() {
                   { id: 'small', label: 'Small Sac', weight: laminateWasteSettings.smallSacWeight / 1000 },
                   { id: 'large', label: 'Large Sac', weight: laminateWasteSettings.largeSacWeight / 1000 }
                 ],
-                rollWeights: {
-                  "22": laminateWasteSettings.rollWeight22,
-                  "45": laminateWasteSettings.rollWeight45,
-                  "85": laminateWasteSettings.rollWeight85,
-                  "125": laminateWasteSettings.rollWeight125,
-                  "850": laminateWasteSettings.rollWeight850
-                }
+                rollWeights
               }
             }, 'Laminate waste settings saved!');
           }} className="mt-6 bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
             💾 Save Laminate Waste Settings
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'palletransfer' && (
+        <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg animate-[fadeIn_0.3s]">
+          <h2 className="text-xl font-bold text-primary mb-6">📦 Pallet Transfer Settings</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-[#1a1a1a] border border-[#444] p-6 rounded-xl">
+              <h3 className="text-status-warning text-sm font-bold uppercase tracking-wider mb-4 border-b border-[#333] pb-2">📐 Pallet Sizes (cartons per pallet)</h3>
+              {Object.keys(config?.gramSpecs || { '22': {}, '45': {}, '85': {}, '125': {}, '850': {} }).sort((a, b) => Number(a) - Number(b)).map(gram => (
+                <div key={gram} className="flex justify-between items-center mb-2">
+                  <label className="text-gray-300">{gram}g:</label>
+                  <input type="number" min="1" step="1"
+                    value={palletTransferSettings.palletSizes[gram] || ''}
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      setPalletTransferSettings(prev => ({
+                        ...prev,
+                        palletSizes: { ...prev.palletSizes, [gram]: val }
+                      }));
+                    }}
+                    className="w-24 p-2 bg-[#121212] border border-[#444] rounded text-white text-right outline-none focus:border-primary" />
+                </div>
+              ))}
+              <div className="text-xs text-gray-500 mt-2">Cartons per pallet for each gram setting.</div>
+            </div>
+          </div>
+
+          <button onClick={async () => {
+            const currentGrams = Object.keys(config?.gramSpecs || {});
+            const reconciled = {};
+            for (const gram of currentGrams) {
+              const existing = palletTransferSettings.palletSizes[gram];
+              reconciled[gram] = existing || 80;
+            }
+            await updateDatabase({
+              palletTransfer: {
+                palletSizes: reconciled
+              }
+            }, 'Pallet transfer settings saved!');
+          }} className="mt-6 bg-primary text-black px-10 py-3 rounded-lg font-bold hover:bg-primary-dark transition-all text-lg shadow-[0_0_15px_rgba(0,188,212,0.3)]">
+            💾 Save Pallet Transfer Settings
           </button>
         </div>
       )}

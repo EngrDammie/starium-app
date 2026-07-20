@@ -6,8 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
 import { useNetwork } from '../context/NetworkContext';
 import {
-  getOrCreateCartonWasteShift,
-  getPreviousCheck,
   saveCartonCheck,
   subscribeToShiftCartonRecords,
   getCartonWasteDocId
@@ -17,10 +15,11 @@ export default function CartonWaste() {
   const { config, loadingConfig } = useConfig();
   const { currentUser, userFullName } = useAuth();
   const { broadcastAlert } = useAlerts();
-  const { isOnline, setCartonQueueCount } = useNetwork();
+  const { isOnline, cartonQueueCount, setCartonQueueCount } = useNetwork();
   const navigate = useNavigate();
 
   const [records, setRecords] = useState([]);
+  const [queuedCartonRecords, setQueuedCartonRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState(() => {
     return localStorage.getItem('starium_carton_team') || config?.packagingTeams?.defaultTeam || '';
@@ -60,13 +59,25 @@ export default function CartonWaste() {
     return () => unsub();
   }, [config, loadingConfig]);
 
+  useEffect(() => {
+    if (loadingConfig) return;
+    const docId = getCartonWasteDocId(config);
+    const queued = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]')
+      .filter(q => q.shiftApprovalDocId === docId)
+      .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+    setQueuedCartonRecords(queued);
+    setCartonQueueCount(queued.length);
+  }, [loadingConfig, records]);
+
+  const displayRecords = [...records, ...queuedCartonRecords];
+
   const getMachineLatestCheck = useCallback((machineId) => {
-    const machineRecords = records.filter(r => r.machineId === machineId);
+    const machineRecords = displayRecords.filter(r => r.machineId === machineId);
     if (machineRecords.length === 0) return null;
     return machineRecords.reduce((latest, r) =>
       r.roundNumber > latest.roundNumber ? r : latest
     );
-  }, [records]);
+  }, [displayRecords]);
 
   const getMachineStatus = useCallback((machineId) => {
     const latest = getMachineLatestCheck(machineId);
@@ -78,7 +89,7 @@ export default function CartonWaste() {
 
   const lines = [...(config.productionLines || [])].sort((a, b) => b.order - a.order);
 
-  const handleMachineClick = async (machine) => {
+  const handleMachineClick = (machine) => {
     setSelectedMachine(machine);
     setAllocated('');
     setRemaining('');
@@ -89,13 +100,8 @@ export default function CartonWaste() {
     setLoadingPrev(true);
     setPreviousCheck(null);
 
-    try {
-      const docId = getCartonWasteDocId(config);
-      const prev = await getPreviousCheck(machine.id, docId);
-      setPreviousCheck(prev);
-    } catch (e) {
-      console.error("Error fetching previous check:", e);
-    }
+    const prev = getMachineLatestCheck(machine.id);
+    setPreviousCheck(prev);
     setLoadingPrev(false);
   };
 
@@ -149,7 +155,12 @@ export default function CartonWaste() {
     setSaving(false);
 
     if (result.status === 'offline-queued') {
-      setCartonQueueCount(prev => prev + 1);
+      const docId = getCartonWasteDocId(config);
+      const queued = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]')
+        .filter(q => q.shiftApprovalDocId === docId)
+        .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+      setQueuedCartonRecords(queued);
+      setCartonQueueCount(queued.length);
       broadcastAlert(`Carton check saved offline for M${selectedMachine.displayNumber || selectedMachine.id}`, 'info', undefined, ['/', '/carton-waste', '/carton-waste-report']);
     }
 
@@ -225,6 +236,9 @@ export default function CartonWaste() {
                   <option key={t} value={t}>Team {t}</option>
                 ))}
               </select>
+              {cartonQueueCount > 0 && (
+                <span className="bg-status-warning/20 text-status-warning px-2 py-1 rounded-md text-xs uppercase tracking-wider font-bold">⏳ {cartonQueueCount} pending</span>
+              )}
             </div>
           </div>
 
@@ -256,6 +270,12 @@ export default function CartonWaste() {
             <span className="w-3 h-3 rounded bg-gray-600"></span>
             <span className="text-gray-400">Unchecked</span>
           </div>
+          {queuedCartonRecords.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded bg-status-warning"></span>
+              <span className="text-gray-400">⏳ Pending sync</span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 md:gap-3 max-w-4xl mx-auto justify-between mt-4">
@@ -271,9 +291,12 @@ export default function CartonWaste() {
                 {lineMachines.map(m => {
                   const status = getMachineStatus(m.id);
                   const latest = getMachineLatestCheck(m.id);
+                  const isPending = latest && latest.synced === false;
 
                   let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative flex flex-col items-center gap-1 justify-center min-h-[80px] ";
-                  if (status === 'checked') {
+                  if (status === 'unchecked' && isPending) {
+                    btnClass += "bg-gradient-to-br from-status-warning to-[#e68900] text-white border-2 border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] hover:scale-105";
+                  } else if (status === 'checked') {
                     btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105";
                   } else if (status === 'high-waste') {
                     btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] hover:scale-105";
@@ -298,6 +321,7 @@ export default function CartonWaste() {
                           Waste:{latest.runningWastePercent.toFixed(1)}%
                         </span>
                       )}
+                      {isPending && <span className="text-[10px] leading-tight text-status-warning">⏳ pending</span>}
                     </button>
                   );
                 })}

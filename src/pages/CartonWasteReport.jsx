@@ -567,11 +567,11 @@ export default function CartonWasteReport() {
   );
 }
 
-function buildShiftIdentifiers(targetShift, targetDateStr, count) {
+function buildShiftIdentifiers(currentShift, targetDateStr, count) {
   const targetDate = new Date(targetDateStr);
   const results = [];
 
-  for (let i = 0; i < count; i++) {
+  for (let i = count - 1; i >= 0; i--) {
     const d = new Date(targetDate);
     d.setDate(d.getDate() - i);
     const year = d.getFullYear();
@@ -580,19 +580,21 @@ function buildShiftIdentifiers(targetShift, targetDateStr, count) {
     const dateStr = `${year}-${month}-${day}`;
     const shortDate = `${month}/${day}`;
 
-    results.push({
-      shift: targetShift,
-      date: dateStr,
-      shortDate,
-      isCurrent: i === 0
-    });
+    for (const shift of ['DAY', 'NIGHT']) {
+      results.push({
+        shift,
+        date: dateStr,
+        shortDate,
+        isCurrent: i === 0 && shift === currentShift
+      });
+    }
   }
 
   return results;
 }
 
-async function buildCrossShiftData(config, targetShift, targetDateStr, teamFilter) {
-  const shifts = buildShiftIdentifiers(targetShift, targetDateStr, 14);
+async function buildCrossShiftData(config, currentShift, targetDateStr, teamFilter) {
+  const shifts = buildShiftIdentifiers(currentShift, targetDateStr, 14);
   const data = [];
 
   for (const s of shifts) {

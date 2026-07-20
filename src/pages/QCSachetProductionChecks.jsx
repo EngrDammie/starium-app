@@ -35,6 +35,7 @@ export default function QCSachetProductionChecks() {
   const [approvalDocId, setApprovalDocId] = useState(null);
 
   const [allRecords, setAllRecords] = useState([]);
+  const [queuedSW, setQueuedSW] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [machineRecords, setMachineRecords] = useState([]);
   const [recordsUnsub, setRecordsUnsub] = useState(null);
@@ -44,10 +45,12 @@ export default function QCSachetProductionChecks() {
   const [swTimeLeft, setSwTimeLeft] = useState(null);
 
   const [bagRecords, setBagRecords] = useState([]);
+  const [queuedBI, setQueuedBI] = useState([]);
   const [bagUnsub, setBagUnsub] = useState(null);
   const [biTimeLeft, setBiTimeLeft] = useState(null);
 
   const [ciRecords, setCiRecords] = useState([]);
+  const [queuedCI, setQueuedCI] = useState([]);
   const [ciUnsub, setCiUnsub] = useState(null);
   const [ciTimeLeft, setCiTimeLeft] = useState(null);
 
@@ -102,6 +105,23 @@ export default function QCSachetProductionChecks() {
 
   useEffect(() => {
     if (!approvalDocId) return;
+    const sw = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]')
+      .filter(q => q.approvalDocId === approvalDocId);
+    setQueuedSW(sw);
+    const bi = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]')
+      .filter(q => q.approvalDocId === approvalDocId);
+    setQueuedBI(bi);
+    const ci = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]')
+      .filter(q => q.approvalDocId === approvalDocId);
+    setQueuedCI(ci);
+  }, [approvalDocId, allRecords, allBagRecords, allCartonRecords]);
+
+  const displaySW = [...allRecords, ...queuedSW.map(r => ({ ...r, synced: false }))];
+  const displayBI = [...allBagRecords, ...queuedBI.map(r => ({ ...r, synced: false }))];
+  const displayCI = [...allCartonRecords, ...queuedCI.map(r => ({ ...r, synced: false }))];
+
+  useEffect(() => {
+    if (!approvalDocId) return;
     const unsub = subscribeToShiftApproval(approvalDocId, (data) => setApprovalData(data));
     return () => unsub();
   }, [approvalDocId]);
@@ -113,7 +133,14 @@ export default function QCSachetProductionChecks() {
       return;
     }
     if (recordsUnsub) recordsUnsub();
-    const unsub = subscribeToMachineStringWeights(approvalDocId, selectedMachine.id, (records) => setMachineRecords(records));
+    const unsub = subscribeToMachineStringWeights(approvalDocId, selectedMachine.id, (records) => {
+      const synced = records.map(r => ({ ...r, synced: true }));
+      const queued = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]')
+        .filter(q => q.machineId === selectedMachine.id && q.approvalDocId === approvalDocId)
+        .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+      const merged = [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+      setMachineRecords(merged);
+    });
     setRecordsUnsub(() => unsub);
     return () => { if (unsub) unsub(); };
   }, [selectedMachine, approvalDocId]);
@@ -125,7 +152,14 @@ export default function QCSachetProductionChecks() {
       return;
     }
     if (bagUnsub) bagUnsub();
-    const unsub = subscribeToMachineBagInspections(approvalDocId, selectedMachine.id, (records) => setBagRecords(records));
+    const unsub = subscribeToMachineBagInspections(approvalDocId, selectedMachine.id, (records) => {
+      const synced = records.map(r => ({ ...r, synced: true }));
+      const queued = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]')
+        .filter(q => q.machineId === selectedMachine.id && q.approvalDocId === approvalDocId)
+        .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+      const merged = [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+      setBagRecords(merged);
+    });
     setBagUnsub(() => unsub);
     return () => { if (unsub) unsub(); };
   }, [selectedMachine, approvalDocId]);
@@ -137,7 +171,14 @@ export default function QCSachetProductionChecks() {
       return;
     }
     if (ciUnsub) ciUnsub();
-    const unsub = subscribeToMachineCartonInspections(approvalDocId, selectedMachine.id, (records) => setCiRecords(records));
+    const unsub = subscribeToMachineCartonInspections(approvalDocId, selectedMachine.id, (records) => {
+      const synced = records.map(r => ({ ...r, synced: true }));
+      const queued = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]')
+        .filter(q => q.machineId === selectedMachine.id && q.approvalDocId === approvalDocId)
+        .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+      const merged = [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+      setCiRecords(merged);
+    });
     setCiUnsub(() => unsub);
     return () => { if (unsub) unsub(); };
   }, [selectedMachine, approvalDocId]);
@@ -219,7 +260,7 @@ export default function QCSachetProductionChecks() {
   const cartonInspectionReady = !cartonInspectionLocked && (ciTimeLeft === null || ciTimeLeft <= 0);
 
   const getMachineLatestRound = (machineId) => {
-    return allRecords
+    return displaySW
       .filter(r => r.machineId === machineId)
       .sort((a, b) => (b.roundNumber || 0) - (a.roundNumber || 0))[0] || null;
   };
@@ -233,9 +274,9 @@ export default function QCSachetProductionChecks() {
 
   // Machine stats for approval modal
   const machineStats = (config.machines || []).map(m => {
-    const sw = allRecords.filter(r => r.machineId === m.id);
-    const bi = allBagRecords.filter(r => r.machineId === m.id);
-    const ci = allCartonRecords.filter(r => r.machineId === m.id);
+    const sw = displaySW.filter(r => r.machineId === m.id);
+    const bi = displayBI.filter(r => r.machineId === m.id);
+    const ci = displayCI.filter(r => r.machineId === m.id);
     return {
       machine: m,
       swRounds: sw.length,
@@ -292,6 +333,17 @@ export default function QCSachetProductionChecks() {
       const result = await saveStringWeightCheck(record, isOnline);
       if (result === 'saved' || result === 'queued') {
         setDialogType(null);
+        if (result === 'queued') {
+          const sw = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]')
+            .filter(q => q.approvalDocId === approvalDocId);
+          setQueuedSW(sw);
+          setMachineRecords(prev => {
+            const synced = prev.filter(r => r.synced);
+            const queued = sw.filter(q => q.machineId === selectedMachine.id)
+              .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+            return [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -328,6 +380,17 @@ export default function QCSachetProductionChecks() {
       const result = await saveBagInspectionCheck(record, isOnline);
       if (result === 'saved' || result === 'queued') {
         setDialogType(null);
+        if (result === 'queued') {
+          const bi = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]')
+            .filter(q => q.approvalDocId === approvalDocId);
+          setQueuedBI(bi);
+          setBagRecords(prev => {
+            const synced = prev.filter(r => r.synced);
+            const queued = bi.filter(q => q.machineId === selectedMachine.id)
+              .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+            return [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -363,6 +426,17 @@ export default function QCSachetProductionChecks() {
       const result = await saveCartonInspectionCheck(record, isOnline);
       if (result === 'saved' || result === 'queued') {
         setDialogType(null);
+        if (result === 'queued') {
+          const ci = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]')
+            .filter(q => q.approvalDocId === approvalDocId);
+          setQueuedCI(ci);
+          setCiRecords(prev => {
+            const synced = prev.filter(r => r.synced);
+            const queued = ci.filter(q => q.machineId === selectedMachine.id)
+              .map(q => ({ ...q, synced: false, id: q.localCreatedAt }));
+            return [...synced, ...queued].sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -429,8 +503,8 @@ export default function QCSachetProductionChecks() {
               </div>
               <div className="max-h-32 overflow-y-auto">
                 {machineRecords.map((r) => (
-                  <div key={r.id || r.roundNumber} className="flex items-center px-4 py-2 text-xs border-t border-[#333] last:border-b-0">
-                    <span className="text-primary font-bold shrink-0 w-14">R{r.roundNumber}</span>
+                  <div key={r.id || r.roundNumber} className={`flex items-center px-4 py-2 text-xs border-t border-[#333] last:border-b-0 ${!r.synced ? 'opacity-50' : ''}`}>
+                    <span className="text-primary font-bold shrink-0 w-14">R{r.roundNumber}{!r.synced && <span className="ml-1 text-status-warning" title="Pending sync">⏳</span>}</span>
                     <div className="flex gap-2 flex-1 justify-center">
                       {(r.weights || []).map((w, i) => (
                         <span key={i} className="text-white font-bold">{w}g</span>
@@ -572,6 +646,12 @@ export default function QCSachetProductionChecks() {
           <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-success to-[#00C853]"></span><span className="text-gray-400">✅ Checked</span></div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-br from-status-danger to-[#D50000]"></span><span className="text-gray-400">⚠️ Issues</span></div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600"></span><span className="text-gray-400">⬜ Unchecked</span></div>
+          {(queuedSW.length > 0 || queuedBI.length > 0 || queuedCI.length > 0) && (
+            <div className="ml-auto flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-status-warning"></span>
+              <span className="text-status-warning text-xs font-bold">⏳ {queuedSW.length + queuedBI.length + queuedCI.length} pending</span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 md:gap-3 max-w-4xl mx-auto justify-between mt-4">
@@ -585,8 +665,14 @@ export default function QCSachetProductionChecks() {
                 {lineMachines.map(m => {
                   const status = getMachineStatus(m.id);
                   const latest = getMachineLatestRound(m.id);
+                  const hasQueuedSW = queuedSW.some(q => q.machineId === m.id);
+                  const hasQueuedBI = queuedBI.some(q => q.machineId === m.id);
+                  const hasQueuedCI = queuedCI.some(q => q.machineId === m.id);
+                  const isQueued = hasQueuedSW || hasQueuedBI || hasQueuedCI;
                   let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative flex flex-col items-center gap-1 justify-center min-h-[80px] ";
-                  if (status === 'checked') {
+                  if (status === 'unchecked' && isQueued) {
+                    btnClass += "bg-gradient-to-br from-status-warning to-[#e68900] text-white border-2 border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] hover:scale-105";
+                  } else if (status === 'checked') {
                     btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105";
                   } else if (status === 'high-waste') {
                     btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] hover:scale-105";
@@ -597,6 +683,7 @@ export default function QCSachetProductionChecks() {
                     <button key={m.id} onClick={() => handleMachineClick(m)} className={btnClass}>
                       <span>M{m.displayNumber || m.id} · {m.gram}g</span>
                       {latest && <span className="text-[10px] leading-tight opacity-80">R{latest.roundNumber}</span>}
+                      {isQueued && <span className="text-[10px] leading-tight text-status-warning">⏳ pending</span>}
                     </button>
                   );
                 })}

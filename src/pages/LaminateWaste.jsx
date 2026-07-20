@@ -19,7 +19,7 @@ export default function LaminateWaste() {
   const { config, loadingConfig } = useConfig();
   const { currentUser, userFullName } = useAuth();
   const { broadcastAlert } = useAlerts();
-  const { isOnline, setLaminateQueueCount } = useNetwork();
+  const { isOnline, laminateQueueCount, setLaminateQueueCount } = useNetwork();
   const navigate = useNavigate();
 
   const [records, setRecords] = useState([]);
@@ -220,6 +220,9 @@ export default function LaminateWaste() {
                   <option key={t} value={t}>Team {t}</option>
                 ))}
               </select>
+              {laminateQueueCount > 0 && (
+                <span className="bg-status-warning/20 text-status-warning px-2 py-1 rounded-md text-xs uppercase tracking-wider font-bold">⏳ {laminateQueueCount} pending</span>
+              )}
             </div>
           </div>
 

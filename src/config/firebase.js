@@ -1,7 +1,7 @@
 // src/config/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 // We grab the secrets from the .env vault we just created
 const firebaseConfig = {
@@ -16,6 +16,16 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize Firestore and enable offline persistence
+const db = getFirestore(app);
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code === 'failed-precondition') {
+    console.warn('Firestore persistence: multiple tabs open, persistence disabled');
+  } else if (err.code === 'unimplemented') {
+    console.warn('Firestore persistence: browser not supported');
+  }
+});
+
 // Export the Auth and Database tools so we can use them anywhere in our app
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export { db };

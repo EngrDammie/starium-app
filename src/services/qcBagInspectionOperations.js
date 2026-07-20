@@ -68,6 +68,7 @@ export async function syncBagInspectionQueue() {
     batch.set(newRef, {
       ...record,
       localCreatedAt: record.localCreatedAt || new Date().toISOString(),
+      createdAt: record.localCreatedAt ? new Date(record.localCreatedAt) : serverTimestamp(),
       syncedAt: serverTimestamp()
     });
   }
