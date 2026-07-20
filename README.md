@@ -40,10 +40,10 @@ When users log in, they land on the **Command Center**, providing a high-level o
 - **Real-Time Executive Dashboards**: Level 9 and BOT live views with Chart.js line charts showing density trends, shift approval workflows, and machine grid density matching.
 - **Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens (or all screens) across the factory. Three levels: Info (blue), Warning (orange), Critical (red with shake animation). Auto-dismisses after 15 seconds.
 - **Shift History Modal**: Floor workers can review all tests submitted during their active shift with exact timestamps and buggy numbers.
-- **Dynamic Admin Panel**: SystemConfig page with 9 tabs — add/edit/delete machines, define production lines, configure gram specs with pieces/bags/freebies breakdown, manage role definitions, toggle global settings (density rules, shift times, packaging teams), configure QC check intervals and string weight ranges, manage carton waste thresholds, laminate waste settings (sac types, roll weights), and import/export/reset configuration.
+- **Dynamic Admin Panel**: SystemConfig page with 10 tabs — add/edit/delete machines, define production lines, configure gram specs with pieces/bags/freebies breakdown, manage role definitions, toggle global settings (density rules, shift times, packaging teams), configure QC check intervals and string weight ranges, manage carton waste thresholds, laminate waste settings (sac types, roll weights), pallet transfer defaults (per-gram pallet sizes), and import/export/reset configuration.
 - **Emoji UX & Branding**: Every page, label, button, and status indicator enhanced with Unicode emojis for instant visual recognition (📧 email, 🔒 password, 📊 reports, 🏭 factory, ⚖️ weigh, ✅ approve). Official RAFa brand logo displayed on login, every page header, sidebar, and footer for a cohesive enterprise look.
 - **Automated Reporting**: Printer-friendly (A4 Landscape) reports with Chart.js analytics (line charts, doughnut charts, bar charts), CSV exports per machine, and cross-shift comparison tables with vs-prev diff arrows.
-- **Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts to Command Center and data entry pages. Auto-refill detection when density tests are saved triggers the refill modal. Dedicated manager report with color-coded machine grid and refill counters (buggy numbers).
+- **Empty Silos System**: Cross-shift live tracking of machines marked as empty with real-time broadcasts to Command Center and data entry pages. Auto-refill detection when density tests are saved triggers the refill modal. **Auto-stop integration**: marking a machine empty automatically creates/gets a "No Powder" issue and reports the machine as stopped via the Stopped Machines system. On refill, the "No Powder" issue is auto-resolved, with a broadcast reminder to start the machine. Dedicated manager report with color-coded machine grid and refill counters (buggy numbers).
 - **Stopped Machines System**: Cross-shift tracking of stopped machines with reusable issue definitions (stored in `machine_issues` collection), click-once issue solving, START button (hidden when machine already running), sparkle animation, 4-color machine state grid (normal/stopped/issues-cleared/running/started-with-issues), and dedicated real-time manager report. Supports appending additional issues to already-stopped machines — the UI filters out pre-existing issues and warns when typing a duplicate label.
 - **Carton Waste System**: Per-machine carton waste tracking with per-machine round numbering, 3-status machine grid (unchecked/checked/high-waste), smart validation (remaining <= available, wasted <= available, used + wasted <= allocated), running totals (allocated, used, wasted, waste%), and "Save & Next Machine" flow. Full report page with waste% by machine bar chart, waste trend over rounds (top 5) line chart, cross-shift comparison table with vs-prev diff arrows, per-machine breakdown table, round-by-round detail table, and CSV export. High waste alerts broadcast to Command Center and carton waste pages. Offline queue via `starium_carton_offline_queue`.
 - **Laminate Waste System**: Per-machine laminate waste tracking using weights (kg) instead of quantities. Staff collect waste in pre-weighed sacs (configurable small 80g / large 160g) and record gross weight each round. Total laminate used auto-computed from machine gram: `rollsPerShift x rollWeight[gram]`. Sac type dropdown, auto-calculated waste collected (gross - sac weight), running waste totals, 3-status machine grid, and full report page. Offline queue via `starium_laminate_offline_queue`.
@@ -123,7 +123,11 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - Report, solve issues, start machines, append more issues
 - 4-color state grid, auto-filled Issue Selector dropdown
 
-### 8. Pallet Transfer
+### 8. Machine Downtime Log
+- Query historical downtime events by date and shift
+- View machine, stopped/started times, duration, and issues for root cause analysis
+
+### 9. Pallet Transfer
 - Per-shift tracking of pallet transfers from production floor to warehouse
 - Records gram/SKU, pallet size (cartons per pallet), pallet count, team
 - Auto-calculated total cartons with real-time per-gram summary cards
@@ -166,6 +170,8 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 | `starium_bag_inspection_queue` | Bag Inspection | Bag inspection check offline queue |
 | `starium_carton_inspection_queue` | Carton Inspection | Carton inspection check offline queue |
 | `starium_pallet_transfer_queue` | Pallet Transfer | Pallet transfer offline queue |
+| `starium_empty_silo_queue` | Empty Silos | Empty silo offline queue |
+| `starium_stopped_machine_queue` | Stopped Machines | Stopped machine offline queue |
 | `starium_pallet_team` | Pallet Transfer | Persisted team selection |
 | `starium_carton_team` | Carton Waste | Persisted team selection |
 | `starium_laminate_team` | Laminate Waste | Persisted team selection |
@@ -181,6 +187,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - **Routing**: React Router v6 (HashRouter for static hosting)
 - **Database & Auth**: Firebase (Firestore V9 Modular SDK)
 - **Charts**: Chart.js & React-Chartjs-2
+- **3D Rendering**: Three.js (used in management presentations)
 - **Build Tool**: Vite / Rolldown
 - **CI/CD**: GitHub Actions (build & deploy to GitHub Pages)
 
@@ -232,7 +239,7 @@ src/
 │   ├── EmptySilosReport.jsx         # Empty silos manager report
 │   ├── StopMachine.jsx              # Report, solve, start, append issues
 │   ├── StoppedMachinesReport.jsx    # Stopped machines manager report
-│   ├── MachineDowntimeLog.jsx       # View machine downtime events by date/shift
+│   ├── MachineDowntimeLog.jsx       # Machine downtime history by date/shift
 │   ├── CartonWaste.jsx              # Carton waste data entry
 │   ├── CartonWasteReport.jsx        # Carton waste report with charts
 │   ├── LaminateWaste.jsx            # Laminate waste data entry

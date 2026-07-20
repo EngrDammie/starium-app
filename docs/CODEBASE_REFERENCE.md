@@ -18,6 +18,7 @@
 | Styling | Tailwind CSS | 3.4.19 |
 | Database/Auth | Firebase (Firestore V9 Modular SDK) | 12.13.0 |
 | Charts | Chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 |
+| 3D Rendering | Three.js | 0.185.0 |
 | Linting | ESLint + react-hooks + react-refresh | 10.x |
 | Deploy | GitHub Pages + GitHub Actions | — |
 
@@ -85,9 +86,10 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/laminate-waste-report` | LaminateWasteReport | Production managers, QC managers, Packaging managers |
 | `/pallet-transfer` | PalletTransfer | Production staff, Packaging staff, Production/Packaging managers |
 | `/pallet-transfer-report` | PalletTransferReport | Production managers, Packaging managers, QC managers |
+| `/machine-downtime-log` | MachineDowntimeLog | QC managers, Production managers, Packaging managers |
 | `/qc-sachet-production-checks` | QCSachetProductionChecks | QC staff & managers, Production staff & managers |
 
-Future routes exist in `MENU_CONFIG` but have no components yet: `/machine-downtime-log`, `/employees`, `/payroll`.
+Future routes exist in `MENU_CONFIG` but have no components yet: `/employees`, `/payroll`.
 
 **Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Report pages were moved from their department categories into a centralized Reports menu category.
 
@@ -112,6 +114,8 @@ Controls which pages a user can navigate to and which sidebar items appear. Defi
 | `qc_manager` | QC Manager | Quality Control |
 | `prod_staff` | Production Staff | Production |
 | `prod_manager` | Production Manager | Production |
+| `packaging_staff` | Packaging Staff | Packaging |
+| `packaging_manager` | Packaging Manager | Packaging |
 | `hr_staff` | HR Staff | Human Resources |
 | `hr_manager` | HR Manager | Human Resources |
 
@@ -125,6 +129,7 @@ Controls which specific approval buttons a user can click on executive dashboard
 | `production_manager` | Production Manager |
 | `qc_manager` | QC Manager |
 | `qc_supervisor` | QC Supervisor |
+| `line_leader` | Line Leader |
 
 ### Enforcement Mechanisms
 
@@ -249,6 +254,11 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
       { id: 'large', label: 'Large Sac', weight: 0.160 }
     ],
     defaultSacType: 'small'
+  },
+  palletTransfer: {
+    palletSizes: {
+      "22": 100, "45": 80, "85": 60, "125": 40, "850": 12
+    }
   }
 }
 ```
@@ -257,9 +267,11 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### NetworkContext (`src/context/NetworkContext.jsx`)
 
-**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `palletQueueCount`, `setPalletQueueCount`, `emptySiloQueueCount`, `setEmptySiloQueueCount`, `stoppedMachineQueueCount`, `setStoppedMachineQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`, `isPalletSyncing`, `setIsPalletSyncing`, `isEmptySiloSyncing`, `setIsEmptySiloSyncing`, `isStoppedMachineSyncing`, `setIsStoppedMachineSyncing`
+**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `cartonInspectionQueueCount`, `setCartonInspectionQueueCount`, `bagInspectionQueueCount`, `setBagInspectionQueueCount`, `stringWeightQueueCount`, `setStringWeightQueueCount`, `palletQueueCount`, `setPalletQueueCount`, `emptySiloQueueCount`, `setEmptySiloQueueCount`, `stoppedMachineQueueCount`, `setStoppedMachineQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`, `isCartonInspectionSyncing`, `setIsCartonInspectionSyncing`, `isBagInspectionSyncing`, `setIsBagInspectionSyncing`, `isStringWeightSyncing`, `setIsStringWeightSyncing`, `isPalletSyncing`, `setIsPalletSyncing`, `isEmptySiloSyncing`, `setIsEmptySiloSyncing`, `isStoppedMachineSyncing`, `setIsStoppedMachineSyncing`
 
 **String Weight Queue**: `starium_qc_string_weight_queue` — synced via `syncStringWeightQueue()` in `qcStringWeightOperations.js` using Firestore `writeBatch`. Queue count is tracked locally in the page (not exposed in NetworkContext yet).
+
+**Firestore IndexedDB Persistence**: `src/config/firebase.js` calls `enableIndexedDbPersistence(db)` to cache Firestore data in the browser's IndexedDB. This keeps `onSnapshot` subscriptions working (returning cached data) even when offline, so the UI renders stale-but-usable data until the connection returns.
 
 **Offline Engine**:
 1. Initializes `isOnline` from `navigator.onLine`
@@ -367,8 +379,8 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`getEmptySilosDocId(config)`**: Returns `empty_silos_{shift}_{date}` as the shift approval document ID for empty silos records.
 - **`subscribeToActiveEmptySilos(callback)`**: Cross-shift query: `where('noLongerEmptyAt', '==', null)`. Returns every machine across all shifts/days that is still empty and not yet refilled. Powers the live grid in Dashboard count, EmptySilos page, EmptySilosReport grid, and PowderDensity auto-refill detection.
 - **`subscribeToShiftEmptySilos(config, callback)`**: Shift-scoped query: filters by current shift's `shiftApprovalDocId`. Used only for the "Refilled This Shift" counter in EmptySilosReport (and potential historical reporting).
-- **`markMachineEmpty(machine, userFullName, config, broadcastAlert)`**: Creates an `empty_silos` document with machine details, marker identity, and timestamp. Fires a `warning`-level broadcast to `/`, `/powder-density`, `/level9-exec`, `/bot-exec`.
-- **`markMachineNoLongerEmpty(recordId, buggyNumber, userFullName, config, broadcastAlert, machine)`**: Updates an existing empty_silos record with buggy number and refill timestamp. Fires an `info`-level broadcast.
+- **`markMachineEmpty(machine, userFullName, config, broadcastAlert)`**: Creates an `empty_silos` document with machine details, marker identity, and timestamp. Fires a `warning`-level broadcast to `/`, `/powder-density`, `/level9-exec`, `/bot-exec`. **Auto-stop integration**: Also calls `autoStopMachineForEmpty()` which gets or creates a "No Powder" issue in `machine_issues`, then calls `reportStoppedMachine()` with that issue — automatically linking the empty silo event to the Stopped Machines system.
+- **`markMachineNoLongerEmpty(recordId, buggyNumber, userFullName, config, broadcastAlert, machine)`**: Updates an existing empty_silos record with buggy number and refill timestamp. Fires an `info`-level broadcast. **Auto-resolve integration**: Calls `resolveNoPowderIssueForMachine()` which queries `stopped_machines` for an active record on this machine, finds the unsolved "No Powder" issue, and marks it solved. Broadcast includes a reminder to start the machine.
 
 ### stoppedMachineOperations (`src/services/stoppedMachineOperations.js`)
 - **`subscribeToMachineIssues(callback)`**: Subscribes to `machine_issues` collection (reusable issue definitions). Returns sorted list of issues.
@@ -378,6 +390,10 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 - **`markIssueSolved(machineDocId, issueId, userFullName)`**: Reads the stopped_machines doc, updates the specific issue's `solvedAt`/`solvedBy` in the array, writes back. Uses `new Date()` instead of `serverTimestamp()` to avoid Firestore errors inside array mutations. Returns `'all-solved'` if the last issue was just cleared.
 - **`startMachine(machineDocId, userFullName)`**: Sets `startedAt` and `startedBy` on the record. If no unresolved issues remain, sets `isActive: false` (machine returns to normal state and disappears from the stopped list).
 - **`appendIssuesToMachine(docId, issues, userFullName)`**: Reads the existing stopped_machines doc, deduplicates by issue ID (skips if already present), appends new issue objects, and resets `startedAt/startedBy` to null (effectively re-stopping the machine so the Start button reappears). Always sets `isActive: true`. This powers the "Report More Issues" flow.
+
+### machineDowntimeOperations (`src/services/machineDowntimeOperations.js`)
+- **`queryMachineDowntime(config, targetShift, targetDate)`**: One-time fetch (not subscription) that queries the `stopped_machines` collection for a specific shift and date. Uses `where('shift', '==', targetShift)` and `where('date', '==', targetDate)` to return all stopped machine records for that shift. Powers the MachineDowntimeLog page.
+- **`subscribeToMachineDowntimeByDateRange(config, startDate, endDate, callback)`**: Real-time subscription for machine downtime records across a date range. Queries `stopped_machines` where `date >= startDate` and `date <= endDate`, ordered by `date` then `stoppedAt`. Returns live updates with `synced: true`.
 
 ### palletTransferOperations (`src/services/palletTransferOperations.js`)
 - **`getPalletTransferDocId(config)`**: Returns `pallet_transfer_{shift}_{date}` as the shift-scoped document ID.
@@ -609,6 +625,14 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Modal uses `max-h-[85vh] flex flex-col` layout with scrollable body and fixed Close button
 - Quick action: "Stopped Machines Report" link in Dashboard for same roles
 
+### MachineDowntimeLog (`src/pages/MachineDowntimeLog.jsx`) — Downtime History Lookup
+- Guarded: QC managers, Production managers, Packaging managers
+- Date picker and shift (DAY/NIGHT) selector; user selects a date + shift, clicks "Search" to query historical stopped machine records
+- Uses `queryMachineDowntime(config, targetShift, targetDate)` for one-time fetch
+- Results displayed in a table: machine, stopped at, started at, duration (human-readable), issues list, reported by
+- No real-time subscription — pure historical query for root cause analysis
+- Quick action: "Machine Downtime Log" link in Dashboard for same roles
+
 ### CartonWaste (`src/pages/CartonWaste.jsx`) — Carton Waste Data Entry
 - Guarded: Production staff & managers, QC managers
 - Subscribes to `subscribeToShiftCartonRecords(config, callback)` for live current-shift carton records
@@ -798,7 +822,7 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
   - Floating "Switch to Level 9" button → navigates to `/level9-exec`
 
 ### SystemConfig (`src/pages/SystemConfig.jsx`) — Admin Panel
-8 tabs (7 original + Carton Waste + Laminate Waste):
+10 tabs:
 
 **1. Machines Tab**:
 - CRUD for machines: ID, Display Number, Name, Line, Gram, Fill Heads (default 2), Min/Max (auto-filled from gram specs)
@@ -821,26 +845,37 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Level 9: Min/Max density, Divisor
 - BOT: Min/Max density, Divisor
 - Shift times: Day start, Night start (24h)
-- Packaging Teams: Team labels (comma-separated, default "A, B, C"), Default Team (default "A") — consumed by Powder Density, Carton Waste, Laminate Waste, and both waste report pages
+- Packaging Teams: Team labels (comma-separated, default "A, B, C"), Default Team (default "A") — consumed by Powder Density, Carton Waste, Laminate Waste, Pallet Transfer, and report pages
 - UI: Machine Grid Columns
 - Master Auth Toggle: enable/disable Firebase login (Ghost Admin mode)
 
-**6. Import/Export Tab**:
-- Export: downloads JSON backup of all config (machines, lines, gramSpecs, roles, settings)
+**6. QC Settings Tab**:
+- Check Intervals: String Weight (default 15 min), Bag Inspection (default 15 min), Carton Inspection (default 60 min)
+- Fill Head Weight Ranges: per-gram configuration of target/acceptable weights for each fill head position
+- Settings stored under `config.qcCheckIntervals` and `config.fillHeadWeightRanges`
+
+**7. Import/Export Tab**:
+- Export: downloads JSON backup of all config (machines, lines, gramSpecs, roles, settings, qcCheckIntervals, fillHeadWeightRanges, cartonWaste, laminateWaste, palletTransfer)
 - Import: uploads JSON, overwrites current config (with confirmation)
 - Reset to Defaults: double-confirmation, restores 30-machine factory default config
 
-**7. Carton Waste Tab**:
+**8. Carton Waste Tab**:
 - Waste Thresholds: Target Waste % (default 5%), Waste Alert Threshold (default 10%)
 - Team labels and default team are now managed centrally in the **Global Settings** tab (see item 5: Packaging Teams)
 - Settings are stored under `config.settings.cartonWaste` as a nested object (merged into DEFAULT_CONFIG in ConfigContext)
 - Fully compatible with the Export/Import JSON and Reset to Defaults features (cartonWaste is included in the exported JSON and reset sequence)
 
-**8. Laminate Waste Tab**:
+**9. Laminate Waste Tab**:
 - Waste Thresholds: Target Waste % (default 5%), Waste Alert Threshold (default 10%)
 - Roll Settings: Rolls per Shift (default 3), Roll Weight per Gram (22g→51.32, 45g→54.40, 85g→51.60, 125g→53.70, 850g→49.90 kg)
 - Sac Types: Small Sac Weight in grams (default 80g), Large Sac Weight in grams (default 160g)
 - Settings stored under `config.settings.laminateWaste` as a nested object (merged into DEFAULT_CONFIG)
+- Fully included in Export/Import JSON and Reset to Defaults
+
+**10. Pallet Transfer Tab**:
+- Per-Gram Pallet Sizes: configure default cartons-per-pallet for each gram/SKU (e.g. 22g→100, 45g→80, etc.)
+- Settings stored under `config.palletTransfer.palletSizes` as a nested object (merged into DEFAULT_CONFIG)
+- The pallet transfer data entry page auto-remembers the last-used pallet size per gram; this config serves as the initial default
 - Fully included in Export/Import JSON and Reset to Defaults
 
 ### ActiveUsers (`src/pages/ActiveUsers.jsx`)
@@ -1424,7 +1459,7 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 - ✅ **Laminate Waste System** — Per-machine laminate waste tracking (kg) with configurable sac types, auto-computed roll usage, offline support, reports, and broadcasts.
 - [ ] **Audit Trail** — Log who modified settings, deleted users, overrode machines
 - [ ] **Mobile Layout Enhancements** — Further optimization for smaller devices
-- [ ] Routes defined in MENU_CONFIG without components: `/machine-downtime-log`, `/employees`, `/payroll`
+- [ ] Routes defined in MENU_CONFIG without components: `/employees`, `/payroll`
 - ✅ **Empty Silos System** — Cross-shift live tracking of empty/filled machines with broadcasts, auto-refill on powder density save, and real-time manager report with dual subscription (active state + shift refilled counter)
 - ✅ **Stopped Machines System** — Cross-shift tracking of stopped machines with reusable issue definitions, click-once issue solving, START button, sparkle animation, 4-color machine grid, and real-time manager report
 - ✅ **Carton Waste System** — Per-machine carton waste tracking with offline support, report with charts, CSV export, and targeted broadcasts. See full documentation in CartonWaste, CartonWasteReport pages and cartonOperations service.
