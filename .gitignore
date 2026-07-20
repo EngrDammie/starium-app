@@ -26,3 +26,6 @@ dist-ssr
 # local env files
 .env
 .env.local
+
+# Personal communications
+docs/letter-to-ceo.md
