@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy React App to GitHub Pages
+name: Deploy to GitHub Pages + Firebase Hosting
 
 on:
   # This triggers the workflow every time you push to the "main" branch
