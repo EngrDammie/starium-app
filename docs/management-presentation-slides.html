@@ -220,7 +220,7 @@ slides.forEach((s,i)=>{
   div.className = 'slide'+(i===0?' active':'');
   const accent = ACCENTS[s.accent];
   let html = '<div class="slide-inner" style="--accent:'+accent+'">';
-  if(i===0) html += '<img src="rafa-logo.svg" alt="Rafa" style="height:48px;margin-bottom:16px;opacity:0.85;filter:brightness(1.2)" />';
+  if(i===0) html += '<img src="rafa-logo.svg" alt="Rafa" style="display:block;margin:0 auto 16px;height:48px;opacity:0.85;filter:brightness(1.2)" />';
   html += '<div class="slide-badge" style="border-color:'+accent+'40;color:'+accent+'">'+s.badge+'</div>';
   html += '<h2>'+s.title+(s.sub?'<span class="hl">'+s.sub+'</span>':'')+'</h2>';
   html += '<p>'+s.text+'</p>';
