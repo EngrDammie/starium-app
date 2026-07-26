@@ -406,7 +406,9 @@
     }
     .video-info {
       padding: 16px 20px 18px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .video-info h4 {
       font-size: clamp(0.95rem,1.3vw,1.15rem);
@@ -414,6 +416,7 @@
       color: #fff;
       margin-bottom: 4px;
       letter-spacing: -0.2px;
+      text-align: center;
     }
     .video-info p {
       text-align: center;
@@ -421,6 +424,7 @@
       color: rgba(255,255,255,0.55);
       line-height: 1.5;
       margin: 0;
+      max-width: 720px;
     }
     .video-badge {
       display: inline-block;
