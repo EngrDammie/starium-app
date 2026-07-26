@@ -48,28 +48,47 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
 
-      - name: Build project
+      # Build #1: GitHub Pages (base path = /starium-app/)
+      - name: Build for GitHub Pages
         run: npm run build
+        env:
+          VITE_BASE_PATH: '/starium-app/'
 
-      - name: Copy management presentations into dist
+      - name: Copy management presentations into dist (GitHub Pages)
         run: |
           cp docs/management-presentation.html dist/
           cp docs/management-presentation-slides.html dist/
           cp docs/rafa-logo.svg dist/
 
+      - name: Rename dist for GitHub Pages
+        run: mv dist dist-pages
+
+      # Build #2: Firebase Hosting (base path = /, root deployment)
+      - name: Build for Firebase Hosting
+        run: npm run build
+        env:
+          VITE_BASE_PATH: '/'
+
+      - name: Copy management presentations into dist (Firebase)
+        run: |
+          cp docs/management-presentation.html dist/
+          cp docs/management-presentation-slides.html dist/
+          cp docs/rafa-logo.svg dist/
+
+      # Deploy to GitHub Pages
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Vite outputs the finished baked files into a folder called "dist"
-          path: './dist'
+          path: './dist-pages'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
+      # Deploy to Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
