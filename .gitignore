@@ -29,6 +29,8 @@ dist-ssr
 
 # Personal communications
 docs/letter-to-ceo.md
+docs/email-to-owner.md
+docs/email-to-owner.html
 
 # Firebase CLI deploy cache (created by `firebase deploy` locally)
 .firebase/

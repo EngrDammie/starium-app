@@ -54,12 +54,6 @@ jobs:
         env:
           VITE_BASE_PATH: '/starium-app/'
 
-      - name: Copy management presentations into dist (GitHub Pages)
-        run: |
-          cp docs/management-presentation.html dist/
-          cp docs/management-presentation-slides.html dist/
-          cp docs/rafa-logo.svg dist/
-
       - name: Rename dist for GitHub Pages
         run: mv dist dist-pages
 
@@ -68,12 +62,6 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: '/'
-
-      - name: Copy management presentations into dist (Firebase)
-        run: |
-          cp docs/management-presentation.html dist/
-          cp docs/management-presentation-slides.html dist/
-          cp docs/rafa-logo.svg dist/
 
       # Deploy to GitHub Pages
       - name: Setup Pages
