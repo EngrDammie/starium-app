@@ -9,6 +9,7 @@ import {
   subscribeToShiftPalletTransfers,
   getQueuedPalletTransfers
 } from '../services/palletTransferOperations';
+import PalletCalculatorModal from '../components/PalletCalculatorModal';
 
 export default function PalletTransfer() {
   const { config, loadingConfig } = useConfig();
@@ -29,6 +30,7 @@ export default function PalletTransfer() {
   const [error, setError] = useState('');
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const lastPalletSizes = useRef({});
 
@@ -243,6 +245,15 @@ export default function PalletTransfer() {
             </div>
           )}
 
+          <button
+            onClick={() => setIsCalculatorOpen(true)}
+            className="fixed bottom-5 left-5 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] px-5 py-3 rounded-full flex items-center gap-2 z-40 shadow-[0_0_20px_rgba(255,107,0,0.4)] border-2 border-primary hover:scale-105 hover:bg-primary/20 transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]"
+            title="Quick pallet & carton qty calculator for loading / waybill"
+          >
+            <span className="text-2xl">🧮</span>
+            <span className="text-primary text-sm font-bold uppercase tracking-wider">Calc</span>
+          </button>
+
           {totalEntries > 0 && (
             <button onClick={() => setIsHistoryOpen(true)} className="fixed bottom-5 right-5 bg-[#1a1a1a] px-6 py-3 rounded-full flex items-center gap-3 z-40 shadow-[0_0_20px_rgba(0,188,212,0.4)] border-2 border-primary hover:scale-105 hover:bg-primary/20 transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]">
               <span className="text-gray-400 text-sm font-medium">📋 Transfers this shift:</span>
@@ -301,6 +312,12 @@ export default function PalletTransfer() {
           </div>
         </div>
       )}
+      <PalletCalculatorModal
+        open={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+        grams={grams}
+        palletSizesConfig={palletSizesConfig}
+      />
     </Layout>
   );
 }

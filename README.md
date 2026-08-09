@@ -133,6 +133,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - Auto-calculated total cartons with real-time per-gram summary cards
 - Offline queue via `starium_pallet_transfer_queue`, auto-sync on reconnect
 - Dedicated report page with 7-day data, filters, and Day vs Night chart
+- **Pallet Calculator** (`🧮 Calc` floating button): instant loading & waybill quantity breakdown tool. Two modes — `Cartons → Pallets` (compute full pallets + leftover cartons from a total carton count) and `Pallets → Cartons` (reverse). Pulls the per-gram cartons-per-pallet divisor from `config.palletTransfer.palletSizes`, with an editable override. Headline tiles for full pallets, leftover cartons, and total pallet slots, a step-by-step breakdown, a color-graded Truck Fill Efficiency bar, and the live `total ÷ size` equation
 
 ---
 
@@ -353,6 +354,7 @@ The workflow (.github/workflows/deploy.yml):
 - ✅ **Empty Silos System**: Complete with refill detection and broadcasts
 - ✅ **Stopped Machines System**: Complete with issue management and broadcasts
 - ✅ **Pallet Transfer System**: Complete with data entry, offline queue, report with Day vs Night chart
+- ✅ **Pallet Calculator**: Quick loading / waybill quantity breakdown — cartons↔pallets conversion using per-gram pallet size divisor, with truck fill efficiency gauge
 - [ ] **Audit Trail**: Background logging system to record who modified settings, deleted users, or overrode machines
 - [ ] **Mobile Layout Enhancements**: Further optimization for smaller mobile devices
 

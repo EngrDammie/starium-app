@@ -686,7 +686,8 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Team dropdown (persisted to localStorage `starium_pallet_team`)
 - Recorded By auto-populated from current user
 - **Per-gram summary cards**: real-time total pallets and cartons grouped by gram
-- **History modal**: floating button showing total transfers count + pending count badge → opens full table with time, gram, pallet size, pallets, cartons, team, recorder, sync status
+- **History modal**: floating button (bottom-right) showing total transfers count + pending count badge → opens full table with time, gram, pallet size, pallets, cartons, team, recorder, sync status
+- **Pallet Calculator** (floating button bottom-left, `🧮 Calc`): opens `PalletCalculatorModal` — see Components section
 - **Offline**: Queues to `starium_pallet_transfer_queue` if offline or Firestore write fails; updates `palletQueueCount` in NetworkContext
 - **Date display**: Shows current date with weekday in en-GB locale
 
@@ -974,6 +975,19 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 - Alert level dropdown: Info (blue), Warning (orange), Critical (red shaking)
 - Sends via `broadcastAlert()` with `targetPages` array
 - Adding a new route to `MENU_CONFIG` automatically makes it targetable — no manual BroadcastModal update needed
+
+### PalletCalculatorModal (`src/components/PalletCalculatorModal.jsx`)
+- Quick loading / waybill quantity breakdown tool, opened from the `🧮 Calc` floating button on the Pallet Transfer page
+- **Two modes** (toggle): `Cartons → Pallets` (default — divide total cartons by pallet size) and `Pallets → Cartons` (reverse — multiply pallets by pallet size)
+- **Divisor source**: defaults to `config.palletTransfer.palletSizes[selectedGram]`, with an editable "Cartons per Pallet" override field and a "Use default" revert button. `useCustomDivisor` flag tracks whether the override is active
+- **Core math**: `fullPallets = Math.floor(total / divisor)`, `leftoverCartons = total % divisor` (modulo for the partial pallet), `totalPalletSlots = fullPallets + (leftover > 0 ? 1 : 0)`
+- **Headline tiles**: Full Pallets (primary), Leftover Cartons (amber when >0, gray when 0), Total Pallet Slots
+- **Breakdown card**: total cartons, cartons per pallet, full-pallets equation, partial pallet contents, computed totals
+- **Truck Fill Efficiency bar**: `utilization = total / capacity × 100`, color-graded (green ≥95%, amber 70–94%, red <70%) with a hint of how many more cartons complete the partial pallet
+- **Equation footer**: renders the exact `total ÷ size` arithmetic in mono font
+- **Presets**: quick amount buttons (500 / 1k / 2k / 5k / 10k) + Clear
+- **UX**: Esc-to-close, body scroll lock, autoFocus entry field, tabular-nums for all numeric displays
+- Memoized `divisor` and `calc` via `useMemo`; null `calc` renders an empty-state hint
 
 ### Footer (`src/components/Footer.jsx`)
 - Default text: "Starium Rafa ERP" with small RAFa logo
@@ -1494,6 +1508,7 @@ The `logout()` function in AuthContext calls `setOfflineStatus(uid)` **before** 
 | Pallet transfer data entry | `src/pages/PalletTransfer.jsx` |
 | Pallet transfer report | `src/pages/PalletTransferReport.jsx` |
 | Pallet transfer config | `src/context/ConfigContext.jsx` (`palletTransfer` object), `src/pages/SystemConfig.jsx` (Packaging & Transfers tab) |
+| Pallet calculator modal | `src/components/PalletCalculatorModal.jsx` |
 | QC Sachet Production Checks data entry | `src/pages/QCSachetProductionChecks.jsx` |
 | QC String Weight Check dialog | `src/components/QCStringWeightDialog.jsx` |
 | QC String Weight operations | `src/services/qcStringWeightOperations.js` |
