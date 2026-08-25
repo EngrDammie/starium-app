@@ -1,5 +1,8 @@
 # Custom Domain Setup Guide (Cloudflare + Firebase Hosting)
 
+> **UPDATE — Cloudflare Workers Pages deployed as a third host.**
+> Since this guide was written, the app is now also deployed **directly to Cloudflare Workers Pages** — not just proxied through Cloudflare's CDN. This gives the system **triple redundancy** (Firebase Hosting + GitHub Pages + Cloudflare Workers Pages). The carrier-blocking problem described below made this necessary: on affected networks, Firebase and GitHub Pages are unreachable without a VPN, while Cloudflare's IP ranges stay open. The custom-domain steps below remain valid if you later want a branded domain; until then, the Workers Pages URL already serves the app on networks where the other two hosts are blocked.
+
 ## Why are we doing this?
 
 ### The problem in plain English

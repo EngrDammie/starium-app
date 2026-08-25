@@ -20,7 +20,7 @@
 | Charts | Chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 |
 | 3D Rendering | Three.js | 0.185.0 |
 | Linting | ESLint + react-hooks + react-refresh | 10.x |
-| Deploy | GitHub Pages + GitHub Actions | — |
+| Deploy | Triple-redundant: Firebase Hosting + GitHub Pages (Actions) + Cloudflare Workers Pages | — |
 
 ### Key Config Files
 - **`vite.config.js`**: `base: '/starium-app/'` — must match GitHub repo name for Pages deploy
@@ -29,7 +29,7 @@
   - `dark.bg`: `#121212`, `dark.card`: `#1E1E1E`, `dark.hover`: `#252525`
   - `status.success`: `#00E676`, `status.danger`: `#F44336`, `status.warning`: `#FF9800`
 - **`postcss.config.js`**: Standard Tailwind + Autoprefixer
-- **`.github/workflows/deploy.yml`**: Triggers on `push` to `main`, injects Firebase secrets from GitHub repo settings, runs `npm run build`, uploads `dist/` to GitHub Pages
+- **`.github/workflows/deploy.yml`**: Triggers on `push` to `main`, injects Firebase secrets from GitHub repo settings, runs `npm run build`, uploads `dist/` to GitHub Pages. Firebase Hosting serves the same `dist/` build at the root path, and Cloudflare Workers Pages mirrors it as a third route — added because some Nigerian carriers block Firebase/GitHub IPs, while Cloudflare's edge stays reachable on ordinary networks without a VPN
 
 ### Environment Variables (`.env`)
 All prefixed with `VITE_`:

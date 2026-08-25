@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cover Letter — Engr. Damilare Paul Ayodele — Chief Software Architect, EKOFIN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #0B3D26;
+    --green: #176B3A;
+    --gold: #D9A441;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --ink: #1D2922;
+    --muted: #637269;
+    --hairline: #E4E1D2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 20px;
+    font-size: 16px;
+    line-height: 1.68;
+  }
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(29,41,34,.08), 0 18px 50px rgba(29,41,34,.12);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* Letterhead */
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 40px 56px 22px;
+    border-bottom: 3px solid var(--green);
+    position: relative;
+  }
+  .head::after {
+    content: "";
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 120px; height: 3px;
+    background: var(--gold);
+  }
+  .lh-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--forest);
+    line-height: 1.15;
+  }
+  .lh-role {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--earth);
+    margin-top: 5px;
+  }
+  .lh-contact {
+    text-align: right;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.75;
+    white-space: nowrap;
+  }
+  .lh-contact strong { color: var(--ink); font-weight: 600; }
+
+  .body-letter { padding: 36px 56px 44px; }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 26px;
+  }
+  .recipient p { line-height: 1.55; }
+  .date-line { text-align: right; color: var(--muted); white-space: nowrap; }
+
+  .subject {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 17.5px;
+    color: var(--forest);
+    margin-bottom: 20px;
+    padding-left: 14px;
+    border-left: 4px solid var(--gold);
+  }
+  .salutation { font-weight: 600; margin-bottom: 16px; color: var(--forest); }
+  .body-letter > p { margin-bottom: 15px; }
+  em.tint { font-style: normal; color: var(--green); font-weight: 600; }
+  strong { color: var(--forest); }
+
+  .vision {
+    margin: 22px 0;
+    padding: 22px 26px;
+    background: var(--cream);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+  }
+  .vision p {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 16.5px;
+    line-height: 1.75;
+    color: #2A362E;
+    margin-bottom: 14px;
+  }
+  .vision p:last-child { margin-bottom: 0; }
+  .imagine-word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    color: var(--earth);
+  }
+
+  .asks { list-style: none; margin: 18px 0 4px; }
+  .asks li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .asks li:last-child { border-bottom: none; }
+  .asks li::before {
+    content: "→";
+    position: absolute; left: 4px;
+    color: var(--leaf);
+    font-weight: 800;
+  }
+
+  .signoff { margin-top: 28px; }
+  .sig-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--forest);
+    margin-top: 2px;
+  }
+  .enc {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footnote-band {
+    background: var(--cream);
+    padding: 15px 56px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footnote-band strong { color: var(--green); }
+
+  @media (max-width: 640px) {
+    .head, .body-letter, .footnote-band { padding-left: 26px; padding-right: 26px; }
+    .head { flex-direction: column; align-items: flex-start; }
+    .lh-contact { text-align: left; white-space: normal; }
+    .meta-row { flex-direction: column; }
+    .date-line { text-align: left; }
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 12mm; }
+    .vision { background: #fff; }
+    section, .asks li, .vision { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div>
+      <div class="lh-name">Engr. Damilare Paul Ayodele</div>
+      <div class="lh-role">Software Architect · Quality Professional</div>
+    </div>
+    <div class="lh-contact">
+      <strong>ayodele.damilare@gmail.com</strong><br>
+      Phone: <strong>0802 897 5816</strong> · WhatsApp: <strong>0705 333 1253</strong><br>
+      4 Olugbenga Close, Iraye-Oke, Epe, Lagos State
+    </div>
+  </div>
+
+  <div class="body-letter">
+
+    <div class="meta-row">
+      <div class="recipient">
+        <p><strong>The Managing Director &amp; Leadership Team</strong><br>
+        Eko Organic Food Industries Limited (EKOFIN)<br>
+        Adebowale Road, Odo-Mola, Epe, Lagos State</p>
+      </div>
+      <div class="date-line">25 August 2026</div>
+    </div>
+
+    <div class="subject">Application for the Position of Chief Software Architect — Building the Digital Spine of a Farm-to-Global Company</div>
+
+    <p class="salutation">Dear Sir/Madam,</p>
+
+    <p>I am writing to you from your own neighbourhood — I live in Iraye-Oke, Epe, minutes from your facility on Adebowale Road — to offer myself as EKOFIN's <strong>Chief Software Architect</strong>. What I bring is not a résumé of theories but a rare, concrete proof: while serving as a Quality Control officer at Starium Rafa Detergents, I personally designed, built and deployed a complete enterprise ERP for that factory — fully functional, offline-resilient, running live in my own test environments today, and awaiting only management approval to enter daily operations, all at zero software cost to my employer.</p>
+
+    <p>My vantage point is unusual and, I believe, exactly what this role demands. I did not learn manufacturing's data problems from slides; I learned them holding a clipboard beside running machines. Every shift I watched critical figures — densities, weights, waste, machine stoppages, pallet movements — vanish into paper notebooks, transcribed late, aggregated later, acted upon rarely. Managers were deciding from memory; supervisors walked floors to discover facts that were already an hour old; every network outage froze what little digitisation existed. I concluded that the distance between what happens on a factory floor and what leadership knows is, fundamentally, <em class="tint">a software problem</em> — and I solved it. The platform covers QC testing, waste intelligence, silo and machine health, pallet logistics, governance with three-tier role-based access, and boardroom-grade reporting, all synchronised in real time and hardened against power and connectivity failure through an offline-first architecture.</p>
+
+    <p>Why does this matter to EKOFIN? Because your company is standing at the precise moment where software stops being a convenience and becomes strategy. The lease of the Julius Berger sixty-tonne plant multiplies your capacity — and multiplied capacity without multiplied traceability is risk wearing the costume of growth. Your public commitments to rigorous testing, batch traceability, NAFDAC compliance and international food-safety standards are promises that only systems can keep at scale. Export buyers will increasingly ask not merely <em>what</em> you shipped but demand instant proof — which farm, which batch, which test result. The companies that answer within seconds will take the contracts; the rest will wait.</p>
+
+    <div class="vision">
+      <p><span class="imagine-word">Imagine</span> your weighing bridges, grading lines, blending halls and packaging bays all speaking one digital language — every kernel weighed, every batch graded streaming to your screen the second it happens, from the farm-gates of six states to the export dock at Epe.</p>
+      <p><span class="imagine-word">Imagine</span> leadership unchained from distance: watching procurement climb, quality checks pass and containers close toward Rotterdam from Lagos, London or Dubai — while stale booklets and Excel graveyards become relics your competitors still depend on.</p>
+      <p><span class="imagine-word">Imagine</span> your buyers tracing shipments back to the very farming communities that grew them, verifying certificates through world-class portals that carry the EKOFIN name with pride.</p>
+    </div>
+
+    <p>This future requires no waiting. Every component of it is technology I have already shipped once, built inside a real factory's walls under genuine constraints, and proven end-to-end in live testing. Given the mandate, here is how I would begin:</p>
+
+    <ul class="asks">
+      <li><strong>First 30 days</strong> — walk both divisions end-to-end and map every data handoff from farm-gate to bill of lading, publishing its cost in hours and errors.</li>
+      <li><strong>First 60 days</strong> — deliver visible quick wins: digital QC/lab and batch records with offline capture, adapted from a platform already proven end-to-end in live testing.</li>
+      <li><strong>First 100 days</strong> — present the blueprint for EKOFIN's integrated core (inventory, batch genealogy, procurement, orders) plus executive dashboards for tonnes processed, yield, defects and traceability coverage.</li>
+    </ul>
+
+    <p>With over a decade of enterprise engineering — senior .NET development at The GIG Group, banking integrations at Longbridge, enterprise HR systems at Alliedsoft Xceed365 — combined with my current life on a production floor, I offer EKOFIN a builder who speaks both languages fluently: the language of machines and shifts, and the language of databases and dashboards. My enclosed CV tells the fuller story; my references will confirm the character behind it.</p>
+
+    <p>I would be honoured to demonstrate the live system and discuss EKOFIN's technology future with you at your convenience. Thank you for your time and consideration.</p>
+
+    <div class="signoff">
+      <p>Yours faithfully,</p>
+      <p class="sig-name">Engr. Damilare Paul Ayodele</p>
+    </div>
+
+    <div class="enc"><strong>Enclosures:</strong> Curriculum Vitae · Live system demonstration available on request · Video walkthroughs available online</div>
+
+  </div>
+
+  <div class="footnote-band">
+    <span><strong>"Passion for Food, Love for People."</strong></span>
+    <span>Your neighbour in Epe, ready to build.</span>
+  </div>
+
+</div>
+</body>
+</html>

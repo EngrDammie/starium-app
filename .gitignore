@@ -34,3 +34,5 @@ docs/email-to-owner.html
 
 # Firebase CLI deploy cache (created by `firebase deploy` locally)
 .firebase/
+# VS Code Counter extension output
+.VSCodeCounter/

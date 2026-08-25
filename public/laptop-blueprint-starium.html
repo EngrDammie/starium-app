@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware Request — Laptop for the Developer of the Starium Rafa Enterprise ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #101828;
+    --navy-soft: #1E2939;
+    --orange: #E05A00;
+    --orange-bright: #FF6B00;
+    --green: #008A46;
+    --cream: #FDF6EE;
+    --paper: #FCFCFA;
+    --ink: #182230;
+    --muted: #5D6B7A;
+    --hairline: #E4E2DA;
+    --faint: #EFEDE6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #ECEAE2;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 15px;
+    line-height: 1.66;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1180px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(16,24,40,.08), 0 18px 50px rgba(16,24,40,.13);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .masthead {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 70%, #24344A 100%);
+    padding: 46px 54px 38px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 90% 12%, rgba(255,107,0,.22) 0, transparent 38%),
+      radial-gradient(circle at 4% 100%, rgba(0,232,118,.08) 0, transparent 42%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--orange-bright);
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -.018em;
+    line-height: 1.18;
+    max-width: 640px;
+    margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.82); font-size: 16px; max-width: 600px; font-weight: 500; }
+  .mast-rule { width: 64px; height: 3px; background: var(--orange-bright); border-radius: 2px; margin-top: 22px; }
+
+  .content { padding: 40px 54px 20px; }
+  .content > p { margin-bottom: 14px; }
+  strong { color: var(--navy); }
+  em.tint { font-style: normal; color: var(--orange); font-weight: 600; }
+
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 36px 0 16px; }
+  .section-num { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 12.5px; color: var(--orange); letter-spacing: .08em; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 21px; font-weight: 800; color: var(--navy); letter-spacing: -.01em; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+
+  .target-panel {
+    border: 1.5px solid var(--orange);
+    border-left-width: 5px;
+    border-radius: 0 12px 12px 0;
+    background: linear-gradient(120deg, rgba(255,107,0,.06), transparent 60%), #fff;
+    padding: 20px 24px;
+    margin: 18px 0 8px;
+  }
+  .target-panel h3 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 8px;
+  }
+  .target-panel p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 16.5px;
+    font-weight: 700;
+    line-height: 1.65;
+    color: var(--navy);
+  }
+
+  .story-panel {
+    background: var(--cream);
+    border-left: 4px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    font-family: 'Lora', Georgia, serif;
+    color: #33413A;
+    line-height: 1.7;
+  }
+
+  .warn-panel {
+    background: var(--cream);
+    border-left: 4px solid var(--orange);
+    border-radius: 0 10px 10px 0;
+    padding: 15px 20px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .warn-panel b:first-child { color: var(--orange); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+
+  table.spec { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: 14px; }
+  table.spec th {
+    font-family: 'Manrope', sans-serif;
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 800;
+    padding: 8px 10px 8px 0;
+    border-bottom: 2px solid var(--navy);
+    white-space: nowrap;
+  }
+  table.spec td { padding: 8.5px 10px 8.5px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; line-height: 1.5; }
+  table.spec td:first-child { font-weight: 700; color: var(--navy); white-space: nowrap; width: 150px; }
+  table.spec .hl { color: var(--orange); font-weight: 700; }
+  table.spec tr { break-inside: avoid; }
+
+  table.laptops { width: 100%; border-collapse: collapse; margin: 16px 0 4px; font-size: 14px; }
+  table.laptops th {
+    font-family: 'Manrope', sans-serif;
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #fff;
+    font-weight: 800;
+    padding: 9px 10px;
+  }
+  table.laptops thead tr { background: var(--navy); }
+  table.laptops td { padding: 10px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; line-height: 1.55; background: #fff; }
+  table.laptops td:first-child { font-weight: 700; color: var(--ink); }
+  table.laptops .price { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--orange); white-space: nowrap; }
+  table.laptops .model-note { display: block; font-size: 11.8px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  table.laptops tr { break-inside: avoid; }
+
+  .tier-badge {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    border: 1.5px solid var(--orange);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 6px;
+    background: #fff;
+  }
+
+  .checklist { list-style: none; margin: 12px 0; columns: 2; column-gap: 34px; }
+  .checklist li { position: relative; padding: 4.5px 0 4.5px 24px; font-size: 13.8px; color: #33404A; break-inside: avoid; }
+  .checklist li::before { content: "✓"; position: absolute; left: 2px; top: 4px; color: var(--green); font-weight: 800; }
+
+  ul.points { list-style: none; margin: 8px 0; }
+  ul.points li { position: relative; padding: 4.5px 0 4.5px 18px; font-size: 14.2px; color: #33404A; }
+  ul.points li::before {
+    content: ""; position: absolute; left: 2px; top: 10px;
+    width: 5.5px; height: 5.5px; border-radius: 50%;
+    border: 1.6px solid var(--orange);
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+
+  .tco-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 6px; }
+  .tco-card {
+    border: 1px solid var(--hairline);
+    border-top: 3px solid var(--orange);
+    border-radius: 10px;
+    padding: 13px 15px;
+    background: #fff;
+  }
+  .tco-card .t-name { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .tco-card .t-num { font-family: 'Manrope', sans-serif; font-size: 20px; font-weight: 800; color: var(--navy); }
+  .tco-card .t-sub { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+  .verdict {
+    border: 1.5px dashed var(--orange);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 18px 0;
+    background: #fff;
+  }
+  .verdict h4 { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+  .verdict p { font-size: 14.5px; }
+
+  .just-list { counter-reset: just; margin: 14px 0; }
+  .just-item { display: flex; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--hairline); break-inside: avoid; }
+  .just-item:last-child { border-bottom: none; }
+  .just-num { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 22px; color: var(--orange); min-width: 30px; line-height: 1.3; }
+  .just-item h4 { font-family: 'Manrope', sans-serif; font-size: 14.8px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .just-item p { font-size: 14px; color: #44505A; }
+
+  .foot-band {
+    margin-top: 30px;
+    border-top: 2.5px solid var(--navy);
+    background: var(--cream);
+    padding: 16px 54px 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--orange); white-space: nowrap; }
+
+  .disclaimer { margin-top: 14px; font-size: 10.5px; color: var(--muted); font-style: italic; }
+
+  @media (max-width: 700px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .two-col { grid-template-columns: 1fr; }
+    .tco-row { grid-template-columns: 1fr 1fr; }
+    .checklist { columns: 1; }
+    .masthead h1 { font-size: 23px; }
+    table.laptops, table.spec { font-size: 11px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 12px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 10mm 11mm; }
+    .masthead { background: #fff !important; }
+    .masthead::after { display: none; }
+    .masthead h1 { color: var(--navy) !important; }
+    .mast-sub { color: var(--muted) !important; }
+    .eyebrow, .mast-rule { }
+    .eyebrow { color: var(--orange) !important; }
+    .mast-rule { background: var(--orange); }
+    table.laptops thead tr { background: #fff !important; }
+    table.laptops th { color: var(--navy) !important; border-bottom: 2px solid var(--navy); }
+    .target-panel, .verdict, .warn-panel, .story-panel, .foot-band, .tco-card { background: #fff; }
+    .target-panel, .tco-card { border-top-color: var(--orange); }
+    .section-head, .target-panel, .verdict, .tco-card, .just-item { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">Internal Hardware Request · Starium Rafa Detergents</div>
+    <h1>The Machine Behind Your Machines' Data</h1>
+    <p class="mast-sub">Laptop specifications and market-priced options to equip the developer who single-handedly built the Starium Rafa Enterprise ERP — complete, proven, and ready for deployment upon management approval.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <div class="content">
+
+    <p>The <strong>Starium Rafa Enterprise ERP</strong> is complete and running live in my test environments: powder-density QC for the Level 9 and BOT lines, sachet string-weight and inspection checks, carton and laminate waste intelligence, empty-silo automation, stopped-machine tracking, pallet transfers, executive dashboards and boardroom reports — real-time on every device, resilient against every outage. It was designed, built and deployed by <strong>one person, on personal hardware, outside working hours</strong>. It stands ready to enter daily service across this factory the moment management approves its deployment.</p>
+
+    <p>This document specifies the single tool that would let that work continue at full capacity — with real models, verified Nigerian prices, and the reasoning behind every specification, so management can approve with confidence.</p>
+    <p class="disclaimer">Prices move with the dollar rate. Figures were gathered from live Nigerian vendor listings — Ritelink, Delaw Tech, IT Warehouse, Techsourcesng, Jumia and Computer Village surveys — in August 2026. Verify before payment.</p>
+
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">What This Machine Must Do for Starium Rafa</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th style="width:190px;">Workload</th><th>Why it matters here</th><th style="width:200px;">Hardware impact</th></tr>
+      <tr><td>ERP maintenance &amp; evolution</td><td>The completed suite spans twenty-plus modules covering QC, waste, silos, machines and transfers. Once deployed, every bug fix, feature request and config change will flow through my keyboard.</td><td>Multi-core CPU, fast NVMe SSD.</td></tr>
+      <tr><td>Offline-first engineering</td><td>The nine local queues that make zero-data-loss possible are developed by simulating outages, conflicts and reconciliations locally — many concurrent processes at once.</td><td><span class="hl">32GB RAM strongly recommended.</span></td></tr>
+      <tr><td>Shift training &amp; onboarding rollout</td><td>Every department head, supervisor and operator will be trained onto the system; training materials and live demo instances must run smoothly side-by-side.</td><td>RAM headroom; reliable sustained performance.</td></tr>
+      <tr><td>Demo videos &amp; boardroom decks</td><td>Management adoption runs on polished screen recordings and slide presentations of live dashboards.</td><td>≥300-nit display, capable GPU, fast video export.</td></tr>
+      <tr><td>Production-floor support</td><td>Walking the lines with a tablet-mode screen during shift handovers, debugging entry issues where they happen.</td><td>MIL-STD durability, long battery, USB-C charging.</td></tr>
+      <tr><td>Factory network &amp; device setup</td><td>Router configuration, kiosk devices, printer fleets and future floor tablets.</td><td><span class="hl">Ethernet port or dock</span>, multiple USB-A ports.</td></tr>
+      <tr><td>Budget-friendly future modules</td><td>Roadmap items — audit trails, HR/payroll hooks, inventory links — mean new services, containers and test databases locally.</td><td>Strong multi-core CPU; upgradeable storage.</td></tr>
+    </table>
+
+    <div class="target-panel">
+      <h3>The one-line spec target</h3>
+      <p>A 14–16″ business-class laptop: Intel Core Ultra 7 (or Ryzen 7 / Apple M4) · 32GB RAM · 1TB NVMe SSD · ≥1920×1200 display at 300+ nits · MIL-STD-810 tested · all-day battery · Windows 11 Pro (or macOS) · 1–3 year local warranty.</p>
+    </div>
+
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">Spec Requirements by Level</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th>Component</th><th>Absolute minimum</th><th>Recommended — sweet spot</th><th>Ideal / future-proof</th></tr>
+      <tr><td>CPU</td><td>Core i5 12th gen / Ryzen 5 5000 / M1</td><td class="hl">Core Ultra 7 / Ryzen 7 PRO / Apple M4</td><td>Core Ultra 9 / Ryzen 9 / M4 Pro</td></tr>
+      <tr><td>RAM</td><td>16GB</td><td class="hl">32GB</td><td>48–64GB (containers, VMs)</td></tr>
+      <tr><td>Storage</td><td>512GB NVMe SSD</td><td class="hl">1TB NVMe PCIe Gen 4</td><td>2TB NVMe</td></tr>
+      <tr><td>Display</td><td>14″ FHD 1920×1080</td><td class="hl">14–16″ 1920×1200 (16:10), 300+ nits, anti-glare</td><td>2560×1600 IPS/OLED, 120Hz</td></tr>
+      <tr><td>Battery</td><td>6–8 hrs light use</td><td class="hl">10+ hrs real use; USB-C PD charging</td><td>15+ hrs (Apple Silicon class)</td></tr>
+      <tr><td>Build</td><td>Plastic business chassis</td><td class="hl">MIL-STD-810H tested, spill-resistant keyboard</td><td>Carbon fibre / magnesium alloy</td></tr>
+      <tr><td>Security</td><td>TPM 2.0</td><td class="hl">TPM 2.0 + fingerprint reader</td><td>vPro manageability + IR camera</td></tr>
+      <tr><td>Ports</td><td>USB-C ×2, USB-A, HDMI</td><td class="hl">+ Thunderbolt 4, Ethernet (or dock)</td><td>+ Wi-Fi 7, SD reader</td></tr>
+      <tr><td>Warranty (Nigeria)</td><td>Shop warranty only</td><td class="hl">1-year national/international</td><td>3-year onsite/business support</td></tr>
+    </table>
+
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">Why Each Spec Matters Here</span><span class="section-line"></span></div>
+
+    <div class="two-col">
+      <ul class="points">
+        <li><strong>RAM is the ceiling.</strong> VS Code + Vite + Firebase emulators + two browsers + Docker exceeds 16GB today. 32GB means every tool stays open at once — critical when a deployment deadline or an urgent fix is on the line.</li>
+        <li><strong>Gen 4 NVMe halves build times</strong>; node_modules, emulator images and SDKs devour hundreds of gigabytes within months. 512GB fills fast; 1TB buys years.</li>
+        <li><strong>H-series CPUs sustain.</strong> Efficient U-chips throttle during hour-long build/test cycles; H-series hold boost clocks when a release is urgent.</li>
+        <li><strong>300+ nits matters under factory lighting</strong> — bright halls wash out dim screens during line-side demos and troubleshooting.</li>
+      </ul>
+      <ul class="points">
+        <li><strong>MIL-STD-810H is insurance against this exact environment:</strong> dust, vibration, heat, drops. Consumer laptops fail precisely there.</li>
+        <li><strong>USB-C PD means power resilience:</strong> during outages the machine sips from a power bank or inverter — the hardware version of the offline-first philosophy I engineer by.</li>
+        <li><strong>TPM 2.0 + biometrics protect company IP</strong> — the entire source code, credentials and operational data models of the ERP live on this device.</li>
+        <li><strong>Spill-resistant keyboards exist because factories happen.</strong> One accident should not end the toolchain.</li>
+      </ul>
+    </div>
+
+    <div class="warn-panel"><b>Critical buying rule —</b> avoid soldered 16GB RAM configurations. If memory cannot be upgraded later, buy 32GB upfront. Soldered-RAM economy purchases become 18-month regrets; upgradeable ones become 5-year machines.</div>
+
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Tier A — Recommended Ask: ₦1.7M – ₦2.7M</span><span class="section-line"></span></div>
+
+    <span class="tier-badge">Business-grade · Warrantied · Powerful</span>
+    <table class="laptops">
+      <thead><tr><th style="width:23%;">Laptop</th><th style="width:41%;">Key specs (as sold in Nigeria)</th><th style="width:16%;">Est. price</th><th>Why it fits</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Lenovo ThinkPad X1 Carbon Gen 13<span class="model-note">First formal choice</span></td>
+          <td>Core Ultra 7, <strong>32GB LPDDR5x</strong>, 1TB NVMe, 14″ 1920×1200 IPS, ~985g, Wi-Fi 7, vPro-class security</td>
+          <td class="price">~₦2,700,000</td>
+          <td>The definitive engineer-executive machine: best-in-class keyboard for marathon sessions, carbon-fibre MIL-STD build, featherweight for floor rounds and training days.</td>
+        </tr>
+        <tr>
+          <td>HP EliteBook 840 G11<span class="model-note">Best value-per-naira alternative</span></td>
+          <td>Core Ultra 7, 16GB DDR5, 512GB NVMe, 14″ FHD, Wi-Fi 6E, Wolf Security</td>
+          <td class="price">~₦1,800,000</td>
+          <td>Premium aluminium chassis, excellent keyboard; spare parts available across Nigeria — easiest 5-year maintenance story.</td>
+        </tr>
+        <tr>
+          <td>Dell Latitude 7450 2-in-1</td>
+          <td>Core Ultra 7 165U vPro, 16GB LPDDR5x, 512GB–1TB NVMe, 14″ FHD+ touch, convertible</td>
+          <td class="price">₦563k – ₦2.2M</td>
+          <td>Tablet mode for walking the lines during shift handovers; vPro enables remote management of the factory's growing device fleet.</td>
+        </tr>
+        <tr>
+          <td>Lenovo ThinkPad T14 Gen 4/5</td>
+          <td>Ryzen 7 PRO or Core Ultra, up to 32GB, 512GB–1TB, 14″ FHD+</td>
+          <td class="price">~₦2,000,000</td>
+          <td>Slightly thicker chassis = better thermals during long builds; easier serviceability than the X1.</td>
+        </tr>
+        <tr>
+          <td>Dell Latitude 3550</td>
+          <td>Core i7-1355U, 16GB, 512GB SSD, 15.6″ touch, Win 11 Pro</td>
+          <td class="price">₦1.45M – ₦1.8M</td>
+          <td>Bigger canvas for dashboard design; most affordable brand-new warrantied option.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">Tier B — Premium Long-Horizon Picks: ₦3.0M – ₦5M+</span><span class="section-line"></span></div>
+
+    <span class="tier-badge">If the company wants one elite machine for 5–6 years</span>
+    <table class="laptops">
+      <thead><tr><th style="width:23%;">Laptop</th><th style="width:41%;">Key specs</th><th style="width:16%;">Est. price</th><th>Why it fits</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Apple MacBook Pro 14″ (M4)</td>
+          <td>M4 10-core, <strong>24GB unified</strong>, 1TB, Liquid Retina XDR 120Hz, 15–20 hr battery</td>
+          <td class="price">₦3,499,000</td>
+          <td>Silent, cool, dramatic compile advantage over x86 peers; official warranty via iStore Nigeria. The React/Firebase stack runs flawlessly.</td>
+        </tr>
+        <tr>
+          <td>Apple MacBook Pro 14″ (M4 Pro)</td>
+          <td>M4 Pro 14-core CPU, 20-core GPU, 24GB, 1TB</td>
+          <td class="price">₦4,799,000<br>(grey ~₦3.07M)</td>
+          <td>Headroom for container fleets and fast demo-video exports for management adoption campaigns.</td>
+        </tr>
+        <tr>
+          <td>Apple MacBook Pro 16″ (M4 Pro)</td>
+          <td>As above with 16.2″ XDR canvas</td>
+          <td class="price">₦4,499,000<br>(grey ~₦3.07M)</td>
+          <td>A giant HDR stage for presenting live dashboards in the boardroom.</td>
+        </tr>
+        <tr>
+          <td>Lenovo ThinkPad P1 Gen 6</td>
+          <td>Core i7-13800H vPro, <strong>64GB DDR5</strong>, 1TB, 16″ touch, RTX 4050</td>
+          <td class="price">~₦3,850,000</td>
+          <td>A certified workstation: 64GB swallows any workload; NVIDIA GPU opens future ML/data-science doors. Overkill today, immortal tomorrow.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">Tier C &amp; D — Constrained-Budget Paths</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th>Option</th><th>Specs</th><th>Cost path</th><th style="width:170px;">Realistic total</th></tr>
+      <tr><td>ThinkPad P14s Gen 2 (UK-used)</td><td>Ryzen 7 Pro 5850U 8-core, Radeon Pro dGPU, 16GB → 32GB upgradeable</td><td>~₦589k + 32GB RAM ~₦120k</td><td class="hl">≈ ₦709k</td></tr>
+      <tr><td>HP EliteBook 840 G8 Touch (UK-used)</td><td>11th-gen i5/i7, 16GB, 512GB, touch</td><td>~₦450k + 32GB RAM + 1TB SSD ≈ ₦180k</td><td class="hl">≈ ₦630k</td></tr>
+      <tr><td>ThinkPad T480 (UK-used legend)</td><td>8th-gen i5, dual batteries, two RAM slots, best-ever keyboard</td><td>₦250k–320k + upgrades ≈ ₦250k</td><td class="hl">≈ ₦550k</td></tr>
+      <tr><td>Dell Latitude 7490 / EliteBook 840 G6 (UK-used)</td><td>8th-gen i5, 16GB upgradeable to 32GB</td><td>₦260k–350k + upgrades</td><td class="hl">≈ ₦530k – ₦600k</td></tr>
+    </table>
+
+    <h4 style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--navy);margin:20px 0 6px;">UK-Used Inspection Checklist (Before Paying)</h4>
+    <ul class="checklist">
+      <li>Battery cycle count vs design capacity (<em>powercfg /batteryreport</em>)</li>
+      <li>All RAM slots present &amp; populated — open the back panel, insist</li>
+      <li>SSD health via CrystalDiskInfo (power-on hours, wear level)</li>
+      <li>Dead pixels / backlight bleed on pure white &amp; black screens</li>
+      <li>Hinge tension — loose hinges predict chassis failure</li>
+      <li>Every port tested live: USB, HDMI, audio, charging</li>
+      <li>Keyboard: every key pressed; trackpoint drift check</li>
+      <li>Serial number verified on Lenovo/HP/Dell warranty lookup</li>
+      <li>BIOS unlocked — supervisor passwords signal stolen units</li>
+      <li>Fan noise and throttling under a short stress test</li>
+      <li>Original charger included, correct wattage</li>
+      <li>Honest grade: A = minimal wear · B = cosmetic marks · C = walk away</li>
+    </ul>
+
+    <div class="section-head"><span class="section-num">07</span><span class="section-title">Windows vs macOS — The Honest Comparison</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th>Factor</th><th>Windows 11 Pro (Latitude / EliteBook / ThinkPad)</th><th>macOS (MacBook Pro M-series)</th></tr>
+      <tr><td>.NET/C# heritage</td><td class="hl">Full Visual Studio IDE — Windows only</td><td>VS Code only</td></tr>
+      <tr><td>Current ERP stack</td><td class="hl">Fully supported</td><td class="hl">Fully supported — arguably smoother</td></tr>
+      <tr><td>Factory IT integration</td><td class="hl">Native fit — kiosks, printers, shared PCs</td><td>Workable, more workarounds</td></tr>
+      <tr><td>Real-workload battery</td><td>6–10 hrs typical</td><td class="hl">15–22 hrs — transformative for floor days</td></tr>
+      <tr><td>Nigeria service ecosystem</td><td class="hl">Extensive nationwide parts &amp; partners</td><td>Official at iStore/Mac Center; pricier parts</td></tr>
+      <tr><td>Power-instability behaviour</td><td>UPS recommended</td><td class="hl">Sips power; pairs beautifully with inverters</td></tr>
+    </table>
+
+    <div class="verdict">
+      <h4>Verdict for Starium Rafa</h4>
+      <p>A <strong>Windows business laptop is the pragmatic institutional choice</strong> — it matches my documented .NET depth, integrates natively with factory IT, and carries the widest service network. The <strong>MacBook Pro 14 M4 is the superior productivity instrument</strong> if battery endurance ranks highest. Either way, buy once at business-grade rather than twice at consumer grade.</p>
+    </div>
+
+    <div class="section-head"><span class="section-num">08</span><span class="section-title">Accessories Worth Bundling</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th>Item</th><th>Purpose</th><th style="width:150px;">Est. cost (NG)</th></tr>
+      <tr><td>USB-C / Thunderbolt dock</td><td>One-cable desk setup; adds Ethernet + dual displays for report design</td><td>₦120k – ₦250k</td></tr>
+      <tr><td>24″ external monitor (FHD IPS)</td><td>Dual-screen development; colour-accurate report previews before print</td><td>₦150k – ₦250k</td></tr>
+      <tr><td>1TB portable NVMe SSD</td><td>Versioned backups of the ERP codebase and demo assets</td><td>₦90k – ₦140k</td></tr>
+      <tr><td>65W/100W GaN spare charger</td><td>Office + bag; charges from power banks and inverters</td><td>₦35k – ₦60k</td></tr>
+      <tr><td>Line-interactive UPS (1kVA)</td><td>Clean shutdowns protect the local build environment during outages</td><td>₦120k – ₦200k</td></tr>
+      <tr><td>Fitted sleeve + keyboard cover</td><td>Factory-floor dust protection</td><td>₦15k – ₦30k</td></tr>
+      <tr><td>4G hotspot</td><td>Redundant connectivity for deployments when factory Wi-Fi dies mid-release</td><td>₦50k – ₦100k + data</td></tr>
+    </table>
+
+    <div class="section-head"><span class="section-num">09</span><span class="section-title">Three-Year Cost View</span><span class="section-line"></span></div>
+
+    <div class="tco-row">
+      <div class="tco-card"><div class="t-name">UK-used path</div><div class="t-num">~₦18k/mo</div><div class="t-sub">₦550k ÷ 36 mo — no warranty, downtime risk, shorter life</div></div>
+      <div class="tco-card"><div class="t-name">Value new (G11)</div><div class="t-num">~₦47k/mo</div><div class="t-sub">₦1.8M ÷ 36–48 mo — warrantied, serviceable, strong</div></div>
+      <div class="tco-card"><div class="t-name">Recommended X1</div><div class="t-num">~₦56k/mo</div><div class="t-sub">₦2.7M ÷ 48 mo — full-power for 4+ years</div></div>
+      <div class="tco-card"><div class="t-name">Premium Mac/P1</div><div class="t-num">~₦71k/mo</div><div class="t-sub">₦3.5–4.8M ÷ 60 mo — elite 5–6 years, best residual value</div></div>
+    </div>
+
+    <p style="margin-top:10px;">Even the flagship costs less per month than a single interrupted release day. Downtime is the hidden multiplier: one week of lost build time erases the price difference between tiers.</p>
+
+    <div class="section-head"><span class="section-num">10</span><span class="section-title">Where to Buy — Channel Intelligence</span><span class="section-line"></span></div>
+
+    <div class="two-col">
+      <ul class="points">
+        <li><strong>TD Africa (Lagos)</strong> — largest tech distributor; official Dell/HP/Lenovo business channel with real warranties and proper invoicing.</li>
+        <li><strong>iStore Nigeria / Mac Center</strong> — official Apple resellers; the safe route if the MacBook route is chosen.</li>
+        <li><strong>Ritelink, Delaw Tech, IT Warehouse, Techsourcesng</strong> — Lagos resellers with online catalogues; compare identical configs across all four before paying.</li>
+        <li><strong>Jumia (refurbished)</strong> — convenient but typically 30–50% above Computer Village for equivalent specs.</li>
+      </ul>
+      <ul class="points">
+        <li><strong>Computer Village, Ikeja</strong> — deepest UK-used stock at best prices; bring the §06 checklist, test before paying.</li>
+        <li><strong>Jiji.ng</strong> — direct sellers, often cheapest; meet publicly, verify serials, insist on live testing.</li>
+        <li><strong>Warranty reality:</strong> new = 1–3 year manufacturer support via Nigerian partners; UK-used = dealer goodwill only.</li>
+        <li><strong>Invoice tip:</strong> exact model/spec/serial on the invoice protects warranty and any future asset register.</li>
+      </ul>
+    </div>
+
+    <div class="section-head"><span class="section-num">11</span><span class="section-title">The Justification — Why Management Should Approve</span><span class="section-line"></span></div>
+
+    <div class="just-list">
+      <div class="just-item"><div class="just-num">01</div><div><h4>The tool produces your product</h4><p>The ERP is finished and proven — poised to save manager-hours on this floor every single shift once approved. It was built on inadequate personal hardware; every compile wait and dead battery between now and rollout is paid-for time leaking daily.</p></div></div>
+      <div class="just-item"><div class="just-num">02</div><div><h4>Reliability costs less than replacement</h4><p>A ₦2.7M business laptop over four years is ~₦56k/month — less than one day of uninterrupted development on the system your managers are about to depend on.</p></div></div>
+      <div class="just-item"><div class="just-num">03</div><div><h4>Built for this environment</h4><p>MIL-STD machines exist precisely for dust, heat, vibration and travel. Consumer laptops fail exactly there — usually mid-shift.</p></div></div>
+      <div class="just-item"><div class="just-num">04</div><div><h4>It powers the rollout phase</h4><p>Department-wide training, new modules, audit trails and deeper integrations all require building, testing and demonstrating software daily. This laptop is the workshop for that next chapter.</p></div></div>
+      <div class="just-item"><div class="just-num">05</div><div><h4>Company IP deserves company-grade security</h4><p>TPM encryption, biometric lock, remote-wipe and vPro management protect the ERP source code and data models resident on the device.</p></div></div>
+    </div>
+
+    <div class="section-head"><span class="section-num">12</span><span class="section-title">Final Recommendation Matrix</span><span class="section-line"></span></div>
+
+    <table class="spec">
+      <tr><th>Scenario</th><th>Ask for</th><th style="width:150px;">Est. total</th></tr>
+      <tr><td>Standard professional request</td><td class="hl">ThinkPad X1 Carbon Gen 13 — Ultra 7 / 32GB / 1TB</td><td>~₦2.7M</td></tr>
+      <tr><td>Value-conscious approval</td><td class="hl">HP EliteBook 840 G11 upgraded to 32GB/1TB</td><td>~₦1.9M – ₦2.1M</td></tr>
+      <tr><td>Premium long-horizon</td><td class="hl">MacBook Pro 14″ M4 Pro 24GB/1TB · or ThinkPad P1 Gen 6 64GB</td><td>~₦3.9M – ₦4.8M</td></tr>
+      <tr><td>Tightest budget (new)</td><td class="hl">Dell Latitude 3550 16GB + accessories</td><td>~₦1.75M</td></tr>
+      <tr><td>Personal interim stopgap</td><td class="hl">UK-used ThinkPad T480 upgraded 32GB/1TB</td><td>~₦550k</td></tr>
+    </table>
+
+    <div class="story-panel">This factory's data is ready to stop living in notebooks. One engineer already built the system that will make that happen — staying late with inadequate tools. Give that engineer adequate tools, and watch the rollout succeed: faster dashboards, trained departments, and a system that grows with the company instead of behind it.</div>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">"Offline-first thinking shouldn't stop at software. It belongs in the toolbox too."</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · QC | Starium Rafa · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

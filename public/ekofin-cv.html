@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curriculum Vitae — Engr. Damilare Paul Ayodele</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #0B3D26;
+    --green: #176B3A;
+    --leaf: #4F9D58;
+    --gold: #B8860B;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --ink: #1D2922;
+    --muted: #637269;
+    --hairline: #E2DFD1;
+    --faint: #EFEDE3;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 26px 18px;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1150px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(29,41,34,.08), 0 16px 44px rgba(29,41,34,.12);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .masthead { padding: 42px 52px 0; }
+  .overline {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  h1.name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 43px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.05;
+    color: var(--forest);
+  }
+  .title-line {
+    margin-top: 9px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .title-line .role {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--green);
+    text-transform: uppercase;
+    font-size: 15.5px;
+  }
+  .title-line .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+  .title-line .tagline {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .contact-strip {
+    margin-top: 20px;
+    padding: 11px 0 12px;
+    border-top: 2px solid var(--forest);
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 26px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .contact-strip::after {
+    content: "";
+    position: absolute; top: -2px; left: 0;
+    width: 110px; height: 2px; background: var(--green);
+  }
+  .contact-strip b { color: var(--ink); font-weight: 600; }
+
+  /* ── Layout ── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: 46px;
+    padding: 30px 52px 40px;
+  }
+  .main-col { min-width: 0; }
+  .side-col { border-left: 1px solid var(--hairline); padding-left: 24px; }
+
+  /* ── Section headings ── */
+  .sec { margin-bottom: 24px; break-inside: avoid; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .sec-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--forest);
+    white-space: nowrap;
+  }
+  .sec-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-3px); }
+
+  /* ── Summary ── */
+  .summary { font-size: 15px; line-height: 1.66; color: #33403A; }
+  .summary strong { color: var(--green); font-weight: 600; }
+
+  /* ── Signature project panel ── */
+  .signature-project {
+    position: relative;
+    border: 1.5px solid var(--green);
+    border-radius: 10px;
+    padding: 18px 20px 15px;
+    margin-bottom: 24px;
+    break-inside: avoid;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(217,164,65,.07) 0, transparent 42%),
+      #FFFFFF;
+  }
+  .sp-flag {
+    position: absolute;
+    top: -9px; left: 16px;
+    background: var(--green);
+    color: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .sp-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-top: 4px;
+    letter-spacing: -.01em;
+  }
+  .sp-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 12px; }
+  .chip {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--green);
+    border: 1px solid #CBDCD0;
+    border-radius: 20px;
+    padding: 3px 10px;
+    background: #fff;
+  }
+  .sp-points li, ul.points li {
+    list-style: none;
+    position: relative;
+    padding: 4px 0 4px 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #33403A;
+  }
+  .sp-points li::before, ul.points li::before {
+    content: "";
+    position: absolute;
+    left: 2px; top: 10px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.6px solid var(--leaf);
+  }
+  .impact-row {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px dashed var(--hairline);
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .impact { min-width: 96px; }
+  .impact .num {
+    font-family: 'Manrope', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--earth);
+    letter-spacing: -.01em;
+  }
+  .impact .lbl { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+
+  /* ── Timeline ── */
+  .timeline { border-left: 2px solid var(--faint); margin-left: 5px; }
+  .t-item {
+    position: relative;
+    padding: 0 0 17px 22px;
+    break-inside: avoid;
+  }
+  .t-item:last-child { padding-bottom: 2px; }
+  .t-item::before {
+    content: "";
+    position: absolute;
+    left: -6.5px; top: 3px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid var(--green);
+  }
+  .t-item.minor::before { border-color: #C9CFC9; width: 9px; height: 9px; left: -5.5px; }
+  .t-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+  .t-role { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 15.5px; color: var(--ink); letter-spacing: -.005em; }
+  .t-date {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--earth);
+    white-space: nowrap;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .t-org { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 1px; }
+  .t-org span { color: var(--muted); font-weight: 400; }
+  .t-desc { font-size: 13.5px; color: #44514A; margin-top: 5px; line-height: 1.58; }
+  .t-desc em { color: var(--muted); }
+
+  /* ── Sidebar blocks ── */
+  .sb-block { margin-bottom: 21px; break-inside: avoid; }
+  .sb-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--forest);
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid var(--forest);
+    margin-bottom: 9px;
+  }
+  .skill-group { margin-bottom: 10px; }
+  .skill-group h4 {
+    font-size: 11.8px;
+    font-weight: 700;
+    color: var(--earth);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .skill-group p { font-size: 13.2px; color: #33403A; line-height: 1.5; }
+  .edu-item { margin-bottom: 10px; }
+  .edu-deg { font-size: 13.2px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+  .edu-meta { font-size: 12.2px; color: var(--muted); }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table td {
+    font-size: 12.8px;
+    padding: 3px 0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  .data-table td:first-child { color: var(--muted); width: 84px; font-weight: 500; }
+  .data-table td:last-child { color: var(--ink); font-weight: 500; }
+  .ref-item { margin-bottom: 10px; font-size: 12.6px; line-height: 1.5; }
+  .ref-name { font-weight: 700; color: var(--ink); }
+  .ref-detail { color: var(--muted); }
+  .ref-contact { color: var(--green); font-size: 12px; word-break: break-all; }
+
+  /* ── Footer band ── */
+  .foot-band {
+    border-top: 2px solid var(--forest);
+    padding: 13px 52px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 11.5px; color: var(--muted); }
+  .foot-right {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--green);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .masthead { padding: 30px 24px 0; }
+    .columns { grid-template-columns: 1fr; padding: 24px; gap: 28px; }
+    .side-col { border-left: none; padding-left: 0; border-top: 1px solid var(--hairline); padding-top: 22px; }
+    h1.name { font-size: 28px; }
+    .foot-band { padding: 13px 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 13.2px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 10mm 11mm; }
+    .signature-project { background: #fff; }
+    .sec, .t-item, .sp-points li, ul.points li, .sb-block, .impact-row, .edu-item, .ref-item { break-inside: avoid; }
+    .timeline { page-break-inside: auto; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="overline">Curriculum Vitae</div>
+    <h1 class="name">Engr. Damilare Paul Ayodele</h1>
+    <div class="title-line">
+      <span class="role">Chief Software Architect Candidate</span>
+      <span class="dot"></span>
+      <span class="tagline">The engineer who built a factory's digital platform from inside it.</span>
+    </div>
+    <div class="contact-strip">
+      <span><b>E:</b> ayodele.damilare@gmail.com</span>
+      <span><b>P:</b> 0802 897 5816</span>
+      <span><b>W:</b> 0705 333 1253 (WhatsApp)</span>
+      <span><b>A:</b> 4 Olugbenga Close, Iraye-Oke, Epe, Lagos State</span>
+      <span><b>Nationality:</b> Nigerian · Born 13 Nov 1984</span>
+    </div>
+  </div>
+
+  <!-- Columns -->
+  <div class="columns">
+
+    <!-- MAIN -->
+    <div class="main-col">
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-title">Professional Profile</span><span class="sec-line"></span></div>
+        <p class="summary">Solutions architect and hands-on full-stack engineer with <strong>over ten years of enterprise software delivery</strong> — spanning logistics platforms at The GIG Group, banking integrations for First Bank, and enterprise HR systems used across West Africa — currently serving as a <strong>Quality Control officer on a live detergent production floor at Starium Rafa Detergents</strong>. There, after witnessing critical production data disappear daily into paper notebooks while managers made decisions from memory, I single-handedly designed, built and delivered the company's complete ERP platform: real-time, offline-resilient, role-governed, costing nothing in licences or servers — fully functional in live test environments today, awaiting management approval to enter daily operations. I am seeking to bring this rare combination — <strong>boardroom-grade architecture and factory-floor empathy</strong> — to an organisation ready to make its operations speak one digital language.</p>
+      </div>
+
+      <div class="signature-project">
+        <div class="sp-flag">Signature Project · Built Solo · Fully Functional, Deployment-Ready</div>
+        <div class="sp-title">Starium Rafa Enterprise ERP</div>
+        <div class="sp-sub">Full-lifecycle architect, developer, DevOps &amp; product owner · Firebase / React · Feb 2026 – Present</div>
+        <div class="chips">
+          <span class="chip">Powder Density QC</span>
+          <span class="chip">Sachet Inspections ×3</span>
+          <span class="chip">Waste Intelligence</span>
+          <span class="chip">Empty-Silo Automation</span>
+          <span class="chip">Stopped-Machine Tracking</span>
+          <span class="chip">Pallet Transfers</span>
+          <span class="chip">Broadcast Alerts</span>
+          <span class="chip">RBAC Governance</span>
+          <span class="chip">Executive Dashboards</span>
+          <span class="chip">CSV / Print Reports</span>
+          <span class="chip">Offline Queue Engine</span>
+        </div>
+        <ul class="sp-points">
+          <li>Architected an <strong>offline-first data engine</strong> — nine independent local queues reconcile automatically after network outages, making zero data loss a structural property, not a policy.</li>
+          <li>Deployed <strong>triple redundant hosting</strong> (Firebase Hosting + GitHub Pages + Cloudflare Workers Pages) so operations survive any single platform failure — the third route chosen deliberately because some networks block the first two, keeping the system reachable on ordinary connections with no VPN workarounds.</li>
+          <li>Designed three-tier security (system / department / action roles) with named digital sign-off workflows mirroring real plant authority.</li>
+          <li>Delivered boardroom-ready cross-shift analytics — trend charts, threshold alerts, CSV export and print-perfect report layouts.</li>
+          <li>Achieved all of this <strong>outside working hours, alongside full QC duties, at zero cost</strong> to my employer — proof of both capability and ownership mindset.</li>
+        </ul>
+        <div class="impact-row">
+          <div class="impact"><div class="num">20+</div><div class="lbl">Modules shipped</div></div>
+          <div class="impact"><div class="num">0 ₦</div><div class="lbl">Software licence cost</div></div>
+          <div class="impact"><div class="num">3×</div><div class="lbl">Redundant hosting</div></div>
+          <div class="impact"><div class="num">100%</div><div class="lbl">Offline capture</div></div>
+          <div class="impact"><div class="num">1</div><div class="lbl">Developer — me</div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-title">Professional Experience</span><span class="sec-line"></span></div>
+        <div class="timeline">
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Quality Control Officer &amp; Systems Builder</span><span class="t-date">Feb 2026 – Present</span></div>
+            <div class="t-org">Starium Rafa Detergents <span>· Lagos</span></div>
+            <p class="t-desc">Execute quality-control testing across Level 9 &amp; BOT powder-density lines and sachet production checks. Identified systemic data loss across shift operations; conceived and built the company-wide ERP described above — complete in live test environments and awaiting deployment approval — while maintaining full QC responsibilities.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Business Consultant &amp; Team Lead</span><span class="t-date">Jul 2021 – Present</span></div>
+            <div class="t-org">Top-Up &amp; Get Reward Ltd / AG Nutrition International <span>· Lagos</span></div>
+            <p class="t-desc">Technical guidance and digital-platform management for a 700-member network; VTU portal and CRM monitoring; training programmes on Zoom and Telegram collaboration tooling.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Senior .NET Software Developer</span><span class="t-date">Feb 2019 – Jul 2021</span></div>
+            <div class="t-org">The GIG Group (God is Good Motors) <span>· Jibowu, Lagos</span></div>
+            <p class="t-desc">Designed API endpoints powering internal logistics and transport applications; built Windows Services for scheduled jobs (payroll, notifications, data sync); database optimisation and server maintenance; Azure DevOps source control and CI/CD pipelines; terminal-staff technical support.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">.NET Software Developer</span><span class="t-date">May 2018 – Jan 2019</span></div>
+            <div class="t-org">Longbridge Technologies <span>· Ikeja, Lagos</span></div>
+            <p class="t-desc">Created integration web services bridging First Bank's Microsoft Dynamics 365 CRM with core banking applications; resolved service issues on banking servers; collaborated with infrastructure team on uptime and data integrity.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">.NET Software Developer</span><span class="t-date">Aug 2014 – May 2018</span></div>
+            <div class="t-org">Alliedsoft (Xceed365) Limited <span>· Marina, Lagos</span></div>
+            <p class="t-desc">Maintained Xceed365 HR software for enterprise clients; developed new desktop/web modules in VB.NET and C#; produced complex SSRS reports; performed SQL Server administration including scripting and backups.</p>
+          </div>
+
+          <div class="t-item minor">
+            <div class="t-head"><span class="t-role">Software Implementer</span><span class="t-date">Sep 2013 – Aug 2014</span></div>
+            <div class="t-org">Coniah Systems Support Limited <span>· Ikeja, Lagos</span></div>
+            <p class="t-desc">Client-site installations, database setup, system deployment and user training.</p>
+          </div>
+
+          <div class="t-item minor">
+            <div class="t-head"><span class="t-role">.NET Developer &amp; Operations Engineer</span><span class="t-date">Aug 2011 – Apr 2012</span></div>
+            <div class="t-org">EasyFuel Limited <span>· Lagos</span></div>
+            <p class="t-desc">Installed and maintained fuel-management equipment, POS terminals and IT hardware across filling stations; deployed handheld payment terminals; maintained internal .NET applications.</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="side-col">
+
+      <div class="sb-block">
+        <div class="sb-title">Core Competencies</div>
+        <div class="skill-group"><h4>Languages &amp; Frameworks</h4><p>C#, VB.NET, ASP.NET Core, MVC, Web APIs, Windows Services, JavaScript, HTML/CSS, React, Firebase</p></div>
+        <div class="skill-group"><h4>Data &amp; Reporting</h4><p>Microsoft SQL Server, MySQL, SSRS, Entity Framework, stored procedures, dashboard design</p></div>
+        <div class="skill-group"><h4>Architecture</h4><p>Offline-first sync engines, real-time subscriptions, redundant hosting, RBAC security models</p></div>
+        <div class="skill-group"><h4>DevOps &amp; Tooling</h4><p>Azure DevOps, CI/CD, Docker, Git, IIS configuration, AI-assisted rapid development</p></div>
+        <div class="skill-group"><h4>Domain Strengths</h4><p>Manufacturing QC processes, logistics &amp; fleet systems, banking integrations, HR/payroll software, field hardware deployment</p></div>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">Education</div>
+        <div class="edu-item">
+          <div class="edu-deg">B.Sc. (Honours) Electronics &amp; Computer Engineering</div>
+          <div class="edu-meta">Lagos State University · Second Class Upper · 2004–2010</div>
+        </div>
+        <div class="edu-item">
+          <div class="edu-deg">WAEC / GCE</div>
+          <div class="edu-meta">Epe Grammar School, Epe · 1995–2002</div>
+        </div>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">Personal Data</div>
+        <table class="data-table">
+          <tr><td>Date of Birth</td><td>13 November 1984</td></tr>
+          <tr><td>State of Origin</td><td>Ekiti State (Efon LGA)</td></tr>
+          <tr><td>Place of Birth</td><td>Lagos</td></tr>
+          <tr><td>Residence</td><td>Epe, Lagos State</td></tr>
+        </table>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">References</div>
+        <div class="ref-item">
+          <div class="ref-name">Alagbe Adeyombo Olusegun</div>
+          <div class="ref-detail">Deputy Registrar / Head, Alumni Relations Unit, LASU Ojo Campus</div>
+          <div class="ref-contact">alayombo@gmail.com · 0810 197 3764</div>
+        </div>
+        <div class="ref-item">
+          <div class="ref-name">Prof. K.F.K. Oyedeko</div>
+          <div class="ref-detail">Chemical Engineering Dept., Faculty of Engineering, Lagos State University</div>
+          <div class="ref-contact">kamilu.oyedeko@lasu.edu.ng · 0803 470 9811</div>
+        </div>
+        <div class="ref-item">
+          <div class="ref-name">Mr. Abiodun Oladejo</div>
+          <div class="ref-detail">Group Head of Finance, Bracken Media Solutions, Ikeja GRA</div>
+          <div class="ref-contact">abiodun.olamileke@brackenads.com · 0802 333 8180</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="foot-band">
+    <span class="foot-left">"Every factory runs twice — once through its machines, once through its data. I build the second run."</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Epe, Lagos</span>
+  </div>
+
+</div>
+</body>
+</html>

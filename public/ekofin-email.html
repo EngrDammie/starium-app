@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application — Chief Software Architect — Eko Organic Food Industries Limited</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #0B3D26;
+    --green: #176B3A;
+    --leaf: #4F9D58;
+    --gold: #D9A441;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --paper: #FCFCF8;
+    --ink: #1D2922;
+    --muted: #637269;
+    --hairline: #E4E1D2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 16px;
+    line-height: 1.65;
+    font-size: 16.5px;
+  }
+  .sheet {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(29,41,34,.08), 0 18px 50px rgba(29,41,34,.14);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* ── Masthead ─────────────────────────────── */
+  .masthead {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--green) 78%, #1E7A44 100%);
+    padding: 52px 56px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 88% 18%, rgba(217,164,65,.16) 0, transparent 34%),
+      radial-gradient(circle at 6% 96%, rgba(255,255,255,.07) 0, transparent 42%);
+    pointer-events: none;
+  }
+  .mast-eyebrow {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    color: #FFFFFF;
+    font-size: 36px;
+    line-height: 1.22;
+    font-weight: 800;
+    letter-spacing: -.015em;
+    max-width: 600px;
+    margin-bottom: 14px;
+  }
+  .mast-sub {
+    color: rgba(255,255,255,.85);
+    font-size: 16.5px;
+    max-width: 560px;
+    font-weight: 500;
+  }
+  .mast-rule {
+    width: 64px; height: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    margin-top: 24px;
+  }
+
+  /* ── Body ─────────────────────────────── */
+  .letter { padding: 46px 56px 30px; }
+  .letter p { margin-bottom: 16px; }
+  .salutation { font-weight: 600; color: var(--forest); margin-bottom: 18px; }
+  .dropcap::first-letter {
+    font-family: 'Lora', Georgia, serif;
+    float: left;
+    font-size: 54px;
+    line-height: .82;
+    padding: 6px 12px 0 0;
+    color: var(--green);
+    font-weight: 500;
+  }
+  .lead { font-size: 16px; }
+
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    margin: 38px 0 18px;
+  }
+  .section-num {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: .08em;
+  }
+  .section-title {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--forest);
+    letter-spacing: -.01em;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+
+  em.tint { font-style: normal; color: var(--green); font-weight: 600; }
+  strong { color: var(--forest); }
+
+  /* Module cards */
+  .module-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0 8px;
+  }
+  .module-card {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 14px 16px 13px;
+    background: #FFFFFF;
+  }
+  .module-card h4 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 4px;
+    letter-spacing: .01em;
+  }
+  .module-card span { font-size: 14px; color: var(--muted); line-height: 1.5; display: block; }
+
+  /* Capability table */
+  table.capabilities {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0 6px;
+    font-size: 15px;
+  }
+  table.capabilities th {
+    font-family: 'Manrope', sans-serif;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    padding: 8px 12px 8px 0;
+    border-bottom: 2px solid var(--forest);
+  }
+  table.capabilities td {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  table.capabilities td:first-child {
+    font-weight: 700;
+    color: var(--forest);
+    white-space: nowrap;
+    width: 190px;
+  }
+
+  /* Imagine block */
+  .imagine {
+    margin: 26px 0;
+    padding: 26px 30px;
+    background: var(--cream);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 12px 12px 0;
+  }
+  .imagine p {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+    color: #2A362E;
+    margin-bottom: 18px;
+  }
+  .imagine p:last-child { margin-bottom: 0; }
+  .imagine .imagine-word {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    color: var(--earth);
+    letter-spacing: .02em;
+  }
+  .imagine-close {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed #D8D2BC;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 15.5px !important;
+    color: var(--muted) !important;
+  }
+
+  /* Roadmap */
+  .roadmap { counter-reset: step; margin: 20px 0 6px; }
+  .roadmap-item {
+    display: flex;
+    gap: 18px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .roadmap-item:last-child { border-bottom: none; }
+  .roadmap-num {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--leaf);
+    min-width: 40px;
+    line-height: 1.25;
+  }
+  .roadmap-item h4 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 3px;
+  }
+  .roadmap-item p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.55; }
+
+  /* Résumé strip */
+  .resume-band {
+    margin: 44px 0 6px;
+    padding: 38px 46px;
+    background: #FFFFFF;
+    border: 1.5px solid var(--hairline);
+    border-radius: 16px;
+  }
+  .resume-grid { display: grid; grid-template-columns: 1fr 300px; gap: 48px; }
+  .xp-item { padding: 11px 0; border-bottom: 1px solid var(--cream); }
+  .xp-item:last-child { border-bottom: none; }
+  .xp-role { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 15.5px; color: var(--ink); }
+  .xp-org { font-size: 14px; color: var(--muted); margin-top: 1px; }
+  .xp-note { font-size: 14px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .side-block { margin-bottom: 22px; }
+  .side-block h5 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--earth);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .side-block p, .side-block li { font-size: 14px; color: var(--ink); line-height: 1.55; }
+  .side-block ul { list-style: none; }
+  .side-block li { padding: 2.5px 0 2.5px 14px; position: relative; }
+  .side-block li::before {
+    content: ""; position: absolute; left: 0; top: 10px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--leaf);
+  }
+  .edu-degree { font-weight: 700; font-size: 14.5px; }
+
+  /* Contact footer */
+  .contact-footer {
+    background: linear-gradient(150deg, var(--forest) 0%, var(--green) 85%);
+    padding: 46px 56px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-footer::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 92% 88%, rgba(217,164,65,.18) 0, transparent 38%);
+    pointer-events: none;
+  }
+  .cf-eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--gold);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cf-name {
+    font-family: 'Manrope', sans-serif;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+  }
+  .cf-title { color: rgba(255,255,255,.85); font-size: 14px; margin-top: 4px; font-weight: 500; }
+  .cf-lines { margin-top: 26px; }
+  .cf-line {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,.14);
+  }
+  .cf-line:last-child { border-bottom: none; }
+  .cf-label {
+    width: 110px;
+    color: rgba(255,255,255,.62);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    font-family: 'Manrope', sans-serif;
+  }
+  .cf-value {
+    color: #fff;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cf-value.small { font-size: 16px; font-weight: 500; color: rgba(255,255,255,.94); }
+  .cf-value a { color: inherit; text-decoration: none; }
+  .cf-tag {
+    margin-top: 24px;
+    color: rgba(255,255,255,.66);
+    font-size: 12.5px;
+    font-style: italic;
+    font-family: 'Lora', Georgia, serif;
+  }
+  .signature { padding: 30px 56px 40px; }
+  .signature .sig-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 19px; font-weight: 800; color: var(--forest);
+  }
+  .signature p { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+
+  /* Instructions */
+  .how-to-send {
+    max-width: 1080px;
+    margin: 0 auto 22px;
+    background: #FFF8E6;
+    border: 1px solid #EDD9A3;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 13px;
+  }
+  .how-to-send h3 {
+    font-family: 'Manrope', sans-serif;
+    color: #8A6116;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .how-to-send ol { padding-left: 20px; }
+  .how-to-send li { margin-bottom: 6px; line-height: 1.55; }
+  .how-to-send code { background: #FBF1D8; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+
+  @media (max-width: 640px) {
+    .masthead, .letter, .contact-footer, .signature { padding-left: 26px; padding-right: 26px; }
+    .resume-band { margin: 32px 0 4px; padding: 26px 24px; }
+    .resume-grid { grid-template-columns: 1fr; gap: 24px; }
+    .module-grid { grid-template-columns: 1fr; }
+    .masthead h1 { font-size: 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    .how-to-send { display: none; }
+    .masthead, .contact-footer { background: #fff !important; }
+    .masthead::after, .contact-footer::before { display: none; }
+    .masthead h1, .cf-name, .cf-value, .cf-value.small { color: var(--forest) !important; }
+    .mast-sub, .cf-title, .cf-label, .cf-tag { color: var(--muted) !important; }
+    .cf-line { border-color: var(--hairline); }
+    .imagine { background: #fff; }
+    .resume-band { background: #fff; }
+    .section-head { break-inside: avoid; }
+    .roadmap-item, .module-card, .xp-item { break-inside: avoid; }
+    .contact-footer { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="how-to-send">
+  <h3>Before sending — quick notes</h3>
+  <ol>
+    <li><strong>Recipient:</strong> EKOFIN's public contact/careers channel (<code>ekofinnigeria.com</code> → Contact / Careers) or the MD's direct address if you obtain it. On LinkedIn, send to EKOFIN's company page and connect with <strong>Temitope Adedeji (GM, Supply Chain)</strong> and any Senior Quality Manager listed.</li>
+    <li><strong>Subject line options:</strong> <code>The Chief Software Architect EKOFIN Hasn't Met Yet — I Already Built the Proof</code> · <code>From Paper Notebooks to Real-Time Intelligence — Application for Chief Software Architect</code></li>
+    <li><strong>To send via Gmail:</strong> open this file in Chrome, select everything from the salutation down to the signature, copy, and paste into the compose window — formatting carries over. Or attach this page as a PDF (Print → Save as PDF).</li>
+    <li><strong>Attach</strong> the matching PDF exports of <code>ekofin-cover-letter.html</code> and <code>ekofin-cv.html</code>.</li>
+    <li>Delete this box (it disappears automatically when printing).</li>
+  </ol>
+</div>
+
+<div class="sheet">
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="mast-eyebrow">Application · Chief Software Architect</div>
+    <h1>Your next chapter deserves more than software. It deserves a proven builder.</h1>
+    <p class="mast-sub">A letter to the leadership of Eko Organic Food Industries Limited (EKOFIN) — written by the engineer who built a complete factory digital platform from inside its floor, finished and proven, awaiting only the word to deploy.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <!-- Letter -->
+  <div class="letter">
+
+    <p class="salutation">Dear Sir/Madam,</p>
+
+    <p class="dropcap lead">Every great food company runs two businesses. The one that grows, processes and ships its products — and the quieter one that gathers what all of it <em>means</em>. The first business you have built impressively: two divisions, six sourcing states, a modern plant in Epe, kernels moving toward the world. The second business — the one made of data — is where most companies quietly bleed, and it is precisely there that I have spent my career preparing to serve you.</p>
+
+    <p>My name is <strong>Damilare Paul Ayodele</strong>, and I am writing to offer myself to EKOFIN as your <strong>Chief Software Architect</strong> — not as a man with theories, but as a builder with receipts. I am currently a Quality Control officer at Starium Rafa Detergents, where I have served since February 2026. I am also the person who, outside my official duties, single-handedly designed, built and deployed a complete enterprise resource planning platform for that factory — fully functional, running live in my own test environments today, and ready to serve its operations the moment management approves deployment.</p>
+
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">The Problem I Could Not Ignore</span>
+      <span class="section-line"></span>
+    </div>
+
+    <p>I did not find the problem in a boardroom. I found it standing at a machine, holding a clipboard. Every shift, critical numbers — densities, weights, waste, machine stoppages, pallet movements — were captured by hand into paper notebooks, transcribed hours later, aggregated days later, and acted upon… sometimes never. Managers were making decisions from memory. Supervisors walked the floor merely to discover what was already true an hour ago. And whenever the internet failed — as it faithfully does in any factory — the little digitisation that existed simply stopped.</p>
+
+    <p>I realised the gap between what was happening on the floor and what leadership knew was not a people problem. It was a <em class="tint">software problem</em>. And nobody was coming to solve it. So, on my own time, at my own expense, I began to solve it myself.</p>
+
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">What I Built — While Doing My Day Job</span>
+      <span class="section-line"></span>
+    </div>
+
+    <p>The <strong>Starium Rafa Enterprise ERP</strong> is complete and running live in my test environments today: twenty-plus routes covering the operational spine of a manufacturing company, real-time on every device, resilient against power and network failure, and costing nothing in licences or servers. It is finished, proven end-to-end, and ready to enter daily factory service as soon as management approves its deployment.</p>
+
+    <div class="module-grid">
+      <div class="module-card"><h4>Powder Density Command</h4><span>Level 9 &amp; BOT lines — live density validation, machine grids, executive charts, digital approvals.</span></div>
+      <div class="module-card"><h4>QC Sachet Suite</h4><span>String weight, bag &amp; carton inspections with cooldown logic, batch lineage and dual sign-off.</span></div>
+      <div class="module-card"><h4>Waste Intelligence</h4><span>Carton &amp; laminate waste tracked per machine, per round, with thresholds, alerts and trend analytics.</span></div>
+      <div class="module-card"><h4>Silos &amp; Machine Health</h4><span>Empty-silo detection, stopped-machine issues, downtime history, automated broadcast alerts.</span></div>
+      <div class="module-card"><h4>Pallet Transfer Ledger</h4><span>Floor-to-warehouse movement with auto-computed cartons, teams and waybill-ready quantities.</span></div>
+      <div class="module-card"><h4>Governance Layer</h4><span>Three-tier role-based access, live presence, audit-friendly records, boardroom-grade reports with CSV/print.</span></div>
+    </div>
+
+    <p>Underneath it sits an <strong>offline-first architecture</strong>: every entry is preserved locally the instant it is made, then synchronises automatically when connectivity returns. Zero data loss has gone from an aspiration to a property of the system. It is hosted redundantly across three independent providers — Firebase, GitHub Pages and Cloudflare Workers Pages — because in manufacturing, availability is not a feature; it is the product.</p>
+
+    <table class="capabilities">
+      <tr><th>Capability</th><th>What it delivers — proven end-to-end in live testing</th></tr>
+      <tr><td>Real-time sync</td><td>Every entry visible instantly across all devices — managers will see answers on screen instead of walking the floor for them.</td></tr>
+      <tr><td>Offline-first engine</td><td>Nine independent queues capture work during outages and reconcile automatically on reconnection.</td></tr>
+      <tr><td>Redundant hosting</td><td>Three-platform deployment (Firebase, GitHub Pages, Cloudflare Workers Pages); failover keeps operations online even where networks block individual providers — reachable on ordinary connections with no VPN.</td></tr>
+      <tr><td>Security &amp; governance</td><td>Three-tier RBAC (system / department / action roles), approval workflows with named digital sign-off.</td></tr>
+      <tr><td>Decision intelligence</td><td>Cross-shift comparisons, trend charts, threshold alerts and exportable boardroom reports.</td></tr>
+      <tr><td>Total cost</td><td>No licence fees, no per-user charges, no dedicated servers — built and operated by one engineer.</td></tr>
+    </table>
+
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Imagine</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="imagine">
+      <p><span class="imagine-word">Imagine</span> your weighing bridges, grading lines, blending halls and packaging bays all speaking one digital language — every kernel weighed, every batch graded, every carton sealed streaming to your screen the very second it happens, from the farm-gates of six states to the export dock at Epe.</p>
+      <p><span class="imagine-word">Imagine</span> leadership unchained from distance. From Lagos, London or Dubai, you watch the facility breathe in real time — procurement volumes climbing, quality checks passing, containers closing toward Rotterdam — while stale figures, lost booklets and Excel graveyards become relics your competitors still depend on.</p>
+      <p><span class="imagine-word">Imagine</span> your buyers — commodity houses abroad, retailers at home — placing orders, tracing shipments back to the very farming communities that grew them, and verifying certificates through world-class portals that carry the EKOFIN name with pride.</p>
+      <p class="imagine-close">None of this requires waiting for the future. Every piece of it is technology I have already shipped once — built inside a real factory's walls, under real constraints, proven end-to-end in my own live test environments, on my own initiative. It is what I intend to bring to your table.</p>
+    </div>
+
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Why EKOFIN. Why Now.</span>
+      <span class="section-line"></span>
+    </div>
+
+    <p>EKOFIN is standing at the exact moment where software stops being a convenience and becomes strategy. The lease of the Julius Berger 60-tonne plant multiplies your processing capacity; multiplied capacity without multiplied <em class="tint">traceability</em> is risk, not growth. Your public commitments — rigorous testing, traceability checks, certified quality, NAFDAC compliance, international food-safety standards — are, at their core, promises that only systems can keep at scale. Export buyers will increasingly ask not just <em>what</em> you shipped, but <em>prove it</em>: which farm, which batch, which test, which date. The companies that answer instantly will win the contracts.</p>
+
+    <p>And there is a simpler truth: <strong>I live in Epe.</strong> Your facility is minutes from my home. The success of this endeavour would not be a contract to me — it would be the transformation of my own community's greatest industrial asset, led from within.</p>
+
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">My First Hundred Days</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="roadmap">
+      <div class="roadmap-item"><div class="roadmap-num">01</div><div><h4>Listen &amp; Map</h4><p>Walk every division — Agric and FMCG — documenting each data handoff from farm-gate to bill of lading; publish the current-state map and its cost in hours and errors.</p></div></div>
+      <div class="roadmap-item"><div class="roadmap-num">02</div><div><h4>Quick Wins</h4><p>Digitise the highest-pain flows first: QC/lab records and batch logging with offline capture — proven value inside weeks, adapted from a platform already proven end-to-end in live testing.</p></div></div>
+      <div class="roadmap-item"><div class="roadmap-num">03</div><div><h4>The Spine</h4><p>Architect the integrated core — inventory, batch genealogy, procurement, orders — cloud-based, offline-tolerant, NDPR-conscious, integration-ready for finance and export documentation.</p></div></div>
+      <div class="roadmap-item"><div class="roadmap-num">04</div><div><h4>Visibility</h4><p>Executive dashboards for tonnes processed, yield, defect rates, traceability coverage and shipment readiness — the numbers you deserve, live.</p></div></div>
+      <div class="roadmap-item"><div class="roadmap-num">05</div><div><h4>Reach</h4><p>B2B client portal and field-agent mobile tools connecting farmers and buyers directly into the platform — EKOFIN as a digital company, not just a physical one.</p></div></div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <span class="section-title">The Résumé Behind This Letter</span>
+      <span class="section-line"></span>
+    </div>
+  </div>
+
+  <!-- Résumé band -->
+  <div class="resume-band">
+    <div class="resume-grid">
+      <div>
+        <div class="xp-item">
+          <div class="xp-role">Quality Control Officer &amp; Systems Builder</div>
+          <div class="xp-org">Starium Rafa Detergents · Feb 2026 – Present</div>
+          <div class="xp-note">Executing QC across powder density and sachet production lines — and architecting the company-wide ERP described above, solo: complete and awaiting deployment approval.</div>
+        </div>
+        <div class="xp-item">
+          <div class="xp-role">Senior .NET Software Developer</div>
+          <div class="xp-org">The GIG Group (God is Good Motors) · 2019 – 2021</div>
+          <div class="xp-note">Logistics APIs, scheduled Windows services (payroll, notifications, data sync), Azure DevOps CI/CD.</div>
+        </div>
+        <div class="xp-item">
+          <div class="xp-role">.NET Software Developer</div>
+          <div class="xp-org">Longbridge Technologies · 2018 – 2019</div>
+          <div class="xp-note">Integration web services bridging First Bank's Dynamics 365 CRM with core banking.</div>
+        </div>
+        <div class="xp-item">
+          <div class="xp-role">.NET Software Developer</div>
+          <div class="xp-org">Alliedsoft (Xceed365) · 2014 – 2018</div>
+          <div class="xp-note">Enterprise HR software modules, complex SSRS reporting, SQL Server administration.</div>
+        </div>
+        <div class="xp-item">
+          <div class="xp-role">Earlier engineering &amp; implementation roles</div>
+          <div class="xp-org">Coniah Systems (2013–14) · EasyFuel (2011–12) · Top-Up &amp; AG Nutrition consultancy (2021–Present)</div>
+          <div class="xp-note">Deployments, client training, fuel-management POS hardware, digital-platform leadership for a 700-member network.</div>
+        </div>
+      </div>
+      <div>
+        <div class="side-block">
+          <h5>Education</h5>
+          <p class="edu-degree">B.Sc. (Hons) Electronics &amp; Computer Engineering</p>
+          <p>Lagos State University · Second Class Upper · 2010</p>
+        </div>
+        <div class="side-block">
+          <h5>Core Stack</h5>
+          <ul>
+            <li>C# · VB.NET · ASP.NET Core · Web APIs</li>
+            <li>JavaScript · HTML/CSS · Firebase · React</li>
+            <li>SQL Server · SSRS · MySQL · Entity Framework</li>
+            <li>Azure DevOps · Docker · Git · IIS</li>
+            <li>Offline-first &amp; real-time architecture</li>
+            <li>Rapid prototyping with AI-assisted tooling</li>
+          </ul>
+        </div>
+        <div class="side-block">
+          <h5>Signature Strengths</h5>
+          <ul>
+            <li>Zero-to-one systems delivery</li>
+            <li>Manufacturing-floor empathy</li>
+            <li>Cost-disciplined engineering</li>
+            <li>Executive-grade reporting design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signature -->
+  <div class="signature">
+    <p>I would welcome the opportunity to present this work in person — system live, code open, questions welcomed. Thank you for your time and consideration.</p>
+    <p style="margin-top:16px;">Respectfully,</p>
+    <p class="sig-name">Engr. Damilare Paul Ayodele</p>
+  </div>
+
+  <!-- Contact footer -->
+  <div class="contact-footer">
+    <div class="cf-eyebrow">Reach Me Directly</div>
+    <div class="cf-name">Engr. Damilare Paul Ayodele</div>
+    <div class="cf-title">Software Architect · Quality Professional · Your Neighbour in Epe</div>
+    <div class="cf-lines">
+      <div class="cf-line"><span class="cf-label">Phone</span><span class="cf-value"><a href="tel:+2348028975816">0802 897 5816</a></span></div>
+      <div class="cf-line"><span class="cf-label">WhatsApp</span><span class="cf-value"><a href="https://wa.me/2347053331253">0705 333 1253</a></span></div>
+      <div class="cf-line"><span class="cf-label">Email</span><span class="cf-value small"><a href="mailto:ayodele.damilare@gmail.com">ayodele.damilare@gmail.com</a></span></div>
+      <div class="cf-line"><span class="cf-label">Address</span><span class="cf-value small">4 Olugbenga Close, Iraye-Oke, Epe, Lagos State</span></div>
+    </div>
+    <p class="cf-tag">"Passion for Food, Love for People" — I would like to spend the next chapter of my career giving that passion its operating system.</p>
+  </div>
+
+</div>
+</body>
+</html>

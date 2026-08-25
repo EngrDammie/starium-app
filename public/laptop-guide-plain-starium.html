@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A New Work Computer for Starium Rafa — Plain-English Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #101828;
+    --orange: #E05A00;
+    --green: #008A46;
+    --cream: #FDF6EE;
+    --paper: #FCFCFA;
+    --ink: #182230;
+    --muted: #5D6B7A;
+    --hairline: #E4E2DA;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #ECEAE2;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 16.5px;
+    line-height: 1.72;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(16,24,40,.08), 0 18px 50px rgba(16,24,40,.13);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .masthead {
+    background: linear-gradient(135deg, var(--navy) 0%, #1E2939 80%);
+    padding: 46px 52px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 90% 10%, rgba(255,107,0,.25) 0, transparent 38%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--orange);
+    font-size: 12px; font-weight: 800;
+    letter-spacing: .32em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff; font-size: 35px; font-weight: 800;
+    letter-spacing: -.015em; line-height: 1.2;
+    max-width: 620px; margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.85); font-size: 16.5px; max-width: 580px; font-weight: 500; }
+
+  .content { padding: 42px 52px 24px; }
+  .content p { margin-bottom: 16px; }
+  strong { color: var(--navy); }
+  em.tint { font-style: normal; color: var(--orange); font-weight: 600; }
+
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 36px 0 16px; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 21.5px; font-weight: 800; color: var(--navy); letter-spacing: -.01em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+
+  .big-quote {
+    background: var(--cream);
+    border-left: 5px solid var(--green);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 26px;
+    margin: 20px 0;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18.5px; line-height: 1.75; color: #33413A;
+  }
+
+  .jb { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: 15px; }
+  .jb th {
+    font-family: 'Manrope', sans-serif; text-align: left;
+    font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 800; padding: 8px 12px 8px 0;
+    border-bottom: 2.5px solid var(--orange);
+  }
+  .jb td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; line-height: 1.6; }
+  .jb td:first-child { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--orange); white-space: nowrap; width: 165px; }
+  .jb tr { break-inside: avoid; }
+
+  .options { display: grid; gap: 14px; margin: 18px 0 6px; }
+  .opt { border: 1.5px solid var(--hairline); border-radius: 14px; padding: 20px 24px 18px; background: #fff; break-inside: avoid; }
+  .opt.best { border-color: var(--orange); border-width: 2px; }
+  .opt-tag {
+    display: inline-block; font-family: 'Manrope', sans-serif;
+    font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    padding: 4px 13px; border-radius: 20px; margin-bottom: 10px;
+    background: var(--cream); color: var(--orange);
+  }
+  .opt.best .opt-tag { background: var(--orange); color: #fff; }
+  .opt h3 { font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: var(--ink); margin-bottom: 3px; }
+  .opt .price { font-family: 'Manrope', sans-serif; font-size: 16.5px; font-weight: 800; color: var(--orange); margin-bottom: 8px; }
+  .opt p { font-size: 14.5px; color: #44505A; margin-bottom: 0; }
+  .opt ul { list-style: none; margin-top: 8px; }
+  .opt li { position: relative; padding: 3px 0 3px 22px; font-size: 14.2px; color: #44505A; }
+  .opt li::before { content: "✓"; position: absolute; left: 2px; top: 2px; color: var(--green); font-weight: 800; }
+
+  .uses { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 16px 0 6px; }
+  .use { border: 1px solid var(--hairline); border-radius: 12px; padding: 14px 17px; background: #fff; break-inside: avoid; }
+  .use h4 { font-family: 'Manrope', sans-serif; font-size: 14.8px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+  .use p { font-size: 14px; color: var(--muted); margin: 0; }
+
+  .money { display: flex; margin: 18px 0 8px; border: 1.5px solid var(--orange); border-radius: 14px; overflow: hidden; background: #fff; }
+  .money-cell { flex: 1; padding: 16px 18px; text-align: center; border-right: 1px solid var(--hairline); }
+  .money-cell:last-child { border-right: none; }
+  .money-num { font-family: 'Manrope', sans-serif; font-size: 24px; font-weight: 800; color: var(--navy); }
+  .money-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-top: 3px; }
+
+  .faq { margin: 14px 0; }
+  .faq-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); break-inside: avoid; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q { font-family: 'Manrope', sans-serif; font-size: 15.5px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .faq-a { font-size: 14.6px; color: #44505A; }
+
+  .foot-band {
+    margin-top: 30px; border-top: 2.5px solid var(--navy);
+    background: var(--cream); padding: 15px 52px 16px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 14px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--orange); white-space: nowrap; }
+
+  @media (max-width: 660px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .uses { grid-template-columns: 1fr; }
+    .money { flex-direction: column; }
+    .money-cell { border-right: none; border-bottom: 1px solid var(--hairline); }
+    .masthead h1 { font-size: 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 12.8px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 11mm 12mm; }
+    .masthead { background: #fff !important; }
+    .masthead::after { display: none; }
+    .masthead h1 { color: var(--navy) !important; }
+    .eyebrow { color: var(--orange) !important; }
+    .mast-sub { color: var(--muted) !important; }
+    .big-quote, .opt, .use, .money, .foot-band { background: #fff; }
+    .section-head, .opt, .use, .faq-item, .money { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">For the Management of Starium Rafa · Plain-English Guide</div>
+    <h1>The Man Who Built Starium's Digital System Needs a Proper Tool</h1>
+    <p class="mast-sub">A short, honest explanation of the one laptop request behind the Starium Rafa ERP — a finished system waiting for management's approval, and the person who will deploy and maintain it.</p>
+  </div>
+
+  <div class="content">
+
+    <p>Imagine every manager and supervisor in this factory opening their phone or computer to see — live — the quality tests, waste figures, stopped machines and pallet movements of the moment, even when the internet fails. That system exists today: the <strong>Starium Rafa Enterprise ERP</strong>, designed and built by one of our own QC staff on his personal laptop, outside working hours. It is finished and running in his test environment — ready to be deployed across our operations as soon as management approves.</p>
+
+    <p>This page explains, without technical jargon, why upgrading that laptop is one of the smallest investments this factory can make with one of its largest returns.</p>
+
+    <div class="section-head"><span class="section-title">The Short Version</span><span class="section-line"></span></div>
+
+    <div class="big-quote">One strong business laptop costs about <strong>₦2 – ₦3 million</strong>, lasts four to five years, works out to roughly <strong>₦50,000 – ₦60,000 per month</strong> — and powers the system that is ready to save our managers hours every single week.</div>
+
+    <div class="section-head"><span class="section-title">Why It Matters Here</span><span class="section-line"></span></div>
+
+    <div class="uses">
+      <div class="use"><h4>The ERP is ready to enter daily operations</h4><p>QC records, machine statuses, waste tracking and reports will all flow through it from day one. Deploying, fixing and improving it starts at his keyboard.</p></div>
+      <div class="use"><h4>Staff training is coming</h4><p>Every department will be brought onto the system. Training sessions need the computer running smoothly in front of an audience.</p></div>
+      <div class="use"><h4>Demos win confidence</h4><p>Videos and live presentations of dashboards are how management sees value. A freezing laptop mid-presentation says the wrong thing.</p></div>
+      <div class="use"><h4>He walks our floor</h4><p>The laptop travels into dusty halls and hot lines during shift handovers — it must survive bumps, heat and long days away from plugs.</p></div>
+      <div class="use"><h4>Power cuts are normal here</h4><p>A good battery plus phone-style charging means work continues through outages instead of stopping.</p></div>
+      <div class="use"><h4>Our data must stay ours</h4><p>Fingerprint locks and encryption keep factory information safe even if the device is lost.</p></div>
+    </div>
+
+    <div class="section-head"><span class="section-title">What the Technical Words Actually Mean</span><span class="section-line"></span></div>
+
+    <table class="jb">
+      <tr><th style="width:165px;">Technical word</th><th>What it really means</th></tr>
+      <tr><td>RAM (memory)</td><td>Desk space for work. The system-building work needs a big desk — many things open at once. Ordinary laptops have small desks; everything slows when crowded.</td></tr>
+      <tr><td>Processor speed</td><td>How fast the computer thinks. Stronger brain = minutes of waiting become seconds, every day, forever.</td></tr>
+      <tr><td>Storage (1TB)</td><td>Filing cabinet size. Software projects pile up thousands of files weekly; a bigger cabinet means years before it's full.</td></tr>
+      <tr><td>"MIL-STD tested"</td><td>Military-grade toughness: tested against drops, dust, heat and bumps. Made for places like factory floors, not just offices.</td></tr>
+      <tr><td>Bright screen (300 nits)</td><td>Readable inside bright halls during line-side demos — no squinting.</td></tr>
+      <tr><td>Fingerprint &amp; encryption</td><td>Factory secrets stay locked even if the laptop disappears. Only the owner's finger opens it.</td></tr>
+      <tr><td>Warranty</td><td>If anything breaks, the maker fixes it free — bought properly from official Nigerian dealers.</td></tr>
+    </table>
+
+    <div class="section-head"><span class="section-title">Three Sensible Options</span><span class="section-line"></span></div>
+
+    <div class="options">
+      <div class="opt best">
+        <span class="opt-tag">Recommended</span>
+        <h3>Lenovo ThinkPad X1 Carbon</h3>
+        <div class="price">≈ ₦2,700,000 · about ₦56,000/month over 4 years</div>
+        <ul>
+          <li>Light enough to carry around the factory all day; famously tough</li>
+          <li>All the memory and speed the ERP work demands, with room for years ahead</li>
+          <li>Official warranty available in Nigeria; world-class keyboard for long working nights</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Smart value</span>
+        <h3>HP EliteBook 840 (upgraded)</h3>
+        <div class="price">≈ ₦1,900,000 – ₦2,100,000 · about ₦47,000/month</div>
+        <ul>
+          <li>Nearly the same strength for noticeably less money</li>
+          <li>Easy to repair anywhere in Nigeria; sleek aluminium body</li>
+          <li>The budget-conscious choice that doesn't feel like a compromise</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Premium statement</span>
+        <h3>MacBook Pro 14″</h3>
+        <div class="price">≈ ₦3,500,000 – ₦4,800,000 · about ₦71,000/month over 5–6 years</div>
+        <ul>
+          <li>The longest battery life money can buy — full days without a socket</li>
+          <li>Silent and cool under pressure; effortless with heavy tasks</li>
+          <li>Holds resale value best; bought officially from iStore Nigeria</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:var(--muted);">Second-hand options exist from ~₦550,000, but carry no warranty and real risk of failing mid-project — acceptable only as a temporary personal stopgap, not as the company's tool.</p>
+
+    <div class="section-head"><span class="section-title">The Money, Made Simple</span><span class="section-line"></span></div>
+
+    <div class="money">
+      <div class="money-cell"><div class="money-num">~₦56k</div><div class="money-lbl">per month (4 yrs)</div></div>
+      <div class="money-cell"><div class="money-num">~₦1,850</div><div class="money-lbl">per working day</div></div>
+      <div class="money-cell"><div class="money-num">4–5 yrs</div><div class="money-lbl">useful lifespan</div></div>
+      <div class="money-cell"><div class="money-num">₦0</div><div class="money-lbl">monthly fees after purchase</div></div>
+    </div>
+
+    <p>The ERP itself has cost the company <strong>zero naira</strong> in software, licences or servers. This request is simply the first piece of equipment the company would ever buy for it — and it costs less per month than the manager-hours the system is ready to save every week.</p>
+
+    <div class="section-head"><span class="section-title">Fair Questions, Honest Answers</span><span class="section-line"></span></div>
+
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q">"Hasn't he managed fine so far?"</div>
+        <div class="faq-a">He has — building the whole system alone on a personal machine. But building was phase one; deploying and maintaining it for the whole company is phase two, and that deserves a dependable, warrantied tool rather than borrowed equipment.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"What happens if the old laptop fails during rollout?"</div>
+        <div class="faq-a">Days or weeks of delay to deployment, training and fixes — with no warranty safety net. One failed part could pause progress across several departments at once.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Does the company own what he builds?"</div>
+        <div class="faq-a">The intent has always been for the system to belong to Starium Rafa. Equipping the builder properly formalises that arrangement and protects company data on company hardware.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Any monthly cost?"</div>
+        <div class="faq-a">None. No subscriptions, no licences, no fees. One purchase, four to five years of service.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Where would it be bought?"</div>
+        <div class="faq-a">From official Lagos channels — TD Africa or iStore — with proper invoices and warranty papers. Prices checked August 2026.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-title">In One Sentence</span><span class="section-line"></span></div>
+
+    <div class="big-quote" style="border-left-color:var(--orange);">The factory trusted him to build its digital nervous system on borrowed tools — approving one good laptop turns that goodwill into a proper partnership.</div>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Written plainly so the decision needs no translation.</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · QC | Starium Rafa · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

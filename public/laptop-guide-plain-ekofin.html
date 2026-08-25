@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A New Work Computer for EKOFIN — Plain-English Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #176B3A;
+    --brand-dark: #0B3D26;
+    --gold: #D9A441;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --paper: #FCFCF8;
+    --ink: #22302A;
+    --muted: #63726B;
+    --hairline: #E2DFD1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 16.5px;
+    line-height: 1.72;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(34,48,42,.08), 0 18px 50px rgba(34,48,42,.13);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .masthead {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 85%);
+    padding: 46px 52px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 90% 10%, rgba(217,164,65,.2) 0, transparent 38%),
+      radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 42%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--gold);
+    font-size: 12px; font-weight: 800;
+    letter-spacing: .32em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff; font-size: 35px; font-weight: 800;
+    letter-spacing: -.015em; line-height: 1.2;
+    max-width: 620px; margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.88); font-size: 16.5px; max-width: 580px; font-weight: 500; }
+
+  .content { padding: 42px 52px 24px; }
+  .content p { margin-bottom: 16px; }
+  strong { color: var(--brand-dark); }
+  em.tint { font-style: normal; color: var(--brand); font-weight: 600; }
+
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 36px 0 16px; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 21.5px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.01em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+
+  .big-quote {
+    background: var(--cream);
+    border-left: 5px solid var(--gold);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 26px;
+    margin: 20px 0;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18.5px; line-height: 1.75; color: #33402F;
+  }
+
+  .jb { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: 15px; }
+  .jb th {
+    font-family: 'Manrope', sans-serif; text-align: left;
+    font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 800; padding: 8px 12px 8px 0;
+    border-bottom: 2.5px solid var(--brand);
+  }
+  .jb td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; line-height: 1.6; }
+  .jb td:first-child { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--brand); white-space: nowrap; width: 165px; }
+  .jb tr { break-inside: avoid; }
+
+  .options { display: grid; gap: 14px; margin: 18px 0 6px; }
+  .opt { border: 1.5px solid var(--hairline); border-radius: 14px; padding: 20px 24px 18px; background: #fff; break-inside: avoid; }
+  .opt.best { border-color: var(--brand); border-width: 2px; }
+  .opt-tag {
+    display: inline-block; font-family: 'Manrope', sans-serif;
+    font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    padding: 4px 13px; border-radius: 20px; margin-bottom: 10px;
+    background: var(--cream); color: var(--earth);
+  }
+  .opt.best .opt-tag { background: var(--brand); color: #fff; }
+  .opt h3 { font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: var(--ink); margin-bottom: 3px; }
+  .opt .price { font-family: 'Manrope', sans-serif; font-size: 16.5px; font-weight: 800; color: var(--earth); margin-bottom: 8px; }
+  .opt p { font-size: 14.5px; color: #44514A; margin-bottom: 0; }
+  .opt ul { list-style: none; margin-top: 8px; }
+  .opt li { position: relative; padding: 3px 0 3px 22px; font-size: 14.2px; color: #44514A; }
+  .opt li::before { content: "✓"; position: absolute; left: 2px; top: 2px; color: var(--brand); font-weight: 800; }
+
+  .uses { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 16px 0 6px; }
+  .use { border: 1px solid var(--hairline); border-radius: 12px; padding: 14px 17px; background: #fff; break-inside: avoid; }
+  .use h4 { font-family: 'Manrope', sans-serif; font-size: 14.8px; font-weight: 700; color: var(--brand-dark); margin-bottom: 3px; }
+  .use p { font-size: 14px; color: var(--muted); margin: 0; }
+
+  .money { display: flex; margin: 18px 0 8px; border: 1.5px solid var(--brand); border-radius: 14px; overflow: hidden; background: #fff; }
+  .money-cell { flex: 1; padding: 16px 18px; text-align: center; border-right: 1px solid var(--hairline); }
+  .money-cell:last-child { border-right: none; }
+  .money-num { font-family: 'Manrope', sans-serif; font-size: 24px; font-weight: 800; color: var(--brand-dark); }
+  .money-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-top: 3px; }
+
+  .faq { margin: 14px 0; }
+  .faq-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); break-inside: avoid; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q { font-family: 'Manrope', sans-serif; font-size: 15.5px; font-weight: 800; color: var(--brand-dark); margin-bottom: 4px; }
+  .faq-a { font-size: 14.6px; color: #44514A; }
+
+  .foot-band {
+    margin-top: 30px; border-top: 2.5px solid var(--brand-dark);
+    background: var(--cream); padding: 15px 52px 16px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 14px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--brand); white-space: nowrap; }
+
+  @media (max-width: 660px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .uses { grid-template-columns: 1fr; }
+    .money { flex-direction: column; }
+    .money-cell { border-right: none; border-bottom: 1px solid var(--hairline); }
+    .masthead h1 { font-size: 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 12.8px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 11mm 12mm; }
+    .masthead { background: #fff !important; }
+    .masthead::after { display: none; }
+    .masthead h1 { color: var(--brand-dark) !important; }
+    .eyebrow { color: var(--earth) !important; }
+    .mast-sub { color: var(--muted) !important; }
+    .big-quote, .opt, .use, .money, .foot-band { background: #fff; }
+    .section-head, .opt, .use, .faq-item, .money { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">For EKOFIN Leadership · Plain-English Guide</div>
+    <h1>The Tool Behind the Technology Plan You've Been Shown</h1>
+    <p class="mast-sub">A short, honest explanation — no technical words — of the one laptop the Chief Software Architect mandate requires to begin delivering.</p>
+  </div>
+
+  <div class="content">
+
+    <p>The proposals put before EKOFIN describe big things: tracing every bag of cashews back to the farm that grew it, dashboards that show leadership exactly how production is flowing, apps connecting farmers and buyers directly to the company. All of that software gets built, tested and demonstrated from <strong>one laptop</strong>. This page explains — in everyday language — what kind, what it costs, and why it earns its keep.</p>
+
+    <div class="section-head"><span class="section-title">The Short Version</span><span class="section-line"></span></div>
+
+    <div class="big-quote">One strong, durable business laptop costs about <strong>₦2 – ₦3 million</strong>, lasts four to five years, works out to roughly <strong>₦50,000 – ₦60,000 per month</strong> — less than one day of delay on the systems your buyers and regulators will depend on.</div>
+
+    <div class="section-head"><span class="section-title">What It Will Be Used For at EKOFIN</span><span class="section-line"></span></div>
+
+    <div class="uses">
+      <div class="use"><h4>Tracing harvests to shipments</h4><p>Building the system that records every batch of kernels — which farm, which test, which container — so buyers get instant proof.</p></div>
+      <div class="use"><h4>Farm-gate apps</h4><p>Creating simple phone apps so field agents record purchases from farmers across six states, even where internet is poor.</p></div>
+      <div class="use"><h4>Buyer portals &amp; certificates</h4><p>Giving customers in Europe, Asia and Nigerian supermarkets a professional way to order, track and verify documents.</p></div>
+      <div class="use"><h4>Leadership dashboards</h4><p>Tonnes processed, quality passing, shipments closing — presented live to management, polished enough for the boardroom.</p></div>
+      <div class="use"><h4>Compliance records</h4><p>Organising NAFDAC and food-safety paperwork digitally so audits stop being fire drills.</p></div>
+      <div class="use"><h4>Travel between sites</h4><p>Epe factory floors, dusty farm roads, buyer meetings — the machine must survive all three and work through power cuts.</p></div>
+    </div>
+
+    <div class="section-head"><span class="section-title">What the Technical Words Actually Mean</span><span class="section-line"></span></div>
+
+    <table class="jb">
+      <tr><th style="width:165px;">Technical word</th><th>What it really means</th></tr>
+      <tr><td>RAM (memory)</td><td>Desk space for work. This role runs many heavy programs at once — building apps while testing others. It needs a big desk; ordinary laptops have small ones, so everything slows.</td></tr>
+      <tr><td>Processor speed</td><td>How fast the computer thinks. A stronger brain turns minutes of waiting into seconds — every day, for years.</td></tr>
+      <tr><td>Storage (1TB)</td><td>Filing cabinet size. Software projects and traceability records pile up thousands of files weekly; a bigger cabinet means years before it's full.</td></tr>
+      <tr><td>"MIL-STD tested"</td><td>Military-grade toughness checks: drops, bumps, dust, heat, vibration. Built for factory floors and farm roads — not just clean offices.</td></tr>
+      <tr><td>Bright screen (300 nits)</td><td>Stays readable inside bright processing halls and outdoors during sourcing-season visits.</td></tr>
+      <tr><td>All-day battery</td><td>Works through power cuts and long trips away from sockets — charges from phone-style power banks when needed.</td></tr>
+      <tr><td>Fingerprint &amp; encryption</td><td>Company secrets — pricing, buyer contracts, batch data — stay locked even if the laptop is lost. Only the owner's finger opens it.</td></tr>
+      <tr><td>Warranty (1–3 yrs)</td><td>If anything breaks, the maker repairs it free through official Nigerian dealers.</td></tr>
+    </table>
+
+    <div class="section-head"><span class="section-title">Three Sensible Options</span><span class="section-line"></span></div>
+
+    <div class="options">
+      <div class="opt best">
+        <span class="opt-tag">Recommended</span>
+        <h3>Lenovo ThinkPad X1 Carbon</h3>
+        <div class="price">≈ ₦2,700,000 · about ₦56,000/month over 4 years</div>
+        <ul>
+          <li>Feather-light and famously tough — made for life between the plant, farms and boardrooms</li>
+          <li>The memory and speed every part of the digital plan demands, with room to grow</li>
+          <li>Official warranty in Nigeria; world-class keyboard for long working sessions</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Smart value</span>
+        <h3>HP EliteBook 840 (upgraded)</h3>
+        <div class="price">≈ ₦1,900,000 – ₦2,100,000 · about ₦47,000/month</div>
+        <ul>
+          <li>Nearly the same strength for noticeably less money</li>
+          <li>Sleek aluminium body; easy to repair anywhere in Nigeria</li>
+          <li>The budget-conscious choice that doesn't feel like a compromise</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Premium statement</span>
+        <h3>MacBook Pro 14″</h3>
+        <div class="price">≈ ₦3,500,000 – ₦4,800,000 · about ₦71,000/month over 5–6 years</div>
+        <ul>
+          <li>The longest battery life available — full farm-visit days without a charger</li>
+          <li>Silent, cool and effortless under heavy work; ideal for buyer-facing demos</li>
+          <li>Holds resale value best; bought officially from iStore Nigeria</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:var(--muted);">Second-hand options exist from ~₦550,000 but carry no warranty and real failure risk — sensible only as a personal interim measure during onboarding, not as the company's tool of record.</p>
+
+    <div class="section-head"><span class="section-title">The Money, Made Simple</span><span class="section-line"></span></div>
+
+    <div class="money">
+      <div class="money-cell"><div class="money-num">~₦56k</div><div class="money-lbl">per month (4 yrs)</div></div>
+      <div class="money-cell"><div class="money-num">~₦1,850</div><div class="money-lbl">per working day</div></div>
+      <div class="money-cell"><div class="money-num">4–5 yrs</div><div class="money-lbl">useful lifespan</div></div>
+      <div class="money-cell"><div class="money-num">₦0</div><div class="money-lbl">monthly fees after purchase</div></div>
+    </div>
+
+    <p>Set against EKOFIN's scale — a sixty-tonne leased plant, six sourcing states, international contracts waiting on traceability — this is among the smallest line items in the entire technology plan, and the one everything else runs through.</p>
+
+    <div class="section-head"><span class="section-title">Fair Questions, Honest Answers</span><span class="section-line"></span></div>
+
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q">"Why not start with a cheaper laptop?"</div>
+        <div class="faq-a">Ordinary laptops are built for browsing and documents. The first hundred days alone involve running many heavy programs together, daily. Cheap machines struggle within months — then the money is spent twice, with delays in between.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Can't he use his current personal laptop?"</div>
+        <div class="faq-a">For demonstrations, yes — briefly. But EKOFIN's data, contracts and systems deserve to live on secure, warrantied company hardware, not borrowed time. The proof-of-work already exists; the tool should match it.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"What if it's damaged or stolen?"</div>
+        <div class="faq-a">It survives drops, dust and heat better than any consumer machine, and its contents stay encrypted and locked behind a fingerprint — unreadable to strangers. Official warranty covers repairs through Nigerian dealers.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Any hidden monthly cost?"</div>
+        <div class="faq-a">None. No subscriptions, no licences, no fees — a single purchase serving four to five years, which is rare in business equipment.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Where would it be bought?"</div>
+        <div class="faq-a">Officially, in Lagos — TD Africa for business brands, iStore Nigeria for Apple — with proper invoices, serials recorded into the company asset register, and warranty papers filed.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-title">In One Sentence</span><span class="section-line"></span></div>
+
+    <div class="big-quote" style="border-left-color:var(--brand);">Before EKOFIN spends millions on software ambitions, it needs one well-made tool for the person who will build them — bought once, kept for years, trusted with the journey from farm gate to global market.</div>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">"Passion for Food, Love for People" — written plainly here so nothing is lost in translation.</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Epe, Lagos · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

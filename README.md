@@ -190,7 +190,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - **Charts**: Chart.js & React-Chartjs-2
 - **3D Rendering**: Three.js (used in management presentations)
 - **Build Tool**: Vite / Rolldown
-- **CI/CD**: GitHub Actions (build & deploy to GitHub Pages)
+- **CI/CD**: GitHub Actions (GitHub Pages), Firebase Hosting & Cloudflare Workers Pages — triple-redundant deployment
 
 ---
 
@@ -333,15 +333,15 @@ Each service module follows consistent patterns:
 
 ---
 
-## Deployment (GitHub Pages + Actions)
+## Deployment (Triple-Redundant Hosting)
 
-This app is deployed via GitHub Actions. Push to `main` triggers build and deploy to GitHub Pages.
+The app is deployed to **three hosting platforms simultaneously** for maximum availability:
 
-The workflow (.github/workflows/deploy.yml):
-1. Checks out code
-2. Injects Firebase env vars from GitHub Secrets
-3. Runs `npm run build`
-4. Publishes `dist/` to GitHub Pages
+1. **Firebase Hosting** — primary deployment (root path)
+2. **GitHub Pages** — secondary deployment (subpath base), via GitHub Actions on every push to `main`
+3. **Cloudflare Workers Pages** — tertiary deployment, added because some Nigerian network carriers block access to Firebase/GitHub Pages IPs (requiring a VPN to bypass). Cloudflare's edge network uses IP ranges that carriers do not block, keeping the app reachable on ordinary local networks with no workarounds.
+
+If any single platform goes down or becomes unreachable on a given network, the others continue serving the factory.
 
 ---
 

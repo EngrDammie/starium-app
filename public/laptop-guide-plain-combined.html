@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A New Work Computer — The Plain-English Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #176B3A;
+    --brand-dark: #0B3D26;
+    --accent: #C87532;
+    --cream: #F7F3E8;
+    --paper: #FCFCF8;
+    --ink: #22302A;
+    --muted: #63726B;
+    --hairline: #E2DFD1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 16.5px;
+    line-height: 1.72;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(34,48,42,.08), 0 18px 50px rgba(34,48,42,.13);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .masthead {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 85%);
+    padding: 46px 52px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 90% 10%, rgba(217,164,65,.2) 0, transparent 38%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: #D9A441;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff;
+    font-size: 35px;
+    font-weight: 800;
+    letter-spacing: -.015em;
+    line-height: 1.2;
+    max-width: 600px;
+    margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.88); font-size: 16.5px; max-width: 560px; font-weight: 500; }
+
+  .content { padding: 42px 52px 24px; }
+  .content p { margin-bottom: 16px; }
+  strong { color: var(--brand-dark); }
+  em.tint { font-style: normal; color: var(--brand); font-weight: 600; }
+
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 36px 0 16px; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 21.5px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.01em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+
+  .big-quote {
+    background: var(--cream);
+    border-left: 5px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 26px;
+    margin: 20px 0;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18.5px;
+    line-height: 1.75;
+    color: #33402F;
+  }
+
+  /* Jargon buster */
+  .jb { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: 15px; }
+  .jb th {
+    font-family: 'Manrope', sans-serif;
+    text-align: left; font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 800; padding: 8px 12px 8px 0;
+    border-bottom: 2.5px solid var(--brand);
+  }
+  .jb td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; line-height: 1.6; }
+  .jb td:first-child { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--brand); white-space: nowrap; width: 165px; }
+  .jb tr { break-inside: avoid; }
+
+  /* Option cards */
+  .options { display: grid; gap: 14px; margin: 18px 0 6px; }
+  .opt {
+    border: 1.5px solid var(--hairline);
+    border-radius: 14px;
+    padding: 20px 24px 18px;
+    background: #fff;
+    break-inside: avoid;
+  }
+  .opt.best { border-color: var(--brand); border-width: 2px; }
+  .opt-tag {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    padding: 4px 13px; border-radius: 20px; margin-bottom: 10px;
+    background: var(--cream); color: var(--accent);
+  }
+  .opt.best .opt-tag { background: var(--brand); color: #fff; }
+  .opt h3 { font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: var(--ink); margin-bottom: 3px; }
+  .opt .price { font-family: 'Manrope', sans-serif; font-size: 16.5px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  .opt p { font-size: 14.5px; color: #44514A; margin-bottom: 0; }
+  .opt ul { list-style: none; margin-top: 8px; }
+  .opt li { position: relative; padding: 3px 0 3px 22px; font-size: 14.2px; color: #44514A; }
+  .opt li::before { content: "✓"; position: absolute; left: 2px; top: 2px; color: var(--brand); font-weight: 800; }
+
+  /* Uses grid */
+  .uses { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 16px 0 6px; }
+  .use {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 14px 17px;
+    background: #fff;
+    break-inside: avoid;
+  }
+  .use h4 { font-family: 'Manrope', sans-serif; font-size: 14.8px; font-weight: 700; color: var(--brand-dark); margin-bottom: 3px; }
+  .use p { font-size: 14px; color: var(--muted); margin: 0; }
+
+  /* Money strip */
+  .money {
+    display: flex; gap: 0; margin: 18px 0 8px;
+    border: 1.5px solid var(--brand);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .money-cell { flex: 1; padding: 16px 18px; text-align: center; border-right: 1px solid var(--hairline); }
+  .money-cell:last-child { border-right: none; }
+  .money-num { font-family: 'Manrope', sans-serif; font-size: 24px; font-weight: 800; color: var(--brand-dark); }
+  .money-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-top: 3px; }
+
+  /* FAQ */
+  .faq { margin: 14px 0; }
+  .faq-item { padding: 13px 0; border-bottom: 1px solid var(--hairline); break-inside: avoid; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q { font-family: 'Manrope', sans-serif; font-size: 15.5px; font-weight: 800; color: var(--brand-dark); margin-bottom: 4px; }
+  .faq-a { font-size: 14.6px; color: #44514A; }
+
+  .foot-band {
+    margin-top: 30px;
+    border-top: 2.5px solid var(--brand-dark);
+    background: var(--cream);
+    padding: 15px 52px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 14px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--brand); white-space: nowrap; }
+
+  @media (max-width: 660px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .uses { grid-template-columns: 1fr; }
+    .money { flex-direction: column; }
+    .money-cell { border-right: none; border-bottom: 1px solid var(--hairline); }
+    .masthead h1 { font-size: 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 12.8px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 11mm 12mm; }
+    .masthead { background: #fff !important; }
+    .masthead::after { display: none; }
+    .masthead h1 { color: var(--brand-dark) !important; }
+    .eyebrow { color: var(--accent) !important; }
+    .mast-sub { color: var(--muted) !important; }
+    .big-quote, .opt, .use, .money, .foot-band { background: #fff; }
+    .section-head, .opt, .use, .faq-item, .money { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">Plain-English Guide · No Technical Words</div>
+    <h1>One Good Work Computer. Here's Why It Pays for Itself.</h1>
+    <p class="mast-sub">A short, honest explanation — for anyone — of the laptop needed for the software work done for companies like EKOFIN and Starium Rafa.</p>
+  </div>
+
+  <div class="content">
+
+    <p>Software is built with tools, exactly the way carpentry is. The difference is that a developer's workshop is <strong>a single laptop</strong>. This page explains — in everyday language — what kind of laptop the work requires, what it costs, and why it earns its keep.</p>
+
+    <div class="section-head"><span class="section-title">The Short Version</span><span class="section-line"></span></div>
+
+    <div class="big-quote">I am asking for one strong, durable business laptop that costs about <strong>₦2 million to ₦3 million</strong>, lasts four to five years, and works out to roughly <strong>₦50,000 – ₦60,000 per month</strong> — less than the value of a single lost working day. Everything below simply explains that sentence.</div>
+
+    <div class="section-head"><span class="section-title">What the Technical Words Actually Mean</span><span class="section-line"></span></div>
+
+    <table class="jb">
+      <tr><th style="width:165px;">Technical word</th><th>What it really means</th></tr>
+      <tr><td>RAM (memory)</td><td>The size of your work desk. A bigger desk means more things open at once — documents, designs, testing windows — without everything grinding to a halt. The work needs a <strong>32GB desk</strong>; ordinary laptops come with an 8GB or 16GB desk, which feels like working on a breakfast tray.</td></tr>
+      <tr><td>Processor (CPU)</td><td>The brain's speed. Building and testing software involves the computer doing thousands of calculations while you wait. A stronger brain turns minutes of waiting into seconds.</td></tr>
+      <tr><td>SSD storage (1TB)</td><td>The filing cabinet. Software projects pile up thousands of small files every week. One terabyte means years of room; smaller cabinets fill up within months and slow everything down.</td></tr>
+      <tr><td>"Fast storage" (NVMe)</td><td>An express elevator between floors instead of the staircase. Files open almost instantly, so the whole machine feels awake rather than drowsy.</td></tr>
+      <tr><td>Screen brightness (300 nits)</td><td>Whether the screen stays readable inside bright factory halls or beside sunny windows. Dim screens turn demos and floor visits into squinting contests.</td></tr>
+      <tr><td>"MIL-STD tested"</td><td>Military-grade toughness checks — the laptop has survived tests for drops, bumps, dust, heat and vibration. Built for real-world places like factory floors and farm roads, not just clean offices.</td></tr>
+      <tr><td>Battery life (all-day)</td><td>The freedom to work through power cuts, site visits and meetings without hunting for a socket — and to charge from the same power banks people already use for phones.</td></tr>
+      <tr><td>Fingerprint lock &amp; encryption</td><td>Company secrets — designs, plans, customer information — stay locked even if the laptop is lost or stolen. Only the owner's finger opens it.</td></tr>
+      <tr><td>Warranty (1–3 years)</td><td>If anything breaks, the maker repairs or replaces it free. Buying from official Nigerian dealers makes this real, not just paper.</td></tr>
+    </table>
+
+    <div class="section-head"><span class="section-title">What It Will Be Used For, Day to Day</span><span class="section-line"></span></div>
+
+    <div class="uses">
+      <div class="use"><h4>Building the company's systems</h4><p>Writing and improving the apps that track production, quality and stock — the way a craftsman shapes his product.</p></div>
+      <div class="use"><h4>Testing before launch</h4><p>Running pretend versions of the whole system on the laptop to catch mistakes before workers ever see them.</p></div>
+      <div class="use"><h4>Management presentations</h4><p>Showing live dashboards and reports to decision-makers — smooth, professional, no freezing mid-presentation.</p></div>
+      <div class="use"><h4>Demo videos &amp; training material</h4><p>Recording clear walkthrough videos so staff and customers can learn the system themselves.</p></div>
+      <div class="use"><h4>Site visits &amp; floor support</h4><p>Carrying it around factories and facilities — it must survive dust, heat, bumpy rides and long days away from plugs.</p></div>
+      <div class="use"><h4>Keeping company data safe</h4><p>Holding sensitive plans and records under fingerprint lock and encryption, wherever the work happens.</p></div>
+    </div>
+
+    <div class="section-head"><span class="section-title">Three Sensible Options</span><span class="section-line"></span></div>
+
+    <div class="options">
+      <div class="opt best">
+        <span class="opt-tag">Recommended</span>
+        <h3>Lenovo ThinkPad X1 Carbon</h3>
+        <div class="price">≈ ₦2,700,000 · about ₦56,000/month over 4 years</div>
+        <ul>
+          <li>Feather-light and famously tough — built for travel between offices, sites and boardrooms</li>
+          <li>The big memory and fast storage the work demands, with room to spare for years</li>
+          <li>World-famous keyboard and all-day battery; official warranty available in Nigeria</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Smart value</span>
+        <h3>HP EliteBook 840 (upgraded)</h3>
+        <div class="price">≈ ₦1,900,000 – ₦2,100,000 · about ₦47,000/month</div>
+        <ul>
+          <li>Nearly the same strength for noticeably less money</li>
+          <li>Sleek aluminium body, strong security, easy to repair anywhere in Nigeria</li>
+          <li>The budget-conscious choice that doesn't feel like a compromise</li>
+        </ul>
+      </div>
+      <div class="opt">
+        <span class="opt-tag">Premium statement</span>
+        <h3>MacBook Pro 14″</h3>
+        <div class="price">≈ ₦3,500,000 – ₦4,800,000 · about ₦71,000/month over 5–6 years</div>
+        <ul>
+          <li>The longest battery life on the market — works a full day and more without a socket</li>
+          <li>Stays silent and cool; handles heavy tasks effortlessly</li>
+          <li>Holds its value best if it's ever resold; bought officially from iStore Nigeria</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:var(--muted);">Cheaper second-hand options exist from around ₦550,000, but they carry no warranty, shorter lifespans and real risk of mid-project failure — sensible only as a temporary personal stopgap, not as a company tool.</p>
+
+    <div class="section-head"><span class="section-title">The Money, Made Simple</span><span class="section-line"></span></div>
+
+    <div class="money">
+      <div class="money-cell"><div class="money-num">~₦56k</div><div class="money-lbl">per month (4 yrs)</div></div>
+      <div class="money-cell"><div class="money-num">~₦1,850</div><div class="money-lbl">per working day</div></div>
+      <div class="money-cell"><div class="money-num">4–5 yrs</div><div class="money-lbl">useful lifespan</div></div>
+      <div class="money-cell"><div class="money-num">₦0</div><div class="money-lbl">monthly fees after purchase</div></div>
+    </div>
+
+    <p>Put another way: the recommended laptop costs less per month than a single hour of wasted time every working day. When the alternative is delays to systems that managers and staff will rely on daily, the mathematics are straightforward.</p>
+
+    <div class="section-head"><span class="section-title">Fair Questions, Honest Answers</span><span class="section-line"></span></div>
+
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q">"Why not just buy a cheaper laptop?"</div>
+        <div class="faq-a">Ordinary laptops are built for browsing and documents. The work described above needs many heavy programs running together, all day, for years. Cheap machines struggle within months — then the money is spent twice.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Why can't the current personal laptop continue?"</div>
+        <div class="faq-a">It can — slowly, and at growing risk. An aging machine without warranty means a failed part could halt work for days or weeks with no safety net. Company-critical systems shouldn't live on borrowed time.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"What if it gets damaged or stolen?"</div>
+        <div class="faq-a">It survives drops, dust and heat better than any consumer laptop, and everything on it is locked with fingerprint security and encryption — unreadable to strangers. With official warranty, repairs are handled by the manufacturer.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Does this cost anything every month?"</div>
+        <div class="faq-a">No subscriptions, no licences, no monthly bills. It is a one-time purchase that keeps giving for four to five years — unlike almost every other business expense.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">"Where would it be bought?"</div>
+        <div class="faq-a">From official channels in Lagos — TD Africa for business brands, iStore Nigeria for Apple — with proper invoices and warranties. Prices were checked in August 2026 and should simply be reconfirmed on the day.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-title">In One Sentence</span><span class="section-line"></span></div>
+
+    <div class="big-quote" style="border-left-color:var(--brand);">One well-made tool, bought once, protects the work, the worker, and the company's information — and quietly pays for itself every month it serves.</div>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Written in plain language because good decisions shouldn't require a dictionary.</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · August 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
