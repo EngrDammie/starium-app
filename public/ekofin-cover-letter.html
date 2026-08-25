@@ -24,7 +24,7 @@
     background: #EEEBDF;
     color: var(--ink);
     padding: 28px 20px;
-    font-size: 16px;
+    font-size: 17.5px;
     line-height: 1.68;
   }
   .page {
@@ -55,7 +55,7 @@
   }
   .lh-name {
     font-family: 'Manrope', sans-serif;
-    font-size: 27px;
+    font-size: 30px;
     font-weight: 800;
     letter-spacing: -.01em;
     color: var(--forest);
@@ -71,7 +71,7 @@
   }
   .lh-contact {
     text-align: right;
-    font-size: 13.5px;
+    font-size: 15px;
     color: var(--muted);
     line-height: 1.75;
     white-space: nowrap;
@@ -91,7 +91,7 @@
   .subject {
     font-family: 'Manrope', sans-serif;
     font-weight: 800;
-    font-size: 17.5px;
+    font-size: 19px;
     color: var(--forest);
     margin-bottom: 20px;
     padding-left: 14px;
@@ -111,7 +111,7 @@
   }
   .vision p {
     font-family: 'Lora', Georgia, serif;
-    font-size: 16.5px;
+    font-size: 18px;
     line-height: 1.75;
     color: #2A362E;
     margin-bottom: 14px;
@@ -141,7 +141,7 @@
   .signoff { margin-top: 28px; }
   .sig-name {
     font-family: 'Manrope', sans-serif;
-    font-size: 19px;
+    font-size: 21px;
     font-weight: 800;
     color: var(--forest);
     margin-top: 2px;
@@ -156,7 +156,7 @@
   .footnote-band {
     background: var(--cream);
     padding: 15px 56px;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--muted);
     display: flex;
     justify-content: space-between;
@@ -179,6 +179,63 @@
     .vision { background: #fff; }
     section, .asks li, .vision { break-inside: avoid; }
   }
+
+  /* ===== PURE-BLACK PRINT · MAXIMUM SHARPNESS · SEAMLESS FLOW ===== */
+  @media print {
+    *, *::before, *::after {
+      color: #000 !important;
+      background: transparent !important;
+      border-color: #000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    html, body { background: #fff !important; }
+    .mast-rule, .title-line .dot, .lh-name::first-line { background: #000 !important; }
+    .sheet, .page {
+      max-width: none !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+    .masthead, .letter, .content, .resume-band, .signature, .contact-footer,
+    .foot-band, .head, .body-letter, .footnote-band {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    /* ---- flow: big containers may split, leaves stay intact ---- */
+    .sec, .signature-project, .resume-band, .imagine, .contact-footer,
+    .target-panel, .verdict, .warn-panel, .story-panel, .vision,
+    .module-grid, .options, .uses, .tco-row, .just-list, .roadmap, .faq,
+    .capabilities, .jb, .chips, .impact-row, .money, .resume-grid,
+    .two-col, .side-block, .columns, .main-col, .side-col, .timeline,
+    .checklist, .sp-points, ul.points, .asks, .enc, .skills,
+    .section-head, .sec-head, .contact-strip, .title-line, .meta-row {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+    tr, .opt, .use, .faq-item, .money-cell, .module-card, .tco-card,
+    .just-item, .roadmap-item, .asks li, .checklist li, .sp-points li,
+    ul.points li, .xp-item, .edu-item, .ref-item, .skill-group,
+    .data-table tr, .t-item, .impact, .cf-line, .jb tr, .arch-item {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    h1, h2, h3, h4, h5, .sec-title, .sb-title, .section-title {
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
+    p, li { orphans: 3; widows: 3; }
+
+    /* ---- fit wide layouts onto A4 ---- */
+    table { width: 100% !important; }
+    td:first-child, .price, .t-date, .cf-value, .xp-org { white-space: normal !important; }
+    .resume-grid { grid-template-columns: 1fr 34% !important; }
+  }
+
 </style>
 </head>
 <body>
