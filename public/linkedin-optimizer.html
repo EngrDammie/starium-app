@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Profile Optimizer — Engr. Damilare Paul Ayodele</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root { --forest:#0B3D26; --green:#176B3A; --leaf:#4F9D58; --gold:#D9A441; --earth:#C87532; --cream:#F7F3E8; --paper:#FCFCF8; --ink:#1D2922; --muted:#637269; --hairline:#E2DFD1; --red:#B83B3B; --blue:#2563EB; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#EEEBDF; color:var(--ink); padding:26px 14px; font-size:16px; line-height:1.75; }
+  .sheet { max-width:1020px; margin:0 auto; background:var(--paper); border-radius:14px; overflow:hidden; box-shadow:0 18px 50px rgba(29,41,34,.13); }
+  section { scroll-margin-top:18px; }
+
+  /* Masthead */
+  .masthead { background:linear-gradient(135deg,#1a3a5c 0%,#2563EB 82%,#3b82f6 100%); padding:50px 54px 42px; position:relative; overflow:hidden; }
+  .masthead::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 88% 10%, rgba(217,164,65,.22) 0, transparent 40%), radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 45%); pointer-events:none; }
+  .eyebrow { font-family:'Manrope',sans-serif; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.32em; text-transform:uppercase; margin-bottom:16px; }
+  .masthead h1 { font-family:'Manrope',sans-serif; color:#fff; font-size:36px; font-weight:800; line-height:1.16; letter-spacing:-.018em; max-width:720px; margin-bottom:14px; }
+  .mast-sub { color:rgba(255,255,255,.88); font-size:17px; max-width:680px; font-weight:500; }
+  .mast-rule { width:70px; height:3px; background:var(--gold); border-radius:2px; margin-top:24px; }
+
+  /* Content */
+  .content { padding:38px 54px 30px; }
+  p { margin-bottom:15px; } strong { color:var(--forest); }
+  .sec { margin-top:46px; } .sec:first-child { margin-top:0; }
+  .sec-head { display:flex; align-items:baseline; gap:13px; margin-bottom:8px; }
+  .sec-emoji { font-size:26px; transform:translateY(2px); }
+  .section-title { font-family:'Manrope',sans-serif; font-size:23px; font-weight:800; color:var(--forest); letter-spacing:-.01em; }
+  .sec-line { flex:1; height:1px; background:var(--hairline); transform:translateY(-5px); }
+  .sec-sub { color:var(--muted); font-style:italic; font-family:'Lora',Georgia,serif; margin-bottom:16px; }
+  h3.mini { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; color:var(--green); margin:24px 0 10px; }
+  h4.mini { font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; color:var(--earth); margin:20px 0 8px; }
+  ul.bullets { list-style:none; margin:10px 0 16px; }
+  ul.bullets li { position:relative; padding:5px 0 5px 30px; }
+  ul.bullets li::before { content:"→"; position:absolute; left:4px; top:5px; color:var(--leaf); font-weight:800; }
+  ol.num { list-style:none; counter-reset:step; margin:10px 0 16px; }
+  ol.num li { counter-increment:step; position:relative; padding:6px 0 6px 38px; }
+  ol.num li::before { content:counter(step); position:absolute; left:0; top:5px; width:26px; height:26px; background:var(--green); color:#fff; border-radius:50%; font-family:'Manrope',sans-serif; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+  /* Callout boxes */
+  .plain { margin:18px 0; padding:16px 20px; background:var(--cream); border-left:5px solid var(--leaf); border-radius:0 12px 12px 0; font-size:15.5px; break-inside:avoid; }
+  .plain b:first-child { color:var(--green); font-weight:800; }
+  .alert { margin:18px 0; padding:16px 20px; background:#fef2f2; border-left:5px solid var(--red); border-radius:0 12px 12px 0; font-size:15.5px; break-inside:avoid; }
+  .alert b:first-child { color:var(--red); font-weight:800; }
+  .golden { border:2px solid var(--gold); border-radius:16px; background:linear-gradient(135deg, rgba(217,164,65,.08), transparent 60%), #fff; padding:24px 28px; margin:20px 0; break-inside:avoid; }
+  .golden h4 { font-family:'Manrope',sans-serif; font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:var(--earth); margin-bottom:10px; }
+  .golden p { margin-bottom:10px; }
+  .golden .big { font-family:'Manrope',sans-serif; font-size:21px; font-weight:800; color:var(--forest); }
+
+  /* Copy block */
+  .copy-block { margin:16px 0; border:1.5px solid var(--hairline); border-radius:14px; overflow:hidden; break-inside:avoid; }
+  .copy-head { display:flex; justify-content:space-between; align-items:center; padding:12px 18px; background:var(--cream); border-bottom:1px solid var(--hairline); }
+  .copy-label { font-family:'Manrope',sans-serif; font-size:12px; font-weight:800; color:var(--earth); letter-spacing:.1em; text-transform:uppercase; }
+  .copy-btn { font-family:'Manrope',sans-serif; font-size:11px; font-weight:800; color:#fff; background:var(--green); border:none; border-radius:8px; padding:6px 14px; cursor:pointer; letter-spacing:.06em; text-transform:uppercase; transition:background .15s; }
+  .copy-btn:hover { background:var(--forest); }
+  .copy-body { padding:18px 20px; background:#fff; font-size:15px; line-height:1.8; white-space:pre-wrap; }
+
+  /* Comparison cards */
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+  .cmp-card { border-radius:14px; padding:18px 20px; border:1.5px solid var(--hairline); background:#fff; break-inside:avoid; }
+  .cmp-card.bad { border-top:5px solid var(--red); }
+  .cmp-card.good { border-top:5px solid var(--green); }
+  .cmp-card h5 { font-family:'Manrope',sans-serif; font-size:13px; font-weight:800; margin-bottom:8px; }
+  .cmp-card.bad h5 { color:var(--red); }
+  .cmp-card.good h5 { color:var(--green); }
+  .cmp-card p { font-size:14px; margin:0; line-height:1.7; }
+
+  /* Stats */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0; }
+  .stat { text-align:center; border:1.5px solid var(--hairline); border-top:4px solid var(--green); border-radius:12px; padding:16px 10px 13px; background:#fff; break-inside:avoid; }
+  .stat .n { font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; color:var(--earth); }
+  .stat .l { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin-top:4px; line-height:1.4; }
+
+  /* Checklist */
+  .checklist { margin:16px 0; }
+  .chk { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--hairline); }
+  .chk:last-child { border-bottom:none; }
+  .chk-box { width:22px; height:22px; flex:0 0 22px; border:2px solid var(--hairline); border-radius:6px; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; transition:all .15s; cursor:pointer; }
+  .chk-box.done { background:var(--green); border-color:var(--green); color:#fff; }
+  .chk-text { flex:1; }
+  .chk-text b { display:block; font-family:'Manrope',sans-serif; color:var(--forest); font-size:14px; margin-bottom:2px; }
+  .chk-text span { font-size:13.5px; color:#44514A; }
+
+  /* Steps */
+  .step { display:flex; gap:16px; padding:14px 0; border-bottom:1px solid var(--hairline); break-inside:avoid; }
+  .step:last-child { border-bottom:none; }
+  .step-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:12px; color:#fff; background:var(--green); border-radius:10px; padding:8px 12px; height:fit-content; white-space:nowrap; }
+  .step h4 { font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; color:var(--forest); margin-bottom:3px; }
+  .step p { font-size:13.5px; margin:0; color:#44514A; }
+
+  /* TOC */
+  .toc { display:flex; flex-wrap:wrap; gap:8px; padding:22px 54px 6px; }
+  .toc a { font-family:'Manrope',sans-serif; font-size:12px; font-weight:700; color:var(--forest); text-decoration:none; border:1.5px solid var(--hairline); border-radius:20px; padding:6px 13px; background:#fff; transition:all .15s ease; }
+  .toc a:hover { border-color:var(--gold); background:var(--cream); }
+
+  /* Footer */
+  .foot-band { border-top:2.5px solid var(--forest); background:var(--cream); padding:16px 54px 17px; display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .foot-left { font-family:'Lora',serif; font-style:italic; font-size:13px; color:var(--muted); }
+  .foot-right { font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--green); white-space:nowrap; }
+
+  /* Responsive */
+  @media (max-width:700px){
+    .masthead,.content,.toc,.foot-band{padding-left:22px;padding-right:22px;}
+    .masthead h1{font-size:28px;}
+    .compare{grid-template-columns:1fr;}
+  }
+
+  /* Print */
+  @media print {
+    *, *::before, *::after { color:#000 !important; background:transparent !important; border-color:#000 !important; box-shadow:none !important; text-shadow:none !important; }
+    html, body { background:#fff !important; padding:0 !important; font-size:13px; }
+    .sheet { box-shadow:none !important; border-radius:0 !important; max-width:none !important; }
+    @page { size:A4; margin:11mm 12mm; }
+    .masthead { background:#fff !important; } .masthead::after { display:none; }
+    .masthead h1, .eyebrow { color:#000 !important; } .mast-sub { color:#333 !important; } .mast-rule { background:#000; }
+    .toc { display:none; }
+    .copy-block, .cmp-card, .golden, .plain, .alert, .stat, .step, .chk { break-inside:avoid !important; page-break-inside:avoid !important; }
+    .compare, .content { break-inside:auto !important; }
+    h1,h2,h3,.section-title,.mini { break-after:avoid !important; }
+    p,li { orphans:3; widows:3; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">LinkedIn Profile Optimizer · Your Personal Playbook</div>
+    <h1>Turn Your LinkedIn Into a Magnet — Employers, Clients &amp; Referrals Coming to You</h1>
+    <p class="mast-sub">A section-by-section, copy-paste-ready guide to rebuilding your profile from overlooked to outstanding. Every change is based on what recruiters actually search for and what clients actually notice.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <nav class="toc">
+    <a href="#diagnosis">🔍 Diagnosis</a><a href="#headline">📣 Headline</a><a href="#photo">📸 Photo &amp; Banner</a><a href="#about">✍️ About</a><a href="#experience">💼 Experience</a><a href="#featured">⭐ Featured</a><a href="#skills">🧩 Skills</a><a href="#education">🎓 Education</a><a href="#certs">📜 Certifications</a><a href="#recs">💬 Recommendations</a><a href="#activity">🔔 Activity</a><a href="#settings">⚙️ Settings</a><a href="#action">📋 Action Plan</a><a href="#mistakes">🚫 Mistakes</a><a href="#words">📖 Power Words</a>
+  </nav>
+
+  <div class="content">
+
+    <!-- ==================== 01 DIAGNOSIS ==================== -->
+    <section class="sec" id="diagnosis">
+      <div class="sec-head"><span class="sec-emoji">🔍</span><span class="section-title">Your Current Profile — The Honest Diagnosis</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Before we fix anything, let's name exactly what's wrong — and why it's costing you opportunities right now.</p>
+
+      <div class="alert"><b>🚨 The headline problem is an emergency.</b> Your profile currently says ".NET Software Developer at The GIG Group" — a job that ended in July 2021. Every single person who visits your profile sees this first. Recruiters see a developer who hasn't updated his profile in 5+ years. Clients see someone who may not be active. The signal is: "stale." This one line is the single biggest reason your profile isn't attracting anyone.</div>
+
+      <div class="stats">
+        <div class="stat"><div class="n">5+</div><div class="l">Years since profile was updated</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">Current roles listed</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">Featured items</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">Recommendations</div></div>
+      </div>
+
+      <h3 class="mini">What your profile currently says vs. what it should say</h3>
+      <div class="compare">
+        <div class="cmp-card bad">
+          <h5>❌ What a visitor sees now</h5>
+          <p>".NET Software Developer at The GIG Group. Last active in 2021. Lists technologies. One old project. No recent work. No narrative. No photo banner. Probably not looking."</p>
+        </div>
+        <div class="cmp-card good">
+          <h5>✅ What they should see</h5>
+          <p>"Software Architect who built an enterprise ERP inside a live manufacturing factory. 10+ years across banking, logistics, HR, and manufacturing systems. Currently open to consulting, fractional CTO, and ERP implementation partnerships."</p>
+        </div>
+      </div>
+
+      <div class="plain"><b>🧠 The mindset shift:</b> LinkedIn is not an online CV — it's a search engine. Recruiters type keywords like "ERP architect," "manufacturing software," "FMCG digitization," "quality management systems." If those words don't appear on your profile, you are literally invisible to the searches that matter. This guide puts those words everywhere they need to be.</div>
+    </section>
+
+    <!-- ==================== 02 HEADLINE ==================== -->
+    <section class="sec" id="headline">
+      <div class="sec-head"><span class="sec-emoji">📣</span><span class="section-title">Section 1 — The Headline (220 Characters Max)</span><span class="sec-line"></span></div>
+      <p class="sec-sub">This is your billboard. It appears in search results, connection requests, comments, and messages. It must do three things: name what you do, name your edge, and invite the right people.</p>
+
+      <div class="alert"><b>🚫 Current headline:</b> ".NET Software Developer at The GIG Group" — outdated, generic, and invisible to the searches that would find you.</div>
+
+      <h3 class="mini">Option A — The Architect Positioning (Recommended)</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Software Architect | Built an Enterprise ERP Inside a Manufacturing Factory | FMCG &amp; Agro-Processing Systems | From Factory Floor to Boardroom — One Digital Platform</div>
+      </div>
+
+      <h3 class="mini">Option B — The Problem-Solver Positioning</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Software Architect · I Turn Paper Factories Into Data-Driven Operations | ERP · QC Systems · Traceability | 10+ Years in Banking, Logistics &amp; Manufacturing</div>
+      </div>
+
+      <h3 class="mini">Option C — The Open-for-Business Positioning</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Enterprise Software Architect | Available: ERP Consulting · Fractional CTO · Manufacturing Digitization | Built 20+ Module ERP Solo at Zero Licence Cost</div>
+      </div>
+
+      <div class="plain"><b>🧠 Why these work:</b> Every option contains high-value searchable keywords (ERP, architect, manufacturing, FMCG, traceability, quality). They tell a story in one line. They signal seniority, not just technical skill. And they tell the reader what to do next — engage.</div>
+
+      <h4 class="mini">Headline Rules</h4>
+      <ul class="bullets">
+        <li><strong>Never use your current job title alone</strong> — it's a LinkedIn default, not a strategy</li>
+        <li><strong>Front-load the most searchable term</strong> — "Software Architect" must appear in the first 60 characters (that's what shows in search results before the "...")</li>
+        <li><strong>Use separators</strong> — the pipe | character creates visual breaks on mobile; it's the cleanest separator on LinkedIn</li>
+        <li><strong>Include a call-to-action implicitly</strong> — words like "Available for" or "Open to" signal you're approachable</li>
+        <li><strong>Never mention a company name that no longer employs you</strong> — it reads as outdated</li>
+      </ul>
+    </section>
+
+    <!-- ==================== 03 PHOTO & BANNER ==================== -->
+    <section class="sec" id="photo">
+      <div class="sec-head"><span class="sec-emoji">📸</span><span class="section-title">Section 2 — Profile Photo &amp; Banner Image</span><span class="sec-line"></span></div>
+      <p class="sec-sub">People decide whether to read your profile in 0.05 seconds. The photo and banner are what they see in that window.</p>
+
+      <h3 class="mini">Profile Photo — The Non-Negotiables</h3>
+      <ol class="num">
+        <li><b>Professional headshot only.</b> No selfies, no group photos, no sunglasses, no cropped wedding pictures. A plain background (white, grey, or blurred office) with natural light.</li>
+        <li><b>Face fills 60–70% of the frame.</b> People must recognize you from 3 feet away — that's how it appears in search results and comment threads.</li>
+        <li><b>Dress one level above your target.</b> For ERP/consulting roles: a clean collared shirt or blazer. No tie needed — but look like someone a boardroom would trust.</li>
+        <li><b>Smile genuinely.</b> Not a grin — a slight, confident smile. Research shows profiles with warm expressions get 20% more connection requests.</li>
+        <li><b>Update it now</b> if your current photo is more than 2 years old. LinkedIn's algorithm literally boosts recently-updated profiles.</li>
+      </ol>
+
+      <h3 class="mini">Banner Image — Your Free Billboard (1584 × 396 px)</h3>
+      <p>The default blue LinkedIn banner is wasted space. This is the largest visual element on your profile — use it.</p>
+
+      <div class="golden">
+        <h4>🎨 Banner Design Spec</h4>
+        <p class="big">Design in Canva (free) using the "LinkedIn Banner" template.</p>
+        <p><strong>Left side:</strong> Your name and title — e.g. "Engr. Damilare Paul Ayodele · Software Architect"</p>
+        <p><strong>Center:</strong> 3–4 key phrases in clean typography: "ERP · Manufacturing · FMCG · Traceability"</p>
+        <p><strong>Right side:</strong> A subtle visual — abstract tech pattern, factory floor image, or circuit-board texture</p>
+        <p><strong>Colour palette:</strong> Use the Starium Rafa / EKOFIN brand greens (#0B3D26, #176B3A) with gold (#D9A441) accents — professional, distinctive, memorable</p>
+        <p><strong>Font:</strong> Manrope or Inter — clean, modern, readable at small sizes</p>
+      </div>
+
+      <div class="plain"><b>🧠 Why this matters:</b> The banner is the first thing eyes land on after your name. A custom banner signals "this person takes their professional presence seriously." Recruiters subconsciously rank bannered profiles higher — it's a trust shortcut. The keywords in the banner also get scanned by LinkedIn's algorithm for search relevance.</div>
+    </section>
+
+    <!-- ==================== 04 ABOUT ==================== -->
+    <section class="sec" id="about">
+      <div class="sec-head"><span class="sec-emoji">✍️</span><span class="section-title">Section 3 — The About Section (2,600 Characters Max)</span><span class="sec-line"></span></div>
+      <p class="sec-sub">This is your story. Not your CV — your story. Recruiters read the first 3 lines, then decide. Clients read the whole thing. Both need to be hooked.</p>
+
+      <div class="alert"><b>🚫 Current About section:</b> A flat paragraph listing technologies — "I develop software using VB.NET, C#, HTML, CSS, Javascript, ASP.NET..." — reads like a skills inventory. No narrative. No impact. No personality. No call to action.</div>
+
+      <h3 class="mini">The Structure That Works</h3>
+      <p>Every high-performing LinkedIn About section follows this rhythm: <strong>Hook → Story → Proof → Skills → Invitation</strong>. Here's yours, written out:</p>
+
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Full About Section — Copy &amp; Paste</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>I build the software that runs factories.
+
+Earlier this year I walked into a detergent manufacturing company where every production record lived in paper notebooks. Shift handovers were verbal. QC data vanished between morning and afternoon. Managers made million-naira decisions from memory.
+
+I designed and built the entire digital backbone from scratch — an enterprise ERP with 20+ modules covering inventory, procurement, production tracking, quality control, waste intelligence, pallet transfers, and executive dashboards. Real-time. Offline-first. Zero software licence cost. Fully functional in live test environments today.
+
+Before that, I built payment integration systems for First Bank, logistics platforms for God is Good Motors, and enterprise HR software used across West Africa for four years. I've shipped software in banking, transport, HR, fuel management, and now manufacturing — always at the intersection of real business problems and clean technical execution.
+
+What I do isn't just code. It's understanding how a factory actually works — the steam in the drying room, the QC inspector's morning routine, the warehouse manager's headaches at shift change — and translating that into software people actually use on the factory floor, not just in the boardroom.
+
+Core expertise:
+→ ERP Architecture & Implementation
+→ Manufacturing & FMCG Systems
+→ Quality Management & Traceability
+→ Database Design (SQL Server, MySQL)
+→ API Integration & Real-Time Dashboards
+→ Offline-First & Resilient Systems
+
+I'm currently exploring consulting partnerships, fractional CTO roles, and ERP implementation projects — especially for manufacturing and agro-processing companies ready to go digital.
+
+Let's talk: ayodele.damilare@gmail.com | +234 802 897 5816</div>
+      </div>
+
+      <h3 class="mini">Why Every Paragraph Works</h3>
+      <ol class="num">
+        <li><b>First line is a hook, not a bio.</b> "I build the software that runs factories" is 8 words that create instant curiosity. It's not a job title — it's a declaration.</li>
+        <li><b>The story creates empathy.</b> "Paper notebooks... QC data vanished... decisions from memory" — anyone who's worked in a factory FEELS this. You're not listing skills — you're describing a problem you solved.</li>
+        <li><b>The proof is specific and quantified.</b> "20+ modules... zero licence cost... live test environments" — numbers beat adjectives every time.</li>
+        <li><b>The career narrative shows range.</b> Banking → logistics → HR → manufacturing — not job-hopping, but breadth of domain understanding.</li>
+        <li><b>The "what I do isn't just code" paragraph is your differentiator.</b> This is where you separate yourself from the 10 million other developers on LinkedIn. You understand the BUSINESS, not just the technology.</li>
+        <li><b>Skills are listed for search.</b> LinkedIn's algorithm scans the About section for keywords. These bullet points ensure you appear in searches for ERP, manufacturing, traceability, quality management, etc.</li>
+        <li><b>The call to action is clear.</b> "Let's talk" with contact details — makes it easy for the right people to reach you.</li>
+      </ol>
+
+      <div class="plain"><b>🧠 Character count:</b> The above is ~1,850 characters — well within LinkedIn's 2,600 limit. You have room to add a specific achievement or two if you want, but brevity wins on LinkedIn. Most people never scroll to the end.</div>
+    </section>
+
+    <!-- ==================== 05 EXPERIENCE ==================== -->
+    <section class="sec" id="experience">
+      <div class="sec-head"><span class="sec-emoji">💼</span><span class="section-title">Section 4 — Experience (Fill Every Role)</span><span class="sec-line"></span></div>
+      <p class="sec-sub">This is where credibility lives. Every role must show impact, not just duties. And the gap must be filled.</p>
+
+      <div class="alert"><b>🚨 Critical gap:</b> Your most recent listed role is The GIG Group (ended Jul 2021). That's a 5-year blank. LinkedIn's algorithm penalizes stale profiles — and human visitors assume you're not active. This must be fixed immediately.</div>
+
+      <h3 class="mini">Role 1 — Your Current Signature Position</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Quality Control Officer &amp; Systems Architect
+Starium Rafa Detergents
+Feb 2026 – Present · Lagos, Nigeria
+
+Designed and built a complete enterprise ERP platform from zero inside an active FMCG manufacturing company — covering production tracking, quality control, inventory, procurement, waste intelligence, pallet transfers, and executive dashboards.
+
+Key achievements:
+→ Architected offline-first data engine with 9 independent local queues — zero data loss guaranteed even during network outages
+→ Deployed triple-redundant hosting (Firebase + GitHub Pages + Cloudflare Workers) so the system survives any single platform failure
+→ Designed three-tier RBAC security model with named digital sign-off workflows mirroring real plant authority
+→ Delivered cross-shift analytics with trend charts, threshold alerts, CSV export and print-perfect reports
+→ Achieved all of this outside working hours, alongside full QC duties, at zero software licence cost to the employer
+
+Tech: Firebase, React, JavaScript, HTML/CSS, Cloudflare Workers, GitHub Pages</div>
+      </div>
+
+      <h3 class="mini">Role 2 — Business Consultant (Jul 2021 – Present)</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Business Consultant &amp; Team Lead
+Top-Up &amp; Get Reward Ltd / AG Nutrition International
+Jul 2021 – Present · Lagos, Nigeria
+
+→ Provided technical guidance and digital-platform management for a 700-member network
+→ Managed VTU portal operations and CRM monitoring systems
+→ Designed and delivered training programmes on Zoom and Telegram collaboration tooling
+→ Built and maintained internal tools for network operations and reporting</div>
+      </div>
+
+      <h3 class="mini">Role 3 — The GIG Group (update existing)</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Senior .NET Software Developer
+The GIG Group (God is Good Motors)
+Feb 2019 – Jul 2021 · Lagos, Nigeria
+
+→ Designed and developed API endpoints powering internal logistics and transport applications used across terminals nationwide
+→ Built Windows Services for scheduled jobs including payroll processing, notification dispatch, and data synchronization
+→ Performed database optimization and server maintenance across production environments
+→ Managed Azure DevOps source control and CI/CD pipeline configurations
+→ Provided technical support and remote deployment at terminal locations across Lagos</div>
+      </div>
+
+      <h3 class="mini">Roles 4–7 — Longbridge, Alliedsoft, Coniah, EasyFuel</h3>
+      <p>Update these with the same pattern: <strong>role title + company + dates + 3–5 bullet points starting with action verbs and including measurable outcomes where possible</strong>. Use the CV content as your source — it already has the right details, just reformat for LinkedIn.</p>
+
+      <div class="plain"><b>🧠 The rule of impact bullets:</b> Every bullet should follow the formula: <strong>Action verb + What you did + Result or Scale</strong>. "Designed API endpoints" is weak. "Designed API endpoints powering logistics applications used across 50+ terminal locations nationwide" is hireable. Always quantify where you can — numbers of users, systems, modules, or money saved.</div>
+    </section>
+
+    <!-- ==================== 06 FEATURED ==================== -->
+    <section class="sec" id="featured">
+      <div class="sec-head"><span class="sec-emoji">⭐</span><span class="section-title">Section 5 — The Featured Section</span><span class="sec-line"></span></div>
+      <p class="sec-sub">This is your portfolio gallery. Most profiles have nothing here. Yours should showcase proof of work.</p>
+
+      <h3 class="mini">What to Add (in priority order)</h3>
+      <div class="step"><span class="step-num">1</span><div><h4>Demo Video 1 — Command Centre &amp; QC</h4><p>Add the YouTube link (https://www.youtube.com/watch?v=EjhFWjsLDcA) as a "Link" featured item. Write the title: "Starium Rafa ERP — Command Centre &amp; QC Dashboard in Action". This is your strongest proof-of-work asset.</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>Demo Video 2 — Pallet Transfer &amp; Reports</h4><p>Add the second YouTube link (https://www.youtube.com/watch?v=Z32CKJGERfg) as a "Link" featured item. Title: "Starium Rafa ERP — Pallet Transfer &amp; Smart Reports". Shows breadth of the system.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>Portfolio Website</h4><p>Add your portfolio URL as a "Link" featured item. Title: "My Portfolio — ERP Systems, blueprints &amp; case studies". This gives recruiters a deep-dive destination.</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h4>One Written Article or Case Study</h4><p>Write a short LinkedIn article (500–800 words) titled something like: "What I Learned Building an ERP Inside a Factory That Ran on Paper". Publish it on LinkedIn, then feature it. This positions you as a thought leader, not just a doer.</p></div></div>
+
+      <div class="plain"><b>🧠 The Featured section gets 3–5× more views than any other section after the headline.</b> LinkedIn's algorithm also gives profiles with Featured items a visibility boost in search. Four items is the sweet spot — enough to show depth, not so many that it looks cluttered.</div>
+    </section>
+
+    <!-- ==================== 07 SKILLS ==================== -->
+    <section class="sec" id="skills">
+      <div class="sec-head"><span class="sec-emoji">🧩</span><span class="section-title">Section 6 — Skills &amp; Endorsements</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Skills are search keywords. LinkedIn lets you list 50 — use all of them. The top 3 are visible by default, so choose strategically.</p>
+
+      <h3 class="mini">Your Top 3 (Visible by Default) — Set These First</h3>
+      <div class="stats">
+        <div class="stat"><div class="n">1</div><div class="l">Enterprise Resource Planning (ERP)</div></div>
+        <div class="stat"><div class="n">2</div><div class="l">Software Architecture</div></div>
+        <div class="stat"><div class="n">3</div><div class="l">Manufacturing Systems</div></div>
+      </div>
+
+      <h3 class="mini">Full Skills List — Add All 50</h3>
+      <p>Add these in batches. LinkedIn's search indexes every skill you list — this is pure keyword coverage:</p>
+
+      <h4 class="mini">Architecture &amp; Strategy</h4>
+      <ul class="bullets">
+        <li>Enterprise Resource Planning (ERP)</li><li>Software Architecture</li><li>System Design</li><li>Database Architecture</li><li>API Design</li><li>Offline-First Systems</li><li>Real-Time Systems</li>
+      </ul>
+
+      <h4 class="mini">Domain Expertise</h4>
+      <ul class="bullets">
+        <li>Manufacturing Systems</li><li>FMCG</li><li>Quality Management</li><li>Quality Control</li><li>Traceability Systems</li><li>Business Analysis</li><li>Requirements Gathering</li><li>Process Improvement</li>
+      </ul>
+
+      <h4 class="mini">Technical Skills</h4>
+      <ul class="bullets">
+        <li>C#</li><li>VB.NET</li><li>ASP.NET</li><li>ASP.NET Core</li><li>MVC</li><li>Web API</li><li>JavaScript</li><li>React</li><li>Firebase</li><li>HTML5</li><li>CSS3</li><li>SQL Server</li><li>MySQL</li><li>Entity Framework</li><li>SSRS</li><li>Stored Procedures</li>
+      </ul>
+
+      <h4 class="mini">Tools &amp; Practices</h4>
+      <ul class="bullets">
+        <li>Azure DevOps</li><li>Git</li><li>CI/CD</li><li>Docker</li><li>REST APIs</li><li>Agile</li><li>Scrum</li><li>Project Management</li><li>Technical Documentation</li>
+      </ul>
+
+      <h4 class="mini">Soft Skills &amp; Leadership</h4>
+      <ul class="bullets">
+        <li>Team Leadership</li><li>Mentoring</li><li>Client Relations</li><li>Problem Solving</li><li>Communication</li><li>Stakeholder Management</li><li>Training</li><li>End-User Training</li><li>Vendor Management</li>
+      </ul>
+
+      <div class="plain"><b>🧠 Endorsement strategy:</b> After adding skills, message 5 people you've worked with (former managers, teammates at GIG Group or Alliedsoft) and ask: "Hey, could you endorse me for ERP / Software Architecture / C# on LinkedIn? I'll happily endorse you back." Reciprocity works. Having 5+ endorsements on your top 3 skills makes a massive difference in search ranking.</div>
+    </section>
+
+    <!-- ==================== 08 EDUCATION ==================== -->
+    <section class="sec" id="education">
+      <div class="sec-head"><span class="sec-emoji">🎓</span><span class="section-title">Section 7 — Education</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Add everything. Each school is a networking node — alumni show up in each other's "People also viewed" and search results.</p>
+
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Education entries to add</span></div>
+        <div class="copy-body>B.Sc. (Honours) Electronics & Computer Engineering
+Lagos State University · 2004 – 2010
+Activities: [Add any — IEEE, engineering society, projects]
+
+WAEC / GCE
+Epe Grammar School, Epe · 1995 – 2002</div>
+      </div>
+
+      <ul class="bullets">
+        <li><strong>Add your B.Sc. first</strong> — it's the most important. Include "Second Class Upper" in the description field if LinkedIn doesn't have a grade field.</li>
+        <li><strong>Add any HND or professional certifications</strong> in the Education section too (some people list these under Certifications instead — either works, but Certifications gets more visual prominence).</li>
+        <li><strong>Join the Lagos State University alumni group</strong> on LinkedIn — this puts you in a network of 50,000+ members and increases your profile's search visibility.</li>
+      </ul>
+    </section>
+
+    <!-- ==================== 09 CERTIFICATIONS ==================== -->
+    <section class="sec" id="certs">
+      <div class="sec-head"><span class="sec-emoji">📜</span><span class="section-title">Section 8 — Certifications</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Certifications are trust signals. Even if they're old, they show you invest in learning.</p>
+
+      <h3 class="mini">Add These in Order of Impact</h3>
+      <div class="step"><span class="step-num">1</span><div><h4>MCSD — Microsoft Certified Solutions Developer</h4><p>This is a strong certification. Add it with the issuing organisation "Microsoft" and the year you obtained it. If you can't find the exact date, use 2018 or 2019.</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>CISCO Certification</h4><p>Add the specific level (CCNA, CCNP, etc.) with "Cisco" as the issuer. Networking knowledge is a differentiator for an architect.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>HND (if applicable)</h4><p>If you have an HND in addition to your B.Sc., list it under Education or Certifications — some Nigerian professional contexts value it alongside the degree.</p></div></div>
+
+      <div class="plain"><b>🧠 Future-proofing:</b> Consider adding one current certification to signal you're still growing. AWS Cloud Practitioner, Azure Fundamentals (AZ-900), or Google Project Management Certificate are all affordable, online, and take 1–2 weeks. Even starting the course and listing it as "In Progress" signals growth mindset.</div>
+    </section>
+
+    <!-- ==================== 10 RECOMMENDATIONS ==================== -->
+    <section class="sec" id="recs">
+      <div class="sec-head"><span class="sec-emoji">💬</span><span class="section-title">Section 9 — Recommendations (Social Proof)</span><span class="sec-line"></span></div>
+      <p class="sec-sub">A recommendation from a former manager or client is the single most powerful trust signal on LinkedIn. One good recommendation outweighs fifty skill endorsements.</p>
+
+      <h3 class="mini">Who to Ask (Priority Order)</h3>
+      <div class="step"><span class="step-num">1</span><div><h4>A Manager at The GIG Group</h4><p>Your team lead or engineering manager who saw your API work and terminal deployments. Ask specifically: "Could you write 2–3 sentences about the logistics API projects and my contribution to the terminal system?"</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>A Manager at Alliedsoft (Xceed365)</h4><p>You spent nearly 4 years there — the longest tenure. Someone senior there can speak to your HR software maintenance, report development, and client-facing work.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>A Colleague at Longbridge / First Bank Project</h4><p>The banking integration work is impressive. A colleague from that project can validate the Dynamics 365 CRM integration and your reliability under pressure.</p></div></div>
+
+      <h3 class="mini">The Ask Template — Send This</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Message template</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>Hi [Name],
+
+Hope you're doing well. I'm refreshing my LinkedIn profile and would really value a recommendation from you — we worked together at [Company] on [specific project, e.g. the logistics API / the HR software / the First Bank integration].
+
+Even just 2–3 sentences about what it was like working together would mean a lot. Happy to write one for you in return.
+
+Thanks in advance — really appreciate it.</div>
+      </div>
+
+      <div class="plain"><b>🧠 The reciprocity principle:</b> LinkedIn makes it easy to offer a recommendation first. Write a genuine recommendation for 2–3 people you've worked with — then ask. Most people reciprocate within a week. The "Give first" approach works every time.</div>
+    </section>
+
+    <!-- ==================== 11 ACTIVITY ==================== -->
+    <section class="sec" id="activity">
+      <div class="sec-head"><span class="sec-emoji">🔔</span><span class="section-title">Section 10 — Activity &amp; Content Strategy</span><span class="sec-line"></span></div>
+      <p class="sec-sub">LinkedIn's algorithm rewards active profiles. Posting or commenting just 2–3 times per week can dramatically increase your visibility.</p>
+
+      <h3 class="mini">The Minimum Viable Activity Plan</h3>
+      <ol class="num">
+        <li><b>Comment on 3 posts per day</b> (5 minutes). Find posts by people in ERP, manufacturing, or fintech. Write thoughtful, 2–3 sentence comments — not "Great post!" but "This matches what I saw when building an ERP for a detergent factory — the hardest part was getting QC inspectors to trust the screen more than their paper notebooks." Specific comments get noticed.</li>
+        <li><b>Post once per week.</b> Start with a "build-in-public" post about your Starium Rafa ERP journey. Example: "I built an entire ERP inside a manufacturing factory — 20+ modules, zero software licences, one developer. Here's what I learned about offline-first systems on a factory floor with bad internet." (Add a screenshot or demo clip.)</li>
+        <li><b>Share one industry article per fortnight</b> with your take. Find an article about manufacturing digitization in Africa, add 2–3 sentences of your perspective, and share. This positions you as someone who thinks about the industry, not just writes code.</li>
+      </ol>
+
+      <h3 class="mini">Post Ideas (First Month)</h3>
+      <ul class="bullets">
+        <li>🏭 "What factory managers actually need from software (hint: it's not dashboards)"</li>
+        <li>📉 "The hidden cost of paper-based QC — I watched data disappear every shift change"</li>
+        <li>🔧 "Building an ERP with zero budget: how offline-first design saves the day"</li>
+        <li>💡 "Why most ERP implementations fail — and what a factory-floor engineer knows that consultants don't"</li>
+        <li>📊 "From VB.NET to React: how a 10-year .NET developer learned to love JavaScript"</li>
+      </ul>
+
+      <div class="plain"><b>🧠 The visibility flywheel:</b> Every comment you write exposes your profile to that post's audience. Every post you write exposes you to your connections' connections. Within 3–4 weeks of consistent activity, recruiters start appearing in your "Who viewed your profile" list. This is not optional — it's the mechanism that makes everything else work.</div>
+    </section>
+
+    <!-- ==================== 12 SETTINGS ==================== -->
+    <section class="sec" id="settings">
+      <div class="sec-head"><span class="sec-emoji">⚙️</span><span class="section-title">Section 11 — Settings &amp; Profile Visibility</span><span class="sec-line"></span></div>
+      <p class="sec-sub">These hidden settings control whether recruiters can find you and whether your profile views are anonymous.</p>
+
+      <h3 class="mini">Critical Settings to Change</h3>
+      <div class="checklist">
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Open to Work → Recruiters Only</b><span>Settings → Job seeking preferences → "Open to work" → Select "Recruiters only" (NOT "All LinkedIn members" — that badge looks desperate). This privately signals to 40M+ recruiters that you're available.</span></div></div>
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Profile viewing → Show your name and headline</b><span>Settings → Visibility → "Who can see your profile viewing options" → Set to "Your name and headline." This means when you view someone's profile, they see YOUR headline (which now says "Software Architect | ERP | Manufacturing") instead of "LinkedIn Member." This drives curiosity clicks back to your profile.</span></div></div>
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Creator Mode → Turn ON</b><span>Settings → Creator Mode → Activate. This adds a "Follow" button (larger network), lets you add topics you post about, and unlocks LinkedIn Live and Newsletter features. It signals you're a content creator, not just a job seeker.</span></div></div>
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Contact info → Add everything</b><span>Click "Contact info" on your profile → Add: email (ayodele.damilare@gmail.com), phone (+234 802 897 5816), website (your portfolio), Twitter/X handle if you have one. Make it trivially easy for people to reach you.</span></div></div>
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Custom URL → Clean it up</b><span>Your URL is already "linkedin.com/in/dammiepaulayodele" — verify this is set as your custom URL (not the default with random numbers). If you can change it to "linkedin.com/in/damilare-ayodele" even better.</span></div></div>
+        <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Job search notifications → Turn ON</b><span>Enable notifications for roles matching "Software Architect," "ERP Developer," "CTO," "Manufacturing Systems." LinkedIn will email you matching jobs — and you'll appear in recruiter searches for those terms.</span></div></div>
+      </div>
+    </section>
+
+    <!-- ==================== 13 ACTION PLAN ==================== -->
+    <section class="sec" id="action">
+      <div class="sec-head"><span class="sec-emoji">📋</span><span class="section-title">Section 12 — Your Priority Action Plan</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Don't try to do everything at once. Follow this sequence — each step builds on the last.</p>
+
+      <div class="golden">
+        <h4>🔴 Today (30 minutes) — Stop the bleeding</h4>
+        <div class="checklist">
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Change your headline</b><span>Pick one of the three options above. Paste it in. This alone changes how you appear in every search result.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add Starium Rafa as your current role</b><span>Even if the title is "Quality Control Officer & Systems Architect" — fill the gap.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add the Top-Up &amp; Get Reward role</b><span>This fills the 2021–2026 gap completely.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Turn on Open to Work (Recruiters Only)</b><span>One toggle in Settings — instantly signals availability to 40M+ recruiters.</span></div></div>
+        </div>
+      </div>
+
+      <div class="golden">
+        <h4>🟡 This Week (1 hour) — Build the foundation</h4>
+        <div class="checklist">
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Rewrite your About section</b><span>Copy the provided text. Adjust the details to feel natural in your voice.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Update all 7 experience entries</b><span>Use the provided copy for the top 3; update the remaining 4 using your CV as source.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add all 50 skills</b><span>Start with the top 3, then add the rest in batches of 10.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add education entries</b><span>B.Sc. and GCE/WAEC.</span></div></div>
+        </div>
+      </div>
+
+      <div class="golden">
+        <h4>🟢 Next 2 Weeks — Amplify</h4>
+        <div class="checklist">
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add Featured items</b><span>Both demo videos + portfolio link.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Add certifications</b><span>MCSD, CISCO, any HND.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Design and upload banner image</b><span>Create in Canva using the spec provided. 1584 × 396 px.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Request 2–3 recommendations</b><span>Use the message template. Send to GIG Group, Alliedsoft, and Longbridge contacts.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Write your first LinkedIn post</b><span>Use one of the post ideas provided. Add a screenshot from the ERP demo.</span></div></div>
+        </div>
+      </div>
+
+      <div class="golden">
+        <h4>🔵 Ongoing — The Flywheel</h4>
+        <div class="checklist">
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Comment on 3 posts per day</b><span>5 minutes. Specific, thoughtful comments on industry posts.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Post once per week</b><span>Build-in-public, industry insight, or lesson learned.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Check "Who viewed your profile" weekly</b><span>Recruiters will start appearing within 2–3 weeks of consistent activity. Click back — if their headline matches your target, message them.</span></div></div>
+          <div class="chk"><div class="chk-box" onclick="this.classList.toggle('done')">✓</div><div class="chk-text"><b>Endorse 3 people per week</b><span>Give before you ask. People notice and reciprocate.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 14 MISTAKES ==================== -->
+    <section class="sec" id="mistakes">
+      <div class="sec-head"><span class="sec-emoji">🚫</span><span class="section-title">Section 13 — Mistakes That Kill Profiles</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Avoid these at all costs — they silently sabotage even well-written profiles.</p>
+
+      <table class="decoded">
+        <tr><th>Mistake 🚫</th><th>Why It Kills You</th><th>What to Do Instead</th></tr>
+        <tr><td>Generic headline with just a job title</td><td>Invisible in search — recruiters search by skills, not titles</td><td>Lead with what you DO, not where you work</td></tr>
+        <tr><td>Listing technologies as a paragraph</td><td>Reads like a skills dump — no one finishes reading</td><td>Story first, skills as searchable bullet points</td></tr>
+        <tr><td>No current role listed</td><td>5-year gap reads as "not active" or "unemployed"</td><td>Add Starium Rafa + Top-Up immediately</td></tr>
+        <tr><td>Default LinkedIn banner</td><td>Looks like you don't care — 60% of profiles have one</td><td>Custom banner with your title and keywords</td></tr>
+        <tr><td>No profile photo</td><td>Profiles without photos get 0× connection requests</td><td>Professional headshot, face 60–70% of frame</td></tr>
+        <tr><td>Using "We" instead of "I"</td><td>Hides YOUR contribution — recruiters can't tell what you did</td><td>"I designed..." "I built..." "I delivered..."</td></tr>
+        <tr><td>No Featured items</td><td>Wastes the most visual section of your profile</td><td>Add demo videos + portfolio + one article</td></tr>
+        <tr><td>Endorsing nobody, asking for many</td><td>Feels transactional — people ignore requests from strangers</td><td>Give 3 endorsements before you ask for 1</td></tr>
+        <tr><td>Writing "Seeking opportunities" in About</td><td>Signals desperation, not confidence</td><td>"Currently exploring consulting and fractional CTO roles" — same meaning, different energy</td></tr>
+        <tr><td>Connecting without a note</td><td>90% of connection requests without notes get ignored</td><td>Always add a 1-sentence personal note</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== 15 POWER WORDS ==================== -->
+    <section class="sec" id="words">
+      <div class="sec-head"><span class="sec-emoji">📖</span><span class="section-title">Power Words &amp; Keywords — LinkedIn's Secret Language</span><span class="sec-line"></span></div>
+      <p class="sec-sub">These are the words LinkedIn's search algorithm actually matches against recruiter queries. Sprinkle them naturally across your headline, About, experience, and skills.</p>
+
+      <div class="stats">
+        <div class="stat"><div class="n">🏗️</div><div class="l">Architecture · Platform · Systems · Infrastructure</div></div>
+        <div class="stat"><div class="n">🏭</div><div class="l">Manufacturing · FMCG · Production · Factory Floor</div></div>
+        <div class="stat"><div class="n">📊</div><div class="l">ERP · CRM · Dashboard · Analytics · Reporting</div></div>
+        <div class="stat"><div class="n">🔍</div><div class="l">Quality · Traceability · Compliance · Audit</div></div>
+        <div class="stat"><div class="n">🔧</div><div class="l">Integration · API · Database · Real-Time · Offline-First</div></div>
+        <div class="stat"><div class="n">💼</div><div class="l">Consulting · CTO · Fractional · Implementation</div></div>
+      </div>
+
+      <h3 class="mini">Phrases That Attract Premium Opportunities</h3>
+      <ul class="bullets">
+        <li><strong>"Built an ERP from zero"</strong> — signals end-to-end capability, not just coding</li>
+        <li><strong>"Zero software licence cost"</strong> — signals resourcefulness and business awareness</li>
+        <li><strong>"Offline-first"</strong> — a hot keyword in African tech (bad internet is the norm)</li>
+        <li><strong>"Factory floor to boardroom"</strong> — signals you bridge operational and executive worlds</li>
+        <li><strong>"Solo developer"</strong> — when paired with the scale of what you built, this is incredibly powerful</li>
+        <li><strong>"Live test environment"</strong> — signals production-readiness, not just a portfolio project</li>
+        <li><strong>"10+ years enterprise delivery"</strong> — the experience signal that separates senior from mid-level</li>
+      </ul>
+
+      <div class="plain"><b>🧠 The one thing to remember:</b> LinkedIn is a search engine. Every word on your profile is a door. The more relevant doors you open, the more the right people walk through. This guide gives you 50+ doors. Now go open them. 🚪</div>
+    </section>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">"Your profile is not a CV — it's a billboard, a search result, and a first impression. Make all three count."</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
