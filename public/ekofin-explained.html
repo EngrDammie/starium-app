@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EKOFIN Explained — The Complete Research Report in Plain Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest:#0B3D26; --green:#176B3A; --leaf:#4F9D58; --gold:#D9A441;
+    --earth:#C87532; --cream:#F7F3E8; --paper:#FCFCF8; --ink:#1D2922;
+    --muted:#637269; --hairline:#E2DFD1;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#EEEBDF; color:var(--ink); padding:26px 14px; font-size:16px; line-height:1.75; }
+  .sheet { max-width:1000px; margin:0 auto; background:var(--paper); border-radius:14px; overflow:hidden; box-shadow:0 18px 50px rgba(29,41,34,.13); }
+  section { scroll-margin-top:18px; }
+
+  /* masthead */
+  .masthead { background:linear-gradient(135deg,var(--forest) 0%,var(--green) 82%,#1E7A44 100%); padding:50px 54px 42px; position:relative; overflow:hidden; }
+  .masthead::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 90% 12%, rgba(217,164,65,.2) 0, transparent 40%), radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 45%); pointer-events:none; }
+  .eyebrow { font-family:'Manrope',sans-serif; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.32em; text-transform:uppercase; margin-bottom:16px; }
+  .masthead h1 { font-family:'Manrope',sans-serif; color:#fff; font-size:36px; font-weight:800; line-height:1.18; letter-spacing:-.018em; max-width:700px; margin-bottom:14px; }
+  .mast-sub { color:rgba(255,255,255,.88); font-size:17px; max-width:660px; font-weight:500; }
+  .mast-rule { width:70px; height:3px; background:var(--gold); border-radius:2px; margin-top:24px; }
+
+  .content { padding:38px 54px 30px; }
+  p { margin-bottom:15px; }
+  strong { color:var(--forest); }
+
+  /* section heads */
+  .sec { margin-top:46px; }
+  .sec:first-child { margin-top:0; }
+  .sec-head { display:flex; align-items:baseline; gap:13px; margin-bottom:8px; }
+  .sec-emoji { font-size:26px; transform:translateY(2px); }
+  .sec-title { font-family:'Manrope',sans-serif; font-size:23px; font-weight:800; color:var(--forest); letter-spacing:-.01em; }
+  .sec-line { flex:1; height:1px; background:var(--hairline); transform:translateY(-5px); }
+  .sec-sub { color:var(--muted); font-style:italic; font-family:'Lora',Georgia,serif; margin-bottom:16px; }
+
+  h3.mini { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; color:var(--green); margin:24px 0 10px; }
+
+  ul.bullets { list-style:none; margin:10px 0 16px; }
+  ul.bullets li { position:relative; padding:5px 0 5px 30px; }
+  ul.bullets li::before { content:"→"; position:absolute; left:4px; top:5px; color:var(--leaf); font-weight:800; }
+
+  /* plain english box */
+  .plain {
+    margin:18px 0; padding:16px 20px;
+    background:var(--cream);
+    border-left:5px solid var(--leaf);
+    border-radius:0 12px 12px 0;
+    font-size:15.5px;
+  }
+  .plain b:first-child, .plain .pl-label { color:var(--green); font-weight:800; }
+
+  /* term chip */
+  .term {
+    display:inline-block;
+    font-weight:700; color:var(--earth);
+    border-bottom:2px dashed var(--gold);
+    cursor:help;
+  }
+
+  /* story quote */
+  .story { font-family:'Lora',Georgia,serif; font-size:17.5px; line-height:1.8; color:#33402F; background:var(--cream); border-left:5px solid var(--gold); border-radius:0 12px 12px 0; padding:20px 26px; margin:20px 0; }
+
+  /* stat tiles */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0; }
+  .stat { text-align:center; border:1.5px solid var(--hairline); border-top:4px solid var(--green); border-radius:12px; padding:16px 10px 13px; background:#fff; }
+  .stat .n { font-family:'Manrope',sans-serif; font-size:26px; font-weight:800; color:var(--earth); }
+  .stat .l { font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+
+  /* flow diagram */
+  .flow { margin:20px 0; }
+  .frow { display:flex; align-items:center; gap:14px; background:#fff; border:1.5px solid var(--hairline); border-radius:12px; padding:13px 18px; margin:0 auto; max-width:720px; break-inside:avoid; }
+  .ficon { font-size:26px; flex:0 0 auto; }
+  .ftext b { display:block; font-family:'Manrope',sans-serif; color:var(--forest); font-size:15px; }
+  .ftext span { font-size:13px; color:var(--muted); }
+  .farrow { text-align:center; font-size:22px; color:var(--leaf); padding:4px 0; font-weight:800; }
+
+  /* split cards */
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0; }
+  @media (max-width:760px){ .split{grid-template-columns:1fr;} }
+  .half { border:1.5px solid var(--hairline); border-radius:14px; padding:20px 22px; background:#fff; break-inside:avoid; }
+  .half.agric { border-top:5px solid var(--green); }
+  .half.fmcg { border-top:5px solid var(--earth); }
+  .half h4 { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; color:var(--forest); margin-bottom:6px; }
+  .half .tagline { font-family:'Lora',serif; font-style:italic; color:var(--muted); font-size:13.5px; margin-bottom:12px; }
+  .half ul { list-style:none; }
+  .half li { padding:4px 0 4px 26px; position:relative; font-size:14.5px; }
+  .half li::before { content:"✔"; position:absolute; left:2px; color:var(--leaf); font-weight:800; }
+  .half.fmcg li::before { color:var(--earth); }
+
+  /* decoded table */
+  table.decoded { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; background:#fff; }
+  .decoded th { font-family:'Manrope',sans-serif; text-align:left; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:800; padding:10px 12px 10px 0; border-bottom:2.5px solid var(--forest); }
+  .decoded td { padding:11px 12px 11px 0; border-bottom:1px solid var(--hairline); vertical-align:top; line-height:1.6; }
+  .decoded td:first-child { font-weight:700; color:var(--forest); white-space:nowrap; }
+  .decoded tr { break-inside:avoid; }
+
+  /* org chart */
+  .org { margin:20px 0; }
+  .org-box { display:inline-flex; align-items:center; gap:10px; border:2px solid var(--green); border-radius:12px; padding:10px 16px; background:#fff; font-family:'Manrope',sans-serif; font-weight:700; color:var(--forest); font-size:14px; }
+  .org-box small { display:block; font-weight:600; color:var(--muted); font-size:11px; letter-spacing:.04em; text-transform:uppercase; }
+  .org-row { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:0 auto; max-width:900px; }
+  .org-line { text-align:center; color:var(--leaf); font-weight:800; font-size:20px; padding:2px 0; }
+
+  /* scorecard */
+  .score-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--hairline); }
+  .score-row:last-child{border-bottom:none;}
+  .s-emoji { font-size:24px; flex:0 0 34px; text-align:center; }
+  .s-name { flex:1; min-width:140px; }
+  .s-name b { display:block; font-family:'Manrope',sans-serif; color:var(--forest); }
+  .s-name span { font-size:13px; color:var(--muted); }
+  .s-grade { font-family:'Manrope',sans-serif; font-weight:800; white-space:nowrap; }
+  .g-red{color:#B3402A;} .g-amber{color:var(--earth);} .g-green{color:var(--green);}
+
+  /* interview QA */
+  .qa { border:1.5px solid var(--hairline); border-radius:14px; padding:22px 24px; margin:18px 0; background:#fff; break-inside:avoid; }
+  .qa-qnum { display:inline-block; font-family:'Manrope',sans-serif; font-weight:800; font-size:11px; letter-spacing:.2em; color:#fff; background:var(--green); border-radius:20px; padding:4px 14px; margin-bottom:10px; }
+  .qa-q { font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; color:var(--forest); margin-bottom:10px; line-height:1.45; }
+  .qa-translate { background:var(--cream); border-radius:10px; padding:11px 15px; font-size:14px; margin-bottom:12px; }
+  .qa-translate b { color:var(--earth); }
+  .qa-answer { font-size:14.5px; }
+  .qa-answer ul { list-style:none; margin:8px 0 0; }
+  .qa-answer li { position:relative; padding:4px 0 4px 26px; }
+  .qa-answer li::before { content:"💡"; position:absolute; left:0; top:4px; font-size:13px; }
+  .qa-hook { margin-top:12px; padding-top:10px; border-top:1px dashed var(--hairline); font-size:13.5px; color:var(--muted); }
+  .qa-hook b { color:var(--green); }
+
+  /* glossary */
+  .gloss { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin:18px 0; }
+  .gcard { border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; background:#fff; break-inside:avoid; }
+  .gcard .abbr { font-family:'Manrope',sans-serif; font-weight:800; color:var(--earth); font-size:14.5px; }
+  .gcard .full { font-size:12.5px; color:var(--muted); font-weight:600; margin:1px 0 5px; }
+  .gcard .mean { font-size:13.5px; line-height:1.55; }
+
+  /* TOC */
+  .toc { display:flex; flex-wrap:wrap; gap:8px; padding:22px 54px 6px; }
+  .toc a {
+    font-family:'Manrope',sans-serif; font-size:12px; font-weight:700;
+    color:var(--forest); text-decoration:none;
+    border:1.5px solid var(--hairline); border-radius:20px; padding:6px 13px;
+    background:#fff; transition:all .15s ease;
+  }
+  .toc a:hover { border-color:var(--gold); background:var(--cream); }
+
+  .foot-band { border-top:2.5px solid var(--forest); background:var(--cream); padding:16px 54px 17px; display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .foot-left { font-family:'Lora',serif; font-style:italic; font-size:13px; color:var(--muted); }
+  .foot-right { font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--green); white-space:nowrap; }
+  .disclaimer-chip { display:inline-block; background:var(--cream); border:1px solid var(--hairline); border-radius:20px; padding:5px 15px; font-size:12px; color:var(--muted); margin-bottom:20px; }
+
+  @media (max-width:700px){
+    .masthead, .content, .toc, .foot-band { padding-left:22px; padding-right:22px; }
+    .masthead h1 { font-size:28px; }
+    .frow { padding:11px 13px; }
+  }
+
+  /* ===== pure-black print · seamless flow ===== */
+  @media print {
+    *, *::before, *::after { color:#000 !important; background:transparent !important; border-color:#000 !important; box-shadow:none !important; text-shadow:none !important; }
+    html, body { background:#fff !important; padding:0 !important; font-size:13.5px; }
+    .sheet { box-shadow:none !important; border-radius:0 !important; max-width:none !important; }
+    @page { size:A4; margin:11mm 12mm; }
+    .masthead { background:#fff !important; } .masthead::after { display:none; }
+    .masthead h1 { color:#000 !important; } .eyebrow { color:#000 !important; }
+    .mast-sub { color:#333 !important; } .mast-rule { background:#000; }
+    .plain, .story, .qa, .half, .stat, .gcard, .frow, .toc a, .disclaimer-chip { background:#fff !important; }
+    .toc { display:none; }
+    .sec, .qa, .half, .plain, .story, .frow, .gcard, .decoded tr, .stats, .score-row { break-inside:avoid !important; page-break-inside:avoid !important; }
+    .flow, .org, .gloss, .content { break-inside:auto !important; }
+    h1,h2,h3,.sec-title,.mini { break-after:avoid !important; }
+    p,li { orphans:3; widows:3; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">EKOFIN Deep Research · Fully Decoded</div>
+    <h1>The Company, The Job, The Game Plan — Explained Like You're Five 🧒🏾➡️👔</h1>
+    <p class="mast-sub">Every single detail from the research report about Eko Organic Food Industries Limited — translated from consultant-speak into everyday language, with nothing left out.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <nav class="toc">
+    <a href="#big-picture">🌍 Big Picture</a><a href="#meet">🏢 Meet EKOFIN</a><a href="#money">💰 Two Machines</a><a href="#customers">🛒 Customers</a><a href="#supply">🚜 Supply Chain</a><a href="#quality">✅ Quality</a><a href="#news">📰 Big News</a><a href="#people">👥 People Map</a><a href="#digital">📱 Digital Today</a><a href="#toolbox">🧰 Dream Toolbox</a><a href="#rules">🔐 Rules</a><a href="#report-card">📊 Report Card</a><a href="#projects">🎯 Projects</a><a href="#interview">🎤 Interview</a><a href="#ammo">💪 Ammunition</a><a href="#drafts">✍️ Drafts</a><a href="#future-ui">🖥️ Future Looks</a><a href="#dictionary">📖 Dictionary</a><a href="#caveats">⚠️ Caveats</a>
+  </nav>
+
+  <div class="content">
+
+    <span class="disclaimer-chip">⚠️ Honesty first: this research was produced by an AI assistant using public information + educated guesses. Facts are sourced; guesses are labelled. Treat numbers as directional, not gospel.</span>
+
+    <!-- ================= 01 BIG PICTURE ================= -->
+    <section class="sec" id="big-picture">
+      <div class="sec-head"><span class="sec-emoji">🌍</span><span class="section-title sec-title">The Big Picture — What Is Going On Here?</span><span class="sec-line"></span></div>
+      <p class="sec-sub">The whole report squeezed into five friendly sentences.</p>
+
+      <p><strong>EKOFIN</strong> is a Nigerian food company based in <strong>Epe, Lagos</strong> — your own neighbourhood. It runs <strong>two businesses under one roof</strong>:</p>
+
+      <ul class="bullets">
+        <li>🌾 <strong>Agric:</strong> It buys raw cashew nuts from farmers across <strong>six Nigerian states</strong>, processes them in its Epe factory, and ships the finished kernels to big buyers in <strong>Europe and Asia</strong>.</li>
+        <li>🥫 <strong>FMCG</strong> (<span class="term">Fast-Moving Consumer Goods</span> — everyday supermarket items like seasonings, drink powders and bottled water): It manufactures and packages food products <strong>for other brands</strong>, and also owns some of its own mini-brands.</li>
+      </ul>
+
+      <p>In late 2025, something huge happened: construction giant <strong>Julius Berger handed over the keys to a modern 60-tonne-per-day cashew factory</strong> in Epe on a long lease. EKOFIN suddenly has industrial muscle — but muscle without a nervous system is just weight. And that's where you come in.</p>
+
+      <p>The report's conclusion: EKOFIN likely runs on <strong>paper, WhatsApp messages and Excel sheets</strong>. No proper company-wide software. Your job opportunity is to become the person who builds that missing nervous system — connecting farm ➡️ factory ➡️ ship ➡️ customer ➡️ boss's phone, all in real time.</p>
+
+      <div class="plain"><b>🧠 In plain English:</b> Imagine a growing restaurant chain where every order is written in notebooks and the owner finds out sales by phoning each branch. EKOFIN is that restaurant — but for cashews and food packets, selling to the world. You'd be the one installing the till system, the kitchen screens and the owner's dashboard.</div>
+    </section>
+
+    <!-- ================= 02 MEET ================= -->
+    <section class="sec" id="meet">
+      <div class="sec-head"><span class="sec-emoji">🏢</span><span class="section-title">Meet EKOFIN — The Company File</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Facts, figures and honest gaps from the research.</p>
+
+      <table class="decoded">
+        <tr><th style="width:190px;">Question</th><th>What the research found</th></tr>
+        <tr><td>📛 Full name</td><td>Eko Organic Food Industries Limited (short name: <strong>EKOFIN</strong>)</td></tr>
+        <tr><td>📍 Home base</td><td>Processing facility on <strong>Adebowale Road, Odo-Mola, Epe, Lagos State</strong> — minutes from your house in Iraye-Oke 🏡</td></tr>
+        <tr><td>🎂 Age</td><td>Founded around <strong>2020</strong> (exact date not public — young and hungry)</td></tr>
+        <tr><td>👑 Ownership</td><td><strong>Privately held</strong> — no stock exchange listing, owners not publicly disclosed (assumption noted)</td></tr>
+        <tr><td>🗣️ Mission</td><td>"From Africa's farms to global markets, and global foods to African homes"</td></tr>
+        <tr><td>❤️ Tagline</td><td><strong>"Passion for Food, Love for People."</strong></td></tr>
+        <tr><td>👨‍👩‍👧 Team size</td><td>About <strong>28 employees</strong> visible on LinkedIn — small enough that YOU would be a founding pillar of its tech, not employee #4,000</td></tr>
+        <tr><td>🏭 Facilities</td><td>The Epe plant (now supercharged by the leased Julius Berger factory), plus implied warehouses/logistics nodes</td></tr>
+        <tr><td>🧭 Known leaders</td><td>No CEO named publicly. One visible manager: <strong>Temitope Adedeji, GM of Supply Chain</strong>. A Senior Quality Manager also exists. Expect a typical structure: MD/CEO ➡️ COO ➡️ division heads</td></tr>
+      </table>
+
+      <div class="plain"><b>🧠 In plain English:</b> A young private company with world-class ambition, a brand-new industrial plant, roughly 28 staff — and no publicly known tech department. You wouldn't be joining an IT team; you'd BE the IT department's foundation stone. 🪨</div>
+    </section>
+
+    <!-- ================= 03 TWO MACHINES ================= -->
+    <section class="sec" id="money">
+      <div class="sec-head"><span class="sec-emoji">💰</span><span class="section-title">The Two Money Machines</span><span class="sec-line"></span></div>
+      <p class="sec-sub">"Two Divisions, One Mission" — here's what each one actually does, step by step.</p>
+
+      <div class="split">
+        <div class="half agric">
+          <h4>🌾 Division 1: AGRIC (Cashew Export)</h4>
+          <div class="tagline">Africa's Farms → Global Markets</div>
+          <ul>
+            <li><strong>Sourcing:</strong> buys raw cashews straight from farmers and cooperatives across six states in Nigeria's "cashew belt" through <strong>six sourcing hubs</strong></li>
+            <li><strong>Cleaning &amp; shelling:</strong> removes the outer shell to extract the kernel (the tasty part we eat)</li>
+            <li><strong>Grading:</strong> sorts kernels by size and whiteness into export grades — buyers abroad pay different prices per grade</li>
+            <li><strong>Packaging:</strong> seals kernels for export containers</li>
+            <li><strong>Byproducts:</strong> even the waste makes money — shells yield <span class="term">CNSL</span> (Cashew Nut Shell Liquid, an industrial oil used in paints, brakes and resins) and the leftover shell mass becomes <strong>biomass fuel</strong> 🔥</li>
+            <li><strong>Selling:</strong> bulk contracts to international commodity buyers (mostly Europe, some Asia), earning <strong>foreign currency</strong> 💵</li>
+          </ul>
+        </div>
+        <div class="half fmcg">
+          <h4>🥫 Division 2: FMCG (Contract Manufacturing)</h4>
+          <div class="tagline">Global Foods → African Homes</div>
+          <ul>
+            <li><strong>Contract manufacturing:</strong> other brands bring recipes; EKOFIN produces on their behalf (<span class="term">co-packing</span>)</li>
+            <li><strong>Formulation &amp; blending:</strong> mixing ingredients — seasonings, beverage powders, non-dairy creamers</li>
+            <li><strong>Packaging:</strong> filling and sealing retail-ready packs</li>
+            <li><strong>Private label:</strong> making products sold under the client's brand name (the shop's own label)</li>
+            <li><strong>Product development:</strong> helping brands create new food products from scratch</li>
+            <li><strong>NAFDAC support:</strong> guiding clients through Nigeria's product-registration process</li>
+            <li><strong>Own mini-brands ("ready-made brands"):</strong> 🚰 <strong>Hotelux</strong> (bottled water + roasted cashews, popular with hotels) and 🍫 <strong>Creviva</strong> (creamers, chocolate drink mixes, seasonings) — available for other businesses to rebrand and sell</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="mini">🗺️ The Journey of a Cashew — Farm Gate to Kitchen Table</h3>
+      <div class="flow">
+        <div class="frow"><span class="ficon">🌱</span><span class="ftext"><b>Farm gate — six states</b><span>Farmers harvest and sell raw cashews at EKOFIN's sourcing hubs</span></span></div>
+        <div class="farrow">⬇️</div>
+        <div class="frow"><span class="ficon">🚚</span><span class="ftext"><b>Haulage to Epe</b><span>Trucks move raw nuts to the processing facility</span></span></div>
+        <div class="farrow">⬇️</div>
+        <div class="frow"><span class="ficon">⚙️</span><span class="ftext"><b>Process — up to 60 tonnes/day</b><span>Clean → cook/steam → shell → dry → peel → grade</span></span></div>
+        <div class="farrow">⬇️</div>
+        <div class="frow"><span class="ficon">📦</span><span class="ftext"><b>Package &amp; certify</b><span>Kernels sealed for export; quality tests documented</span></span></div>
+        <div class="farrow">⬇️</div>
+        <div class="frow"><span class="ficon">🚢</span><span class="ftext"><b>Export</b><span>Containers ship to Europe/Asia; documents prove origin &amp; safety</span></span></div>
+        <div class="farrow">⬇️</div>
+        <div class="frow"><span class="ficon">🛒</span><span class="ftext"><b>Shelves worldwide</b><span>Snacks, bakeries, food factories — and cash returns home</span></span></div>
+      </div>
+
+      <table class="decoded">
+        <tr><th>Division</th><th>Products &amp; services</th><th>Who buys</th></tr>
+        <tr><td>🌾 Agric</td><td>Raw cashews; graded kernels (W180, W240-style grades); CNSL oil; de-oiled shell; biomass fuel; packaged kernels</td><td>International commodity traders (EU/Asia); Nigerian food processors; nut brands</td></tr>
+        <tr><td>🥫 FMCG</td><td>Contract manufacturing of powders/seasonings/drinks; co-packing; private label; product development; NAFDAC registration help; Hotelux &amp; Creviva ready-made brands</td><td>Nigerian supermarkets/distributors/hotels; overseas brands wanting local production; African markets</td></tr>
+      </table>
+
+      <div class="plain"><b>🧠 In plain English:</b> Agric sells ONE thing (cashews) to FEW customers at HIGH volume — like selling sacks of rice to giant wholesalers. FMCG makes MANY things for MANY smaller customers — like a busy kitchen cooking for lots of restaurants. They need completely different software rhythms, which is why this job is genuinely interesting. ⚙️🍽️</div>
+    </section>
+
+    <!-- ================= 04 CUSTOMERS ================= -->
+    <section class="sec" id="customers">
+      <div class="sec-head"><span class="sec-emoji">🛒</span><span class="section-title">Who Buys From EKOFIN</span><span class="sec-line"></span></div>
+
+      <ul class="bullets">
+        <li>🌍 <strong>Agric side:</strong> international commodity buyers — companies in <strong>Europe and Asia</strong> that buy tonnes of cashew kernels for snacks, baking and food manufacturing. They demand paperwork proving quality and origin, and they punish late or undocumented shipments.</li>
+        <li>🏠 <strong>FMCG side:</strong> Nigerian <strong>supermarket chains, distributors, hotels and restaurants</strong>; plus <strong>foreign food brands</strong> that want a trusted local factory in Nigeria instead of importing finished goods; plus entrepreneurs who rebrand EKOFIN's ready-made products (Hotelux/Creviva).</li>
+        <li>🏨 <strong>Hospitality tilt:</strong> Hotelux bottled water is positioned for hotels — a premium B2B channel.</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Two very different customer personalities. Overseas buyers speak the language of <em>certificates, deadlines and container numbers</em>. Local buyers speak the language of <em>price, availability and shelf appeal</em>. Any software you build must please both mamas. 👩‍🍳👨‍💼</div>
+    </section>
+
+    <!-- ================= 05 SUPPLY CHAIN ================= -->
+    <section class="sec" id="supply">
+      <div class="sec-head"><span class="sec-emoji">🚜</span><span class="section-title">The Supply Chain &amp; Its Friends</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">🌾 Upstream — where the nuts come from</h3>
+      <ul class="bullets">
+        <li>A network of <strong>smallholder farmers and cooperatives</strong> across Nigeria's cashew belt (six states) feeding <strong>six sourcing hubs</strong></li>
+        <li>Likely supported by agro-extension programmes (government/NGO farming advisors) — an assumption based on common industry practice</li>
+        <li>Farmer loyalty depends on <strong>fair prices, quick payment and support</strong> — exactly the pain points a farmer-facing app could fix</li>
+      </ul>
+
+      <h3 class="mini">🤝 Around the company — friends with benefits</h3>
+      <ul class="bullets">
+        <li>🏗️ <strong>Julius Berger PLC</strong> — built the 60t/day plant, then leased it to EKOFIN (landlord-partner)</li>
+        <li>🚛 <strong>Road transporters</strong> for haulage; 🚢 shipping lines &amp; ports for exports</li>
+        <li>🏛️ <strong>Certification bodies</strong> — SON (standards) and NAFDAC (food/drug regulator) for compliance; export promotion agencies</li>
+        <li>📦 Packaging suppliers, equipment vendors, and possibly financial partners behind the lease</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Picture a relay race 🏃🏾: farmers pass the baton (nuts) to trucks, trucks to the factory, the factory to quality testers, testers to the port, the port to ships, ships to foreign buyers. Every handover is a place where information can be dropped — and every dropped detail is money lost. Your systems are the baton tracker. 🏏📡</div>
+    </section>
+
+    <!-- ================= 06 QUALITY ================= -->
+    <section class="sec" id="quality">
+      <div class="sec-head"><span class="sec-emoji">✅</span><span class="section-title">Quality Promises &amp; Magic Passwords (Certificates)</span><span class="sec-line"></span></div>
+
+      <p>EKOFIN publicly promises "<strong>rigorous testing, traceability checks, and compliance verification</strong>" meeting international food-safety standards. In the food-export world, those words are passports — without them, containers rot at ports. Here's what each magic word means:</p>
+
+      <table class="decoded">
+        <tr><th>Magic word</th><th>Plain meaning</th><th>Why EKOFIN cares</th></tr>
+        <tr><td>🏆 <span class="term">NAFDAC</span></td><td>Nigeria's food &amp; drug regulator. Every food/drink product sold locally needs its approval number.</td><td>FMCG products (Hotelux, Creviva, client brands) legally cannot sit on shelves without it</td></tr>
+        <tr><td>📏 <span class="term">SON</span></td><td>Standards Organisation of Nigeria — sets national product standards &amp; certifications</td><td>Processed goods may need SON certification; credibility marker</td></tr>
+        <tr><td>🦠 <span class="term">HACCP</span></td><td>A step-by-step method for finding danger points in food production (e.g. "moisture too high here!") and controlling them before they hurt anyone</td><td>International buyers expect HACCP-style thinking throughout the plant</td></tr>
+        <tr><td>🌐 <span class="term">ISO 22000</span></td><td>The worldwide certificate for food-safety management systems (the "school certificate" of food safety)</td><td>Assumed pursued/strengthens export credibility (research assumption)</td></tr>
+        <tr><td>🧪 EU import limits (<span class="term">MRLs</span>)</td><td>Maximum Residue Limits — tiny legal caps on pesticides etc. in imported food</td><td>One failed test in Europe = rejected container = huge loss 😱</td></tr>
+        <tr><td>🧾 <span class="term">Traceability</span></td><td>The ability to trace any finished bag BACK to the exact farm/batch that produced it</td><td>If contamination happens, you recall 200kg — not 20 tonnes. Buyers increasingly require proof</td></tr>
+        <tr><td>🤝 Fair Trade Practices</td><td>Treating farmers/suppliers fairly — honest weights, prompt payment</td><td>Listed as a company differentiator on its website</td></tr>
+      </table>
+
+      <div class="story">Here's the secret most people miss: <strong>quality promises are actually software promises.</strong> You can't "prove traceability" with a smile — you need records linking every sack to a farm, every test to a batch, every batch to a container. Whoever builds those records becomes the keeper of EKOFIN's reputation. That keeper could be you. 🔑</div>
+    </section>
+
+    <!-- ================= 07 NEWS ================= -->
+    <section class="sec" id="news">
+      <div class="sec-head"><span class="sec-emoji">📰</span><span class="section-title">The Julius Berger Plot Twist</span><span class="sec-line"></span></div>
+
+      <p><strong>September 2025:</strong> Julius Berger Nigeria — the famous construction company — announced it had formally <strong>leased its 60-tonne-per-day cashew processing plant in Epe to EKOFIN</strong> (board-approved 24 Sept 2025).</p>
+
+      <h3 class="mini">🎬 Why this matters (the movie version)</h3>
+      <ul class="bullets">
+        <li>🏗️ Julius Berger built the ultra-modern plant in 2022, then decided construction was its true calling and exited agro-processing</li>
+        <li>🤝 Analysts called Berger's exit "pragmatic" and EKOFIN's takeover "<strong>a major win</strong>" — inheriting a commissioned, world-class facility without building from scratch</li>
+        <li>📈 For EKOFIN this means a sudden leap in processing capacity right when global cashew demand is strong</li>
+        <li>⚠️ Capacity without systems = chaos at scale. More tonnes flowing means more chances for paper records to drown. Growth makes digitisation urgent, not optional.</li>
+      </ul>
+
+      <h3 class="mini">💵 About the money</h3>
+      <ul class="bullets">
+        <li>Private company = <strong>no public financial statements</strong>. Revenue figures unknown (research assumes growth post-lease)</li>
+        <li>No outside investors reported — the lease/expansion presumably financed privately</li>
+        <li>For your purposes: don't quote numbers you don't have; talk in <em>trends</em> (capacity up, exports growing, compliance stakes rising)</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> A lion woke up and was handed a bigger jungle. 🦁 The lease multiplied how MUCH EKOFIN can process. Your role decides how WELL it can handle that much. In interviews, this event is your best opening line — it shows you read the news like a future insider. 🗞️👀</div>
+    </section>
+
+    <!-- ================= 08 PEOPLE ================= -->
+    <section class="sec" id="people">
+      <div class="sec-head"><span class="sec-emoji">👥</span><span class="section-title">The People Map — Who Does What</span><span class="sec-line"></span></div>
+      <p class="sec-sub">The real chart isn't public; researchers sketched the standard shape for a company like this. Names marked 🧩 are educated guesses.</p>
+
+      <div class="org">
+        <div class="org-row"><span class="org-box">👑 CEO / Managing Director<small>vision · approvals · budget</small></span></div>
+        <div class="org-line">⬇️</div>
+        <div class="org-row">
+          <span class="org-box">🏭 COO<small>runs operations</small></span>
+          <span class="org-box">💰 CFO<small>finance &amp; costing</small></span>
+          <span class="org-box">🧑‍⚖️ HR/Admin</span>
+          <span class="org-box">✅ Quality/Compliance 🧩</span>
+        </div>
+        <div class="org-line">⬇️</div>
+        <div class="org-row">
+          <span class="org-box">🌾 Agric Manager 🧩</span>
+          <span class="org-box">🥫 FMCG Manager 🧩</span>
+          <span class="org-box">🚚 GM Supply Chain<br><small>visible: Temitope Adedeji</small></span>
+          <span class="org-box">💻 IT / Chief Architect<br><small>← THE SEAT YOU WANT 🎯</small></span>
+        </div>
+      </div>
+
+      <h3 class="mini">🧑‍🤝‍🧑 Inside voices (internal stakeholders) — what each one wants</h3>
+      <table class="decoded">
+        <tr><th>Person</th><th>Cares about…</th><th>Your system gives them…</th></tr>
+        <tr><td>👑 CEO/MD</td><td>Growth, ROI, competitive edge</td><td>Live KPIs &amp; dashboards — the business in one glance</td></tr>
+        <tr><td>🏭 COO</td><td>Smooth daily production</td><td>Bottleneck alerts, machine status, throughput trends</td></tr>
+        <tr><td>🚚 GM Supply Chain</td><td>Reliable inputs, lower costs</td><td>Procurement records, farmer payments, logistics tracking</td></tr>
+        <tr><td>🌾🥫 Division heads</td><td>Hitting targets safely</td><td>Production schedules tied to live inventory &amp; QC results</td></tr>
+        <tr><td>✅ Quality Manager</td><td>Passing every audit</td><td>Digital test logs, audit trails, instant compliance reports</td></tr>
+        <tr><td>💰 CFO</td><td>Cost control &amp; cash flow</td><td>Clean costing data, fewer manual errors, faster closes</td></tr>
+        <tr><td>💻 You (Chief Architect)</td><td>Aligning all of the above</td><td>The mandate to connect everything 🕸️</td></tr>
+      </table>
+
+      <h3 class="mini">📣 Outside voices (external stakeholders)</h3>
+      <ul class="bullets">
+        <li>👨🏾‍🌾 <strong>Farmers/cooperatives:</strong> want fair prices &amp; fast payment → mobile tools could serve them directly someday</li>
+        <li>🌍 <strong>Export buyers:</strong> demand quality, punctuality, full documentation → portals &amp; certificates win them</li>
+        <li>🏛️ <strong>Regulators (NAFDAC/SON):</strong> approve products; enforce safety → clean digital records keep them friendly</li>
+        <li>🏬 <strong>Distributors/retailers:</strong> need dependable supply &amp; good margins</li>
+        <li>🚛 <strong>Logistics partners &amp; ports:</strong> care about correct, timely documents</li>
+        <li>🤫 <strong>Possible silent investors/board:</strong> expect professional reporting</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Your software is a peace treaty between eight groups who all want different things. Remember their wishes and you'll always know WHAT to build next — and WHO to demo it to. 🕊️</div>
+    </section>
+
+    <!-- ================= 09 DIGITAL TODAY ================= -->
+    <section class="sec" id="digital">
+      <div class="sec-head"><span class="sec-emoji">📱</span><span class="section-title">EKOFIN's Digital Life Today</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">🌐 What definitely exists (public facts)</h3>
+      <ul class="bullets">
+        <li>A polished <strong>informational website</strong> (ekofinnigeria.com) with division pages and a "Request a Quote" form — but <strong>no online ordering, no customer login</strong></li>
+        <li>A <strong>LinkedIn presence</strong> (~346 followers, ~28 staff listed) posting market updates</li>
+        <li>An inquiry email address — that's the entire digital customer journey 📮</li>
+      </ul>
+
+      <h3 class="mini">🔮 What probably exists inside (educated guesses)</h3>
+      <ul class="bullets">
+        <li>📊 Spreadsheets everywhere — procurement lists, stock counts, finance books</li>
+        <li>📓 Paper records on the factory floor (weights, batches, QC checks)</li>
+        <li>💳 Basic accounting software for finance</li>
+        <li>🧪 Possibly a lab notebook system for QC tests (no vendor known)</li>
+        <li>📋 Some form of <span class="term">ICS</span> (Internal Control System — checklists ensuring staff follow procedures) hinted by <span class="term">NICERT</span>-style training common among Nigerian exporters</li>
+        <li>❌ Almost certainly NO unified ERP, NO integrated CRM, NO analytics dashboards, NO customer/farmer apps</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Their public face is a beautiful shopfront 🏛️ — but behind it, information lives in drawers and diaries. Everyone agrees the shop looks great; nobody can tell you yesterday's numbers without opening a notebook. That gap between pretty-outside and paper-inside is EXACTLY the space Chief Architects are hired to fill. 🧨</div>
+    </section>
+
+    <!-- ================= 10 TOOLBOX ================= -->
+    <section class="sec" id="toolbox">
+      <div class="sec-head"><span class="sec-emoji">🧰</span><span class="section-title">The Dream Toolbox — Systems EKOFIN Needs</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Researchers mapped what a complete digital backbone looks like for this business. Each tool decoded below.</p>
+
+      <table class="decoded">
+        <tr><th>Tool (jargon)</th><th>Plain meaning</th><th>For EKOFIN specifically</th></tr>
+        <tr><td>🗃️ ERP / SCM</td><td><b>ERP</b> = Enterprise Resource Planning: one central brain for purchasing, stock, production, sales, accounts. <b>SCM</b> = Supply Chain Management module: tracks goods moving from suppliers to customers</td><td>The spine. Tracks nuts from farm-gate purchase → processing → grading → container → invoice. Candidates mentioned: Odoo (free/open-source), SAP Business One, Oracle NetSuite</td></tr>
+        <tr><td>🤝 CRM + Client Portal</td><td><b>CRM</b> = Customer Relationship Management: remembers every buyer conversation/order. <b>Portal</b> = a login website where clients see THEIR orders</td><td>European buyers check shipment status themselves; local brands place repeat orders in two taps; fewer "any update?" calls</td></tr>
+        <tr><td>🧪 Quality module / LIMS / ICS</td><td><b>LIMS</b> = Laboratory Information Management System: digital lab notebook for test results. <b>ICS</b> = Internal Control System: procedure checklists with proof-of-compliance</td><td>Moisture %, aflatoxin tests, grading scores logged digitally, tied to batches; audit reports generated automatically instead of nights of photocopying</td></tr>
+        <tr><td>📊 Data Warehouse + BI</td><td><b>BI</b> = Business Intelligence: dashboards that turn raw records into pictures executives understand. Data warehouse = the tidy storeroom feeding those dashboards</td><td>Tonnes processed/month, defect rates, on-time delivery %, revenue by grade — on the MD's phone by 7am ☕</td></tr>
+        <tr><td>🖥️ Infrastructure</td><td>Where software physically lives: office servers vs cloud (rented internet computers)</td><td>Hybrid: reliable local setup for the factory floor + cloud for backup/access anywhere; designed around Nigerian power reality 🔋</td></tr>
+        <tr><td>📱 Mobile / IoT</td><td><b>IoT</b> = Internet of Things: sensors on machines sending automatic readings</td><td>Field agents log farmer purchases on phones (with GPS 📍); humidity sensors watch drying rooms; machines report downtime themselves</td></tr>
+      </table>
+
+      <h3 class="mini">🕸️ How the pieces talk to each other (the architecture, drawn simply)</h3>
+      <div class="flow">
+        <div class="frow"><span class="ficon">👨🏾‍🌾</span><span class="ftext"><b>Farmers &amp; hubs</b><span>deliver nuts · agent app captures weight + GPS + farmer ID</span></span></div>
+        <div class="farrow">⬇️ feeds</div>
+        <div class="frow"><span class="ficon">🗃️</span><span class="ftext"><b>ERP core</b><span>inventory · procurement · production orders · sales · finance</span></span></div>
+        <div class="farrow">⬆️⬇️ chats with</div>
+        <div class="frow"><span class="ficon">⚙️</span><span class="ftext"><b>Factory execution (MES)</b><span>what each line produced today, hour by hour</span></span></div>
+        <div class="farrow">⬇️ proves quality via</div>
+        <div class="frow"><span class="ficon">🧪</span><span class="ftext"><b>LIMS/QC module</b><span>test results locked to batches — no pass, no ship</span></span></div>
+        <div class="farrow">⬇️ serves</div>
+        <div class="frow"><span class="ficon">🤝</span><span class="ftext"><b>CRM / Buyer portal</b><span>orders, statuses, certificates downloadable</span></span></div>
+        <div class="farrow">⬇️ all flows into</div>
+        <div class="frow"><span class="ficon">📊</span><span class="ftext"><b>Dashboards (BI)</b><span>MD, COO, CFO each see their numbers live</span></span></div>
+        <div class="farrow">↔️ talks securely to</div>
+        <div class="frow"><span class="ficon">🏦🛃</span><span class="ftext"><b>Banks · Customs/export docs · Regulators</b><span>payments in/out, electronic trade papers, compliance filings</span></span></div>
+      </div>
+
+      <div class="plain"><b>🧠 In plain English:</b> Think of a human body 🧍🏾: ERP = heart pumping everything; MES = muscles doing work; LIMS = immune system checking everything; CRM = the face smiling at customers; BI = the brain showing the boss what's happening; IoT = nerves feeling the factory; banks/customs = the mouth dealing with outsiders. Build them in the RIGHT ORDER — heart first! 🫀</div>
+
+      <h3 class="mini">🧾 Suggested starter stack (from the research — discuss, don't preach)</h3>
+      <ul class="bullets">
+        <li>ERP: <strong>Odoo</strong> (open-source, affordable) or NetSuite/SAP B1 if budget allows — must handle multiple currencies &amp; multiple locations</li>
+        <li>Portal: Node.js/React web app + PostgreSQL database in the cloud (AWS/Azure regions near Nigeria)</li>
+        <li>Integration glue: APIs connecting portal ↔ ERP ↔ QC module; hourly sync so factory keeps working when internet blinks 🔌</li>
+        <li>Local network: strong Wi-Fi at the Epe plant + wired LAN for critical machines + UPS power backup</li>
+      </ul>
+    </section>
+
+    <!-- ================= 11 RULES ================= -->
+    <section class="sec" id="rules">
+      <div class="sec-head"><span class="sec-emoji">🔐</span><span class="section-title">Rules of the Game — Compliance, Safety &amp; Secrets</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Eight rulebooks EKOFIN plays by. Each is really a software requirement wearing a legal costume. 🎭</p>
+
+      <table class="decoded">
+        <tr><th>Rulebook</th><th>What it demands</th><th>What YOU build</th></tr>
+        <tr><td>🦠 Food safety (EU/ISO 22000/HACCP)</td><td>Control hazards at defined points; keep proof</td><td>Digital checklists + hazard logs tied to batches; alerts when readings drift</td></tr>
+        <tr><td>🧾 Traceability</td><td>Any bag → its batch → its farm(s), instantly</td><td>Batch genealogy in ERP: unique lot IDs scanned at every step (barcode/QR)</td></tr>
+        <tr><td>🏛️ NAFDAC/SON paperwork</td><td>Registrations, labels, renewals documented</td><td>Document vault + renewal reminders + submission packs generated automatically</td></tr>
+        <tr><td>🕵🏽‍♀️ NDPR (+ GDPR if EU data)</td><td>Nigeria's data-protection law: personal data (staff, farmers, buyers) collected fairly, stored safely, deletable on request</td><td>Permission controls, encrypted storage, activity logs, privacy-first design habits</td></tr>
+        <tr><td>🛡️ Cybersecurity basics</td><td>Firewalls, strong passwords, 2FA, staff anti-phishing training, separate factory-device network</td><td>Hardening checklist, backups, access reviews — boring but career-saving</td></tr>
+        <tr><td>📋 Internal Controls (ICS)</td><td>Written procedures + evidence they were followed (auditors LOVE this)</td><td>Digital SOP checklists with timestamps + sign-offs; audit-ready exports</td></tr>
+        <tr><td>🚢 Trade/customs compliance</td><td>Correct export documents: bill of lading, certificate of origin, quality certs; Nigeria's Single Window electronic customs</td><td>Auto-generate document packs per shipment; track status; zero manual retyping</td></tr>
+        <tr><td>🔋 Disaster recovery</td><td>Survive outages/floods/power cuts: backups offsite, plans written down</td><td>Automated daily backups (target: never lose more than 24h), restore drills, generator-aware design</td></tr>
+      </table>
+
+      <div class="story">Golden interview line hiding in this section: <em>"Compliance isn't paperwork — it's memory. Companies fail audits because paper forgets. My systems remember."</em> 🧠💾 Say that, then pause. Let it land.</div>
+    </section>
+
+    <!-- ================= 12 REPORT CARD ================= -->
+    <section class="sec" id="report-card">
+      <div class="sec-head"><span class="sec-emoji">📊</span><span class="section-title">Report Card — Where EKOFIN Stands Digitally</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Researcher's estimated grades (assumptions, not audits!). Lower grade = bigger opportunity for you.</p>
+
+      <div class="score-row"><span class="s-emoji">🌐</span><span class="s-name"><b>Public face</b><span>Website + LinkedIn</span></span><span class="s-grade g-green">Good 😀</span></div>
+      <div class="score-row"><span class="s-emoji">🗃️</span><span class="s-name"><b>Unified ERP</b><span>one central business brain</span></span><span class="s-grade g-red">Likely missing ❌</span></div>
+      <div class="score-row"><span class="s-emoji">📈</span><span class="s-name"><b>Analytics/BI</b><span>dashboards for decisions</span></span><span class="s-grade g-red">No evidence ❌</span></div>
+      <div class="score-row"><span class="s-emoji">🤝</span><span class="s-name"><b>Customer/farmer interfaces</b><span>portals &amp; apps</span></span><span class="s-grade g-red">None found ❌</span></div>
+      <div class="score-row"><span class="s-emoji">⚙️</span><span class="s-name"><b>Factory automation</b><span>sensors, counters, machine data</span></span><span class="s-grade g-amber">Unknown/likely low ⚠️</span></div>
+      <div class="score-row"><span class="s-emoji">☁️</span><span class="s-name"><b>Cloud adoption</b><span>modern hosting &amp; backups</span></span><span class="s-grade g-amber">Unclear ⚠️</span></div>
+      <div class="score-row"><span class="s-emoji">🧪</span><span class="s-name"><b>QC record-keeping</b><span>lab/test logs</span></span><span class="s-grade g-amber">Probably manual 📓</span></div>
+
+      <div class="plain"><b>🧠 In plain English:</b> Overall grade: <strong>“Beautiful mask, wooden skeleton.”</strong> 🎭 Foundational digital tools are URGENT; fancy AI/blockchain stuff is LATER. If you remember only one strategic sentence: <em>“First get the basics digital; then get them clever.”</em></div>
+
+      <h3 class="mini">🕳️ The Five Gaps (each one = your future project ticket)</h3>
+      <ul class="bullets">
+        <li>🧩 Fragmented data (every department has its own spreadsheet island)</li>
+        <li>🐢 Manual reporting delays decisions by days</li>
+        <li>📞 Zero self-service for buyers/farmers — everything via calls/WhatsApp</li>
+        <li>✋ Manual counting/logging invites errors &amp; theft blind-spots</li>
+        <li>🌩️ Unknown backup/cloud posture = silent risk</li>
+      </ul>
+    </section>
+
+    <!-- ================= 13 PROJECTS ================= -->
+    <section class="sec" id="projects">
+      <div class="sec-head"><span class="sec-emoji">🎯</span><span class="section-title">The Priority Projects Playbook</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Seven candidate projects, ranked. Effort = how hard; Impact = why the MD should care; KPI = the scoreboard number after launch.</p>
+
+      <table class="decoded">
+        <tr><th>#</th><th>Project</th><th>Effort ⏳</th><th>Impact story 💥</th><th>Scoreboard (KPIs) 🏆</th></tr>
+        <tr><td>1️⃣</td><td><strong>ERP core</strong> (procure→produce→sell→account)</td><td>High · 12–18 months</td><td>Kills spreadsheet islands; one truth for every department</td><td>Order-to-cash cycle −30% · inventory accuracy &gt;95% · 100% batch traceability</td></tr>
+        <tr><td>2️⃣</td><td><strong>CRM + B2B portal</strong></td><td>Medium · 6–12 months</td><td>Buyers self-serve orders/status/certs; sales team freed</td><td>Quotation time −20% · repeat orders ↑ · 80% portal adoption</td></tr>
+        <tr><td>3️⃣</td><td><strong>Quality system</strong> (LIMS/ICS digital)</td><td>Medium · 6–9 months</td><td>Audit-proof QC; recalls shrink from tonnes to kilos</td><td>Zero transcription errors · 100% inspection coverage · audit findings → zero</td></tr>
+        <tr><td>4️⃣</td><td><strong>Dashboards &amp; BI</strong></td><td>Medium · 6–9 months</td><td>Decisions in hours not weeks; inefficiencies exposed</td><td>Bottlenecks spotted within 24h · throughput target +15%</td></tr>
+        <tr><td>5️⃣</td><td><strong>IoT sensors</strong> (dryers, stores)</td><td>Low–Med · ~6 months</td><td>Machines &amp; environment monitored automatically</td><td>Downtime −20% · spoilage risk &lt;1%</td></tr>
+        <tr><td>6️⃣</td><td><strong>Farmer engagement app</strong></td><td>Low · 3–6 months</td><td>Digital purchases with GPS/photo proof; happier suppliers</td><td>Sourced volumes ↑ · 100% digital procurement records</td></tr>
+        <tr><td>7️⃣</td><td><strong>Cybersecurity hardening</strong></td><td>High · ongoing</td><td>Data, money &amp; reputation protected</td><td>NDPR-aligned · ISO 27001-ready · zero breaches · clean pen-tests</td></tr>
+      </table>
+
+      <h3 class="mini">🧮 How to read “KPI” targets like a pro</h3>
+      <p>A <span class="term">KPI</span> (Key Performance Indicator) is just a scoreboard number agreed BEFORE the project starts, so nobody argues afterwards about whether it worked. Example: today, getting an order from buyer to shipped goods might take 10 days of phone calls and signatures. Promise the ERP will cut it to ~7 days (−30%), measure it monthly, show the graph. Numbers end debates. 📉😤➡️😌</p>
+
+      <div class="plain"><b>🧠 In plain English:</b> Never promise "digital transformation". Promise <strong>one scoreboard number per project, with a deadline</strong>. That's what separates architects from app-hobbyists in the MD's eyes. 🎯</div>
+    </section>
+
+    <!-- ================= 14 INTERVIEW ================= -->
+    <section class="sec" id="interview">
+      <div class="sec-head"><span class="sec-emoji">🎤</span><span class="section-title">The Interview Playground — 10 Likely Questions</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Each card: the question ➡️ what they're REALLY asking ➡️ the winning answer's bones ➡️ a memory hook.</p>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 1</span>
+        <div class="qa-q">🏗️ "How would you design an ERP/SCM system for our cashew export process?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Do you understand OUR specific flow, or will you give generic textbook talk?</div>
+        <div class="qa-answer">Show you've mapped THEIR chain first:
+          <ul>
+            <li>Map farm-gate → hub → factory → grading → export docs; identify where data is born (weighbridge, grader, lab, port)</li>
+            <li>Pick ERP with strong supply-chain modules (e.g. Odoo/SAP B1) — inventory of raw vs processed, batch/lot numbering, QC gates, export-order management</li>
+            <li>Unique lot ID per batch traced back to farmer groups across the six states</li>
+            <li>Automate order→invoice; set the KPI: order-to-export cycle −30% in year one</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Memory hook:</b> "I map before I build. The map IS the design." 🗺️</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 2</span>
+        <div class="qa-q">🏛️ "We must satisfy NAFDAC and EU rules. How do systems help?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Can you turn scary regulations into calm engineering?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Compliance built-in, not bolted-on: QC module logs every test (moisture, aflatoxin) against batch IDs</li>
+            <li>ERP refuses to release export orders without passing QC records — quality gates enforced by software, not memory</li>
+            <li>Digital ingredient/label records → NAFDAC submission packs generated, not assembled</li>
+            <li>Electronic timestamps/signatures = tamper-evident history auditors trust</li>
+            <li>KPI: regulatory paperwork prep time −50%; audit findings → 0</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Software remembers; paper forgives — until the audit." 💾</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 3</span>
+        <div class="qa-q">💻 "What technology stack suits our scale and the Nigerian context?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Will you propose ₦500m German sports cars for a company that needs sturdy Toyota Hiluxes?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Cloud-first for resilience; open-source-friendly for cost: Odoo ERP candidate #1; NetSuite/SAP B1 if budget/preference differs</li>
+            <li>Portal: Node.js/React + PostgreSQL on AWS/Azure; multi-currency + multi-location from day one</li>
+            <li>Plant: robust Wi-Fi + wired LAN for critical gear; hybrid local+cloud so internet hiccups don't stop production</li>
+            <li>Everything API-connected; hourly sync tolerates outages gracefully</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Right-sized, not resume-sized." 📏</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 4</span>
+        <div class="qa-q">🚜 "How can tech make buying from farmers faster and fairer?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Do you respect the humans at the start of the chain?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Offline-capable agent app: purchases recorded with farmer profile, weight, GPS pin, photo proof — syncs when signal returns</li>
+            <li>SMS/WhatsApp notifications for prices &amp; payments (meet farmers where they already are)</li>
+            <li>Analytics predict supply dips before they bite</li>
+            <li>KPI: ≥98% on-time factory input fulfilment; 100% digital purchase records</li>
+            <li>Blockchain payments? Interesting LATER — start simple, earn trust</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Design for the weakest signal, not the strongest Wi-Fi." 📶</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 5</span>
+        <div class="qa-q">🧑‍💼 "How should IT be organised at EKOFIN?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Are you a lone wolf or an institution-builder?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>You report to CEO/COO — close enough to strategy, close enough to ops</li>
+            <li>Start lean: Solutions Architect (you) + DevOps engineer + data analyst; vendors for heavy lifting</li>
+            <li>Digital steering committee: MD, COO, GM Supply, Quality, Finance — quarterly priorities, monthly demos</li>
+            <li>Grow toward a real IT dept: ERP admin, CRM admin, support as adoption spreads</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Small team, wide table." 🪑</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 6</span>
+        <div class="qa-q">🛡️ "What are our cybersecurity priorities?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Will you protect us or play with toys?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Risk assessment first: what data exists, who touches it, what hurts most if leaked</li>
+            <li>Basics ruthlessly done: enterprise firewall, password policy, 2FA everywhere, phishing drills for staff</li>
+            <li>Segment factory devices from office network; HTTPS/TLS everywhere; encrypt sensitive records at rest</li>
+            <li>Backups with tested restores; NDPR documentation; aim for ISO 27001 readiness</li>
+            <li>KPI: 0 breaches/year; external pen-test with 0 critical findings</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Security is a habit, not a purchase." 🔐</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 7</span>
+        <div class="qa-q">📊 "Which KPIs tell us digital transformation is working?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Will you be measurable or mysterious?</div>
+        <div class="qa-answer">
+          <ul>
+            <li><b>Speed:</b> order-cycle days ↓; month-end close days ↓</li>
+            <li><b>Accuracy:</b> inventory accuracy &gt;95%; production yield ↑</li>
+            <li><b>Trust:</b> % shipments with complete traceability → 100%; audit failures → 0</li>
+            <li><b>Money:</b> manual-effort cost ↓; export volume ↑ year-over-year</li>
+            <li><b>Love:</b> buyer repeat-order rate ↑; portal adoption %</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Five families of numbers: Speed, Accuracy, Trust, Money, Love." ❤️</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 8</span>
+        <div class="qa-q">📶 "Internet in rural areas is unreliable. How do we still capture farm data?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Have you actually worked in REAL Nigeria? (You have — Starium's offline engine!)</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Offline-first mobile app: entries saved on-device, synced later — ZERO data loss philosophy</li>
+            <li>Optional GSM/SMS fallback for minimal logs where smartphones struggle</li>
+            <li>Devices buffer sensor data locally; sync resumes silently</li>
+            <li>KPI: &lt;5% submission failure rate</li>
+            <li>🔥 YOUR ACE: "I've already engineered nine independent offline queues for a live factory system — this problem is my home turf."</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> Show, don't claim — offer to open the code. 📂</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 9</span>
+        <div class="qa-q">🕸️ "Propose an architecture connecting factory, warehouses and HQ."</div>
+        <div class="qa-translate"><b>Really asking:</b> Can you think in maps, not just apps?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>WAN: each site ↔ secure VPN tunnel ↔ central cloud VPC</li>
+            <li>Edge server at Epe runs local MES/QC capture; syncs hourly to cloud ERP — internet down ≠ factory down</li>
+            <li>Redundant ISPs at HQ; segmented factory LAN; enterprise SIM data for field teams</li>
+            <li>Principle: hybrid cloud with local fallback — resilience by design</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "The factory must never wait for the internet." ⚡</div>
+      </div>
+
+      <div class="qa">
+        <span class="qa-qnum">QUESTION 10</span>
+        <div class="qa-q">🚀 "Any exciting innovations you'd bring?"</div>
+        <div class="qa-translate"><b>Really asking:</b> Are you curious — but mature enough to sequence?</div>
+        <div class="qa-answer">
+          <ul>
+            <li>Sequencing wisdom FIRST: master ERP/mobile/dashboards before shiny things</li>
+            <li>Then evaluate: IoT condition monitoring (drying rooms), ML yield prediction from climate data, demand forecasting</li>
+            <li>Blockchain traceability (e.g. IBM Food Trust) — brand-powerful, but only once core data is trustworthy</li>
+            <li>Prefer managed cloud services (AWS IoT/Azure) to reduce maintenance burden</li>
+          </ul>
+        </div>
+        <div class="qa-hook"><b>Hook:</b> "Innovation is dessert. Nutrition comes first." 🍰🥗</div>
+      </div>
+
+    </section>
+
+    <!-- ================= 15 AMMO ================= -->
+    <section class="sec" id="ammo">
+      <div class="sec-head"><span class="sec-emoji">💪</span><span class="section-title">Your Ammunition — Achievement Patterns to Adapt</span><span class="sec-line"></span></div>
+      <p class="sec-sub">The report drafted template bullets with placeholder metrics. Here's each pattern, translated — swap in YOUR true numbers from the Starium ERP wherever possible.</p>
+
+      <table class="decoded">
+        <tr><th>Pattern</th><th>Template says</th><th>Your honest adaptation</th></tr>
+        <tr><td>🗃️ Integrated systems</td><td>"Led ERP implementation… order cycle −30%, delivery +25%"</td><td>Use real ERP outcomes once deployed at Starium; today speak to architecture completeness (20+ modules) instead of invented %</td></tr>
+        <tr><td>🚜 Supply-chain digitisation</td><td>"Farmer app raised traceability 40%→100%, errors −90%"</td><td>Point to your offline queue engine as the same DNA, awaiting farm-scale deployment</td></tr>
+        <tr><td>✅ Quality/compliance systems</td><td>"ISO-style QMS… audit-ready records"</td><td>Your QC modules already produce audit trails + digital sign-off — demo THAT</td></tr>
+        <tr><td>📊 Analytics</td><td>"Dashboards lifted throughput +15%"</td><td>Show live cross-shift dashboards; let charts argue for you</td></tr>
+        <tr><td>🤝 Customer portals</td><td>"B2B portal, 500 users, support calls −50%"</td><td>Position as phase-2 build at EKOFIN with your existing portal skills</td></tr>
+        <tr><td>💸 Cost optimisation</td><td>"Hosting costs −40%, uptime 99.9%"</td><td>TRUE TODAY: dual-hosted at ₦0 licence cost — say it proudly 🎉</td></tr>
+        <tr><td>🛡️ Security governance</td><td>"ISO 27001-style controls, zero audit findings"</td><td>Map your 3-tier RBAC + Firebase security rules to their language</td></tr>
+        <tr><td>🏃 Agile coaching</td><td>"Delivery times −20%"</td><td>Your solo rapid-ship cadence IS the story: request→live in days</td></tr>
+      </table>
+
+      <div class="plain"><b>⚠️ Integrity rule:</b> never quote a metric you can't defend. The research invented illustrative numbers — replace with measured truths, or convert claims into demonstrations. A live screen beats a fake statistic every single time. 🎥</div>
+    </section>
+
+    <!-- ================= 16 DRAFTS ================= -->
+    <section class="sec" id="drafts">
+      <div class="sec-head"><span class="sec-emoji">✍️</span><span class="section-title">Sample Drafts Included in the Report</span><span class="sec-line"></span></div>
+      <p class="sec-sub">The researcher also drafted a generic cover letter + outreach email. You've since written far stronger personalised versions — treat those drafts as checklists only.</p>
+
+      <h3 class="mini">📬 What the sample outreach email did well (keep these moves)</h3>
+      <ul class="bullets">
+        <li>Opened by referencing EKOFIN's growth news (the plant lease) — shows homework</li>
+        <li>Connected ONE relevant achievement to THEIR stated mission</li>
+        <li>Asked for a short call, not a job</li>
+        <li>Mentioned attached CV + enthusiasm for "certified quality"</li>
+      </ul>
+      <h3 class="mini">📝 What the sample cover letter covered (your versions already beat it)</h3>
+      <ul class="bullets">
+        <li>Mission alignment → your "neighbour in Epe" angle wins harder ❤️</li>
+        <li>Quantified achievements → your live-system demos win harder 🎥</li>
+        <li>Named priorities (ERP, traceability, NAFDAC workflows) → your 100-day roadmap matches ✔️</li>
+        <li>Closing values callback → your tagline weave does it elegantly 🎀</li>
+      </ul>
+      <div class="plain"><b>🧠 Takeaway:</b> drafts = scaffolding. Your bespoke materials are the finished cathedral. 🏛️ Nothing to copy back — just confirm every scaffold plank appears somewhere in your final letters. ✔️</div>
+    </section>
+
+    <!-- ================= 17 FUTURE UI ================= -->
+    <section class="sec" id="future-ui">
+      <div class="sec-head"><span class="sec-emoji">🖥️</span><span class="section-title">What Great Could Look Like — Product Sketches</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">🏛️ Corporate site + B2B portal</h3>
+      <ul class="bullets">
+        <li>Earth-tones matching EKOFIN branding; large authentic farm/factory photography</li>
+        <li>Client login → active orders, batch certificates (COA), compliance documents, shipment timeline</li>
+        <li>Mobile-first everywhere — including for field agents</li>
+      </ul>
+      <h3 class="mini">📊 Executive dashboards</h3>
+      <ul class="bullets">
+        <li>Tonnes processed · export revenue · defect rate · on-time delivery % — one screen</li>
+        <li>Brand colours as mood: green = healthy, orange/red = attention needed</li>
+      </ul>
+      <h3 class="mini">📱 Field-agent app (farmers)</h3>
+      <ul class="bullets">
+        <li>Farmer profiles + purchase checklists (weight, moisture, grade)</li>
+        <li>GPS tagging 📍 + barcode/QR scan of bag tags · works fully offline</li>
+        <li>Simple imagery &amp; local-language hints — accessibility for every literacy level</li>
+      </ul>
+      <div class="plain"><b>🧠 Design north star:</b> every screen reinforces the mission — someone should FEEL "farm to table" within five seconds of opening anything you build. 🌾➡️🍽️</div>
+    </section>
+
+    <!-- ================= 18 DICTIONARY ================= -->
+    <section class="sec" id="dictionary">
+      <div class="sec-head"><span class="sec-emoji">📖</span><span class="section-title">The Tiny Dictionary — Every Abbreviation, Decoded</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Bookmark-worthy. Skim once; return whenever a stranger acronym attacks. 🥷</p>
+
+      <div class="gloss">
+        <div class="gcard"><div class="abbr">🌍 Agric / FMCG</div><div class="full">Agriculture · Fast-Moving Consumer Goods</div><div class="mean">Farm exports vs everyday supermarket products — EKOFIN's two arms.</div></div>
+        <div class="gcard"><div class="abbr">🗃️ ERP</div><div class="full">Enterprise Resource Planning</div><div class="mean">One central software brain for purchasing, stock, production, sales and accounts.</div></div>
+        <div class="gcard"><div class="abbr">🚛 SCM</div><div class="full">Supply Chain Management</div><div class="mean">Tracking goods/services from supplier to customer — often an ERP module.</div></div>
+        <div class="gcard"><div class="abbr">🤝 CRM</div><div class="full">Customer Relationship Management</div><div class="mean">Remembers every customer, deal and conversation.</div></div>
+        <div class="gcard"><div class="abbr">🏷️ Private label / White label</div><div class="full">Store-brand manufacturing</div><div class="mean">You make it; another company's name goes on the pack.</div></div>
+        <div class="gcard"><div class="abbr">📦 Co-packing</div><div class="full">Contract packing</div><div class="mean">Filling/packaging products for client brands under contract.</div></div>
+        <div class="gcard"><div class="abbr">🏛️ NAFDAC</div><div class="full">National Agency for Food &amp; Drug Administration &amp; Control</div><div class="mean">Nigeria's regulator approving foods/drinks for sale.</div></div>
+        <div class="gcard"><div class="abbr">📏 SON</div><div class="full">Standards Organisation of Nigeria</div><div class="mean">Sets/enforces national product standards &amp; certificates.</div></div>
+        <div class="gcard"><div class="abbr">🦠 HACCP</div><div class="full">Hazard Analysis Critical Control Points</div><div class="mean">Find danger steps in food production; control them; write proof.</div></div>
+        <div class="gcard"><div class="abbr">🌐 ISO 22000 / 9001 / 27001</div><div class="full">International Organization for Standardization</div><div class="mean">Certificates for food safety / general quality / information security management.</div></div>
+        <div class="gcard"><div class="abbr">🧪 LIMS</div><div class="full">Laboratory Information Management System</div><div class="mean">Digital lab notebook: samples, tests, results — searchable forever.</div></div>
+        <div class="gcard"><div class="abbr">📋 ICS</div><div class="full">Internal Control System</div><div class="mean">Procedure checklists + evidence that staff follow them (auditors' favourite pet).</div></div>
+        <div class="gcard"><div class="abbr">🎓 NICERT</div><div class="full">(Certification/training body referenced in agri press)</div><div class="mean">Associated with ICS-style food-quality training extended to Nigerian exporters.</div></div>
+        <div class="gcard"><div class="abbr">⚖️ MRL</div><div class="full">Maximum Residue Limits</div><div class="mean">Legal caps on pesticide traces in imported food — exceed it, lose the container.</div></div>
+        <div class="gcard"><div class="abbr">🥜 CNSL</div><div class="full">Cashew Nut Shell Liquid</div><div class="mean">Industrial oil from cashew shells — used in resins, brakes, coatings. Waste → revenue!</div></div>
+        <div class="gcard"><div class="abbr">🔍 Traceability</div><div class="full">Batch/Lot genealogy</div><div class="mean">Follow any finished pack back to its exact batch and farms.</div></div>
+        <div class="gcard"><div class="abbr">📊 BI</div><div class="full">Business Intelligence</div><div class="mean">Dashboards turning raw records into decision pictures.</div></div>
+        <div class="gcard"><div class="abbr">🏭 MES</div><div class="full">Manufacturing Execution System</div><div class="mean">Tracks what each production line did, hour by hour.</div></div>
+        <div class="gcard"><div class="abbr">📡 IoT</div><div class="full">Internet of Things</div><div class="mean">Sensors/machines reporting data automatically (temperature, counts, jams).</div></div>
+        <div class="gcard"><div class="abbr">🕵🏽 NDPR</div><div class="full">Nigeria Data Protection Regulation</div><div class="mean">Rules for handling personal data fairly &amp; securely in Nigeria.</div></div>
+        <div class="gcard"><div class="abbr">🇪🇺 GDPR</div><div class="full">General Data Protection Regulation</div><div class="mean">Europe's stricter cousin of NDPR — applies when EU citizens' data is touched.</div></div>
+        <div class="gcard"><div class="abbr">🛡️ 2FA</div><div class="full">Two-Factor Authentication</div><div class="mean">Password PLUS phone code — doubles account protection.</div></div>
+        <div class="gcard"><div class="abbr">🚢 Bill of lading</div><div class="full">Shipping's most important document</div><div class="mean">Receipt + contract + title deed for cargo on a ship.</div></div>
+        <div class="gcard"><div class="abbr">📜 COA / Certificate of Origin</div><div class="full">Analysis · Origin proofs</div><div class="mean">COA = lab results for a batch; Origin = which country grew it.</div></div>
+        <div class="gcard"><div class="abbr">🛃 Single Window / EDI</div><div class="full">One-stop electronic customs</div><div class="mean">Submit all trade documents to government through one digital channel (EDI = Electronic Data Interchange).</div></div>
+        <div class="gcard"><div class="abbr">⏱️ Order-to-cash cycle</div><div class="full">Order received → money collected</div><div class="mean">The full commercial heartbeat; shorter = healthier.</div></div>
+        <div class="gcard"><div class="abbr">🎯 KPI</div><div class="full">Key Performance Indicator</div><div class="mean">An agreed scoreboard number proving success or failure.</div></div>
+        <div class="gcard"><div class="abbr">💹 ROI</div><div class="full">Return On Investment</div><div class="mean">For every ₦1 spent, how many came back?</div></div>
+        <div class="gcard"><div class="abbr">🏬 B2B / B2C</div><div class="full">Business-to-Business / Business-to-Consumer</div><div class="mean">Selling to companies vs selling to you and me.</div></div>
+        <div class="gcard"><div class="abbr">🦉 Odoo · SAP B1 · NetSuite</div><div class="full">ERP software options</div><div class="mean">Odoo = open-source (cheap, flexible); SAP B1/NetSuite = premium commercial suites.</div></div>
+        <div class="gcard"><div class="abbr">🗄️ PostgreSQL</div><div class="full">Open-source database engine</div><div class="mean">Where structured app data lives — reliable and free.</div></div>
+        <div class="gcard"><div class="abbr">☁️ AWS / Azure</div><div class="full">Amazon / Microsoft clouds</div><div class="mean">Rent servers &amp; services instead of owning hardware.</div></div>
+        <div class="gcard"><div class="abbr">📉 Power BI / Tableau</div><div class="full">Dashboard tools</div><div class="mean">Drag-and-drop chart builders for executives.</div></div>
+        <div class="gcard"><div class="abbr">🔗 Blockchain (Food Trust)</div><div class="full">Shared tamper-proof ledger</div><div class="mean">Fancy shared record-keeping — powerful later, unnecessary day one.</div></div>
+        <div class="gcard"><div class="abbr">🌐 WAN · VPN · VPC</div><div class="full">Wide Area Network · Virtual Private Network · Virtual Private Cloud</div><div class="mean">Secure private roads connecting offices, factories and cloud homes.</div></div>
+        <div class="gcard"><div class="abbr">🔋 RPO</div><div class="full">Recovery Point Objective</div><div class="mean">Max data you can afford to lose in a disaster (aim: under 24h).</div></div>
+        <div class="gcard"><div class="abbr">🧯 Pen-test</div><div class="full">Penetration Test</div><div class="mean">Hired hackers attack your systems on purpose — to find holes before bad guys do.</div></div>
+      </div>
+    </section>
+
+    <!-- ================= 19 CAVEATS ================= -->
+    <section class="sec" id="caveats">
+      <div class="sec-head"><span class="sec-emoji">⚠️</span><span class="section-title">Trust But Verify — What's Fact vs Guess</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">✅ Solid facts (public sources)</h3>
+      <ul class="bullets">
+        <li>Company identity, Epe location, two-division model, mission/tagline — official website</li>
+        <li>Julius Berger 60t/day plant lease (board-approved 24 Sept 2025) — reputable news coverage</li>
+        <li>Sourcing-hub count (6+), FMCG categories (9+), brands (Hotelux/Creviva), capabilities — official site</li>
+        <li>~28 employees / ~346 followers, GM Supply Chain name — LinkedIn</li>
+      </ul>
+
+      <h3 class="mini">🧩 Clearly-labelled assumptions (handle gently in interviews)</h3>
+      <ul class="bullets">
+        <li>No disclosed ERP/IT systems — inferred from absence of evidence, not confirmed absence</li>
+        <li>Org-chart shape, CFO/COO existence — typical-structure guesswork</li>
+        <li>HACCP/ISO pursuits — assumed from "international standards" marketing language</li>
+        <li>Financial trajectory — direction presumed, figures unknown</li>
+        <li>All KPI percentages in the playbook — illustrative targets, not commitments</li>
+      </ul>
+
+      <div class="plain"><b>🎤 Interview-safe phrasing:</b> use "my understanding is…" / "based on public information…" / "I'd validate early whether…". Curiosity + humility reads as seniority. Never assert internals you haven't seen. 🕊️</div>
+
+      <h3 class="mini">📚 Where it all came from</h3>
+      <p style="font-size:14px;color:var(--muted);">EKOFIN official website (ekofinnigeria.com) · EKOFIN LinkedIn page · News coverage of the Julius Berger lease transaction · General industry context on Nigeria's cashew-export sector. Assumptions explicitly flagged throughout the original report and preserved above. 📌</p>
+    </section>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Read twice. Then go make the first impression they'll compare everyone else against. 🌟</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

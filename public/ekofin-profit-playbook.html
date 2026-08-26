@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The EKOFIN Profit Playbook — Industry Intelligence &amp; Competitive Advantage Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root { --forest:#0B3D26; --green:#176B3A; --leaf:#4F9D58; --gold:#D9A441; --earth:#C87532; --cream:#F7F3E8; --paper:#FCFCF8; --ink:#1D2922; --muted:#637269; --hairline:#E2DFD1; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#EEEBDF; color:var(--ink); padding:26px 14px; font-size:16px; line-height:1.75; }
+  .sheet { max-width:1020px; margin:0 auto; background:var(--paper); border-radius:14px; overflow:hidden; box-shadow:0 18px 50px rgba(29,41,34,.13); }
+  section { scroll-margin-top:18px; }
+  .masthead { background:linear-gradient(135deg,var(--forest) 0%,var(--green) 82%,#1E7A44 100%); padding:50px 54px 42px; position:relative; overflow:hidden; }
+  .masthead::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 88% 10%, rgba(217,164,65,.22) 0, transparent 40%), radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 45%); pointer-events:none; }
+  .eyebrow { font-family:'Manrope',sans-serif; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.32em; text-transform:uppercase; margin-bottom:16px; }
+  .masthead h1 { font-family:'Manrope',sans-serif; color:#fff; font-size:36px; font-weight:800; line-height:1.16; letter-spacing:-.018em; max-width:720px; margin-bottom:14px; }
+  .mast-sub { color:rgba(255,255,255,.88); font-size:17px; max-width:680px; font-weight:500; }
+  .mast-rule { width:70px; height:3px; background:var(--gold); border-radius:2px; margin-top:24px; }
+  .content { padding:38px 54px 30px; }
+  p { margin-bottom:15px; } strong { color:var(--forest); }
+  .sec { margin-top:46px; } .sec:first-child { margin-top:0; }
+  .sec-head { display:flex; align-items:baseline; gap:13px; margin-bottom:8px; }
+  .sec-emoji { font-size:26px; transform:translateY(2px); }
+  .sec-title { font-family:'Manrope',sans-serif; font-size:23px; font-weight:800; color:var(--forest); letter-spacing:-.01em; }
+  .sec-line { flex:1; height:1px; background:var(--hairline); transform:translateY(-5px); }
+  .sec-sub { color:var(--muted); font-style:italic; font-family:'Lora',Georgia,serif; margin-bottom:16px; }
+  h3.mini { font-family:'Manrope',sans-serif; font-size:17px; font-weight:800; color:var(--green); margin:24px 0 10px; }
+  ul.bullets { list-style:none; margin:10px 0 16px; }
+  ul.bullets li { position:relative; padding:5px 0 5px 30px; }
+  ul.bullets li::before { content:"→"; position:absolute; left:4px; top:5px; color:var(--leaf); font-weight:800; }
+  .plain { margin:18px 0; padding:16px 20px; background:var(--cream); border-left:5px solid var(--leaf); border-radius:0 12px 12px 0; font-size:15.5px; break-inside:avoid; }
+  .plain b:first-child { color:var(--green); font-weight:800; }
+  .term { display:inline-block; font-weight:700; color:var(--earth); border-bottom:2px dashed var(--gold); cursor:help; }
+  .story { font-family:'Lora',Georgia,serif; font-size:17.5px; line-height:1.8; color:#33402F; background:var(--cream); border-left:5px solid var(--gold); border-radius:0 12px 12px 0; padding:20px 26px; margin:20px 0; break-inside:avoid; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0; }
+  .stat { text-align:center; border:1.5px solid var(--hairline); border-top:4px solid var(--green); border-radius:12px; padding:16px 10px 13px; background:#fff; break-inside:avoid; }
+  .stat .n { font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; color:var(--earth); }
+  .stat .l { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin-top:4px; line-height:1.4; }
+  table.decoded { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; background:#fff; }
+  .decoded th { font-family:'Manrope',sans-serif; text-align:left; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:800; padding:10px 12px 10px 0; border-bottom:2.5px solid var(--forest); }
+  .decoded td { padding:11px 12px 11px 0; border-bottom:1px solid var(--hairline); vertical-align:top; line-height:1.62; }
+  .decoded td:first-child { font-weight:700; color:var(--forest); }
+  .decoded tr { break-inside:avoid; }
+  .golden { border:2px solid var(--gold); border-radius:16px; background:linear-gradient(135deg, rgba(217,164,65,.08), transparent 60%), #fff; padding:24px 28px; margin:20px 0; break-inside:avoid; }
+  .golden h4 { font-family:'Manrope',sans-serif; font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:var(--earth); margin-bottom:10px; }
+  .golden p { margin-bottom:10px; }
+  .golden .big { font-family:'Manrope',sans-serif; font-size:21px; font-weight:800; color:var(--forest); }
+  .streams { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:18px 0; }
+  .stream { border-radius:14px; padding:18px 20px; background:#fff; border:1.5px solid var(--hairline); break-inside:avoid; }
+  .stream.k { border-top:5px solid var(--green); } .stream.s { border-top:5px solid var(--earth); } .stream.t { border-top:5px solid var(--gold); }
+  .stream h5 { font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; color:var(--forest); margin-bottom:6px; }
+  .stream .pct { font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; color:var(--earth); }
+  .stream p { font-size:13.5px; margin-bottom:0; color:#44514A; }
+  .frow { display:flex; align-items:center; gap:14px; background:#fff; border:1.5px solid var(--hairline); border-radius:12px; padding:13px 18px; max-width:780px; margin:0 auto; break-inside:avoid; }
+  .ficon { font-size:26px; flex:0 0 auto; }
+  .ftext b { display:block; font-family:'Manrope',sans-serif; color:var(--forest); font-size:15px; }
+  .ftext span { font-size:13px; color:var(--muted); }
+  .farrow { text-align:center; font-size:22px; color:var(--leaf); padding:4px 0; font-weight:800; max-width:780px; margin:0 auto; }
+  .phase { display:flex; gap:16px; padding:14px 0; border-bottom:1px solid var(--hairline); break-inside:avoid; }
+  .phase:last-child { border-bottom:none; }
+  .ph-badge { font-family:'Manrope',sans-serif; font-weight:800; font-size:12px; color:#fff; background:var(--green); border-radius:10px; padding:8px 12px; height:fit-content; white-space:nowrap; }
+  .phase h4 { font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; color:var(--forest); margin-bottom:3px; }
+  .phase p { font-size:13.5px; margin:0; color:#44514A; }
+  .unlock { display:inline-block; margin-top:5px; font-size:11.5px; font-weight:800; color:var(--earth); letter-spacing:.06em; text-transform:uppercase; }
+  .sayit { border:1.5px dashed var(--gold); border-radius:12px; padding:15px 19px; margin:12px 0; background:#fff; break-inside:avoid; }
+  .sayit .mic { font-size:18px; }
+  .sayit p { font-family:'Lora',Georgia,serif; font-style:italic; font-size:15.5px; color:#33402F; margin:6px 0 0; }
+  .gloss { display:grid; grid-template-columns:repeat(auto-fill,minmax(295px,1fr)); gap:12px; margin:18px 0; }
+  .gcard { border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; background:#fff; break-inside:avoid; }
+  .gcard .abbr { font-family:'Manrope',sans-serif; font-weight:800; color:var(--earth); font-size:14.5px; }
+  .gcard .full { font-size:12.5px; color:var(--muted); font-weight:600; margin:1px 0 5px; }
+  .gcard .mean { font-size:13.5px; line-height:1.55; }
+  .toc { display:flex; flex-wrap:wrap; gap:8px; padding:22px 54px 6px; }
+  .toc a { font-family:'Manrope',sans-serif; font-size:12px; font-weight:700; color:var(--forest); text-decoration:none; border:1.5px solid var(--hairline); border-radius:20px; padding:6px 13px; background:#fff; transition:all .15s ease; }
+  .toc a:hover { border-color:var(--gold); background:var(--cream); }
+  .foot-band { border-top:2.5px solid var(--forest); background:var(--cream); padding:16px 54px 17px; display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .foot-left { font-family:'Lora',serif; font-style:italic; font-size:13px; color:var(--muted); }
+  .foot-right { font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--green); white-space:nowrap; }
+  .disclaimer-chip { display:inline-block; background:var(--cream); border:1px solid var(--hairline); border-radius:20px; padding:5px 15px; font-size:12px; color:var(--muted); margin-bottom:20px; }
+  .src { font-size:13px; color:var(--muted); }
+  @media (max-width:700px){ .masthead,.content,.toc,.foot-band{padding-left:22px;padding-right:22px;} .masthead h1{font-size:28px;} }
+  @media print {
+    *, *::before, *::after { color:#000 !important; background:transparent !important; border-color:#000 !important; box-shadow:none !important; text-shadow:none !important; }
+    html, body { background:#fff !important; padding:0 !important; font-size:13px; }
+    .sheet { box-shadow:none !important; border-radius:0 !important; max-width:none !important; }
+    @page { size:A4; margin:11mm 12mm; }
+    .masthead { background:#fff !important; } .masthead::after { display:none; }
+    .masthead h1, .eyebrow { color:#000 !important; } .mast-sub { color:#333 !important; } .mast-rule { background:#000; }
+    .toc { display:none; }
+    .plain, .story, .golden, .stat, .frow, .gcard, .stream, .decoded tr, .stats, .phase, .sayit { break-inside:avoid !important; page-break-inside:avoid !important; }
+    .flow, .gloss, .content { break-inside:auto !important; }
+    h1,h2,h3,.sec-title,.mini { break-after:avoid !important; }
+    p,li { orphans:3; widows:3; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="masthead">
+    <div class="eyebrow">Competitive Advantage Playbook · Cashew Industry Intelligence</div>
+    <h1>How EKOFIN Wins: More Kernel, Less Waste, Cheaper Power, Bigger Markets</h1>
+    <p class="mast-sub">Fresh August-2026 industry research translated into one actionable strategy — how technology makes EKOFIN the most profitable processor in West Africa while cutting costs and waste at every step.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <nav class="toc">
+    <a href="#map">🌍 World Map</a><a href="#leaks">🕳️ Profit Leaks</a><a href="#yield">🎚️ Yield King</a><a href="#waste">♻️ Waste Wealth</a><a href="#energy">⚡ Power Play</a><a href="#moat">🛡️ Compliance Moat</a><a href="#farmers">🧑🏾‍🌾 Farmer Moat</a><a href="#money">💰 Money Tech</a><a href="#markets">🛒 Market Plays</a><a href="#roadmap">🗺️ Roadmap</a><a href="#lines">🎤 Say It Like This</a><a href="#words">📖 New Words</a>
+  </nav>
+
+  <div class="content">
+
+    <span class="disclaimer-chip">⚠️ Figures gathered August 2026 from NEPC, NCAN, BusinessDay, Tridge, Mordor Intelligence, African Cashew Alliance, TechnoServe, APEDA, UNCTAD, World Bank &amp; trade press. Ranges are directional — verify before board meetings.</span>
+
+    <!-- ================= 01 WORLD MAP ================= -->
+    <section class="sec" id="map">
+      <div class="sec-head"><span class="sec-emoji">🌍</span><span class="section-title">The World Map of Cashews — Who Really Makes the Money</span><span class="sec-line"></span></div>
+      <p class="sec-sub">You cannot beat a game you haven't seen. Here is the whole board.</p>
+      <p>Africa grows the nuts; Asia cracks them and keeps the margin. That one sentence explains the entire industry — and EKOFIN's entire opportunity.</p>
+      <div class="stats">
+        <div class="stat"><div class="n">$5.23B</div><div class="l">Vietnam kernel exports 2025 (record)</div></div>
+        <div class="stat"><div class="n">&gt;80%</div><div class="l">Share of world kernel exports Vietnam holds</div></div>
+        <div class="stat"><div class="n">~3M t</div><div class="l">Raw nuts Vietnam imports yearly to feed factories</div></div>
+        <div class="stat"><div class="n">$7.1→9B</div><div class="l">Kernel market 2025 → 2031 (4.1% growth)</div></div>
+      </div>
+      <ul class="bullets">
+        <li>🏆 <strong>Vietnam</strong>: processes nuts grown almost entirely in Africa (~90% imported RCN), exported ~797,000 t of kernels in 2025 at average <strong>$6,711–6,805/tonne</strong> — its 19th straight year as world #1.</li>
+        <li>🥈 <strong>Côte d'Ivoire</strong>: world's biggest grower (~1.25–1.3M t). Masterstroke: a tax on raw-nut exports plus processor support grew local processing from <strong>68,515 t (2018) → 345,000 t (2024)</strong>. Target: 50% processed domestically by 2030.</li>
+        <li>🇮🇳 <strong>India</strong>: historic processing giant (Kollam, Panruti); domestic snacking absorbs ~40% of global production; GST cut to 5% fuels local demand further.</li>
+        <li>🇳🇬 <strong>Nigeria</strong>: produces ~<strong>350,000 t</strong> (estimates range up to 600k t), earned <strong>$446.9M (₦635bn) in 2025</strong> — but ships out <strong>85–90% RAW</strong>. Local processing sits below 10–30%. We export away the jobs, the shells and the margin.</li>
+        <li>📈 <strong>Africa's moment:</strong> fastest-growing region (4.9% CAGR to 2031). Near-origin mechanised plants are landing (Robust International $27M, Valency $40M — both Côte d'Ivoire) shortening supply chains to Europe. Buyers actively WANT African-origin kernels for supply resilience.</li>
+      </ul>
+      <table class="decoded">
+        <tr><th>Value ladder 🪜</th><th>Approx. price</th><th>Who earns it today</th></tr>
+        <tr><td>🌱 Farm-gate RCN (Nigeria)</td><td>₦1.8–2M per tonne</td><td>Farmers &amp; raw-nut exporters</td></tr>
+        <tr><td>📦 Raw RCN exports (HS 080131)</td><td>~$1,066–1,447/tonne (import averages)</td><td>Nigeria 🇳🇬 (mostly)</td></tr>
+        <tr><td>🌰 Shelled kernels (HS 080132)</td><td>~$5,685–7,000+/tonne (W320 benchmark)</td><td>Vietnam &amp; India 🇻🇳🇮🇳</td></tr>
+        <tr><td>🍫 Roasted, branded retail packs</td><td>up to ~$25/kg retail (UNCTAD worked example)</td><td>European brands</td></tr>
+      </table>
+      <div class="story">UNCTAD traced one Ivorian cashew's journey: farmer earned <strong>$0.675/kg</strong>; after Indian processing it left as kernels worth <strong>$2.35/kg-equivalent</strong>; after European roasting &amp; branding it reached <strong>$25/kg retail</strong> — roughly <strong>37× the farm price</strong>. Every multiplication step that happens inside EKOFIN's walls instead of abroad is money that lands in Epe. 🏦</div>
+      <div class="plain"><b>🧠 In plain English:</b> The world doesn't lack cashew trees — it lacks cashew FACTORIES near the trees. Vietnam imports three million tonnes of our region's nuts, adds value with machines, and banks five billion dollars. EKOFIN owns a 60-tonne/day factory next to the farms. The strategy writes itself: <strong>process here, certify here, brand upward — capture the steps Asia currently takes.</strong></div>
+    </section>
+
+    <!-- ================= 02 LEAKS ================= -->
+    <section class="sec" id="leaks">
+      <div class="sec-head"><span class="sec-emoji">🕳️</span><span class="section-title">Where a Cashew Factory's Profit Leaks Out</span><span class="sec-line"></span></div>
+      <table class="decoded">
+        <tr><th>Cost bucket 💸</th><th>Reality check</th><th>Leak-plugging lever 🔧</th></tr>
+        <tr><td>🥜 Raw nuts (60–70% of cost)</td><td>Bought on eyeball &amp; bag-count; bad lots discovered AFTER payment; season ~3 months but factory runs 12 → stockpiling financed at brutal rates (interest reported as high as <strong>42%</strong> — NCAN)</td><td>KOR-tested procurement (pay for MEASURED quality), supplier scoreboards, inventory data that unlocks cheaper credit</td></tr>
+        <tr><td>⚡ Energy (8–15% of cost)</td><td>Diesel ₦1,758/L (May 2025, +25% YoY); true self-generated power cost <strong>$0.25–0.40/kWh</strong>; grid delivers just 4–8 hrs/day in many areas</td><td>Shell-fired boiler covers ALL heat; solar powers motors; batteries bridge — see ⚡ Power Play</td></tr>
+        <tr><td>📉 Processing losses</td><td>Broken/bruised kernels fall from premium whole grades (W240/W320) to discount splits &amp; pieces. Nigeria's typical whole-kernel recovery runs only <strong>60–65%</strong> vs 70–77% achieved by well-run lines elsewhere</td><td>Steam-recipe control, cutter calibration, per-shift recovery boards — see 🎚️ Yield King</td></tr>
+        <tr><td>🗑️ Buried treasure</td><td>Shells (~70% of intake weight!) dumped at a COST while their oil burns off; testa discarded; pieces under-sold</td><td>Waste-to-wealth ledger — see ♻️ Waste Wealth</td></tr>
+        <tr><td>📄 Compliance scramble</td><td>Audit prep via photocopies; one missing certificate strands a container (demurrage!)</td><td>Audit-ready-by-design records — see 🛡️ Compliance Moat</td></tr>
+        <tr><td>📞 Manual coordination</td><td>Buyers phone for updates; farmers paid late; spreadsheets contradict each other</td><td>The ERP + portal + dashboard stack from the main proposal</td></tr>
+      </table>
+      <div class="plain"><b>🧠 In plain English:</b> A cashew factory leaks money through six pipes: buying blind, burning diesel, breaking kernels, burying treasure, begging auditors, and chasing information by phone call. Every pipe has a valve — and every valve is software, hardware, or both. 🔧</div>
+    </section>
+
+    <!-- ================= 03 YIELD KING ================= -->
+    <section class="sec" id="yield">
+      <div class="sec-head"><span class="sec-emoji">🎚️</span><span class="section-title">The Yield King — One Number Rules Them All</span><span class="sec-line"></span></div>
+      <p class="sec-sub">If you learn ONE industry concept deeply, learn this. Fortunes are made and lost on it.</p>
+
+      <h3 class="mini">📏 The vocabulary of yield</h3>
+      <table class="decoded">
+        <tr><th>Term</th><th>Meaning</th><th>Why insiders whisper it</th></tr>
+        <tr><td><span class="term">KOR</span> (Out-turn)</td><td>Pounds of usable kernel inside one standard <strong>80kg bag</strong> of raw nuts. Cut a 1kg sample, weigh good kernels: <strong>KOR = grams × 0.176</strong></td><td>The PRICE of every purchase. You buy bags — but you're really buying their KOR.</td></tr>
+        <tr><td><span class="term">WKR</span> (Whole Kernel Recovery)</td><td>% of kernels that come out WHOLE and unbroken after shelling (vs splits &amp; pieces)</td><td>The QUALITY of your factory. Wholes earn a ~15–16% premium over splits.</td></tr>
+        <tr><td>Nut count</td><td>Nuts per kg (150–240). Lower count = bigger nuts = premium W240 territory</td><td>Size predicts which grades you can cut</td></tr>
+        <tr><td>Moisture</td><td>8–10% ideal for storage; ≤5% in finished kernels; &gt;9% risks mould in transit</td><td>Mould = rejection; over-dried = brittle = breakage</td></tr>
+        <tr><td>Defect rate</td><td>% unusable nuts (void, moth-eaten, spotted…). <strong>Above 24% = cargo rejected</strong></td><td>The rejection cliff</td></tr>
+      </table>
+
+      <h3 class="mini">🇳🇬 Nigeria's uncomfortable truth — which is exactly the opening</h3>
+      <ul class="bullets">
+        <li>Nigerian nuts typically test <strong>KOR 43–49 lbs/bag</strong> — the lowest band in West Africa (Tanzania 51–55, Indonesia 53–57), with high nut counts (~220/kg → smaller kernels).</li>
+        <li>Nigeria's typical whole-kernel recovery: only <strong>60–65%</strong>. Well-run lines on similar nuts achieve <strong>70–73%</strong>; Vietnamese optical-sorting lines hold defects inside the UNECE ≤8% bar at 75–77%.</li>
+        <li>That gap is not geology. It's <strong>handling, steaming recipes and machine discipline</strong> — all fixable, all worth money:</li>
+      </ul>
+
+      <div class="golden">
+        <h4>💰 The Golden Arithmetic — memorise this</h4>
+        <p>At ~230 kg of saleable kernel per tonne of raw nuts, with wholes commanding a ~15–16% premium over splits:</p>
+        <p class="big">➕ 1 point of KOR (buy smarter) ≈ +10 kg kernel/tonne ≈ <span style="color:var(--earth)">~$68 per tonne</span></p>
+        <p class="big">➕ 1 point of WKR (process gentler) ≈ 2.3 kg upgraded to whole ≈ <span style="color:var(--earth)">~$2.53 per tonne</span></p>
+        <p>Both matter — but <strong>outturn outranks polish by roughly 27×</strong>. Chase yield first, then protect wholes. And the cheapest win? Tighter steaming times and cutter alignment: costs nothing but supervision attention.</p>
+      </div>
+
+      <h3 class="mini">🎛️ The science you weaponise</h3>
+      <p>Published research (J. Saudi Society of Agricultural Sciences) shows whole-kernel recovery peaks at precise <strong>moisture × nut-size × steam-time</strong> combinations — e.g. 8.34% moisture with ~30 min steam for large/small nuts, 11.80% with 32 min for medium, at 700 kPa pressure. No single knob works alone; it's always the interaction.</p>
+      <ul class="bullets">
+        <li>🎛️ <strong>Recipe-controlled steaming:</strong> log each batch's size-class, incoming moisture and steam minutes — turn tribal knowledge into repeatable setpoints your ERP enforces</li>
+        <li>📏 <strong>Grade isolation before cutting:</strong> never mix nut sizes on one line; uniform batches crack cleaner</li>
+        <li>👁️ <strong>Optical colour sorting:</strong> the tool behind Vietnam's defect dominance — the upgrade when volumes justify it</li>
+        <li>📊 <strong>Per-machine, per-shift WKR boards:</strong> operators see yesterday's recovery %; friendly competition does the rest</li>
+        <li>📓 <strong>The KOR↔WKR ledger:</strong> log every lot's bought-KOR against its delivered-WKR. Within weeks you'll know WHICH suppliers' nuts cut best in YOUR machines — and pay accordingly. Data turns bargaining hope into bargaining leverage 🤝</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Imagine buying eggs without checking freshness, boiling them without a timer, and cracking them with a hammer. That's cashew processing without measurement. Weigh the sample (KOR), time the boil (steam recipe), track the shells (WKR board) — and the same trucks of nuts suddenly yield more sellable whole kernels. Same nuts, more money. 🥚➡️💎</div>
+    </section>
+
+    <!-- ================= 04 WASTE ================= -->
+    <section class="sec" id="waste">
+      <div class="sec-head"><span class="sec-emoji">♻️</span><span class="section-title">The Waste-to-Wealth Ledger</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Every tonne of raw nuts leaves the factory as THREE streams. Most factories monetise one — and pay to bury the other two.</p>
+
+      <div class="streams">
+        <div class="stream k"><h5>🌰 Kernel stream</h5><div class="pct">≈ 22–24%</div><p>Pays the wages. Wholes go premium; splits/pieces still sell into baking, confectionery and ingredient markets.</p></div>
+        <div class="stream s"><h5>🫒 Shell stream</h5><div class="pct">≈ 70%</div><p>Contains <strong>CNSL oil</strong> (20–25% of shell weight); de-oiled cake is boiler fuel (&gt;4,000 kcal/kg). Today it's often dumped or burnt open-air.</p></div>
+        <div class="stream t"><h5>🟤 Testa stream</h5><div class="pct">small</div><p>The thin brown skin removed at peeling — mulch, feed blend or fuel. Contains no CNSL (a common mix-up!).</p></div>
+      </div>
+
+      <h3 class="mini">🫒 Deep-dive: CNSL — the buried treasure 💎</h3>
+      <ul class="bullets">
+        <li><strong>What it is:</strong> dark caustic industrial oil held in the shell's honeycomb layer — rich in anacardic acid, <strong>cardanol</strong> and cardol. Global market ~<strong>1.06M tonnes (2025) → 1.41M t by 2031</strong> (4.9% CAGR). Biggest buyer: brake-lining makers (~35% of demand); then resins, coatings, adhesives — even wind-turbine blades and EV brake formulations.</li>
+        <li>💵 <strong>2025 prices:</strong> technical CNSL ≈ $650–750/t FOB Vietnam (refined); degummed $695–745; <strong>pure cardanol $1,800–2,500/t</strong>; natural acid-rich grade $1,100–1,400/t. European buyers pay a documented <strong>15–20% premium for distilled CNSL accompanied by traceability documentation</strong> — our traceability system earns again 😉</li>
+        <li>🏭 <strong>Landscape:</strong> India processes ~45% of world supply; Vietnam specialises in refined export grades. Africa under-monetises badly — most shells flared or burnt as low-grade fuel. In-region refiners capture the spread.</li>
+        <li>🧯 <strong>Handle with respect:</strong> raw CNSL causes skin burns — gloves, splash containment, trained staff. A real factory consideration, not a footnote.</li>
+        <li>⚖️ <strong>EKOFIN's staged play:</strong> Phase 1 — mechanical presses + settling tanks → sell technical-grade CNSL (immediate revenue + cleaner de-oiled cake for the boiler). Phase 2 — evaluate vacuum distillation into cardanol once kernel volumes are stable. The distillation column, not the press, is where the capital goes — treat it as its own payback decision (~$200k–500k scale per research estimates).</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Today many factories PAY to dump shells whose oil industry buys at hundreds of dollars a tonne, while burning diesel worth thousands. The waste-to-wealth flip: press the oil out (sell it), burn the leftover cake instead of diesel (power yourself), and sell or use every last crumb. Three revenue streams from one nut instead of one-and-a-half. 💰💰💰</div>
+    </section>
+
+    <!-- ================= 05 ENERGY ================= -->
+    <section class="sec" id="energy">
+      <div class="sec-head"><span class="sec-emoji">⚡</span><span class="section-title">The Power Play — Energy Independence by Design</span><span class="sec-line"></span></div>
+      <p class="sec-sub">A cashew line's appetite is mostly HEAT (steaming + drying), not electricity. That single fact rewrites the energy strategy.</p>
+
+      <table class="decoded">
+        <tr><th>Load 🔌</th><th>Best source</th><th>Grid needed?</th></tr>
+        <tr><td>Steam conditioning (3–4 bar)</td><td><strong>Shell-fired boiler</strong> (300–4,000 kg steam/h)</td><td>No — runs on your own shells</td></tr>
+        <tr><td>Borma drying (13–14 h batches)</td><td>Boiler steam via heat coils (or hybrid solar-biomass dryers)</td><td>No on the steam route</td></tr>
+        <tr><td>Motors: shelling, cutting, grading</td><td>Small motors 0.75–3 kW each</td><td>Low draw, interruption-tolerant</td></tr>
+        <tr><td>Peeling + colour sorting compressor (30–100 HP)</td><td>Solar PV + battery / grid — size around THIS load</td><td>This is the real electrical load</td></tr>
+      </table>
+
+      <div class="stats">
+        <div class="stat"><div class="n">₦1,758/L</div><div class="l">Diesel May-2025 (+25% YoY)</div></div>
+        <div class="stat"><div class="n">$0.25–0.40</div><div class="l">True cost per kWh (grid+genset) Nigeria</div></div>
+        <div class="stat"><div class="n">3–5 yrs</div><div class="l">Solar payback window Nigeria</div></div>
+        <div class="stat"><div class="n">$0.03–0.08</div><div class="l">Achievable energy cost per kg kernel (from $0.20–0.40)</div></div>
+      </div>
+
+      <ul class="bullets">
+        <li>🔥 <strong>Step 1 — shell-fired boiler first:</strong> heat dominates the energy bill; your own shells cover it. Research (TechnoServe) values shells as fuel at ~<strong>$30/tonne</strong> vs paying ~$3/tonne to dispose — flipping a cost into income. De-oiled cake burns at &gt;4,000 kcal/kg.</li>
+        <li>☀️ <strong>Step 2 — solar PV for electricity:</strong> rooftop system for motors/compressor/lighting; Nigeria installs run $0.80–1.50/W with 5–5.8 sun-hours/day; C&amp;I rooftop paybacks of 2–4 years are now normal in Lagos; solar power runs 40–60% cheaper than diesel generation.</li>
+        <li>🔋 <strong>Step 3 — LFP batteries to bridge outages:</strong> $150–200/kWh installed (2025); an 80–120 kWh buffer can eliminate most genset runtime for smaller loads.</li>
+        <li>🏗️ <strong>Step 4 (scale-up option) — CHP co-generation:</strong> TechnoServe models show 1.5–3 MW shell-cake combined heat+power plants turning profitable in year one across Nigeria, generating surplus electricity saleable back to the grid. Big-capital, big-payoff endgame.</li>
+        <li>📊 <strong>Secret ingredient — sub-metering dashboards:</strong> you can't save what you can't see. Per-line kWh, per-batch steam, diesel litres/day — live on the same dashboard family as production. (Your ERP DNA again.)</li>
+        <li>🌱 <strong>Green premium bonus:</strong> renewable-powered processing supports the ESG certifications that European premium buyers increasingly request.</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> The nut brings its own firewood to the party. 🔥 Burn the shell for steam, let the sun spin the motors, keep a battery for cloudy moments — and the factory's loudest expense (generator diesel) quietly walks out the door. Savings land straight on the profit line every single month.</div>
+    </section>
+
+    <!-- ================= 06 COMPLIANCE MOAT ================= -->
+    <section class="sec" id="moat">
+      <div class="sec-head"><span class="sec-emoji">🛡️</span><span class="section-title">The Compliance Moat — Turning Paperwork Into a Weapon</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Every rule that scares competitors away is a wall that protects whoever already climbed it.</p>
+
+      <table class="decoded">
+        <tr><th>Buyer/regulator trend 📜</th><th>What it demands</th><th>Your moat move 🏰</th></tr>
+        <tr><td>🇪🇺 EU retail bar rising</td><td>GFSI-aligned food-safety systems (FSSC 22000 / BRCGS), SMETA ethical audits, aflatoxin certificates — "rising compliance bar (BRC, SMETA)" noted across EU trade channels in 2025–26 reporting</td><td>Build audit-ready-by-design: digital QC logs, batch genealogy, one-click audit packs. While rivals photocopy, EKOFIN exports a PDF</td></tr>
+        <tr><td>🇺🇸 FSMA 204 (US FDA)</td><td>Food Traceability Rule — extended deadline <strong>July 20, 2028</strong>. Applies to foods on the Food Traceability List — which explicitly includes <strong>nut butters (cashew butter!)</strong>. Requires lot codes + Key Data Elements at every Critical Tracking Event; records producible to FDA within 24 hours, electronic &amp; sortable; retained 2 years</td><td>Raw kernels aren't listed — but the moment EKOFIN ships cashew butter/paste to the US, the clock applies. Your traceability spine = automatic compliance + a marketing badge ("FDA-traceable") competitors can't fake quickly</td></tr>
+        <tr><td>🌍 Due-diligence direction (EUDR watch)</td><td>EU deforestation rules currently cover cocoa/coffee/etc., NOT cashew — but the regulatory wind blows toward provenance proof for all agri-imports</td><td>Farm-level GPS mapping via the farmer app future-proofs you; when rules expand, EKOFIN is already compliant while others start from zero</td></tr>
+        <tr><td>🏅 Premium certifications</td><td>Certified organic / Fairtrade contracts pay premiums that offset higher unit costs — US buyers awarding such contracts to African processors per USDA/trade reporting</td><td>Certification projects with data trails (no unexplained gaps) — certification becomes margin, not cost</td></tr>
+        <tr><td>🧪 Aflatoxin &amp; quality testing</td><td>Compliance services now sit alongside core processing as buyer requirements</td><td>In-house lab records linked to batches → instant COA generation per container</td></tr>
+      </table>
+
+      <div class="story">Strategic insight: compliance deadlines keep MOVING (FSMA 204 slipped from Jan 2026 to Jul 2028) but retail buyers do NOT wait — major retailers already demand lot-level traceability ahead of enforcement. The moat belongs to whoever is ready before they're asked. 🏰👑</div>
+
+      <div class="plain"><b>🧠 In plain English:</b> Think of every new food-safety rule as a toll gate on the road to rich customers. Most competitors will still be queueing for change when the gate opens. EKOFIN's ticket gets printed automatically by its own factory system — because you designed the road. 🎟️</div>
+    </section>
+
+    <!-- ================= 07 FARMER MOAT ================= -->
+    <section class="sec" id="farmers">
+      <div class="sec-head"><span class="sec-emoji">🧑🏾‍🌾</span><span class="section-title">The Farmer-Side Moat — Quality Is Won at the Farm Gate</span><span class="sec-line"></span></div>
+      <p class="sec-sub">The cheapest place to improve your factory is actually the farm. KOR is decided long before the truck arrives.</p>
+
+      <ul class="bullets">
+        <li>🌾 <strong>Handling decides outturn:</strong> nuts dried properly (8–10% moisture), stored off the floor, kept dry in transit arrive with higher KOR and lower defect rates. Sloppy drying → mouldy kernels → discounts or rejection. Teaching + enforcing post-harvest handling literally raises the value of every bag you buy.</li>
+        <li>📱 <strong>Digital aggregation app:</strong> agents record farmer ID, weight, moisture-meter reading and GPS pin at point of purchase; instant mobile payment; syncs offline. Every sack arrives pre-scored by history.</li>
+        <li>🏆 <strong>The supplier scoreboard (secret weapon):</strong> after each season you KNOW whose nuts cut best in your machines (bought-KOR vs delivered-WKR ledger). Pay measured-quality premiums backed by data — farmers trust it because it's fair, and supply security follows loyalty.</li>
+        <li>📝 <strong>Contract farming for uniformity:</strong> retailers prize consistent kernel sizing; contract-growing arrangements delivering uniform nut profiles support premium whole-kernel output.</li>
+        <li>🏦 <strong>Data unlocks cheap money:</strong> NCAN reports processors borrowing at rates up to 42% to stockpile nuts. A digital inventory + purchase ledger is bank-grade collateral evidence — the difference between 42% emergency credit and structured single-digit facilities. Financing IS a technology outcome here.</li>
+        <li>🗺️ <strong>Six-state visibility:</strong> hub dashboards show volumes, qualities and prices per zone in real time — sourcing strategy stops being folklore.</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Two factories buy from the same farms. One pays by eyeball, stores blindly, and discovers bad bags after paying. The other weighs, tests, pays instantly by phone, remembers every farmer's history, and rewards the best ones first. After two seasons, guess who gets first pick of the harvest? 🌾👑 That's not an app feature — that's a supply-chain throne.</div>
+    </section>
+
+    <!-- ================= 08 MONEY TECH ================= -->
+    <section class="sec" id="money">
+      <div class="sec-head"><span class="sec-emoji">💰</span><span class="section-title">Money Tech — Margins, Cash Cycles &amp; Currency Smarts</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">🔄 The cash-cycle squeeze (and how software loosens it)</h3>
+      <ul class="bullets">
+        <li>Harvest window ≈ 3 months; factory runs 12 → you must stockpile raw nuts worth billions of naira. Interest rates up to 42% make storage a knife-fight 💸</li>
+        <li>RCN price volatility is wild (Vietnamese RCN jumped $1,200–1,300 → $1,900–2,000/t within months in 2024; Indian kernel prices swung 80–100%)</li>
+        <li>Forward contracts get discouraged by exactly this volatility — traders lose visibility, so they hedge blind</li>
+      </ul>
+
+      <h3 class="mini">🧰 What your platforms add</h3>
+      <ul class="bullets">
+        <li>📊 <strong>Live cost-per-kg dashboard:</strong> raw-nut spend, energy, labour, waste recovery — per batch, per day. Margin leaks become visible within hours instead of month-end</li>
+        <li>🏦 <strong>Bank-grade data room:</strong> audited digital inventory + purchase history + sales pipeline = credible working-capital applications; cheaper capital compounds into bigger seasonal buys</li>
+        <li>📈 <strong>Price-intelligence feed:</strong> track Tridge/ACA benchmark series (RCN $/t, kernel W320 $/t, CNSL $/t) alongside internal costs → negotiate contracts from evidence, time sales windows (festive peaks lift kernel prices)</li>
+        <li>💱 <strong>FX awareness:</strong> naira dynamics make Nigerian-origin processing structurally cheaper vs Asian processors importing at dollar costs — a real tailwind worth stating in every pitch</li>
+        <li>⏱️ <strong>Faster order-to-cash:</strong> portal orders + auto-documents shorten the cycle; research targets −30% cycle times from ERP adoption</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> In commodity businesses, the winner is usually whoever holds cash longer, borrows cheaper, and sees numbers sooner. Software doesn't just run the factory — it negotiates your loans and times your sales. 💳📈</div>
+    </section>
+
+    <!-- ================= 09 MARKETS ================= -->
+    <section class="sec" id="markets">
+      <div class="sec-head"><span class="sec-emoji">🛒</span><span class="section-title">Market Plays — Where to Sell, What to Build Next</span><span class="sec-line"></span></div>
+
+      <h3 class="mini">🌐 Demand currents (2025–26)</h3>
+      <ul class="bullets">
+        <li>🇨🇳 <strong>China overtook the US</strong> as top kernel buyer ($1.115B vs $975M) — huge appetite, price-sensitive; healthy-snacking boom (China group-buying + online = ~70% of nut retail)</li>
+        <li>🇺🇸 <strong>US restock window:</strong> tariff turbulence cut 2025 imports; tariffs on Vietnamese kernels reduced to 0% → H2-2026 restocking opportunity for well-positioned suppliers</li>
+        <li>🇳🇱 <strong>Netherlands remains Europe's gateway</strong> ($495M); EU snack formats take ~90% of imported kernels; rising BRC/SMETA bar = opportunity for certified players</li>
+        <li>🕌 <strong>Middle East gifting:</strong> UAE/Saudi anchors (India's UAE channel alone $80.79M) — festive whole-kernel grades command premiums</li>
+        <li>🌱 <strong>Plant-based boom:</strong> cashew protein (18g/100g) powers vegan dairy alternatives — ingredient buyers entering the market beyond snacking</li>
+      </ul>
+
+      <h3 class="mini">🪜 The product ladder — climb it deliberately</h3>
+      <div class="flow">
+        <div class="frow"><span class="ficon">📦</span><span class="ftext"><b>Rung 1 · Raw RCN bulk</b><span>today's default — lowest margin, zero jobs created</span></span></div>
+        <div class="farrow">⬇️ EKOFIN is here ⬇️</div>
+        <div class="frow"><span class="ficon">🌰</span><span class="ftext"><b>Rung 2 · Graded export kernels</b><span>W240/W320/W450 + pieces channels — the core profit step</span></span></div>
+        <div class="farrow">⬇️ next</div>
+        <div class="frow"><span class="ficon">🔥</span><span class="ftext"><b>Rung 3 · Roasted / salted / flavoured packs</b><span>private label for EU/Middle East retail — brand-adjacent margins</span></span></div>
+        <div class="farrow">⬇️ then</div>
+        <div class="frow"><span class="ficon">🥜</span><span class="ftext"><b>Rung 4 · Cashew butter &amp; paste</b><span>US-market product — triggers FSMA 204 readiness advantage</span></span></div>
+        <div class="farrow">⬇️ horizon</div>
+        <div class="frow"><span class="ficon">🧪</span><span class="ftext"><b>Rung 5 · Ingredients &amp; derivatives</b><span>protein isolates (Brazil precedent), CNSL cardanol chemicals</span></span></div>
+      </div>
+
+      <ul class="bullets">
+        <li>🌍 <strong>AfCFTA angle:</strong> regional African market access diversifies beyond EU/US/Asia cycles</li>
+        <li>🏷️ <strong>Private-label wins:</strong> supermarkets love certified, reliable co-packers — your FMCG division experience maps directly onto cashew snacks</li>
+        <li>🧊 <strong>Counter-seasonal play:</strong> Tanzania/Mozambique harvest when West Africa doesn't — origin processing plus smart sourcing keeps lines running year-round</li>
+      </ul>
+
+      <div class="plain"><b>🧠 In plain English:</b> Selling raw nuts is selling flour while others sell bread. Each rung up multiplies revenue from the SAME harvest — and every rung needs exactly the traceability, quality-data and customer-portal machinery this whole proposal installs. 🎢</div>
+    </section>
+
+    <!-- ================= 10 ROADMAP ================= -->
+    <section class="sec" id="roadmap">
+      <div class="sec-head"><span class="sec-emoji">🗺️</span><span class="section-title">The 24-Month Technology Roadmap</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Sequenced so each phase funds and de-risks the next. Every phase unlocks a profit lever.</p>
+
+      <div class="phase"><span class="ph-badge">Q1–Q2</span><div><h4>See Everything — QC digital + measurement baseline</h4><p>Batch IDs from day one; KOR cutting-test logs; WKR boards per line; energy &amp; diesel sub-meters; supplier register begins.</p><span class="unlock">🔓 Unlocks: yield truth · supplier scoreboard · audit trail foundation</span></div></div>
+      <div class="phase"><span class="ph-badge">Q3–Q4</span><div><h4>Own the Spine — ERP core + shell-boiler commissioning</h4><p>Inventory/procurement/production/sales on one brain; boiler displaces diesel heat; farmer-app pilot with GPS + mobile payment at two hubs.</p><span class="unlock">🔓 Unlocks: −30% admin friction · heat-energy independence · quality-at-source data</span></div></div>
+      <div class="phase"><span class="ph-badge">Yr2 H1</span><div><h4>Sell Smarter — portal + BI + finance-grade reporting</h4><p>Buyer portal (orders/status/certificates), executive dashboards, cost-per-kg live view, bank data-room package for cheaper working capital.</p><span class="unlock">🔓 Unlocks: faster cash cycle · repeat orders · cheaper credit · boardroom credibility</span></div></div>
+      <div class="phase"><span class="ph-badge">Yr2 H2</span><div><h4>Compound the Moats — CNSL feasibility, optical sorter study, FSMA-204-ready butter line</h4><p>CNSL press business case with real volumes; colour-sorter ROI test; roasted/butter pilot for US retail with built-in lot-code traceability; solar Phase-2 sizing.</p><span class="unlock">🔓 Unlocks: new revenue streams · premium-market entry · energy endgame options</span></div></div>
+
+      <div class="plain"><b>🧠 Sequencing wisdom:</b> measure ➡️ control ➡️ sell ➡️ multiply. Each phase pays for the next — transformation becomes self-financing instead of a leap of faith. 🪜</div>
+    </section>
+
+    <!-- ================= 11 SAY IT ================= -->
+    <section class="sec" id="lines">
+      <div class="sec-head"><span class="sec-emoji">🎤</span><span class="section-title">Say It Like This — Boardroom Soundbites</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Six sentences engineered to make a managing director lean forward.</p>
+
+      <div class="sayit"><span class="mic">🎚️</span><p>"One point of outturn is worth twenty-seven points of polish. I manage the number that moves tonnes, not the one that moves opinions."</p></div>
+      <div class="sayit"><span class="mic">🔥</span><p>"Our shells should pay our power bill. Right now we pay to bury fuel."</p></div>
+      <div class="sayit"><span class="mic">📄</span><p>"Vietnam converts our region's crop into five billion dollars a year. My job is to keep more of that five billion in Epe."</p></div>
+      <div class="sayit"><span class="mic">🛡️</span><p>"Compliance isn't paperwork — it's memory. Companies fail audits because paper forgets. My systems remember."</p></div>
+      <div class="sayit"><span class="mic">🧑🏾‍🌾</span><p>"I'll pay farmers by measured quality, instantly by phone. Fairness at farm-gate is supply security at factory-gate."</p></div>
+      <div class="sayit"><span class="mic">🏦</span><p>"Give me a season of clean data and I'll walk into any bank with collateral no spreadsheet could fake."</p></div>
+    </section>
+
+    <!-- ================= 12 GLOSSARY ================= -->
+    <section class="sec" id="words">
+      <div class="sec-head"><span class="sec-emoji">📖</span><span class="section-title">New Words — Industry Dictionary</span><span class="sec-line"></span></div>
+      <p class="sec-sub">Every specialist term used above, decoded once more for instant recall.</p>
+
+      <div class="gloss">
+        <div class="gcard"><div class="abbr">🥜 RCN</div><div class="full">Raw Cashew Nuts</div><div class="mean">Unprocessed in-shell nuts straight from farms. HS code 080131.</div></div>
+        <div class="gcard"><div class="abbr">⚖️ KOR / Out-turn</div><div class="full">Kernel Outturn Ratio</div><div class="mean">Pounds of usable kernel per 80kg bag of RCN. Formula: good-kernel grams × 0.176. Nigeria typically 43–49; excellent is 50+.</div></div>
+        <div class="gcard"><div class="abbr">🌰 WKR</div><div class="full">Whole Kernel Recovery</div><div class="mean">% of kernels emerging whole/unbroken. Nigeria average 60–65%; achievable 70–77%.</div></div>
+        <div class="gcard"><div class="abbr">🔢 Nut count</div><div class="full">Nuts per kilogram</div><div class="mean">Size indicator: ~160/kg = big premium nuts; ~220+/kg = smaller kernels.</div></div>
+        <div class="gcard"><div class="abbr">💧 Float rate</div><div class="full">Share of nuts floating in water</div><div class="mean">Lower = denser = better quality; classic quick field test.</div></div>
+        <div class="gcard"><div class="abbr">🏷️ W240 / W320 / W450</div><div class="full">White Whole grades</div><div class="mean">Kernels-per-pound grading (W240 large/premium → W450 small). W320 is the global trading benchmark.</div></div>
+        <div class="gcard"><div class="abbr">📏 UNECE DDP-17</div><div class="full">UN trade standard for kernels</div><div class="mean">Defines styles, colours, defect limits (e.g. ≤8% defects) used in international contracts.</div></div>
+        <div class="gcard"><div class="abbr">🫒 CNSL</div><div class="full">Cashew Nut Shell Liquid</div><div class="mean">Caustic phenolic oil in shells (~20–25% of shell weight) sold to brake-lining/resin/coating industries.</div></div>
+        <div class="gcard"><div class="abbr">🧪 Cardanol · Anacardic acid · Cardol</div><div class="full">CNSL's valuable phenols</div><div class="mean">Cardanol ($1,800–2,500/t distilled) drives industrial value; anacardic acid-rich natural grade serves pharma/specialty niches.</div></div>
+        <div class="gcard"><div class="abbr">🟤 Testa</div><div class="full">Kernel skin</div><div class="mean">Thin brown coat peeled after shelling — NOT the CNSL source (that's the shell). Used as mulch/feed/fuel.</div></div>
+        <div class="gcard"><div class="abbr">♨️ Borma</div><div class="full">Drying oven for kernels</div><div class="mean">13–14 hour heated drying step; steam-heated bormas run on your own shell boiler.</div></div>
+        <div class="gcard"><div class="abbr">🏭 CHP</div><div class="full">Combined Heat &amp; Power</div><div class="mean">One plant making electricity AND useful steam together (~85% efficiency vs 45% conventional). Shell-cake fueled.</div></div>
+        <div class="gcard"><div class="abbr">⚡ OEE-style dashboards</div><div class="full">Overall Equipment Effectiveness thinking</div><div class="mean">Availability × performance × quality per machine/shift — the yield-board philosophy.</div></div>
+        <div class="gcard"><div class="abbr">🚢 HS 080131 / 080132</div><div class="full">Customs codes</div><div class="mean">080131 = raw in-shell; 080132 = shelled kernels. Reading the wrong code = reading the wrong market.</div></div>
+        <div class="gcard"><div class="abbr">💵 FOB / CIF</div><div class="full">Free On Board / Cost-Insurance-Freight</div><div class="mean">Incoterms defining where seller's responsibility (and price quote) ends.</div></div>
+        <div class="gcard"><div class="abbr">📜 Forward contract</div><div class="full">Price agreed today for future delivery</div><div class="mean">Hedges volatility but discouraged lately by wild price swings — data makes hedging safer.</div></div>
+        <div class="gcard"><div class="abbr">💳 Working capital</div><div class="full">Cash tied up running operations</div><div class="mean">Season stockpiling eats it; interest up to 42% reported — data-backed lending changes the game.</div></div>
+        <div class="gcard"><div class="abbr">🛡️ FSMA 204</div><div class="full">US FDA Food Traceability Rule</div><div class="mean">Lot codes + Key Data Elements at Critical Tracking Events; 24-hour sortable records; deadline July 20, 2028; covers NUT BUTTERS incl. cashew butter.</div></div>
+        <div class="gcard"><div class="abbr">🔤 TLC · KDE · CTE</div><div class="full">Traceability Lot Code · Key Data Elements · Critical Tracking Events</div><div class="mean">FSMA 204's vocabulary: unique lot identifier, required data fields, and the moments (harvest/pack/transform/ship/receive) they're captured.</div></div>
+        <div class="gcard"><div class="abbr">🔖 GS1 (GTIN·GLN·SSCC)</div><div class="full">Global standards identifiers</div><div class="mean">Standard product/location/logistics codes encoded in GS1-128 barcodes — the de-facto retailer language.</div></div>
+        <div class="gcard"><div class="abbr">🏅 FSSC 22000 / BRCGS / SMETA</div><div class="full">Audit schemes European retail demands</div><div class="mean">Food-safety &amp; ethical-audit passports increasingly required by EU private-label buyers.</div></div>
+        <div class="gcard"><div class="abbr">🌍 AfCFTA</div><div class="full">African Continental Free Trade Area</div><div class="mean">Continental free-trade zone — regional market diversification beyond EU/US/Asia.</div></div>
+        <div class="gcard"><div class="abbr">🏛️ NEPC · NCAN · FACAN</div><div class="full">Nigerian export/cashew bodies</div><div class="mean">Export Promotion Council; National Cashew Association; Federation of Agricultural Commodity Associations — policy voices quoting the industry stats.</div></div>
+        <div class="gcard"><div class="abbr">🌱 TechnoServe "Prosper Cashew"</div><div class="full">Development program</div><div class="mean">Supports mechanised processing plants in Nigeria/Benin/Ghana — potential technical partner &amp; credibility reference.</div></div>
+        <div class="gcard"><div class="abbr">📊 CAGR</div><div class="full">Compound Annual Growth Rate</div><div class="mean">Year-on-year growth pace, smoothed. Kernel market: 4.1%; CNSL: 4.9%.</div></div>
+        <div class="gcard"><div class="abbr">🌡️ Moisture window</div><div class="full">8–10% storage · ≤5% finished</div><div class="mean">Sweet spots preventing mould in transit and brittleness in cutting; science optimums vary by nut size &amp; steam time.</div></div>
+      </div>
+    </section>
+
+    <!-- ================= SOURCES ================= -->
+    <section class="sec" id="sources">
+      <div class="sec-head"><span class="sec-emoji">📚</span><span class="section-title">Where These Numbers Come From</span><span class="sec-line"></span></div>
+      <p class="src">NEPC / NCAN / FACAN statements via BusinessDay, New Telegraph, Punch &amp; MSME Africa (Jan–Mar 2026) · Agro Climate News ($446.9M/₦635bn 2025) · Tridge Cashew Kernel Market Overview 2026 · ShipScout cashew export data 2026 (Vietnam $5.23B record) · WorldStopExports 2025 country tables · Mordor Intelligence (kernel market $7.1B→$9.03B; CNSL 1.06→1.41M t) · MarketsandMarkets CNSL report · SVC Group Vietnam industry review 2026 · APEDA Market Intelligence Cell dashboard (Oct 2025) · African Cashew Alliance (West Africa processing +51% 2025; KOR calculation guides) · ComCashew/FOCAS KOR methodology · UNCTAD Commodities at a Glance: Cashew Nuts · TechnoServe "Cashew Shells for Energy" CHP models · cashew-machine.org &amp; cashew-technology.com yield/WKR engineering guides · J. Saudi Soc. Agricultural Sciences steaming research · iFactory/Policy Canary/Tive FSMA 204 compliance trackers · ESI Africa &amp; Solar&Storage Live Nigeria market report · NBS diesel price watch. Figures are directional industry intelligence — validate specifics before financial commitments. 📌</p>
+    </section>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Process here. Certify here. Climb the ladder. Let the shells pay the bills. 🚀</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
