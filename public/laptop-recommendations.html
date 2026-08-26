@@ -634,5 +634,81 @@
   </div>
 
 </div>
+
+<style>
+.qlink-wrap { max-width: 1100px; margin: 36px auto 44px; padding: 0 22px; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+.qlink-panel {
+  border: 1.5px dashed #D9A441; border-radius: 14px;
+  padding: 26px 28px 20px;
+  background: linear-gradient(135deg, rgba(217,164,65,.07), transparent 55%), #fff;
+}
+.ql-eyebrow { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: #C87532; margin-bottom: 6px; }
+.ql-title { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 19px; font-weight: 800; color: #0B3D26; margin-bottom: 16px; }
+.ql-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ql-btn {
+  display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+  border: 1.5px solid #E2DFD1; border-radius: 12px; background: #fff; text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.ql-btn:hover { border-color: #D9A441; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(11,61,38,.13); }
+.ql-icon { width: 40px; height: 40px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 19px; border-radius: 10px; background: #F7F3E8; }
+.ql-name { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 13.5px; font-weight: 800; color: #0B3D26; line-height: 1.25; display: block; }
+.ql-sub { font-size: 10.5px; color: #637269; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; display: block; }
+@media print { .qlink-wrap { display: none !important; } }
+</style>
+
+<!-- Quick Links (screen only) -->
+<div class="qlink-wrap">
+  <div class="qlink-panel">
+    <div class="ql-eyebrow">Screen Only · Excluded From Printouts</div>
+    <div class="ql-title">Quick Links — Everything, One Click Away</div>
+    <div class="ql-grid">
+        <a class="ql-btn" href="ekofin-cover-letter.html">
+          <span class="ql-icon">✉️</span>
+          <span><span class="ql-name">Cover Letter</span><span class="ql-sub">Read the full letter</span></span>
+        </a>
+        <a class="ql-btn" href="ekofin-cv.html">
+          <span class="ql-icon">📋</span>
+          <span><span class="ql-name">Curriculum Vitae</span><span class="ql-sub">View the résumé</span></span>
+        </a>
+        <a class="ql-btn" href="ekofin-email.html">
+          <span class="ql-icon">📄</span>
+          <span><span class="ql-name">Email Tapestry</span><span class="ql-sub">Letter · résumé · contacts in one flow</span></span>
+        </a>
+        <a class="ql-btn" href="documents.html">
+          <span class="ql-icon">🗂️</span>
+          <span><span class="ql-name">Documents Hub</span><span class="ql-sub">Every page, one place</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/7wgyoteeg8q5xk0chays7/dammieBSc.pdf?rlkey=o1hluuugbsdc26pjdb0v6ztls&st=u81cq1el&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🎓</span>
+          <span><span class="ql-name">B.Sc. Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/kh4jwadt9h6u0j6eq8svx/dammieNYSC.pdf?rlkey=ywun0j8mufxyaynecv0uy4gih&st=jc1g805e&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🎖️</span>
+          <span><span class="ql-name">NYSC Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/9uua9ssfraqnfvf1xlbj6/dammieGCE.pdf?rlkey=mtuitb6i8hnqymmobiftv9yex&st=pg6b43ry&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">📜</span>
+          <span><span class="ql-name">GCE Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/x09f2dnlr1pd9gg3ri3sq/dammieBirthCert.pdf?rlkey=ycp1mnhlex9v18vib33whb4j7&st=4vv035tn&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🧾</span>
+          <span><span class="ql-name">Birth Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://starium-app.dammieoptimus.workers.dev/" target="_blank" rel="noopener">
+          <span class="ql-icon">🏭</span>
+          <span><span class="ql-name">Starium Rafa ERP</span><span class="ql-sub">Open the live system</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.youtube.com/watch?v=EjhFWjsLDcA" target="_blank" rel="noopener">
+          <span class="ql-icon">▶️</span>
+          <span><span class="ql-name">Demo Video 1</span><span class="ql-sub">Command Centre & QC · YouTube</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.youtube.com/watch?v=Z32CKJGERfg" target="_blank" rel="noopener">
+          <span class="ql-icon">▶️</span>
+          <span><span class="ql-name">Demo Video 2</span><span class="ql-sub">Pallet Transfer & Reports · YouTube</span></span>
+        </a>
+    </div>
+  </div>
+</div>
 </body>
 </html>

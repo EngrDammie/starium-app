@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents Hub — Engr. Damilare Paul Ayodele</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #0B3D26;
+    --green: #176B3A;
+    --leaf: #4F9D58;
+    --gold: #D9A441;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --paper: #FCFCF8;
+    --ink: #1D2922;
+    --muted: #637269;
+    --hairline: #E2DFD1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(29,41,34,.08), 0 18px 50px rgba(29,41,34,.13);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* Masthead */
+  .masthead {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--green) 80%, #1E7A44 100%);
+    padding: 48px 54px 42px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 90% 12%, rgba(217,164,65,.18) 0, transparent 38%),
+      radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 42%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--gold);
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .32em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff; font-size: 34px; font-weight: 800;
+    letter-spacing: -.018em; line-height: 1.18;
+    max-width: 640px; margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.87); font-size: 16px; max-width: 620px; font-weight: 500; }
+  .mast-rule { width: 64px; height: 3px; background: var(--gold); border-radius: 2px; margin-top: 24px; }
+
+  /* Content */
+  .content { padding: 40px 54px 36px; }
+
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 38px 0 18px; }
+  .section-head:first-child { margin-top: 0; }
+  .section-num { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13px; color: var(--gold); letter-spacing: .08em; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 21px; font-weight: 800; color: var(--forest); letter-spacing: -.01em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+  .section-desc { font-size: 13.5px; color: var(--muted); margin: -8px 0 16px; max-width: 720px; }
+
+  /* Card grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    border: 1.5px solid var(--hairline);
+    border-radius: 14px;
+    background: #fff;
+    text-decoration: none;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(11,61,38,.14);
+  }
+  .card-icon {
+    width: 52px; height: 52px; flex: 0 0 52px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 25px;
+    border-radius: 13px;
+    background: var(--cream);
+  }
+  .card-text { display: flex; flex-direction: column; min-width: 0; }
+  .card-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15.5px; font-weight: 800; color: var(--forest);
+    line-height: 1.28;
+  }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+  /* Live system banner */
+  .live-banner {
+    margin-top: 44px;
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 26px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--forest) 0%, var(--green) 100%);
+    text-decoration: none;
+    transition: transform .18s ease, box-shadow .18s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .live-banner::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 92% 20%, rgba(217,164,65,.25) 0, transparent 45%);
+    pointer-events: none;
+  }
+  .live-banner:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(11,61,38,.35); }
+  .live-icon {
+    width: 56px; height: 56px; flex: 0 0 56px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 27px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.12);
+  }
+  .live-name { font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #fff; }
+  .live-sub { font-size: 13.5px; color: rgba(255,255,255,.85); margin-top: 3px; }
+
+  .foot-band {
+    border-top: 2.5px solid var(--forest);
+    background: var(--cream);
+    padding: 15px 54px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--green); white-space: nowrap; }
+
+  @media (max-width: 700px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .masthead h1 { font-size: 27px; }
+    .section-title { white-space: normal; }
+  }
+
+  @media print {
+    *, *::before, *::after { color: #000 !important; background: transparent !important; box-shadow: none !important; }
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 12mm; }
+    .live-banner { border: 2px solid #000; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">Documents Hub</div>
+    <h1>Every Document. One Page.</h1>
+    <p class="mast-sub">Application materials, technical blueprints and plain-English guides — all in one place, each opening in its own beautifully designed page.</p>
+    <div class="mast-rule"></div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">EKOFIN Application Suite</span><span class="section-line"></span></div>
+    <p class="section-desc">The complete Chief Software Architect application — letter, résumé, and the full email tapestry with verifiable credentials built in.</p>
+    <div class="grid">
+      <a class="card" href="ekofin-email.html">
+        <span class="card-icon">✉️</span>
+        <span class="card-text"><span class="card-name">The Email Tapestry</span><span class="card-sub">Cover story → résumé → contact details, woven into one flowing page.</span></span>
+      </a>
+      <a class="card" href="ekofin-cover-letter.html">
+        <span class="card-icon">✒️</span>
+        <span class="card-text"><span class="card-name">Cover Letter</span><span class="card-sub">Formal letterhead version — printable A4, credentials panel on screen.</span></span>
+      </a>
+      <a class="card" href="ekofin-cv.html">
+        <span class="card-icon">📋</span>
+        <span class="card-text"><span class="card-name">Curriculum Vitae</span><span class="card-sub">World-class two-column résumé — ink-saving, pure-black print ready.</span></span>
+      </a>
+    </div>
+
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">Laptop Blueprints — Technical</span><span class="section-line"></span></div>
+    <p class="section-desc">Full procurement references: workload analysis, spec ladders, four price tiers of real Nigerian-market laptops, TCO and buying-channel intelligence.</p>
+    <div class="grid">
+      <a class="card" href="laptop-blueprint-starium.html">
+        <span class="card-icon">🏭</span>
+        <span class="card-text"><span class="card-name">Blueprint · Starium Rafa</span><span class="card-sub">Internal hardware request framed around the ERP's rollout phase.</span></span>
+      </a>
+      <a class="card" href="laptop-blueprint-ekofin.html">
+        <span class="card-icon">🌾</span>
+        <span class="card-text"><span class="card-name">Blueprint · EKOFIN</span><span class="card-sub">Architect-mandate edition tied to the farm-to-global plan.</span></span>
+      </a>
+      <a class="card" href="laptop-recommendations.html">
+        <span class="card-icon">💻</span>
+        <span class="card-text"><span class="card-name">Recommendations · Combined</span><span class="card-sub">The original unified reference covering both companies.</span></span>
+      </a>
+    </div>
+
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">Plain-English Guides</span><span class="section-line"></span></div>
+    <p class="section-desc">No jargon, no tables of specs — just honest answers for anyone: what is being asked, what it costs, why it pays for itself.</p>
+    <div class="grid">
+      <a class="card" href="laptop-guide-plain-combined.html">
+        <span class="card-icon">📖</span>
+        <span class="card-text"><span class="card-name">Guide · Combined</span><span class="card-sub">One universal version for any reader.</span></span>
+      </a>
+      <a class="card" href="laptop-guide-plain-starium.html">
+        <span class="card-icon">📕</span>
+        <span class="card-text"><span class="card-name">Guide · Starium Rafa</span><span class="card-sub">For Starium management — the ERP behind the request.</span></span>
+      </a>
+      <a class="card" href="laptop-guide-plain-ekofin.html">
+        <span class="card-icon">📗</span>
+        <span class="card-text"><span class="card-name">Guide · EKOFIN</span><span class="card-sub">For EKOFIN leadership — the tool behind the mandate.</span></span>
+      </a>
+    </div>
+
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Management Presentations</span><span class="section-line"></span></div>
+    <p class="section-desc">Screen decks showcasing the Starium Rafa Enterprise ERP — modules, architecture and the complete package list.</p>
+    <div class="grid">
+      <a class="card" href="management-presentation.html">
+        <span class="card-icon">🖥️</span>
+        <span class="card-text"><span class="card-name">Management Presentation</span><span class="card-sub">Full scroll deck — every module, no gaps.</span></span>
+      </a>
+      <a class="card" href="management-presentation-slides.html">
+        <span class="card-icon">🎞️</span>
+        <span class="card-text"><span class="card-name">Presentation Slides</span><span class="card-sub">Condensed slide-by-slide version.</span></span>
+      </a>
+    </div>
+
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">Certificates &amp; Credentials</span><span class="section-line"></span></div>
+    <p class="section-desc">Original certificates, hosted on Dropbox — one click to verify.</p>
+    <div class="grid">
+      <a class="card" href="https://www.dropbox.com/scl/fi/7wgyoteeg8q5xk0chays7/dammieBSc.pdf?rlkey=o1hluuugbsdc26pjdb0v6ztls&st=u81cq1el&dl=0" target="_blank" rel="noopener">
+        <span class="card-icon">🎓</span>
+        <span class="card-text"><span class="card-name">B.Sc. Certificate</span><span class="card-sub">Electronics &amp; Computer Engineering · LASU · View PDF</span></span>
+      </a>
+      <a class="card" href="https://www.dropbox.com/scl/fi/kh4jwadt9h6u0j6eq8svx/dammieNYSC.pdf?rlkey=ywun0j8mufxyaynecv0uy4gih&st=jc1g805e&dl=0" target="_blank" rel="noopener">
+        <span class="card-icon">🏅</span>
+        <span class="card-text"><span class="card-name">NYSC Certificate</span><span class="card-sub">National Youth Service Corps · View PDF</span></span>
+      </a>
+      <a class="card" href="https://www.dropbox.com/scl/fi/9uua9ssfraqnfvf1xlbj6/dammieGCE.pdf?rlkey=mtuitb6i8hnqymmobiftv9yex&st=pg6b43ry&dl=0" target="_blank" rel="noopener">
+        <span class="card-icon">📜</span>
+        <span class="card-text"><span class="card-name">GCE Certificate</span><span class="card-sub">West African Examinations Council · View PDF</span></span>
+      </a>
+      <a class="card" href="https://www.dropbox.com/scl/fi/x09f2dnlr1pd9gg3ri3sq/dammieBirthCert.pdf?rlkey=ycp1mnhlex9v18vib33whb4j7&st=4vv035tn&dl=0" target="_blank" rel="noopener">
+        <span class="card-icon">🧾</span>
+        <span class="card-text"><span class="card-name">Birth Certificate</span><span class="card-sub">View PDF</span></span>
+      </a>
+    </div>
+
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">Demo Videos</span><span class="section-line"></span></div>
+    <p class="section-desc">Short real-screen recordings of the live ERP — no mockups, no post-production.</p>
+    <div class="grid">
+      <a class="card" href="https://www.youtube.com/watch?v=EjhFWjsLDcA" target="_blank" rel="noopener">
+        <span class="card-icon">▶️</span>
+        <span class="card-text"><span class="card-name">Demo Video 1</span><span class="card-sub">Command Centre &amp; QC in action · YouTube</span></span>
+      </a>
+      <a class="card" href="https://www.youtube.com/watch?v=Z32CKJGERfg" target="_blank" rel="noopener">
+        <span class="card-icon">▶️</span>
+        <span class="card-text"><span class="card-name">Demo Video 2</span><span class="card-sub">Pallet Transfer &amp; Smart Reports · YouTube</span></span>
+      </a>
+    </div>
+
+    <a class="live-banner" href="https://starium-app.dammieoptimus.workers.dev/" target="_blank" rel="noopener">
+      <span class="live-icon">🏭</span>
+      <span>
+        <span class="live-name">Starium Rafa Enterprise ERP — Live</span><br/>
+        <span class="live-sub">Skip the documents entirely: open the real, running system right now.</span>
+      </span>
+    </a>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Built the way everything here is built — carefully, and to be used.</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Aug 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
