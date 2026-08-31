@@ -136,7 +136,7 @@
   </div>
 
   <nav class="toc">
-    <a href="#diagnosis">🔍 Diagnosis</a><a href="#headline">📣 Headline</a><a href="#photo">📸 Photo &amp; Banner</a><a href="#about">✍️ About</a><a href="#experience">💼 Experience</a><a href="#featured">⭐ Featured</a><a href="#skills">🧩 Skills</a><a href="#education">🎓 Education</a><a href="#certs">📜 Certifications</a><a href="#recs">💬 Recommendations</a><a href="#activity">🔔 Activity</a><a href="#settings">⚙️ Settings</a><a href="#action">📋 Action Plan</a><a href="#mistakes">🚫 Mistakes</a><a href="#words">📖 Power Words</a>
+    <a href="#diagnosis">🔍 Diagnosis</a><a href="#headline">📣 Headline</a><a href="#photo">📸 Photo &amp; Banner</a><a href="#about">✍️ About</a><a href="#experience">💼 Experience</a><a href="#architecture">🏗️ Scale Answer</a><a href="#featured">⭐ Featured</a><a href="#skills">🧩 Skills</a><a href="#education">🎓 Education</a><a href="#certs">📜 Certifications</a><a href="#recs">💬 Recommendations</a><a href="#activity">🔔 Activity</a><a href="#settings">⚙️ Settings</a><a href="#action">📋 Action Plan</a><a href="#mistakes">🚫 Mistakes</a><a href="#words">📖 Power Words</a>
   </nav>
 
   <div class="content">
@@ -343,6 +343,61 @@ Feb 2019 – Jul 2021 · Lagos, Nigeria
       <p>Update these with the same pattern: <strong>role title + company + dates + 3–5 bullet points starting with action verbs and including measurable outcomes where possible</strong>. Use the CV content as your source — it already has the right details, just reformat for LinkedIn.</p>
 
       <div class="plain"><b>🧠 The rule of impact bullets:</b> Every bullet should follow the formula: <strong>Action verb + What you did + Result or Scale</strong>. "Designed API endpoints" is weak. "Designed API endpoints powering transportation management applications used across 40+ terminal locations nationwide" is hireable. Always quantify where you can — numbers of users, systems, modules, or money saved.</div>
+    </section>
+
+    <!-- ==================== ARCHITECTURE / SCALE STORY ==================== -->
+    <section class="sec" id="architecture">
+      <div class="sec-head"><span class="sec-emoji">🏗️</span><span class="section-title">The "Structured to Scale" Answer — Prove It in an Interview</span><span class="sec-line"></span></div>
+      <p class="sec-sub">If you put "structured to scale into full ERP modules" on your profile, an interviewer WILL ask: "So how exactly is your code structured to scale?" Here is the truthful, technically-grounded answer — with the real files, patterns, and an honest admission of the weak point.</p>
+
+      <div class="alert"><b>⚠️ Read this before your interview:</b> The phrasing you already corrected on the profile is the safe framing — "modules covering QC, waste intelligence, pallet transfers, machine tracking, and executive dashboards, structured to scale." You must NEVER claim inventory/procurement exist. But you CAN confidently explain the architecture that would let you ADD them. That's the question this section answers.</div>
+
+      <h3 class="mini">The 30-Second Elevator Answer (Say This First)</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>I built it on a strict module-per-feature pattern. Each domain — quality control, carton waste, pallet transfers — follows the exact same four-layer recipe: a page, a service file for data access, a context provider for shared state, and Firestore plus a localStorage queue for offline resilience. Because the pattern is identical for every module, adding a new ERP module like inventory or procurement isn't a new architecture — it's a mechanical copy of an established pattern. I register its route, its menu entry with role permissions, its service file, and its offline queue, and it plugs into the same dashboard and approval backbone as everything else. That's what I mean by structured to scale.</div>
+      </div>
+
+      <div class="plain"><b>🧠 Why this lands:</b> It shows you don't just know one feature — you understand the whole architecture as a repeatable system. Interviewers love hearing "mechanical copy of an established pattern" because it signals maintainability and low risk. Confident, specific, honest.</div>
+
+      <h3 class="mini">The Technical Walkthrough — The 7-File Recipe for a New Module</h3>
+      <p>This is the detail that convinces a technical interviewer you ACTUALLY built it. Refer to it when they ask "how would you add inventory?"</p>
+
+      <div class="step"><span class="step-num">1</span><div><h4>Service file — the data layer</h4><p><strong>File:</strong> e.g. <code>src/services/inventoryOperations.js</code>, mirroring the existing <code>cartonOperations.js</code>.<br><strong>What it contains:</strong> a module-scoped queue key (<code>const INVENTORY_QUEUE_KEY = 'starium_inventory_queue'</code>), a <code>saveInventoryX()</code> function that branches online/offline, a <code>subscribeToX()</code> using Firestore's <code>onSnapshot</code> for real-time updates, and a <code>syncInventoryOfflineQueue()</code> using <code>writeBatch</code> to flush offline records on reconnect.</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>Page(s)</h4><p><strong>File:</strong> <code>src/pages/Inventory.jsx</code> (+ a <code>InventoryReport.jsx</code>). Each consumes <code>useConfig</code>, <code>useAuth</code>, <code>useNetwork</code>, <code>useAlerts</code> — the same four hooks every other page uses.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>Route registration</h4><p><strong>File:</strong> <code>src/App.jsx</code>. Add <code>&lt;Route path="/inventory" element={&lt;ProtectedRoute&gt;&lt;Inventory /&gt;&lt;/ProtectedRoute&gt;} /&gt;</code> — every business route is wrapped in <code>ProtectedRoute</code> (the RBAC gate).</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h4>Menu + permissions</h4><p><strong>File:</strong> <code>src/config/navigation.js</code> — the "module catalog." Drop in a child object <code>{ path: '/inventory', label: 'Inventory', icon: '📦', allowedRoles: ['prod_staff','prod_manager'] }</code>. <code>ProtectedRoute</code> and the <code>Sidebar.canViewRoute</code> function pick it up automatically — a module only appears in navigation for users whose <code>departmentRoles</code> include an allowed role.</p></div></div>
+      <div class="step"><span class="step-num">5</span><div><h4>Wire the offline queue</h4><p><strong>File:</strong> <code>src/context/NetworkContext.jsx</code> — the offline coordinator. Add a queue count state and a <code>useEffect</code> that auto-calls <code>syncInventoryOfflineQueue()</code> when back online. This is the honest weak point (see below).</p></div></div>
+      <div class="step"><span class="step-num">6</span><div><h4>Config defaults</h4><p><strong>File:</strong> <code>src/config/Context.jsx</code> — add an <code>inventory</code> key to <code>DEFAULT_CONFIG</code> (lookup data / tolerances), deep-merged over what's in Firestore.</p></div></div>
+      <div class="step"><span class="step-num">7</span><div><h4>Admin configuration tab (optional)</h4><p><strong>File:</strong> <code>src/pages/SystemConfig.jsx</code> — add an Inventory tab so managers can edit inventory settings at runtime without code changes.</p></div></div>
+
+      <div class="golden">
+        <h4>🎯 The Signature Architecture Facts — Memorise These</h4>
+        <p class="big">"Module-per-feature, config-driven, role-gated, offline-first."</p>
+        <p><strong>Stack:</strong> React 19 + Vite + Firebase/Firestore + react-router. Offline via dual-layer: Firestore's native <code>enableIndexedDbPersistence</code> for reads + a per-module localStorage outbox for writes.</p>
+        <p><strong>Three-tier RBAC:</strong> <code>systemRole</code> (super_admin/standard), <code>departmentRoles</code> (gate which pages you see), <code>actionRoles</code> (gate which buttons you hit). Roles are runtime-editable via <code>UserManagement.jsx</code> — no code changes to change permissions.</p>
+        <p><strong>Config-driven:</strong> <code>MENU_CONFIG</code>, <code>DEFAULT_CONFIG</code>, and all role definitions live in Firestore and are editable at runtime. This is the strongest "ERP-ready" signal in the whole codebase.</p>
+        <p><strong>Approval spine:</strong> Every module writes to a shared <code>shift_approvals</code> collection with named digital sign-off — the same backbone you'd extend to procurement/inventory approval workflows.</p>
+        <p><strong>Dashboard:</strong> The Command Center is a live subscription hub — one <code>onSnapshot</code> stream per module, normalised into KPI cards that link to role-gated pages. Adding a module = adding one subscription + one card.</p>
+      </div>
+
+      <h3 class="mini">The Honest Weak Point (Say This — It Makes You Credible)</h3>
+      <p>Do NOT pretend the architecture is perfect. Interviewers respect candour. The real scaling smell is here:</p>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body>One honest weakness: the offline-sync orchestration in NetworkContext is currently written per-module — nearly identical useEffect blocks for each queue. It works, and it's reliable, but it's repetitive. If I were building this for production scale today, I'd refactor it into a single module registry — a MODULES array that encodes each module's route, nav entry, service file, queue key, and role requirements in one place, and drives both the UI and the sync coordinator from that single source of truth. The architecture is structured to make that refactor easy — I isolated each module's logic to its own service file and page — but I haven't fully centralised the queue wiring yet. That's the first thing I'd do at industrial scale.</div>
+      </div>
+
+      <div class="plain"><b>🧠 Why this answer is powerful:</b> It reframes the weakness as a clear-eyed roadmap. You know the codebase's fault line AND you know the exact fix. This is what separates "someone who wrote code" from "someone who architects systems." Admitting it builds massive trust — then the concrete plan turns that trust into admiration.</div>
+
+      <h3 class="mini">Anticipated Follow-Up Questions — With Answers</h3>
+      <div class="step"><span class="step-num">Q</span><div><h4>"How do you keep new modules from breaking existing ones?"</h4><p>Each module is an isolated vertical slice — its own service file, queue key, and page. Adding one doesn't touch another's data layer. The only shared touchpoint is the dashboard subscriptions and the approval collection, and those are additive (a new onSnapshot + a new entry), not modifications of existing logic.</p></div></div>
+      <div class="step"><span class="step-num">Q</span><div><h4>"How is offline data eventually consistent with the server?"</h4><p>Dual layer. Reads use Firestore's native IndexedDB persistence so cached data is available offline. Writes go to a module-scoped localStorage outbox stamped with a local timestamp. When the network returns, <code>syncXOfflineQueue()</code> flushes the outbox via a Firestore <code>writeBatch</code> — atomically, preserving original timestamps — then clears the queue. That zero-data-loss property is structural: the write is never dropped, it just waits.</p></div></div>
+      <div class="step"><span class="step-num">Q</span><div><h4>"How does security work across modules?"</h4><p>Three tiers. <code>systemRole</code> is the global gate (super_admin bypasses everything). <code>departmentRoles</code> determine which modules appear in your sidebar and which routes <code>ProtectedRoute</code> lets you reach. <code>actionRoles</code> gate individual actions — for example, only a qc_supervisor can open a shift approval. All of it is config-driven and editable at runtime, so changing who can see a module doesn't require a redeploy.</p></div></div>
+      <div class="step"><span class="step-num">Q</span><div><h4>"Why not just use an off-the-shelf ERP?"</h4><p>Cost and control. Odoo/SAP require licences, servers, consultants, and months of configuration — at zero software licence cost I delivered a working, role-governed, offline-first system tailored to this exact factory's QC workflow, and I own the entire codebase. Off-the-shelf would have been a black box I couldn't reshape to the shop floor's actual daily reality.</p></div></div>
+      <div class="step"><span class="step-num">Q</span><div><h4>"What would you add first if you could?"</h4><p>Honestly, the module registry refactor I mentioned — centralising queue sync — because it de-risks every future module. Then inventory, because the pallet-transfer data is already moving cartons toward the warehouse, so inventory is the natural, data-aligned next step. Then procurement. That sequence makes the scaling story real, not just theoretical.</p></div></div>
+
+      <div class="plain"><b>🧠 The takeaway:</b> You don't need inventory or procurement to be built to speak about scaling — you need to articulate the <em>mechanism</em> by which they'd be added, and be honest about the current limits. This section gives you that mechanism in real file names and real patterns. Practice saying the elevator answer out loud until it's automatic.</div>
     </section>
 
     <!-- ==================== 06 FEATURED ==================== -->
