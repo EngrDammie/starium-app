@@ -7,8 +7,8 @@ import { getShiftDateInfo } from './qcOperations';
 
 const PALLET_QUEUE_KEY = 'starium_pallet_transfer_queue';
 
-export function getPalletTransferDocId(config) {
-  const { shift, date } = getShiftDateInfo(config);
+export function getPalletTransferDocId(config, now) {
+  const { shift, date } = getShiftDateInfo(config, now);
   return `pallet_transfer_${shift}_${date}`;
 }
 
@@ -101,6 +101,10 @@ export function getQueuedPalletTransfers(config) {
 }
 
 export async function syncPalletTransferOfflineQueue() {
+  // NOTE: unlike the other sync fns this returns a COUNT (number), not
+  // { synced }. NetworkContext normalises via normalizeSyncResult(), and
+  // re-reads the true remaining queue length afterwards — so partial
+  // failures stay visible instead of being silently cleared.
   const queue = JSON.parse(localStorage.getItem(PALLET_QUEUE_KEY) || '[]');
   if (queue.length === 0) return 0;
   const batch = writeBatch(db);

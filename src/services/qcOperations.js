@@ -4,8 +4,7 @@ import { collection, addDoc, doc, getDoc, setDoc, updateDoc, serverTimestamp, qu
 
 const QUEUE_KEY = 'starium_offline_queue';
 
-export function getShiftDateInfo(config) {
-  const now = new Date();
+export function getShiftDateInfo(config, now = new Date()) {
   const hour = now.getHours();
   let shift, dateObj;
   
@@ -86,6 +85,49 @@ function queueOffline(testData, setQueueCount) {
     console.error("Failed to queue offline", e);
     return 'error';
   }
+}
+
+// Flush the legacy QC (`qc_tests`) offline queue to Firestore.
+// Kept as a named service function so the offline-module registry in
+// NetworkContext can treat the QC queue like every other module queue.
+// Returns { synced, failed }.
+export async function syncQcOfflineQueue() {
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  if (queue.length === 0) return { synced: 0, failed: 0 };
+
+  let failedCount = 0;
+  const remainingQueue = [];
+
+  for (const testData of queue) {
+    try {
+      const localTime = testData.localCreatedAt;
+      const syncId = testData.syncId;
+
+      const docData = {
+        ...testData,
+        createdAt: localTime ? new Date(localTime) : serverTimestamp(),
+        syncedAt: serverTimestamp(),
+        wasOfflineQueued: true,
+        offlineSyncId: syncId
+      };
+      delete docData.localCreatedAt;
+      delete docData.syncId;
+
+      await addDoc(collection(db, 'qc_tests'), docData);
+    } catch (e) {
+      failedCount++;
+      remainingQueue.push(testData);
+      console.error('[Sync] Failed to sync item:', e);
+    }
+  }
+
+  if (failedCount === 0) {
+    localStorage.removeItem(QUEUE_KEY);
+  } else {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(remainingQueue));
+  }
+
+  return { synced: queue.length - failedCount, failed: failedCount };
 }
 
 // Includes the Oldest-to-Newest sorting fix

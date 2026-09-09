@@ -1,8 +1,10 @@
 # Starium App — Engineering Plan (Backup-Developer Handover + Code Quality)
 
-> **Status:** Planning only. Nothing implemented yet.
+> **Status:** IMPLEMENTED locally 2026-09-09 — all items P0–P2 done, verified
+> (`npm run test`: 60/60 green; `npm run build` passes; no new lint errors).
+> NOT pushed to GitHub yet — user will test locally first.
 > **Purpose:** A working document I (the AI assistant) will revisit later to execute. It consolidates every improvement recommended during our conversations so far, prioritized, with concrete steps.
-> **Last updated:** 2026-09-04
+> **Last updated:** 2026-09-09
 
 ---
 
@@ -160,8 +162,51 @@ When resuming, the flow is:
 ---
 
 ## 6. Reminders / Notes for the Resume Session
-
 - The LinkedIn optimizer (`public/linkedin-optimizer.html`) already contains the interview-story framing for the module-registry refactor and the NetworkContext weakness. Making the refactor real now strengthens that story.
 - The earlier **Firestore rules fix** (all collections added, deployed) is DONE and committed (`a95c1a1`). The `firestore.rules` file and `firebase.json` reference are in place.
 - The **uncommitted** LinkedIn optimizer edits (Firebase + Supabase Q&A interview notes) are still pending — confirm whether to commit/push these when resuming (the user said "don't push yet").
 - Never claim inventory/procurement modules exist — the docs and profile wording correctly describe the current module set only.
+
+---
+
+## 7. Implementation Log (2026-09-09 — all done locally, NOT pushed)
+
+Decisions taken (open questions resolved by sensible default):
+- Test framework: **Vitest** (+ jsdom, @testing-library). Pure-logic coverage
+  first; no Firebase emulator (static rules guard instead).
+- Registry refactor: **backwards-compatible** — all legacy NetworkContext
+  names preserved; pages untouched.
+- No CI change yet (GitHub Actions deploy untouched).
+
+What was built:
+- **P0-A:** `vitest.config.js`, `src/test/setup.js`, `npm run test` /
+  `test:watch` scripts; `src/services/queueStore.js` (+ `createMemoryStorage`);
+  `getShiftDateInfo` (+ all doc-ID helpers) accept optional `now` for tests;
+  `syncQcOfflineQueue()` extracted to `qcOperations.js`;
+  `summarizeCartonRecords()` / `summarizeLaminateRecords()` pure helpers.
+  6 service test files + registry + context + utils + rules tests.
+- **P0-B:** `src/config/offlineModules.js` (9-module registry +
+  `normalizeSyncResult`); `NetworkContext.jsx` rewritten registry-driven
+  (253 lines, same size, but 1 generic sync effect instead of 10 bespoke
+  blocks; re-reads true remaining lengths after flush).
+- **P1-C:** `SystemConfig.jsx` 1217 → ~600-line shell; 10 tab components +
+  `ConfigModals.jsx` + `tabs.js` + `factoryDefaults.js` under
+  `src/pages/SystemConfig/`. No logic moved, no behavior change.
+- **P1-D:** `CONTRIBUTING.md` day-1 cheat sheet.
+- **P2-E:** `src/services/reportUtils.js` (`buildShiftIdentifiers`,
+  `calculateTrend` deduplicated from both waste reports) +
+  `src/services/formatUtils.js` (`formatCountdown`, `formatTime`);
+  `src/components/qcSachet/` (`MachineGrid`, `MachineDetail`,
+  `ApprovalModal`). QCSachet 805 → ~560 lines; Carton 645 → 603;
+  Laminate 648 → 606.
+- **P2-F:** 5 high-value comments (logout ordering, appendIssues re-stop,
+  empty-silo auto-stop coupling, carton validation invariant, pallet
+  sync return-shape note).
+- **P2-G:** `src/test/firestoreRules.test.js` static guard (12 collections ×
+  create/update/delete assertions).
+
+Verification: `npx vitest run` → 10 files, 60 tests, all green.
+`npm run build` passes. New files lint-clean; remaining lint errors in
+touched files are pre-existing kinds (count went down, not up).
+`docs/CODEBASE_REFERENCE.md` updated (NetworkContext, SystemConfig,
+QC Sachet, shared helpers, tests sections).

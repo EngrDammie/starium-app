@@ -3,13 +3,12 @@ import { db } from '../config/firebase';
 
 const STRING_WEIGHT_KEY = 'starium_qc_string_weight_queue';
 
-export function getStringWeightShiftDocId(config) {
-  const { shift, date } = getShiftDateInfo(config);
+export function getStringWeightShiftDocId(config, now) {
+  const { shift, date } = getShiftDateInfo(config, now);
   return `qc_string_weight_${shift}_${date}`;
 }
 
-export function getShiftDateInfo(config) {
-  const now = new Date();
+export function getShiftDateInfo(config, now = new Date()) {
   const hour = now.getHours();
   let shift, dateObj;
   if (hour >= config.dayShiftStart && hour < config.nightShiftStart) {

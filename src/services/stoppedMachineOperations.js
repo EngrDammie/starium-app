@@ -141,6 +141,10 @@ export async function startMachine(machineDocId, userFullName) {
 }
 
 export async function appendIssuesToMachine(docId, issues, userFullName) {
+  // NOTE: appending issues RE-STOPS the machine by design — startedAt/startedBy
+  // are reset to null so the Start button reappears and isActive flips back to
+  // true. The machine only returns to normal once ALL issues (old + new) are
+  // solved and it is started again. See startMachine() for the other half.
   try {
     const docRef = doc(db, 'stopped_machines', docId);
     const snap = await getDoc(docRef);

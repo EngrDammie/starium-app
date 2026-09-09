@@ -5,8 +5,8 @@ import { addMachineIssue, reportStoppedMachine, markIssueSolved } from './stoppe
 
 const EMPTY_SILO_QUEUE_KEY = 'starium_empty_silo_queue';
 
-export function getEmptySilosDocId(config) {
-  const { shift, date } = getShiftDateInfo(config);
+export function getEmptySilosDocId(config, now) {
+  const { shift, date } = getShiftDateInfo(config, now);
   return `empty_silos_${shift}_${date}`;
 }
 
@@ -140,6 +140,10 @@ async function getOrCreateNoPowderIssue(userFullName) {
 }
 
 async function autoStopMachineForEmpty(machine, userFullName, isOnline) {
+  // CROSS-MODULE COUPLING (read before changing): an empty silo implies no
+  // powder, so the machine is automatically reported stopped with a "No Powder"
+  // issue in the Stopped Machines system. The reverse happens on refill —
+  // see resolveNoPowderIssueForMachine(). Touch one side, test the other.
   try {
     const issue = await getOrCreateNoPowderIssue(userFullName);
     await reportStoppedMachine(machine, [issue], userFullName, isOnline);

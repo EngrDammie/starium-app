@@ -188,6 +188,10 @@ export function AuthProvider({ children }) {
     };
   }, [currentUser]);
 
+  // ORDER MATTERS: the presence write requires a valid Firebase auth token
+  // (see firestore.rules `presence` block), so we must signal offline BEFORE
+  // signOut() clears the token. Reversing these two lines causes
+  // "Missing or insufficient permissions" and leaves a ghost online user.
   const logout = async () => {
     const uid = currentUser?.uid;
     if (uid) await setOfflineStatus(uid);

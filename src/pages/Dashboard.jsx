@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { subscribeToAllStringWeights, getShiftDateInfo } from '../services/qcStringWeightOperations';
 import { subscribeToAllBagInspections } from '../services/qcBagInspectionOperations';
 import { subscribeToAllCartonInspections } from '../services/qcCartonInspectionOperations';
+import { pluralize } from '../services/formatUtils';
 
 export default function Dashboard() {
   const { config, loadingConfig } = useConfig();
@@ -31,6 +32,8 @@ export default function Dashboard() {
   const [biCount, setBiCount] = useState(0);
   const [ciCount, setCiCount] = useState(0);
   const [palletTransfer, setPalletTransfer] = useState({ totalPallets: 0, totalCartons: 0, perGram: {} });
+
+  const sachetTotal = swCount + biCount + ciCount;
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -182,7 +185,7 @@ export default function Dashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
               Live Users
             </h3>
-            <div className="text-5xl font-black text-white mb-1">{activeUsersCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
             <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
           </Link>
         ) : (
@@ -192,7 +195,7 @@ export default function Dashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
               Live Users
             </h3>
-            <div className="text-5xl font-black text-white mb-1">{activeUsersCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
             <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
           </div>
         )}
@@ -202,14 +205,14 @@ export default function Dashboard() {
           <Link to="/level9-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🏭 Level 9 Tests</h3>
-            <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
+            <div className="text-5xl font-black text-white mb-1">{level9Count} <span className="text-xl font-bold text-gray-400">{pluralize(level9Count, 'buggy', 'buggies')}</span></div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.6s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🏭</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🏭 Level 9 Tests</h3>
-            <div className="text-5xl font-black text-white mb-1">{level9Count}</div>
+            <div className="text-5xl font-black text-white mb-1">{level9Count} <span className="text-xl font-bold text-gray-400">{pluralize(level9Count, 'buggy', 'buggies')}</span></div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </div>
         )}
@@ -219,14 +222,14 @@ export default function Dashboard() {
           <Link to="/bot-exec" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🤖 BOT Tests</h3>
-            <div className="text-5xl font-black text-white mb-1">{botCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{botCount} <span className="text-xl font-bold text-gray-400">{pluralize(botCount, 'test')}</span></div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </Link>
         ) : (
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.7s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🤖</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🤖 BOT Tests</h3>
-            <div className="text-5xl font-black text-white mb-1">{botCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{botCount} <span className="text-xl font-bold text-gray-400">{pluralize(botCount, 'test')}</span></div>
             <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
           </div>
         )}
@@ -283,7 +286,7 @@ export default function Dashboard() {
           <Link to="/carton-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Carton Waste</h3>
-            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
+            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()} <span className="text-xl font-bold text-gray-400">{pluralize(cartonWaste.wasted, 'carton')}</span></div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {cartonWaste.wastePercent}%
             </div>
@@ -293,7 +296,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Carton Waste</h3>
-            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()}</div>
+            <div className="text-5xl font-black text-white mb-1">{cartonWaste.wasted.toLocaleString()} <span className="text-xl font-bold text-gray-400">{pluralize(cartonWaste.wasted, 'carton')}</span></div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: cartonWaste.wastePercent > (config?.cartonWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {cartonWaste.wastePercent}%
             </div>
@@ -306,7 +309,7 @@ export default function Dashboard() {
           <Link to="/laminate-waste-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🗑️ Laminate Waste</h3>
-            <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
+            <div className="text-5xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} <span className="text-xl font-bold text-gray-400">kg</span></div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {laminateWaste.wastePercent}%
             </div>
@@ -316,7 +319,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗑️</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🗑️ Laminate Waste</h3>
-            <div className="text-4xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} kg</div>
+            <div className="text-5xl font-black text-white mb-1">{laminateWaste.wasteCollected.toFixed(2)} <span className="text-xl font-bold text-gray-400">kg</span></div>
             <div className="text-xs font-bold uppercase tracking-wider" style={{ color: laminateWaste.wastePercent > (config?.laminateWaste?.targetWastePercent ?? 5) ? '#F44336' : '#00E676' }}>
               Waste {laminateWaste.wastePercent}%
             </div>
@@ -329,8 +332,8 @@ export default function Dashboard() {
           <Link to="/pallet-transfer-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Cartons → Warehouse</h3>
-            <div className="text-4xl font-black text-white mb-1">{palletTransfer.totalPallets} pallet{palletTransfer.totalPallets > 1 ? 's' : ''}</div>
-            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} cartons</div>
+            <div className="text-5xl font-black text-white mb-1">{palletTransfer.totalPallets} <span className="text-xl font-bold text-gray-400">{pluralize(palletTransfer.totalPallets, 'pallet')}</span></div>
+            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} {pluralize(palletTransfer.totalCartons, 'carton')}</div>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {Object.entries(palletTransfer.perGram).sort(([a],[b]) => Number(a)-Number(b)).map(([g, t]) => (
                 <span key={g} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{g}g: {t.cartons}</span>
@@ -342,8 +345,8 @@ export default function Dashboard() {
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">📦</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">📦 Cartons → Warehouse</h3>
-            <div className="text-4xl font-black text-white mb-1">{palletTransfer.totalPallets} pallet{palletTransfer.totalPallets > 1 ? 's' : ''}</div>
-            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} cartons</div>
+            <div className="text-5xl font-black text-white mb-1">{palletTransfer.totalPallets} <span className="text-xl font-bold text-gray-400">{pluralize(palletTransfer.totalPallets, 'pallet')}</span></div>
+            <div className="text-xs text-gray-400 mb-2">{palletTransfer.totalCartons.toLocaleString()} {pluralize(palletTransfer.totalCartons, 'carton')}</div>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {Object.entries(palletTransfer.perGram).sort(([a],[b]) => Number(a)-Number(b)).map(([g, t]) => (
                 <span key={g} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{g}g: {t.cartons}</span>
@@ -358,7 +361,7 @@ export default function Dashboard() {
           <Link to="/qc-sachet-report" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out] block cursor-pointer">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔬 QC Sachet Checks</h3>
-            <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{sachetTotal} <span className="text-xl font-bold text-gray-400">{pluralize(sachetTotal, 'check')}</span></div>
             <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
               <span>SW: <strong className="text-white">{swCount}</strong></span>
               <span>BI: <strong className="text-white">{biCount}</strong></span>
@@ -371,7 +374,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">✅</div>
             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">🔬 QC Sachet Checks</h3>
-            <div className="text-5xl font-black text-white mb-1">{swCount + biCount + ciCount}</div>
+            <div className="text-5xl font-black text-white mb-1">{sachetTotal} <span className="text-xl font-bold text-gray-400">{pluralize(sachetTotal, 'check')}</span></div>
             <div className="flex gap-3 text-[10px] text-gray-500 mt-1">
               <span>SW: <strong className="text-white">{swCount}</strong></span>
               <span>BI: <strong className="text-white">{biCount}</strong></span>

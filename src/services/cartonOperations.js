@@ -9,8 +9,8 @@ import { getShiftDateInfo } from './qcOperations';
 
 const CARTON_QUEUE_KEY = 'starium_carton_offline_queue';
 
-export function getCartonWasteDocId(config) {
-  const { shift, date } = getShiftDateInfo(config);
+export function getCartonWasteDocId(config, now) {
+  const { shift, date } = getShiftDateInfo(config, now);
   return `carton_waste_${shift}_${date}`;
 }
 
@@ -53,6 +53,9 @@ export async function getPreviousCheck(machineId, shiftApprovalDocId) {
 }
 
 export function validateCheck(record, previousCheck) {
+  // Business invariant: used = previousRemaining + allocated - remaining, and
+  // nothing (remaining, wasted, used + wasted) may exceed maxAvailable.
+  // All four rules must hold before a record is saved or queued.
   const previousRemaining = previousCheck?.remaining ?? 0;
   const maxAvailable = previousRemaining + record.allocated;
 
@@ -242,7 +245,12 @@ export async function fetchCartonRecordsByShift(config, targetShift, targetDate)
 
 export async function getCartonWasteSummary(config, targetShift, targetDate) {
   const records = await fetchCartonRecordsByShift(config, targetShift, targetDate);
+  return summarizeCartonRecords(records);
+}
 
+// Pure grouping/summary helper — no Firestore, fully unit-testable.
+// Groups raw carton records by machine and computes waste %.
+export function summarizeCartonRecords(records) {
   const machinesMap = {};
 
   for (const record of records) {

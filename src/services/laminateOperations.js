@@ -8,8 +8,8 @@ import { getShiftDateInfo } from './qcOperations';
 
 const LAMINATE_QUEUE_KEY = 'starium_laminate_offline_queue';
 
-export function getLaminateWasteDocId(config) {
-  const { shift, date } = getShiftDateInfo(config);
+export function getLaminateWasteDocId(config, now) {
+  const { shift, date } = getShiftDateInfo(config, now);
   return `laminate_waste_${shift}_${date}`;
 }
 
@@ -232,7 +232,11 @@ export async function fetchLaminateRecordsByShift(config, targetShift, targetDat
 
 export async function getLaminateWasteSummary(config, targetShift, targetDate) {
   const records = await fetchLaminateRecordsByShift(config, targetShift, targetDate);
+  return summarizeLaminateRecords(records);
+}
 
+// Pure grouping/summary helper — no Firestore, fully unit-testable.
+export function summarizeLaminateRecords(records) {
   const machinesMap = {};
 
   for (const record of records) {

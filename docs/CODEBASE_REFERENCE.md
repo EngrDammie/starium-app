@@ -267,7 +267,18 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 
 ### NetworkContext (`src/context/NetworkContext.jsx`)
 
-**State exposed**: `isOnline`, `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `cartonInspectionQueueCount`, `setCartonInspectionQueueCount`, `bagInspectionQueueCount`, `setBagInspectionQueueCount`, `stringWeightQueueCount`, `setStringWeightQueueCount`, `palletQueueCount`, `setPalletQueueCount`, `emptySiloQueueCount`, `setEmptySiloQueueCount`, `stoppedMachineQueueCount`, `setStoppedMachineQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`, `isCartonInspectionSyncing`, `setIsCartonInspectionSyncing`, `isBagInspectionSyncing`, `setIsBagInspectionSyncing`, `isStringWeightSyncing`, `setIsStringWeightSyncing`, `isPalletSyncing`, `setIsPalletSyncing`, `isEmptySiloSyncing`, `setIsEmptySiloSyncing`, `isStoppedMachineSyncing`, `setIsStoppedMachineSyncing`
+> **Refactored (Sept 2026):** queue counting + auto-sync are now driven by the
+> module registry in `src/config/offlineModules.js` (single source of truth).
+> One descriptor per module (queue key + sync fn + legacy names); the provider
+> keeps one `queueCounts`/`syncing` map and derives the legacy flat names
+> (`cartonQueueCount`, `setCartonQueueCount`, `isCartonSyncing`, …) so existing
+> pages work unchanged. After each flush the true remaining queue length is
+> re-read instead of assumed zero. Storage mechanics live in
+> `src/services/queueStore.js` (injectable storage, unit-tested).
+
+**State exposed**: `isOnline`, `queueCounts`, `syncing`, plus the full legacy
+flat API below (preserved for backwards compatibility — see
+`src/config/offlineModules.js` for the id → prop-name mapping): `queueCount`, `setQueueCount`, `cartonQueueCount`, `setCartonQueueCount`, `laminateQueueCount`, `setLaminateQueueCount`, `cartonInspectionQueueCount`, `setCartonInspectionQueueCount`, `bagInspectionQueueCount`, `setBagInspectionQueueCount`, `stringWeightQueueCount`, `setStringWeightQueueCount`, `palletQueueCount`, `setPalletQueueCount`, `emptySiloQueueCount`, `setEmptySiloQueueCount`, `stoppedMachineQueueCount`, `setStoppedMachineQueueCount`, `isSyncing`, `setIsSyncing`, `isCartonSyncing`, `setIsCartonSyncing`, `isLaminateSyncing`, `setIsLaminateSyncing`, `isCartonInspectionSyncing`, `setIsCartonInspectionSyncing`, `isBagInspectionSyncing`, `setIsBagInspectionSyncing`, `isStringWeightSyncing`, `setIsStringWeightSyncing`, `isPalletSyncing`, `setIsPalletSyncing`, `isEmptySiloSyncing`, `setIsEmptySiloSyncing`, `isStoppedMachineSyncing`, `setIsStoppedMachineSyncing`
 
 **String Weight Queue**: `starium_qc_string_weight_queue` — synced via `syncStringWeightQueue()` in `qcStringWeightOperations.js` using Firestore `writeBatch`. Queue count is tracked locally in the page (not exposed in NetworkContext yet).
 
@@ -743,6 +754,11 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
 
 ### QCSachetProductionChecks (`src/pages/QCSachetProductionChecks.jsx`) — QC Sachet Production Checks
 - Guarded: QC staff, QC managers, Production staff, Production managers
+- Presentational pieces live in `src/components/qcSachet/`: `QCSachetMachineGrid`
+  (machine buttons), `QCSachetMachineDetail` (detail card + round history + check
+  buttons + dialogs), `QCSachetApprovalModal` (stats table + dual approvals).
+  Shared formatters (`formatCountdown`, `formatTime`) live in
+  `src/services/formatUtils.js` (unit-tested).
 - **Grid view**: Machine grid with 3 statuses — green (latest round all-in-target + meets criteria), red (weights outside target or criteria not met), gray (unchecked). Teams dropdown (persisted to localStorage), shift/date display.
 - **Detail view**: Clicking a machine shows the machine detail page with Round History table (round, weights, result, staff, time) and 3 action buttons: String Weight Check, Bag Inspection, Carton Inspection.
 - **Cooldown timer**: String Weight Check button has a live countdown (configured via `config.qcCheckIntervals.stringWeight`, default 15 min) — disabled until cooldown expires.
@@ -822,7 +838,13 @@ Where `used = previousRemaining + allocated - remaining` and `maxAvailable = pre
   - Table shows Flow instead of Fragrance
   - Floating "Switch to Level 9" button → navigates to `/level9-exec`
 
-### SystemConfig (`src/pages/SystemConfig.jsx`) — Admin Panel
+### SystemConfig (`src/pages/SystemConfig.jsx`) — Admin Panel shell
+Owns ALL state + Firestore handlers. Each tab is a presentational component
+under `src/pages/SystemConfig/` (`MachinesTab`, `LinesTab`, `GramSpecsTab`,
+`RolesTab`, `GlobalSettingsTab`, `QCSettingsTab`, `CartonWasteTab`,
+`LaminateWasteTab`, `PalletTransferTab`, `ImportExportTab`), plus
+`ConfigModals.jsx` (machine/line/gram modals), `tabs.js` (tab registry), and
+`factoryDefaults.js` (30-machine default config used by Reset to Defaults).
 10 tabs:
 
 **1. Machines Tab**:
@@ -1436,7 +1458,27 @@ All data writes go through `saveQCTest()` which:
 1. Checks `isOnline` from NetworkContext
 2. If online → direct Firestore write; on failure → queue
 3. If offline → queue to localStorage
-4. NetworkContext auto-flushes queue on reconnect
+4. NetworkContext auto-flushes queue on reconnect (registry-driven — see
+   `src/config/offlineModules.js`; storage mechanics in
+   `src/services/queueStore.js`)
+
+### Shared pure helpers (unit-tested — see `src/services/__tests__/`)
+- `src/services/queueStore.js` — `readQueue`/`writeQueue`/`pushToQueue`/
+  `clearQueue`/`getQueueLength`/`removeFromQueue` + `createMemoryStorage()`.
+- `src/services/reportUtils.js` — `buildShiftIdentifiers()` + `calculateTrend()`
+  (deduplicated from Carton/Laminate reports; imported by both pages).
+- `src/services/formatUtils.js` — `formatCountdown()` + `formatTime()`.
+- `summarizeCartonRecords()` (`cartonOperations.js`) and
+  `summarizeLaminateRecords()` (`laminateOperations.js`) — pure grouping used
+  by `getCartonWasteSummary()` / `getLaminateWasteSummary()`.
+
+### Tests
+`npm run test` (vitest + jsdom). Covers: shift-boundary logic, carton/laminate
+validation + summaries, inspection grading, string-weight bands, doc-ID formats,
+queueStore, offlineModules registry, NetworkContext legacy API,
+report/format utils, and a static `firestore.rules` coverage guard
+(`src/test/firestoreRules.test.js`) that fails if any writable collection
+loses its explicit rules block.
 
 ### Real-Time Subscriptions
 All data fetching uses `onSnapshot` for live updates. Components return unsubscribe functions in cleanup.
