@@ -1,60 +1,51 @@
 // src/context/NetworkContext.jsx
-import { createContext, useContext, useState, useEffect } from 'react';
-import { db } from '../config/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { syncCartonOfflineQueue } from '../services/cartonOperations';
-import { syncLaminateOfflineQueue } from '../services/laminateOperations';
-import { syncCartonInspectionQueue } from '../services/qcCartonInspectionOperations';
-import { syncBagInspectionQueue } from '../services/qcBagInspectionOperations';
-import { syncStringWeightQueue } from '../services/qcStringWeightOperations';
-import { syncPalletTransferOfflineQueue } from '../services/palletTransferOperations';
-import { syncEmptySiloQueue } from '../services/emptySiloOperations';
-import { syncStoppedMachineQueue } from '../services/stoppedMachineOperations';
+//
+// Offline-first coordinator, driven by the module registry in
+// src/config/offlineModules.js (the single source of truth).
+//
+// HOW IT WORKS (for the next developer):
+// Each factory module owns a localStorage outbox (see OFFLINE_MODULES).
+// This provider (1) tracks how many records are pending per module, and
+// (2) flushes each pending queue via its service syncFn when back online.
+// After each flush it RE-READS the true remaining queue length instead of
+// assuming zero — so partial failures stay visible instead of vanishing.
+//
+// BACKWARDS COMPATIBILITY: pages use flat names like `cartonQueueCount` /
+// `setCartonQueueCount` / `isCartonSyncing`. Those are derived here from the
+// registry maps, so existing pages work unchanged. New code should prefer
+// the maps (`queueCounts`, `syncing`) or the registry directly.
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { OFFLINE_MODULES, normalizeSyncResult } from '../config/offlineModules';
+import { getQueueLength } from '../services/queueStore';
 
 const NetworkContext = createContext();
 
-export function NetworkProvider({ children }) {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [queueCount, setQueueCount] = useState(0);
-  const [cartonQueueCount, setCartonQueueCount] = useState(0);
-  const [laminateQueueCount, setLaminateQueueCount] = useState(0);
-  const [cartonInspectionQueueCount, setCartonInspectionQueueCount] = useState(0);
-  const [bagInspectionQueueCount, setBagInspectionQueueCount] = useState(0);
-  const [stringWeightQueueCount, setStringWeightQueueCount] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isCartonSyncing, setIsCartonSyncing] = useState(false);
-  const [isLaminateSyncing, setIsLaminateSyncing] = useState(false);
-  const [isCartonInspectionSyncing, setIsCartonInspectionSyncing] = useState(false);
-  const [isBagInspectionSyncing, setIsBagInspectionSyncing] = useState(false);
-  const [isStringWeightSyncing, setIsStringWeightSyncing] = useState(false);
-  const [palletQueueCount, setPalletQueueCount] = useState(0);
-  const [isPalletSyncing, setIsPalletSyncing] = useState(false);
-  const [emptySiloQueueCount, setEmptySiloQueueCount] = useState(0);
-  const [isEmptySiloSyncing, setIsEmptySiloSyncing] = useState(false);
-  const [stoppedMachineQueueCount, setStoppedMachineQueueCount] = useState(0);
-  const [isStoppedMachineSyncing, setIsStoppedMachineSyncing] = useState(false);
+const initialCounts = Object.fromEntries(OFFLINE_MODULES.map((m) => [m.id, 0]));
+const initialSyncing = Object.fromEntries(OFFLINE_MODULES.map((m) => [m.id, false]));
 
-  // 1. Listen for Wi-Fi changes
+function readAllQueueLengths() {
+  const counts = {};
+  for (const mod of OFFLINE_MODULES) {
+    try {
+      counts[mod.id] = getQueueLength(mod.queueKey);
+    } catch {
+      counts[mod.id] = 0;
+    }
+  }
+  return counts;
+}
+
+export function NetworkProvider({ children }) {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
+  const [queueCounts, setQueueCounts] = useState(initialCounts);
+  const [syncing, setSyncing] = useState(initialSyncing);
+
+  // 1. Listen for Wi-Fi changes + initial queue count read.
   useEffect(() => {
     const checkQueues = () => {
-      const q = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
-      const cq = JSON.parse(localStorage.getItem('starium_carton_offline_queue') || '[]');
-      const lq = JSON.parse(localStorage.getItem('starium_laminate_offline_queue') || '[]');
-      const ciq = JSON.parse(localStorage.getItem('starium_carton_inspection_queue') || '[]');
-      const biq = JSON.parse(localStorage.getItem('starium_bag_inspection_queue') || '[]');
-      const swq = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]');
-      const pq = JSON.parse(localStorage.getItem('starium_pallet_transfer_queue') || '[]');
-      const esq = JSON.parse(localStorage.getItem('starium_empty_silo_queue') || '[]');
-      const smq = JSON.parse(localStorage.getItem('starium_stopped_machine_queue') || '[]');
-      setQueueCount(q.length);
-      setCartonQueueCount(cq.length);
-      setLaminateQueueCount(lq.length);
-      setCartonInspectionQueueCount(ciq.length);
-      setBagInspectionQueueCount(biq.length);
-      setStringWeightQueueCount(swq.length);
-      setPalletQueueCount(pq.length);
-      setEmptySiloQueueCount(esq.length);
-      setStoppedMachineQueueCount(smq.length);
+      setQueueCounts(readAllQueueLengths());
     };
 
     const handleOnline = () => {
@@ -74,180 +65,95 @@ export function NetworkProvider({ children }) {
     };
   }, []);
 
-  // 2. The Auto-Sync trigger for QC queue
+  // 2. Auto-sync: flush every pending module queue when online.
+  // Guarded by the `syncing` map so each module syncs at most once at a time.
   useEffect(() => {
-    const syncLocalQueue = async () => {
-      const queue = JSON.parse(localStorage.getItem('starium_offline_queue') || '[]');
-      if (queue.length === 0) return;
+    if (!isOnline) return;
+    const pending = OFFLINE_MODULES.filter(
+      (m) => (queueCounts[m.id] || 0) > 0 && !syncing[m.id],
+    );
+    if (pending.length === 0) return;
 
-      setIsSyncing(true);
-      let failedCount = 0;
-      const remainingQueue = [];
+    let cancelled = false;
 
-      for (const testData of queue) {
-        try {
-          const localTime = testData.localCreatedAt;
-          const syncId = testData.syncId;
-          
-          const docData = {
-            ...testData,
-            createdAt: localTime ? new Date(localTime) : serverTimestamp(),
-            syncedAt: serverTimestamp(),
-            wasOfflineQueued: true,
-            offlineSyncId: syncId
-          };
-          delete docData.localCreatedAt;
-          delete docData.syncId;
+    (async () => {
+      await Promise.allSettled(
+        pending.map(async (mod) => {
+          setSyncing((prev) => ({ ...prev, [mod.id]: true }));
+          try {
+            const result = await mod.syncFn();
+            if (!cancelled) {
+              const synced = normalizeSyncResult(result);
+              if (synced > 0) console.log(`[Sync] ${mod.label}: ${synced} synced`);
+            }
+          } catch (e) {
+            console.error(`[Sync] ${mod.label} failed:`, e);
+          } finally {
+            if (!cancelled) {
+              let remaining = 0;
+              try {
+                remaining = getQueueLength(mod.queueKey);
+              } catch {
+                remaining = 0;
+              }
+              setQueueCounts((prev) => ({ ...prev, [mod.id]: remaining }));
+              setSyncing((prev) => ({ ...prev, [mod.id]: false }));
+            }
+          }
+        }),
+      );
+    })();
 
-          await addDoc(collection(db, 'qc_tests'), docData);
-          console.log('[Sync] Synced:', syncId);
-        } catch (e) {
-          failedCount++;
-          remainingQueue.push(testData);
-          console.error('[Sync] Failed to sync item:', e);
-        }
-      }
-
-      if (failedCount === 0) {
-        localStorage.removeItem('starium_offline_queue');
-        setQueueCount(0);
-      } else {
-        localStorage.setItem('starium_offline_queue', JSON.stringify(remainingQueue));
-        setQueueCount(remainingQueue.length);
-      }
-      
-      setIsSyncing(false);
+    return () => {
+      cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, queueCounts]);
 
-    if (isOnline && queueCount > 0 && !isSyncing) {
-      syncLocalQueue();
+  // 3. Legacy flat API derived from the registry maps.
+  // Setters accept either a raw number or an updater fn (prev => next),
+  // matching React setState semantics used by existing pages.
+  //
+  // STABILITY CONTRACT (do not break): pages like PalletTransfer put these
+  // setters in useEffect dependency arrays. The setter identities MUST be
+  // stable across renders (hence useMemo with no deps — they only wrap the
+  // stable useState setters), and calling a setter with an unchanged value
+  // MUST NOT create new state (hence the Object.is bail-out returning prev).
+  // Violating either re-creates the "Maximum update depth exceeded" loop.
+  const legacySetters = useMemo(() => {
+    const setters = {};
+    for (const mod of OFFLINE_MODULES) {
+      setters[mod.setCountProp] = (v) =>
+        setQueueCounts((prev) => {
+          const current = prev[mod.id] ?? 0;
+          const next = typeof v === 'function' ? v(current) : v;
+          if (Object.is(next, current)) return prev;
+          return { ...prev, [mod.id]: next };
+        });
+      setters[mod.setSyncingProp] = (v) =>
+        setSyncing((prev) => {
+          const current = prev[mod.id] ?? false;
+          const next = typeof v === 'function' ? v(current) : v;
+          if (Object.is(next, current)) return prev;
+          return { ...prev, [mod.id]: next };
+        });
     }
-  }, [isOnline, queueCount, isSyncing]);
+    return setters;
+  }, []);
 
-  // 3. Auto-Sync trigger for carton queue
-  useEffect(() => {
-    const syncCartonQueue = async () => {
-      setIsCartonSyncing(true);
-      const result = await syncCartonOfflineQueue();
-      if (result?.synced > 0) {
-        setCartonQueueCount(0);
-      }
-      setIsCartonSyncing(false);
-    };
-
-    if (isOnline && cartonQueueCount > 0 && !isCartonSyncing) {
-      syncCartonQueue();
+  const value = useMemo(() => {
+    const v = { isOnline, queueCounts, syncing };
+    for (const mod of OFFLINE_MODULES) {
+      v[mod.countProp] = queueCounts[mod.id] || 0;
+      v[mod.syncingProp] = syncing[mod.id] || false;
+      v[mod.setCountProp] = legacySetters[mod.setCountProp];
+      v[mod.setSyncingProp] = legacySetters[mod.setSyncingProp];
     }
-  }, [isOnline, cartonQueueCount, isCartonSyncing]);
+    return v;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, queueCounts, syncing]);
 
-  // 4. Auto-Sync trigger for laminate queue
-  useEffect(() => {
-    const syncLaminateQueue = async () => {
-      setIsLaminateSyncing(true);
-      const result = await syncLaminateOfflineQueue();
-      if (result?.synced > 0) {
-        setLaminateQueueCount(0);
-      }
-      setIsLaminateSyncing(false);
-    };
-
-    if (isOnline && laminateQueueCount > 0 && !isLaminateSyncing) {
-      syncLaminateQueue();
-    }
-  }, [isOnline, laminateQueueCount, isLaminateSyncing]);
-
-  // 5. Auto-Sync trigger for carton inspection queue
-  useEffect(() => {
-    const syncCiQueue = async () => {
-      setIsCartonInspectionSyncing(true);
-      const result = await syncCartonInspectionQueue();
-      if (result?.synced > 0) {
-        setCartonInspectionQueueCount(0);
-      }
-      setIsCartonInspectionSyncing(false);
-    };
-
-    if (isOnline && cartonInspectionQueueCount > 0 && !isCartonInspectionSyncing) {
-      syncCiQueue();
-    }
-  }, [isOnline, cartonInspectionQueueCount, isCartonInspectionSyncing]);
-
-  // 6. Auto-Sync trigger for bag inspection queue
-  useEffect(() => {
-    const syncBiQueue = async () => {
-      setIsBagInspectionSyncing(true);
-      const result = await syncBagInspectionQueue();
-      if (result?.synced > 0) {
-        setBagInspectionQueueCount(0);
-      }
-      setIsBagInspectionSyncing(false);
-    };
-
-    if (isOnline && bagInspectionQueueCount > 0 && !isBagInspectionSyncing) {
-      syncBiQueue();
-    }
-  }, [isOnline, bagInspectionQueueCount, isBagInspectionSyncing]);
-
-  // 7. Auto-Sync trigger for string weight queue
-  useEffect(() => {
-    const syncSwQueue = async () => {
-      setIsStringWeightSyncing(true);
-      const result = await syncStringWeightQueue();
-      if (result?.synced > 0) {
-        setStringWeightQueueCount(0);
-      }
-      setIsStringWeightSyncing(false);
-    };
-
-    if (isOnline && stringWeightQueueCount > 0 && !isStringWeightSyncing) {
-      syncSwQueue();
-    }
-  }, [isOnline, stringWeightQueueCount, isStringWeightSyncing]);
-
-  // 8. Auto-Sync trigger for pallet transfer queue
-  useEffect(() => {
-    const syncPalletQueue = async () => {
-      setIsPalletSyncing(true);
-      await syncPalletTransferOfflineQueue();
-      setPalletQueueCount(0);
-      setIsPalletSyncing(false);
-    };
-    if (isOnline && palletQueueCount > 0 && !isPalletSyncing) {
-      syncPalletQueue();
-    }
-  }, [isOnline, palletQueueCount, isPalletSyncing]);
-
-  // 9. Auto-Sync trigger for empty silo queue
-  useEffect(() => {
-    const syncEsQueue = async () => {
-      setIsEmptySiloSyncing(true);
-      const result = await syncEmptySiloQueue();
-      if (result?.synced > 0) setEmptySiloQueueCount(0);
-      setIsEmptySiloSyncing(false);
-    };
-    if (isOnline && emptySiloQueueCount > 0 && !isEmptySiloSyncing) {
-      syncEsQueue();
-    }
-  }, [isOnline, emptySiloQueueCount, isEmptySiloSyncing]);
-
-  // 10. Auto-Sync trigger for stopped machine queue
-  useEffect(() => {
-    const syncSmQueue = async () => {
-      setIsStoppedMachineSyncing(true);
-      const result = await syncStoppedMachineQueue();
-      if (result?.synced > 0) setStoppedMachineQueueCount(0);
-      setIsStoppedMachineSyncing(false);
-    };
-    if (isOnline && stoppedMachineQueueCount > 0 && !isStoppedMachineSyncing) {
-      syncSmQueue();
-    }
-  }, [isOnline, stoppedMachineQueueCount, isStoppedMachineSyncing]);
-
-  return (
-    <NetworkContext.Provider value={{ isOnline, queueCount, setQueueCount, cartonQueueCount, setCartonQueueCount, laminateQueueCount, setLaminateQueueCount, cartonInspectionQueueCount, setCartonInspectionQueueCount, bagInspectionQueueCount, setBagInspectionQueueCount, stringWeightQueueCount, setStringWeightQueueCount, palletQueueCount, setPalletQueueCount, emptySiloQueueCount, setEmptySiloQueueCount, stoppedMachineQueueCount, setStoppedMachineQueueCount, isSyncing, setIsSyncing, isCartonSyncing, setIsCartonSyncing, isLaminateSyncing, setIsLaminateSyncing, isCartonInspectionSyncing, setIsCartonInspectionSyncing, isBagInspectionSyncing, setIsBagInspectionSyncing, isStringWeightSyncing, setIsStringWeightSyncing, isPalletSyncing, setIsPalletSyncing, isEmptySiloSyncing, setIsEmptySiloSyncing, isStoppedMachineSyncing, setIsStoppedMachineSyncing }}>
-      {children}
-    </NetworkContext.Provider>
-  );
+  return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
 }
 
 export const useNetwork = () => useContext(NetworkContext);
