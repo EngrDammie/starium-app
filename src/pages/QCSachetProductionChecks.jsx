@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import QCStringWeightDialog from '../components/QCStringWeightDialog';
-import QCBagInspectionDialog from '../components/QCBagInspectionDialog';
-import QCCartonInspectionDialog from '../components/QCCartonInspectionDialog';
+import QCSachetMachineGrid from '../components/qcSachet/QCSachetMachineGrid';
+import QCSachetMachineDetail from '../components/qcSachet/QCSachetMachineDetail';
+import QCSachetApprovalModal from '../components/qcSachet/QCSachetApprovalModal';
+import { formatCountdown, formatTime } from '../services/formatUtils';
 import { useConfig } from '../context/ConfigContext';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
@@ -225,18 +226,7 @@ export default function QCSachetProductionChecks() {
     return () => clearInterval(id);
   }, [ciRecords, config?.qcCheckIntervals?.cartonInspection]);
 
-  const formatCountdown = (ms) => {
-    if (ms === null || ms <= 0) return null;
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    return `${m}:${String(s).padStart(2, '0')}`;
-  };
-
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    const d = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  // formatCountdown + formatTime live in src/services/formatUtils.js (shared, tested).
 
   const swRoundNumber = machineRecords.length > 0
     ? Math.max(...machineRecords.map(r => r.roundNumber)) + 1
@@ -472,130 +462,33 @@ export default function QCSachetProductionChecks() {
 
   if (selectedMachine) {
     return (
-      <Layout title="QC Sachet Production Checks" subtitle={selectedMachine ? `Machine M${selectedMachine.displayNumber || selectedMachine.id}` : ''} maxWidth="max-w-4xl">
-        <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg">
-          <button onClick={handleBackToGrid} className="text-primary hover:text-primary-dark text-sm font-bold mb-4">&larr; Back to Machines</button>
-
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                Machine M{selectedMachine.displayNumber || selectedMachine.id}
-                <span className="text-sm text-gray-400 font-normal ml-2">
-                  Line {selectedMachine.line} ({selectedMachine.gram}g · {selectedMachine.fillHeads ?? 2}H)
-                </span>
-              </h2>
-            </div>
-            <div className="text-right">
-              <div className="text-primary font-bold text-lg">Round {swRoundNumber}</div>
-              <div className="text-xs text-gray-500">{machineRecords.length} total round{machineRecords.length !== 1 ? 's' : ''}</div>
-            </div>
-          </div>
-
-          {machineRecords.length > 0 && (
-            <div className="mb-4 bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden">
-              <div className="text-xs text-gray-400 uppercase font-bold tracking-wider px-4 pt-3 pb-1">🔬 String Weight Checks — Round History</div>
-              <div className="hidden md:flex items-center px-4 py-1 text-[10px] text-gray-500 uppercase tracking-wider font-bold border-t border-[#333]">
-                <span className="shrink-0 w-14">Round</span>
-                <span className="flex-1 text-center">Weights</span>
-                <span className="shrink-0 w-16 text-center">Result</span>
-                <span className="shrink-0 w-28 text-center">Staff</span>
-                <span className="shrink-0 w-14 text-right">Time</span>
-              </div>
-              <div className="max-h-32 overflow-y-auto">
-                {machineRecords.map((r) => (
-                  <div key={r.id || r.roundNumber} className={`flex items-center px-4 py-2 text-xs border-t border-[#333] last:border-b-0 ${!r.synced ? 'opacity-50' : ''}`}>
-                    <span className="text-primary font-bold shrink-0 w-14">R{r.roundNumber}{!r.synced && <span className="ml-1 text-status-warning" title="Pending sync">⏳</span>}</span>
-                    <div className="flex gap-2 flex-1 justify-center">
-                      {(r.weights || []).map((w, i) => (
-                        <span key={i} className="text-white font-bold">{w}g</span>
-                      ))}
-                    </div>
-                    <span className={`shrink-0 w-16 text-center ${r.meetsCriteria === 'Y' ? 'text-status-success' : 'text-status-danger'}`}>
-                      {r.meetsCriteria === 'Y' ? '✓ Meets' : '✗ No'}
-                    </span>
-                    <span className="text-gray-300 shrink-0 w-28 text-center">{r.checkedBy || 'Unknown'}</span>
-                    <span className="text-gray-500 shrink-0 w-14 text-right">{r.createdAt?.toDate?.().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || ''}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button onClick={() => swTimeLeft > 0 ? null : setDialogType('stringWeight')}
-              className={`flex-1 py-4 rounded-xl font-bold transition-all ${swTimeLeft > 0 ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
-              {swTimeLeft > 0
-                ? `⏳ String Weight Check (${formatCountdown(swTimeLeft)})`
-                : '✅ String Weight Check'}
-            </button>
-
-            {bagInspectionLocked ? (
-              <button disabled
-                className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
-                🔒 Bag Inspection <span className="text-[10px] block">requires String Weight R1</span>
-              </button>
-            ) : (
-              <button onClick={() => bagInspectionReady ? setDialogType('bagInspection') : null}
-                className={`flex-1 py-4 rounded-xl font-bold transition-all ${!bagInspectionReady ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
-                {biTimeLeft > 0
-                  ? `⏳ Bag Inspection (${formatCountdown(biTimeLeft)})`
-                  : '✅ Bag Inspection'}
-              </button>
-            )}
-
-            {cartonInspectionLocked ? (
-              <button disabled
-                className="flex-1 py-4 bg-[#1a1a1a] border-2 border-[#444] rounded-xl font-bold text-gray-600 cursor-not-allowed">
-                🔒 Carton Inspection <span className="text-[10px] block">requires String Weight R1</span>
-              </button>
-            ) : (
-              <button onClick={() => cartonInspectionReady ? setDialogType('cartonInspection') : null}
-                className={`flex-1 py-4 rounded-xl font-bold transition-all ${!cartonInspectionReady ? 'bg-[#1a1a1a] border-2 border-[#444] text-gray-600 cursor-not-allowed' : 'bg-primary/20 border-2 border-primary text-primary hover:bg-primary hover:text-black'}`}>
-                {ciTimeLeft > 0
-                  ? `⏳ Carton Inspection (${formatCountdown(ciTimeLeft)})`
-                  : '✅ Carton Inspection'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {dialogType === 'stringWeight' && (
-          <QCStringWeightDialog
-            machine={selectedMachine}
-            roundNumber={swRoundNumber}
-            previousRecord={swPreviousRecord}
-            onSave={handleSaveStringWeight}
-            onClose={() => setDialogType(null)}
-            saving={saving}
-          />
-        )}
-
-        {dialogType === 'bagInspection' && (
-          <QCBagInspectionDialog
-            machine={selectedMachine}
-            roundNumber={biRoundNumber}
-            previousRecord={biPreviousRecord}
-            batchNumber={batchNumber}
-            stringWeightRecord={stringWeightRecord}
-            onSave={handleSaveBagInspection}
-            onClose={() => setDialogType(null)}
-            saving={saving}
-          />
-        )}
-
-        {dialogType === 'cartonInspection' && (
-          <QCCartonInspectionDialog
-            machine={selectedMachine}
-            roundNumber={ciRoundNumber}
-            previousRecord={ciPreviousRecord}
-            batchNumber={batchNumber}
-            stringWeightRecord={stringWeightRecord}
-            onSave={handleSaveCartonInspection}
-            onClose={() => setDialogType(null)}
-            saving={saving}
-          />
-        )}
-      </Layout>
+      <QCSachetMachineDetail
+        selectedMachine={selectedMachine}
+        machineRecords={machineRecords}
+        swRoundNumber={swRoundNumber}
+        swTimeLeft={swTimeLeft}
+        bagInspectionLocked={bagInspectionLocked}
+        bagInspectionReady={bagInspectionReady}
+        biTimeLeft={biTimeLeft}
+        cartonInspectionLocked={cartonInspectionLocked}
+        cartonInspectionReady={cartonInspectionReady}
+        ciTimeLeft={ciTimeLeft}
+        formatCountdown={formatCountdown}
+        handleBackToGrid={handleBackToGrid}
+        setDialogType={setDialogType}
+        dialogType={dialogType}
+        swPreviousRecord={swPreviousRecord}
+        handleSaveStringWeight={handleSaveStringWeight}
+        biPreviousRecord={biPreviousRecord}
+        batchNumber={batchNumber}
+        stringWeightRecord={stringWeightRecord}
+        handleSaveBagInspection={handleSaveBagInspection}
+        biRoundNumber={biRoundNumber}
+        ciPreviousRecord={ciPreviousRecord}
+        handleSaveCartonInspection={handleSaveCartonInspection}
+        ciRoundNumber={ciRoundNumber}
+        saving={saving}
+      />
     );
   }
 
@@ -654,151 +547,31 @@ export default function QCSachetProductionChecks() {
           )}
         </div>
 
-        <div className="flex gap-2 md:gap-3 max-w-4xl mx-auto justify-between mt-4">
-          {lines.map(lineObj => {
-            const lineMachines = (config.machines || [])
-              .filter(m => m.line === lineObj.id)
-              .sort((a, b) => (a.displayNumber || a.id) - (b.displayNumber || b.id));
-            if (lineMachines.length === 0) return null;
-            return (
-              <div key={lineObj.id} className="flex flex-col gap-2 md:gap-3 flex-1">
-                {lineMachines.map(m => {
-                  const status = getMachineStatus(m.id);
-                  const latest = getMachineLatestRound(m.id);
-                  const hasQueuedSW = queuedSW.some(q => q.machineId === m.id);
-                  const hasQueuedBI = queuedBI.some(q => q.machineId === m.id);
-                  const hasQueuedCI = queuedCI.some(q => q.machineId === m.id);
-                  const isQueued = hasQueuedSW || hasQueuedBI || hasQueuedCI;
-                  let btnClass = "py-3 px-1 md:px-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer relative flex flex-col items-center gap-1 justify-center min-h-[80px] ";
-                  if (status === 'unchecked' && isQueued) {
-                    btnClass += "bg-gradient-to-br from-status-warning to-[#e68900] text-white border-2 border-status-warning shadow-[0_0_10px_rgba(255,152,0,0.4)] hover:scale-105";
-                  } else if (status === 'checked') {
-                    btnClass += "bg-gradient-to-br from-status-success to-[#00C853] text-black border-2 border-status-success shadow-[0_0_10px_rgba(0,230,118,0.3)] hover:scale-105";
-                  } else if (status === 'high-waste') {
-                    btnClass += "bg-gradient-to-br from-status-danger to-[#D50000] text-white border-2 border-status-danger shadow-[0_0_10px_rgba(244,67,54,0.4)] hover:scale-105";
-                  } else {
-                    btnClass += "bg-gradient-to-br from-gray-600 to-gray-700 text-gray-300 border-2 border-gray-600 hover:scale-105 hover:border-gray-500";
-                  }
-                  return (
-                    <button key={m.id} onClick={() => handleMachineClick(m)} className={btnClass}>
-                      <span>M{m.displayNumber || m.id} · {m.gram}g</span>
-                      {latest && <span className="text-[10px] leading-tight opacity-80">R{latest.roundNumber}</span>}
-                      {isQueued && <span className="text-[10px] leading-tight text-status-warning">⏳ pending</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+        <QCSachetMachineGrid
+          lines={lines}
+          config={config}
+          queuedSW={queuedSW}
+          queuedBI={queuedBI}
+          queuedCI={queuedCI}
+          getMachineStatus={getMachineStatus}
+          getMachineLatestRound={getMachineLatestRound}
+          handleMachineClick={handleMachineClick}
+        />
       </div>
 
       {/* Approval Modal */}
       {isApproveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-dark-card border border-[#333] rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-[#333]">
-              <h2 className="text-lg font-bold text-white">📋 Shift Approval — {shiftInfo.shift} {shiftInfo.date}</h2>
-              <button onClick={() => setIsApproveModalOpen(false)} className="text-gray-500 hover:text-white text-xl leading-none">&times;</button>
-            </div>
-
-            <div className="p-5">
-              {/* Machine Stats Table */}
-              <div className="overflow-x-auto mb-6">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-gray-500 uppercase tracking-wider border-b border-[#333]">
-                      <th className="text-left py-2 pr-2">Machine</th>
-                      <th className="text-center px-2">Gram</th>
-                      <th className="text-center px-2">Line</th>
-                      <th className="text-center px-2">Batch</th>
-                      <th className="text-center px-2">SW</th>
-                      <th className="text-center px-2">BI</th>
-                      <th className="text-center px-2">CI</th>
-                      <th className="text-center pl-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {machineStats.map(({ machine, swRounds, biRounds, ciRounds, latestSW }) => (
-                      <tr key={machine.id} className="border-b border-[#222]">
-                        <td className="py-2 pr-2 text-white font-bold">M{machine.displayNumber || machine.id}</td>
-                        <td className="text-center px-2 text-gray-400">{machine.gram}g</td>
-                        <td className="text-center px-2 text-gray-400">{machine.line}</td>
-                        <td className="text-center px-2 text-gray-300">{latestSW?.batchNumber || '-'}</td>
-                        <td className="text-center px-2">
-                          <span className={`font-bold ${swRounds > 0 ? 'text-status-success' : 'text-gray-500'}`}>{swRounds}</span>
-                        </td>
-                        <td className="text-center px-2">
-                          <span className={`font-bold ${biRounds > 0 ? 'text-status-success' : 'text-gray-500'}`}>{biRounds}</span>
-                        </td>
-                        <td className="text-center px-2">
-                          <span className={`font-bold ${ciRounds > 0 ? 'text-status-success' : 'text-gray-500'}`}>{ciRounds}</span>
-                        </td>
-                        <td className="text-center pl-2">
-                          {latestSW ? (
-                            <span className={latestSW.meetsCriteria === 'Y' ? 'text-status-success' : 'text-status-danger'}>
-                              {latestSW.meetsCriteria === 'Y' ? '✓' : '✗'}
-                            </span>
-                          ) : (
-                            <span className="text-gray-600">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Approval Section */}
-              <div className="border-t border-[#333] pt-4">
-                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Approvals</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* QC Supervisor */}
-                  <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-bold text-sm">🔍 QC Supervisor</span>
-                      {approvalData?.qc_supervisor ? (
-                        <span className="text-status-success text-xs flex items-center gap-1">✓ {approvalData.qc_supervisor.name} <span className="text-gray-500">{formatTime(approvalData.qc_supervisor.timestamp)}</span></span>
-                      ) : (
-                        <span className="text-gray-500 text-xs">Pending</span>
-                      )}
-                    </div>
-                    {!approvalData?.qc_supervisor && canApproveQcSupervisor && (
-                      <button onClick={() => submitApproval('qc_supervisor')} disabled={approvalLoading}
-                        className="w-full mt-2 bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50">
-                        {approvalLoading ? 'Approving...' : '✅ Approve as QC Supervisor'}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Line Leader */}
-                  <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-bold text-sm">👷 Line Leader</span>
-                      {approvalData?.line_leader ? (
-                        <span className="text-status-success text-xs flex items-center gap-1">✓ {approvalData.line_leader.name} <span className="text-gray-500">{formatTime(approvalData.line_leader.timestamp)}</span></span>
-                      ) : (
-                        <span className="text-gray-500 text-xs">Pending</span>
-                      )}
-                    </div>
-                    {!approvalData?.line_leader && canApproveLineLeader && (
-                      <button onClick={() => submitApproval('line_leader')} disabled={approvalLoading}
-                        className="w-full mt-2 bg-primary/20 border border-primary text-primary hover:bg-primary hover:text-black py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50">
-                        {approvalLoading ? 'Approving...' : '✅ Approve as Line Leader'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {approversList.length === 2 && (
-                  <div className="mt-4 text-center">
-                    <span className="text-status-success text-sm font-bold">✅ All approvals complete — shift is fully approved</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <QCSachetApprovalModal
+          shiftInfo={shiftInfo}
+          machineStats={machineStats}
+          approvalData={approvalData}
+          formatTime={formatTime}
+          canApproveQcSupervisor={canApproveQcSupervisor}
+          canApproveLineLeader={canApproveLineLeader}
+          submitApproval={submitApproval}
+          approvalLoading={approvalLoading}
+          onClose={() => setIsApproveModalOpen(false)}
+        />
       )}
     </Layout>
   );
