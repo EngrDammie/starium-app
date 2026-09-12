@@ -332,7 +332,7 @@ Jul 2021 – Present · Lagos, Nigeria
       <h3 class="mini">Role 3 — The GIG Group (update existing)</h3>
       <div class="copy-block">
         <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
-        <div class="copy-body>Senior .NET Software Developer
+        <div class="copy-body">Senior .NET Software Developer
 The GIG Group (GIG Mobility — formerly God is Good Motors)
 Feb 2019 – Jul 2021 · Lagos, Nigeria
 
@@ -347,6 +347,36 @@ Feb 2019 – Jul 2021 · Lagos, Nigeria
       <p>Update these with the same pattern: <strong>role title + company + dates + 3–5 bullet points starting with action verbs and including measurable outcomes where possible</strong>. Use the CV content as your source — it already has the right details, just reformat for LinkedIn.</p>
 
       <div class="plain"><b>🧠 The rule of impact bullets:</b> Every bullet should follow the formula: <strong>Action verb + What you did + Result or Scale</strong>. "Designed API endpoints" is weak. "Designed API endpoints powering transportation management applications used across 40+ terminal locations nationwide" is hireable. Always quantify where you can — numbers of users, systems, modules, or money saved.</div>
+
+      <h3 class="mini">Factory Role Descriptions — The Teams Your ERP Serves (Paste-Ready JDs)</h3>
+      <p>These two job descriptions are deduced from what the Starium ERP actually asks each team to do every shift — every duty below maps to a real screen and workflow in the system. Two uses: <strong>(1)</strong> enrich your Starium experience entry by showing the scale of the operation you digitized, and <strong>(2)</strong> hire or brief factory staff with duties that match the software they'll use from day one.</p>
+
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">QC Staff JD — Copy &amp; Paste</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body">Quality Control Officer — Starium Rafa (Detergent Manufacturing), On-site, Shift-based
+
+Frontline quality assurance for a detergent powder factory running 30 machines across 6 production lines (DAY shift 7am–7pm / NIGHT shift 7pm–7am, Teams A/B/C). Owns quality data capture from raw powder through finished sachets: powder density testing, silo status monitoring, machine downtime reporting, and sachet quality checks — all recorded digitally in real time on the factory ERP.
+
+→ Powder density testing: weigh powder samples and verify density against spec for Level 9 silos (0.200–0.310) and BOT base powder (0.200–0.240); grade appearance, fragrance, and flow properties; assign buggy numbers and match production machines to test results
+→ Silo monitoring: track empty vs. filled status across all silo machines each shift; log refills with buggy numbers so production traceability never breaks
+→ Downtime reporting: report stopped machines with categorized fault issues, confirm issue resolution, and verify machines are restarted and running
+→ Sachet quality checks: run string-weight checks per fill head against 5-band tolerances (Too Low → Too High) across 22g–850g SKUs; inspect bags on 6 criteria (leakage, print, completeness, freebies, perforation, odour) and cartons on 5 criteria; maintain per-machine batch traceability
+→ Out-of-spec escalation: flag off-target densities, failed inspections, and machine faults to supervisors in real time; review shift history at handover so nothing is lost between shifts</div>
+      </div>
+
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Production Staff JD — Copy &amp; Paste</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body">Production Associate — Starium Rafa (Detergent Manufacturing), On-site, Shift-based
+
+Frontline production execution for a detergent powder factory running 30 machines across 6 production lines (DAY shift 7am–7pm / NIGHT shift 7pm–7am, Teams A/B/C). Owns material accountability on the floor: carton and laminate waste tracking within target thresholds, and finished-goods pallet movement to the warehouse — all recorded digitally in real time on the factory ERP.
+
+→ Carton waste tracking: record allocated, remaining, used, and wasted cartons per machine each round; work the "Save &amp; Next Machine" floor cycle across assigned lines; keep waste within the 5% target and respond to over-threshold alerts
+→ Laminate waste tracking: weigh waste-collection sacs (small 80g / large 160g) and record gross weights per machine per round; track running waste totals against auto-computed laminate usage for the machine's gram setting
+→ Pallet transfer: move finished cartons to the warehouse by gram/SKU — set cartons-per-pallet, count pallets, verify auto-calculated carton totals; use the pallet calculator for loading and waybill breakdowns
+→ Shift discipline: record under the correct team, review per-machine round history before each new check, and hand over live counts digitally at shift change so the next team starts current, not blind</div>
+      </div>
+
+      <div class="plain"><b>🧠 How to use these on YOUR profile:</b> you weren't QC or Production staff — you built their system. Don't add these as your own roles. Instead, steal one line for your Starium entry, e.g.: <em>"Digitized the daily workflow of QC and Production teams across 30 machines — density testing, waste tracking, pallet movement — replacing paper notebooks with a real-time, offline-first ERP."</em> That single sentence tells a recruiter the size of the operation you served. Keep the full JDs for hiring, onboarding, or interview stories ("here's the team I built for").</div>
     </section>
 
     <!-- ==================== ARCHITECTURE / SCALE STORY ==================== -->
@@ -359,7 +389,7 @@ Feb 2019 – Jul 2021 · Lagos, Nigeria
       <h3 class="mini">The 30-Second Elevator Answer (Say This First)</h3>
       <div class="copy-block">
         <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
-        <div class="copy-body>I built it on a strict module-per-feature pattern. Each domain — quality control, carton waste, pallet transfers — follows the exact same four-layer recipe: a page, a service file for data access, a context provider for shared state, and Firestore plus a localStorage queue for offline resilience. Because the pattern is identical for every module, adding a new ERP module like inventory or procurement isn't a new architecture — it's a mechanical copy of an established pattern. I register its route, its menu entry with role permissions, its service file, and its offline queue, and it plugs into the same dashboard and approval backbone as everything else. That's what I mean by structured to scale.</div>
+        <div class="copy-body">I built it on a strict module-per-feature pattern. Each domain — quality control, carton waste, pallet transfers — follows the exact same four-layer recipe: a page, a service file for data access, a context provider for shared state, and Firestore plus a localStorage queue for offline resilience. Because the pattern is identical for every module, adding a new ERP module like inventory or procurement isn't a new architecture — it's a mechanical copy of an established pattern. I register its route, its menu entry with role permissions, its service file, and its offline queue, and it plugs into the same dashboard and approval backbone as everything else. That's what I mean by structured to scale.</div>
       </div>
 
       <div class="plain"><b>🧠 Why this lands:</b> It shows you don't just know one feature — you understand the whole architecture as a repeatable system. Interviewers love hearing "mechanical copy of an established pattern" because it signals maintainability and low risk. Confident, specific, honest.</div>
@@ -389,7 +419,7 @@ Feb 2019 – Jul 2021 · Lagos, Nigeria
       <p>Do NOT pretend the architecture is perfect. Interviewers respect candour. The real scaling smell is here:</p>
       <div class="copy-block">
         <div class="copy-head"><span class="copy-label">Copy this</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
-        <div class="copy-body>One honest weakness: the offline-sync orchestration in NetworkContext is currently written per-module — nearly identical useEffect blocks for each queue. It works, and it's reliable, but it's repetitive. If I were building this for production scale today, I'd refactor it into a single module registry — a MODULES array that encodes each module's route, nav entry, service file, queue key, and role requirements in one place, and drives both the UI and the sync coordinator from that single source of truth. The architecture is structured to make that refactor easy — I isolated each module's logic to its own service file and page — but I haven't fully centralised the queue wiring yet. That's the first thing I'd do at industrial scale.</div>
+        <div class="copy-body">One honest weakness I already fixed: the offline-sync orchestration in NetworkContext used to be written per-module — nearly identical useEffect blocks for each queue. It worked and was reliable, but it was repetitive and a new developer had to edit five places to add a module. So I refactored it into a single module registry (src/config/offlineModules.js) — one descriptor per module encoding its queue key, sync function, and state names — with NetworkContext iterating the registry for counting and auto-sync. The legacy state names pages depend on are preserved, so nothing else changed. If I were taking it further at industrial scale, the next step would be pushing the registry up to also drive route registration and the nav menu from the same single source of truth.</div>
       </div>
 
       <div class="plain"><b>🧠 Why this answer is powerful:</b> It reframes the weakness as a clear-eyed roadmap. You know the codebase's fault line AND you know the exact fix. This is what separates "someone who wrote code" from "someone who architects systems." Admitting it builds massive trust — then the concrete plan turns that trust into admiration.</div>
@@ -419,7 +449,73 @@ Feb 2019 – Jul 2021 · Lagos, Nigeria
       <div class="step"><span class="step-num">1</span><div><h4>Demo Video 1 — Command Centre &amp; QC</h4><p>Add the YouTube link (https://www.youtube.com/watch?v=EjhFWjsLDcA) as a "Link" featured item. Write the title: "Starium Rafa ERP — Command Centre &amp; QC Dashboard in Action". This is your strongest proof-of-work asset.</p></div></div>
       <div class="step"><span class="step-num">2</span><div><h4>Demo Video 2 — Pallet Transfer &amp; Reports</h4><p>Add the second YouTube link (https://www.youtube.com/watch?v=Z32CKJGERfg) as a "Link" featured item. Title: "Starium Rafa ERP — Pallet Transfer &amp; Smart Reports". Shows breadth of the system.</p></div></div>
       <div class="step"><span class="step-num">3</span><div><h4>Portfolio Website</h4><p>Add your portfolio URL as a "Link" featured item. Title: "My Portfolio — ERP Systems, blueprints &amp; case studies". This gives recruiters a deep-dive destination.</p></div></div>
-      <div class="step"><span class="step-num">4</span><div><h4>One Written Article or Case Study</h4><p>Write a short LinkedIn article (500–800 words) titled something like: "What I Learned Building an ERP Inside a Factory That Ran on Paper". Publish it on LinkedIn, then feature it. This positions you as a thought leader, not just a doer.</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h4>One Written Article or Case Study</h4><p>Publish the ready-made article below as a LinkedIn Article ("Write article" from the post composer), then feature it. This positions you as a thought leader, not just a doer.</p></div></div>
+
+      <h3 class="mini">Your Featured Lineup — Exact Setup (4 Slots, This Order)</h3>
+      <div class="step"><span class="step-num">1</span><div><h4>Slot 1 — Demo Video 1 (Link)</h4><p>URL: https://www.youtube.com/watch?v=EjhFWjsLDcA — Title: "Starium Rafa ERP — Command Centre &amp; QC Dashboard in Action". Your strongest proof-of-work asset, first position.</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>Slot 2 — The Article (Article)</h4><p>Publish the article below, then feature the article itself (LinkedIn lets you feature your own articles). Title: "What I Learned Building an ERP Inside a Factory That Ran on Paper". Written proof you think, not just code.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>Slot 3 — Demo Video 2 (Link)</h4><p>URL: https://www.youtube.com/watch?v=Z32CKJGERfg — Title: "Starium Rafa ERP — Pallet Transfer &amp; Smart Reports". Shows breadth beyond QC.</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h4>Slot 4 — Portfolio Website (Link)</h4><p>Your portfolio URL — Title: "My Portfolio — ERP Systems, blueprints &amp; case studies". The deep-dive destination for convinced recruiters.</p></div></div>
+
+      <h3 class="mini">The Article — Copy, Paste, Publish (Do Not Reword the Honest Parts)</h3>
+      <div class="plain"><b>⚠️ Honesty guardrails (already baked in — keep them):</b> the system is in <strong>live test environments</strong>, not full production — the text says so and never claims otherwise. It never claims inventory/procurement exist. And the golden thread throughout is that <strong>deeply understanding the real processes is what made the app directly useful</strong> — that framing is your differentiator, don't dilute it.</div>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">LinkedIn Article — Copy &amp; Paste into "Write article"</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body">What I Learned Building an ERP Inside a Factory That Ran on Paper
+
+Earlier this year, I walked into a detergent manufacturing company where every production record lived in paper notebooks.
+
+Shift handovers were verbal. QC data vanished between morning and afternoon. Managers made million-naira decisions from memory.
+
+I was brought in to fix that. But I didn't start by writing code — I started by studying how the factory actually works. That decision shaped everything that followed: the system I built solo from scratch — quality-control testing, waste intelligence, pallet transfers, machine tracking, and executive dashboards, real-time, offline-first, at zero software licence cost, now proving itself in live test environments — is directly useful because every screen in it maps to a real process I first took the time to understand.
+
+Here are 5 things the factory floor taught me that no tutorial ever did:
+
+1. Offline-first isn't a feature. It's the whole job.
+The factory WiFi drops constantly. Any system that breaks without internet is a system nobody trusts — and an untrusted system becomes a very expensive decoration. So every record saves locally first and syncs the millisecond the connection returns, with original timestamps preserved. Zero data loss isn't a bullet point; it's the reason people use the software.
+
+2. Design for the inspector's actual work, not the boardroom.
+I didn't start with an architecture diagram. I started by studying the real work — the inspector weighing sachet strings against five tolerance bands, the buggy numbers assigned per machine, the rush at shift change. Only after understanding the process did I build the screen for it. Software that skips that step gets abandoned. Software shaped around understood work gets defended by its users.
+
+3. Your permissions bug will find you in testing — let it.
+While testing on a colleague's machine, half the modules silently stopped saving. The cause: my database rules only covered some collections, and the rest fell through to an admin-only default — so regular staff writes were quietly rejected. Lesson: test as the least-privileged user, on someone else's device, before you call anything done.
+
+4. Repetition is a design smell — refactor it before it owns you.
+My offline-sync logic started as ten near-identical blocks, one per module. It worked. It was also the most confusing part of the codebase. I refactored it into a single module registry: add one descriptor, get counting and auto-sync for free. The best time to kill duplication is the moment you notice it — the second-best time is today.
+
+5. Cheap beats impressive — when the process fit is right.
+No licences. No servers. No consultants. A working, role-governed, offline-first system, now proving itself in live test environments, for the cost of cloud free tiers. None of that would matter if the app didn't fit the work — but because it was built around understood processes, the low cost is the reason it gets a hearing, and the fit is the reason it stays.
+
+Every screen exists because I first understood the process it serves. Understand deeply, build for actual conditions, own your mistakes in public — that's the whole method.
+
+If you're digitizing operations in manufacturing or agro-processing, let's talk: ayodele.damilare@gmail.com
+
+#ERP #Manufacturing #SoftwareEngineering #DigitalTransformation #Nigeria #FMCG #OfflineFirst #TechLeadership</div>
+      </div>
+
+      <h3 class="mini">The Launch Post — Publish the Day After the Article, Link the Article in It</h3>
+      <div class="copy-block">
+        <div class="copy-head"><span class="copy-label">Launch Post — Copy &amp; Paste as a regular post</span><button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.copy-block').querySelector('.copy-body').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button></div>
+        <div class="copy-body">For months I studied how a detergent factory really works — the QC checks, the waste counts, the pallet moves.
+
+Then I built software shaped exactly around what I learned. Solo.
+
+No licences. No servers. No consultants.
+
+QC tests, waste tracking, pallet transfers, machine monitoring, executive dashboards — real-time, offline-first, at zero licence cost, now proving itself in live test environments.
+
+I wrote up the 5 hardest lessons here 👇 [paste your article link]
+
+Lesson 3 nearly ended me. 😅
+
+#ERP #BuildInPublic #Manufacturing #SoftwareEngineering</div>
+      </div>
+
+      <h3 class="mini">Posting Sequence (Viral Mechanics)</h3>
+      <div class="step"><span class="step-num">1</span><div><h4>Day 1 — Publish the article</h4><p>Post it as a LinkedIn Article (not a regular post — articles are feature-able and rank in search). Share it to your feed when prompted so it gets initial distribution.</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h4>Day 2 — Publish the launch post</h4><p>Regular post linking the article. The hook ("For months I studied…") + the list + the honest lesson-3 tease is engineered for comments — reply to every comment within the first 2 hours to feed the algorithm.</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h4>Day 2 — Fill all 4 Featured slots</h4><p>Article + 2 demo videos + portfolio, in the order above. Your profile now converts curiosity into proof.</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h4>Week 1 — Engage, don't just broadcast</h4><p>Comment substantively on 3–5 manufacturing/tech posts daily. Every comment exposes your profile — with the Featured section loaded, those views convert.</p></div></div>
 
       <div class="plain"><b>🧠 The Featured section gets 3–5× more views than any other section after the headline.</b> LinkedIn's algorithm also gives profiles with Featured items a visibility boost in search. Four items is the sweet spot — enough to show depth, not so many that it looks cluttered.</div>
     </section>
