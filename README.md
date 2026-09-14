@@ -36,7 +36,7 @@ When users log in, they land on the **Command Center**, providing a high-level o
 ## Key Features
 
 - **Factory Command Center**: Centralized dashboard with 8 live metric cards (Live Users, Level 9 Tests, BOT Tests, Empty Silos, Stopped Machines, Carton Waste, Laminate Waste, QC Sachet Checks). Clickable links navigate managers to their respective executive dashboards. Super admins get a clickable Live Users card linking to the Active Users page. Quick Actions section provides role-based shortcuts to all factory modules.
-- **Offline-First Engine**: 8 independent offline queues with auto-sync on reconnect. Tests are queued locally with perfect timestamp preservation and synced via `writeBatch`.
+- **Offline-First Engine**: 9 independent offline queues with auto-sync on reconnect, coordinated through a single module registry (`src/config/offlineModules.js`). Tests are queued locally with perfect timestamp preservation and synced via `writeBatch`.
 - **Real-Time Executive Dashboards**: Level 9 and BOT live views with Chart.js line charts showing density trends, shift approval workflows, and machine grid density matching.
 - **Targeted Broadcast Alerts**: Admins and system events can blast real-time, color-coded popup messages to specific screens (or all screens) across the factory. Three levels: Info (blue), Warning (orange), Critical (red with shake animation). Auto-dismisses after 15 seconds.
 - **Shift History Modal**: Floor workers can review all tests submitted during their active shift with exact timestamps and buggy numbers.
@@ -183,13 +183,14 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 
 ## Tech Stack
 
-- **Frontend Framework**: React 18 (via Vite)
+- **Frontend Framework**: React 19 (via Vite)
 - **Styling**: Tailwind CSS v3
-- **Routing**: React Router v6 (HashRouter for static hosting)
+- **Routing**: React Router v7 (HashRouter for static hosting)
 - **Database & Auth**: Firebase (Firestore V9 Modular SDK)
 - **Charts**: Chart.js & React-Chartjs-2
 - **3D Rendering**: Three.js (used in management presentations)
 - **Build Tool**: Vite / Rolldown
+- **Testing**: Vitest + jsdom + Testing Library (`npm run test`) — unit tests for business logic, offline queues, sync registry, and Firestore rules coverage
 - **CI/CD**: GitHub Actions (GitHub Pages), Firebase Hosting & Cloudflare Workers Pages — triple-redundant deployment
 
 ---
@@ -205,11 +206,12 @@ src/
 ├── index.css                        # Tailwind directives + base styles
 ├── config/
 │   ├── firebase.js                  # Firebase init (env vars)
-│   └── navigation.js                # MENU_CONFIG sidebar structure + role-based route protection rules
+│   ├── navigation.js                # MENU_CONFIG sidebar structure + role-based route protection rules
+│   └── offlineModules.js            # Offline-module registry: queue key + sync fn + legacy names per module (single source of truth)
 ├── context/
 │   ├── AuthContext.jsx              # Firebase auth, role management, presence heartbeat
 │   ├── ConfigContext.jsx            # Live Firestore config subscription, DEFAULT_CONFIG
-│   ├── NetworkContext.jsx           # Online/offline detection, 8 queue auto-sync
+│   ├── NetworkContext.jsx           # Online/offline detection, registry-driven queue auto-sync (legacy flat API preserved)
 │   └── AlertContext.jsx             # Real-time alert subscription, broadcastAlert()
 ├── components/
 │   ├── Layout.jsx                   # Page shell: sidebar, authbar, syncbadge, alertbanner, footer
@@ -224,14 +226,16 @@ src/
 │   ├── MachineModal.jsx             # Machine detail modal with carton content
 │   ├── QCStringWeightDialog.jsx     # String weight check form dialog
 │   ├── QCBagInspectionDialog.jsx    # Bag inspection check form dialog
-│   └── QCCartonInspectionDialog.jsx # Carton inspection check form dialog
+│   ├── QCCartonInspectionDialog.jsx # Carton inspection check form dialog
+│   └── qcSachet/                    # QC Sachet view components: MachineGrid, MachineDetail, ApprovalModal
 ├── pages/
 │   ├── Dashboard.jsx                # Command Center with 7 metric cards + quick actions
 │   ├── PowderDensity.jsx            # Data entry: Level 9 & BOT tests with machine grid
 │   ├── Level9Exec.jsx               # Level 9 executive dashboard with charts + approval
 │   ├── BotExec.jsx                  # BOT executive dashboard with charts + approval
 │   ├── Reports.jsx                  # QC Density Report with charts and filters
-│   ├── SystemConfig.jsx             # 9-tab admin panel for all factory configuration
+│   ├── SystemConfig.jsx             # Admin panel shell (state + handlers); tabs live in SystemConfig/ (Machines, Lines, GramSpecs, Roles, Global, QC, Carton, Laminate, Pallet, ImportExport + modals)
+│   ├── SystemConfig/                # Per-tab presentational components + tabs.js registry + factoryDefaults.js
 │   ├── UserManagement.jsx           # CRUD for user roles and profiles
 │   ├── ActiveUsers.jsx              # Real-time active user table
 │   ├── Login.jsx                    # Firebase email/password login + password reset
@@ -247,9 +251,12 @@ src/
 │   ├── LaminateWasteReport.jsx      # Laminate waste report with charts
 │   ├── PalletTransfer.jsx           # Pallet transfer data entry
 │   ├── PalletTransferReport.jsx     # Pallet transfer report with charts
-│   ├── QCSachetProductionChecks.jsx # QC monitoring with 3 check types + approval flow
+│   ├── QCSachetProductionChecks.jsx # QC monitoring shell (3 check types + approval flow); views in components/qcSachet/
 │   └── QCSachetReport.jsx           # QC Sachet printable report with Print/CSV export
 └── services/
+    ├── queueStore.js                # Central localStorage queue mechanics (read/write/push/clear) with injectable storage for tests
+    ├── reportUtils.js               # Shared report helpers (buildShiftIdentifiers, calculateTrend)
+    ├── formatUtils.js               # Shared formatters (formatCountdown, formatTime, pluralize)
     ├── qcOperations.js              # QC Tests CRUD, shift approval, offline queue
     ├── cartonOperations.js          # Carton waste CRUD, validation, offline queue
     ├── laminateOperations.js        # Laminate waste CRUD, validation, offline queue
@@ -267,7 +274,7 @@ src/
 
 1. **HashRouter** - URL routing (hash-based for static hosting)
 2. **AuthProvider** - Firebase auth state, role fetching, presence heartbeat
-3. **NetworkProvider** - Online/offline detection, 8 offline queue auto-sync
+3. **NetworkProvider** - Online/offline detection, registry-driven auto-sync of all 9 module queues (`OFFLINE_MODULES` in `config/offlineModules.js`)
 4. **ConfigProvider** - Live config subscription, DEFAULT_CONFIG fallback
 5. **AlertProvider** - Real-time alert subscription, broadcastAlert function
 6. **App** - Routes (21 protected + 1 public)
@@ -295,6 +302,11 @@ Each service module follows consistent patterns:
 - `subscribeTo{Resource}(params, callback)` returns `unsubscribe` function
 - Callback receives sorted array of records
 - Error handler logs error and calls callback with `[]`
+
+### Testing
+- `npm run test` (Vitest + jsdom) — unit tests live beside the code in `__tests__/` folders (`src/services/__tests__/`, `src/config/__tests__/`, `src/context/__tests__/`) plus `src/test/` (setup + Firestore rules guard)
+- Covered: shift boundaries, carton/laminate validation and summaries, inspection grading, weight bands, doc-ID formats, queue mechanics, the offline-module registry, the NetworkContext legacy API, and a static guard asserting every writable Firestore collection keeps an explicit rules block
+- New pure logic (validation, math, doc IDs, grouping) must ship with tests — see `CONTRIBUTING.md`
 
 ### Validation Pattern
 - `validate{Check}()` returns `{ valid: boolean, message?: string }`
@@ -330,6 +342,13 @@ Each service module follows consistent patterns:
    ```bash
    npm run dev
    ```
+
+5. **Run the Tests:**
+   ```bash
+   npm run test
+   ```
+
+> New here? Read **`CONTRIBUTING.md`** first (day-1 cheat sheet), then **`docs/CODEBASE_REFERENCE.md`** for full depth on every module, collection, and business rule.
 
 ---
 

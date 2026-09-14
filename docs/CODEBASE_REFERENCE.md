@@ -275,6 +275,13 @@ Each child route has `{ path, label, icon, allowedRoles }`. The `getAllowedRoles
 > pages work unchanged. After each flush the true remaining queue length is
 > re-read instead of assumed zero. Storage mechanics live in
 > `src/services/queueStore.js` (injectable storage, unit-tested).
+>
+> **Stability contract (do not break):** legacy setter identities are created
+> once (`useMemo`, no deps) and setting an unchanged value bails out without
+> new state — pages like PalletTransfer list these setters in `useEffect`
+> dependency arrays, and unstable identities + always-new state objects caused
+> a "Maximum update depth exceeded" infinite loop. Regression tests in
+> `src/context/__tests__/NetworkContext.test.jsx` pin this behavior.
 
 **State exposed**: `isOnline`, `queueCounts`, `syncing`, plus the full legacy
 flat API below (preserved for backwards compatibility — see
@@ -1467,7 +1474,8 @@ All data writes go through `saveQCTest()` which:
   `clearQueue`/`getQueueLength`/`removeFromQueue` + `createMemoryStorage()`.
 - `src/services/reportUtils.js` — `buildShiftIdentifiers()` + `calculateTrend()`
   (deduplicated from Carton/Laminate reports; imported by both pages).
-- `src/services/formatUtils.js` — `formatCountdown()` + `formatTime()`.
+- `src/services/formatUtils.js` — `formatCountdown()` + `formatTime()` +
+  `pluralize()` (dashboard unit labels: carton/buggy/test/check/user/kg/pallet).
 - `summarizeCartonRecords()` (`cartonOperations.js`) and
   `summarizeLaminateRecords()` (`laminateOperations.js`) — pure grouping used
   by `getCartonWasteSummary()` / `getLaminateWasteSummary()`.
@@ -1479,6 +1487,12 @@ queueStore, offlineModules registry, NetworkContext legacy API,
 report/format utils, and a static `firestore.rules` coverage guard
 (`src/test/firestoreRules.test.js`) that fails if any writable collection
 loses its explicit rules block.
+
+### Onboarding Docs
+- `CONTRIBUTING.md` (repo root) — day-1 cheat sheet: local setup, file map,
+  the rabbit holes (empty-silo auto-stop coupling, approval flows, sync
+  coordinator, runtime role config), the add-a-module checklist, test/lint
+  expectations. Start here, then use this reference for depth.
 
 ### Real-Time Subscriptions
 All data fetching uses `onSnapshot` for live updates. Components return unsubscribe functions in cleanup.
