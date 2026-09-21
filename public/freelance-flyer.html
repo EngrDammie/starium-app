@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engr. Damilare Paul Ayodele — App Developer &amp; Tech Solutions | Build-It-All Flyer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #000;
+    --ink: #111;
+    --grey-1: #222;
+    --grey-2: #444;
+    --grey-3: #6b6b6b;
+    --grey-4: #9a9a9a;
+    --line: #d9d9d9;
+    --paper: #fafafa;
+    --white: #fff;
+  }
+
+  html, body {
+    background: #e6e6e6;
+    font-family: 'Space Grotesk', 'Segoe UI', Helvetica, Arial, sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ===== A4 SHEET ===== */
+  .sheet {
+    width: 210mm;
+    height: 297mm;
+    margin: 20px auto;
+    background: var(--white);
+    color: var(--ink);
+    box-shadow: 0 2px 6px rgba(0,0,0,.18), 0 24px 60px rgba(0,0,0,.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mono {
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 9.5px;
+  }
+
+  /* ===== MASTHEAD ===== */
+  .masthead {
+    padding: 8mm 12mm 6mm;
+    border-bottom: 2px solid var(--black);
+    position: relative;
+  }
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4mm;
+  }
+  .brand-mark {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    border: 2px solid var(--black);
+    padding: 5px 10px;
+  }
+  .availability {
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .availability .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--black);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .name-line {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: -.01em;
+  }
+  .name-line .accent {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--grey-2);
+  }
+  .role-line {
+    margin-top: 4px;
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+  }
+  .tag-strip {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    color: var(--grey-3);
+    font-size: 9px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ===== PROMISE BAND ===== */
+  .promise {
+    background: var(--black);
+    color: var(--white);
+    padding: 7mm 12mm 7mm;
+    position: relative;
+  }
+  .promise .overline {
+    color: var(--grey-4);
+    margin-bottom: 3mm;
+  }
+  .promise h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.06;
+  }
+  .promise h2 em {
+    font-style: italic;
+  }
+  .promise .sub {
+    margin-top: 3mm;
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: #cfcfcf;
+    max-width: 165mm;
+  }
+  .promise .sub strong { color: var(--white); }
+
+  /* ===== WHAT I BUILD ===== */
+  .builds {
+    padding: 5mm 12mm 4mm;
+    flex: 0 1 auto;
+  }
+  .builds-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--black);
+    padding-bottom: 2mm;
+    margin-bottom: 3mm;
+  }
+  .builds-head h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .builds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--black);
+  }
+  .b-card {
+    border-right: 1px solid var(--black);
+    border-bottom: 1px solid var(--black);
+    padding: 3mm 3.4mm 2.6mm;
+    min-height: 0;
+  }
+  .b-card:nth-child(3n) { border-right: none; }
+  .b-card:nth-last-child(-n+3) { border-bottom: none; }
+  .b-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--grey-4);
+    display: block;
+    margin-bottom: 1mm;
+  }
+  .b-title {
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.15;
+    margin-bottom: 1mm;
+  }
+  .b-card p {
+    font-size: 8.7px;
+    line-height: 1.4;
+    color: var(--grey-2);
+  }
+
+  /* ===== PROOF STRIP ===== */
+  .proof {
+    background: var(--black);
+    color: var(--white);
+    padding: 5mm 12mm 5mm;
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 10mm;
+    align-items: center;
+  }
+  .proof .pserif {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.14;
+  }
+  .proof .pserif em { font-style: italic; color: #d5d5d5; }
+  .proof .pbody {
+    margin-top: 2mm;
+    font-size: 8.8px;
+    line-height: 1.48;
+    color: #c9c9c9;
+  }
+  .proof .pstats {
+    border-left: 1px solid #383838;
+    padding-left: 5mm;
+    display: flex;
+    flex-direction: column;
+    gap: 2.6mm;
+  }
+  .stat .s-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat .s-lab {
+    font-size: 8px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+    font-weight: 500;
+  }
+
+  /* ===== HOW WE WORK ===== */
+  .how {
+    padding: 4mm 12mm 4mm;
+    border-bottom: 2px solid var(--black);
+  }
+  .how-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8mm;
+  }
+  .h-step {
+    display: flex;
+    gap: 3mm;
+    align-items: flex-start;
+  }
+  .h-index {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: .9;
+  }
+  .h-step h4 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .8mm;
+  }
+  .h-step p {
+    font-size: 8.6px;
+    line-height: 1.38;
+    color: var(--grey-2);
+  }
+
+  /* ===== CTA BAND ===== */
+  .cta {
+    background: var(--black);
+    color: var(--white);
+    padding: 5.5mm 12mm 6mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: 2.6mm;
+  }
+  .cta .slant {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.12;
+  }
+  .cta .slant em { font-style: italic; color: #d5d5d5; }
+  .contact-row {
+    display: flex;
+    gap: 9mm;
+    justify-content: center;
+    margin-top: 1mm;
+  }
+  .c-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6mm;
+  }
+  .c-lab {
+    font-size: 8px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+    font-weight: 500;
+  }
+  .c-val {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .04em;
+    color: var(--white);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .c-val:hover { text-decoration: underline; }
+  .cta .helper {
+    font-size: 8.8px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+  }
+  .cta .signoff {
+    margin-top: .5mm;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 16px;
+    color: #e6e6e6;
+  }
+  .cta .signoff strong {
+    font-family: 'Space Grotesk', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-size: 10px;
+    color: var(--white);
+  }
+
+  /* ===== PRINT ===== */
+  @page { size: A4; margin: 0; }
+  @media print {
+    html, body { background: #fff; }
+    .sheet {
+      margin: 0;
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+
+    <!-- MASTHEAD -->
+    <header class="masthead">
+      <div class="masthead-top">
+        <div class="brand-mark">D · A · SP</div>
+        <div class="availability"><span class="dot"></span>Available for freelance work</div>
+      </div>
+      <div class="name-line">Engr. Damilare Paul <span class="accent">Ayodele</span></div>
+      <div class="role-line">App Developer · Software Engineer · Tech Solutions Provider</div>
+      <div class="tag-strip">
+        <span>Unlimited shape</span>
+        <span>Unlimited size</span>
+        <span>Unlimited industry</span>
+      </div>
+    </header>
+
+    <!-- PROMISE -->
+    <section class="promise">
+      <div class="overline mono">The promise</div>
+      <h2>Tell me what you need. <em>I will build it.</em></h2>
+      <p class="sub">A mobile app, a business website, a complete ERP, an automation, a dashboard — or an idea you haven't even named yet.<br><strong>If it's software, it's buildable — and I am your builder.</strong></p>
+    </section>
+
+    <!-- WHAT I BUILD -->
+    <section class="builds">
+      <div class="builds-head">
+        <h3>What I build</h3>
+        <div class="mono" style="color:var(--grey-3)">Any shape · any size · any industry</div>
+      </div>
+      <div class="builds-grid">
+        <div class="b-card">
+          <span class="b-num">/ 01</span>
+          <div class="b-title">Apps &amp; Websites</div>
+          <p>Business websites, e-commerce, booking systems — professional, fast and mobile-ready.</p>
+        </div>
+        <div class="b-card">
+          <span class="b-num">/ 02</span>
+          <div class="b-title">Business Systems</div>
+          <p>ERPs, inventory, HR, payroll, procurement — the quiet systems that run your operations.</p>
+        </div>
+        <div class="b-card">
+          <span class="b-num">/ 03</span>
+          <div class="b-title">Automation</div>
+          <p>Retire routine manual work with software, and connect the tools you already use.</p>
+        </div>
+        <div class="b-card">
+          <span class="b-num">/ 04</span>
+          <div class="b-title">Dashboards &amp; Reports</div>
+          <p>Turn scattered records into live dashboards and PDF / CSV reports your team can act on.</p>
+        </div>
+        <div class="b-card">
+          <span class="b-num">/ 05</span>
+          <div class="b-title">Offline-First Systems</div>
+          <p>Software engineered to keep working when the network struggles — built for Nigeria.</p>
+        </div>
+        <div class="b-card">
+          <span class="b-num">/ 06</span>
+          <div class="b-title">Rescue &amp; Revive</div>
+          <p>Broken, abandoned or messy software? I'll fix, rebuild or rescue it — properly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROOF -->
+    <section class="proof">
+      <div>
+        <div class="pserif">Proof, not promises: <em>a full factory ERP, built for a real company.</em></div>
+        <p class="pbody">I designed, built and deployed a complete Enterprise ERP for Starium Rafa — QC testing, waste intelligence, machine and pallet tracking, executive dashboards — offline-first, live on three hosting platforms. That's what I deliver. Even while employed full-time.</p>
+      </div>
+      <div class="pstats">
+        <div class="stat">
+          <div class="s-num">10+</div>
+          <div class="s-lab">Years enterprise engineering</div>
+        </div>
+        <div class="stat">
+          <div class="s-num">4</div>
+          <div class="s-lab">Live business systems shipped</div>
+        </div>
+        <div class="stat">
+          <div class="s-num">3</div>
+          <div class="s-lab">Hosting platforms, one ERP</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW WE WORK -->
+    <section class="how">
+      <div class="how-steps">
+        <div class="h-step">
+          <div class="h-index">01</div>
+          <div>
+            <h4>Talk</h4>
+            <p>Call or WhatsApp me. Tell me what you need — even a rough sketch or a voice note is enough.</p>
+          </div>
+        </div>
+        <div class="h-step">
+          <div class="h-index">02</div>
+          <div>
+            <h4>Build</h4>
+            <p>I design and engineer it, with AI-assisted development behind me — shipping in days, not months.</p>
+          </div>
+        </div>
+        <div class="h-step">
+          <div class="h-index">03</div>
+          <div>
+            <h4>Ship</h4>
+            <p>You review, test, and start using it the way you actually work. Support continues after launch.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <footer class="cta">
+      <div class="slant">One conversation is all I ask.<br><em>Give me a chance — I'll earn it.</em></div>
+
+      <div class="contact-row">
+        <div class="c-item">
+          <span class="c-lab">WhatsApp</span>
+          <a class="c-val" href="https://wa.me/2347053331253">0705 333 1253</a>
+        </div>
+        <div class="c-item">
+          <span class="c-lab">Call</span>
+          <a class="c-val" href="tel:+2348028975816">0802 897 5816</a>
+        </div>
+        <div class="c-item">
+          <span class="c-lab">Email</span>
+          <a class="c-val" href="mailto:ayodele.damilare@gmail.com">ayodele.damilare@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="helper">Fast response · Fair pricing · No job too small</div>
+      <div class="signoff">Whatever the project — <strong>let's build it together.</strong></div>
+    </footer>
+
+  </div>
+</body>
+</html>
