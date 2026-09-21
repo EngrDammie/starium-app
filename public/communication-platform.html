@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company-Wide Communication Platform — Dammie Optimus Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101418;
+    --ink-2: #1c232b;
+    --ink-3: #2a333d;
+    --paper: #faf8f4;
+    --card: #ffffff;
+    --line: #e8e2d4;
+    --gold: #C9962E;
+    --gold-soft: #f2e3bd;
+    --green: #12674a;
+    --green-soft: #dfeee7;
+    --red: #a5312a;
+    --red-soft: #f6e3e0;
+    --blue: #1f5f8b;
+    --blue-soft: #e2edf5;
+    --muted: #6b6f76;
+    --shadow: 0 1px 3px rgba(16,20,24,.06), 0 14px 40px rgba(16,20,24,.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  .mono { font-family: 'Manrope', sans-serif; }
+  h1, h2, h3, h4, h5 { font-family: 'Manrope', sans-serif; }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: linear-gradient(140deg, #0d1117 0%, #12212b 60%, #1a3344 100%);
+    color: #fff;
+    padding: 68px 24px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -160px; top: -160px;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,169,222,.25), transparent 60%);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    left: -120px; bottom: -180px;
+    width: 460px; height: 460px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,150,46,.16), transparent 62%);
+  }
+  .hero-inner { max-width: 1060px; margin: 0 auto; position: relative; z-index: 2; }
+  .overflow {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 4.6vw, 56px);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -.02em;
+    max-width: 26ch;
+  }
+  .hero h1 em {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-weight: 600;
+    color: #7fc4e8;
+  }
+  .hero .sub {
+    margin-top: 18px;
+    max-width: 66ch;
+    color: #c7d3db;
+    font-size: 17px;
+  }
+  .hero-chips { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #dde4ea;
+    background: rgba(255,255,255,.04);
+  }
+  .chip b { color: var(--gold); font-weight: 700; }
+
+  /* ===== STICKY NAV ===== */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250,248,244,.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .toc-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toc-inner::-webkit-scrollbar { display: none; }
+  .toc-inner a {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 16px 12px;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+  }
+  .toc-inner a:hover { color: var(--ink); }
+  .toc-inner a.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* ===== LAYOUT ===== */
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 24px; }
+  section.block { margin: 56px 0; }
+  .kicker { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .kicker .num {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2em;
+    color: var(--gold);
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  .kicker .rule { flex: 1; height: 1px; background: var(--line); }
+  section.block h2 {
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 800;
+    letter-spacing: -.015em;
+    margin-bottom: 10px;
+  }
+  section.block > p.lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 70ch;
+    margin-bottom: 26px;
+  }
+  h3.sec { font-size: 20px; font-weight: 700; margin: 30px 0 12px; }
+  p.body { margin: 12px 0; max-width: 78ch; }
+  p.body b { font-family: 'Manrope', sans-serif; }
+  ul.tight { margin: 12px 0 12px 24px; }
+  ul.tight li { margin: 6px 0; max-width: 74ch; }
+
+  /* ===== NO-JARGON CALLOUTS ===== */
+  .callout {
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 22px 0;
+    font-size: 15px;
+    border-left: 5px solid;
+  }
+  .callout.gold { background: var(--gold-soft); border-color: var(--gold); }
+  .callout.green { background: var(--green-soft); border-color: var(--green); }
+  .callout.red { background: var(--red-soft); border-color: var(--red); }
+  .callout.blue { background: var(--blue-soft); border-color: var(--blue); }
+  .callout b { font-family: 'Manrope', sans-serif; }
+  .callout .lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .callout.gold .lab { color: #8a6418; }
+  .callout.green .lab { color: var(--green); }
+  .callout.red .lab { color: var(--red); }
+  .callout.blue .lab { color: var(--blue); }
+
+  /* ===== TABLES ===== */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin: 18px 0 28px;
+  }
+  .table-card .t-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .table-card .t-head h4 { font-size: 15px; font-weight: 800; }
+  .table-card .t-head .tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--paper);
+    border-radius: 100px;
+    padding: 5px 12px;
+    white-space: nowrap;
+  }
+  .table-card table { width: 100%; border-collapse: collapse; }
+  .table-card th {
+    text-align: left;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: #f6f3ec;
+    padding: 12px 22px;
+    white-space: nowrap;
+  }
+  .table-card td {
+    padding: 13px 22px;
+    font-size: 14.5px;
+    border-top: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .table-card td b { font-family: 'Manrope', sans-serif; }
+  .table-card tr:last-child td { border-bottom: none; }
+  .table-card .money { font-family: 'Manrope', sans-serif; font-weight: 700; white-space: nowrap; }
+  .table-card .money.gold { color: #8a6418; }
+  .table-card .money.green { color: var(--green); }
+  .table-card td.note { color: var(--muted); font-size: 13px; }
+  .table-card .stars { color: var(--gold); letter-spacing: 2px; font-weight: 700; }
+
+  /* ===== CARD GRIDS ===== */
+  .cards4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .m-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+  .m-card .m-ico {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 14px;
+    color: var(--ink);
+    background: var(--gold-soft);
+  }
+  .m-card.g .m-ico { background: var(--green-soft); color: var(--green); }
+  .m-card.r .m-ico { background: var(--red-soft); color: var(--red); }
+  .m-card.b .m-ico { background: var(--blue-soft); color: var(--blue); }
+  .m-card h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .m-card .who { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .m-card p { font-size: 14px; color: var(--ink-2); }
+  .m-card .pros { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+  .m-card .pros span { display: block; margin: 3px 0; color: var(--muted); }
+  .m-card .pros b { color: var(--green); }
+  .m-card .pros .no b { color: var(--red); }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-block {
+    background: #0f1419;
+    color: #dbe4ea;
+    border-radius: 14px;
+    margin: 18px 0 26px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .code-block .c-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #9db3c2;
+    background: rgba(255,255,255,.02);
+  }
+  .code-block .c-head span:last-child { color: var(--gold); }
+  .code-block pre {
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .code-block .c-comment { color: #7c8f9c; }
+  .code-block .c-kw { color: #7fc4e8; }
+  .code-block .c-str { color: #9fe8b2; }
+
+  /* ===== CHECKLIST ===== */
+  .check-list { list-style: none; margin: 14px 0; }
+  .check-list li {
+    padding: 12px 16px 12px 20px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: var(--card);
+    font-size: 14.5px;
+    position: relative;
+  }
+  .check-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0; top: 0;
+    width: 20px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    color: var(--green);
+  }
+  .check-list li b { font-family: 'Manrope', sans-serif; }
+
+  /* ===== FLOW / DIAGRAM ===== */
+  .flow {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 16px;
+    padding: 26px 26px;
+    margin: 18px 0 28px;
+  }
+  .flow .f-lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+  .flow pre {
+    font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    overflow-x: auto;
+    color: #d7dee5;
+    white-space: pre;
+  }
+  .flow pre .hl { color: #7fc4e8; }
+  .flow pre .gr { color: #9fe8b2; }
+
+  /* ===== QUOTE / SCRIPT ===== */
+  .script {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--green);
+    border-radius: 0 16px 16px 0;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin: 18px 0;
+    font-size: 15px;
+  }
+  .script .who { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--green); display: block; margin-bottom: 8px; }
+  .script p { color: var(--ink-2); }
+
+  /* ===== QUICK CARD ===== */
+  .quick-card {
+    background: radial-gradient(130% 140% at 0% 0%, #12212b 0%, #0d1419 100%);
+    border-radius: 20px;
+    padding: 36px 30px;
+    color: #fff;
+    box-shadow: var(--shadow);
+    margin: 30px 0;
+  }
+  .quick-card .qk-lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .qk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .qk-item {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 18px 18px;
+  }
+  .qk-item h5 { font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #cfd9e0; margin-bottom: 8px; }
+  .qk-item p { font-size: 13.5px; color: #aeb8c1; line-height: 1.55; }
+  .qk-item p b { color: #fff; }
+
+  /* ===== FOOTER ===== */
+  .footer { background: var(--ink); color: #7d8894; margin-top: 40px; }
+  .footer-inner { max-width: 1060px; margin: 0 auto; padding: 40px 24px; font-size: 13px; }
+  .footer-inner .brand { font-family: 'Manrope', sans-serif; font-weight: 800; color: #fff; letter-spacing: .06em; }
+  .footer-inner .brand span { color: var(--gold); }
+  .footer-inner p { margin-top: 8px; max-width: 78ch; line-height: 1.6; }
+
+  @media (max-width: 760px) {
+    .cards4, .cards3 { grid-template-columns: 1fr; }
+    .hero { padding: 48px 20px 40px; }
+  }
+  @media print {
+    *, *::before, *::after { color: #000 !important; background: transparent !important; box-shadow: none !important; }
+    body { background: #fff; }
+    .flow, .code-block, .quick-card { border: 1px solid #000; }
+    .toc { display: none; }
+    @page { size: A4; margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div class="hero-inner">
+      <span class="overflow">Company-Wide Communication Platform · 2026 Edition</span>
+      <h1>Replacing WhatsApp with a <em>programmatic</em>, self-hosted chat system.</h1>
+      <p class="sub">Why WhatsApp cannot scale for a factory, how four real platforms compare, why Mattermost wins, and the complete step-by-step plan to build it — while Firebase Firestore stays at the heart of everything. Every idea is explained in plain English, no tech background needed.</p>
+      <div class="hero-chips">
+        <span class="chip">4 platforms <b>compared</b></span>
+        <span class="chip">Firestore as the <b>source of truth</b></span>
+        <span class="chip">$0 software · <b>~$200/year</b></span>
+        <span class="chip">12-week <b>rollout plan</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== STICKY TOC ===== -->
+  <nav class="toc">
+    <div class="toc-inner">
+      <a href="#problem">The Problem</a>
+      <a href="#requirements">Requirements</a>
+      <a href="#options">Options Compared</a>
+      <a href="#recommendation">Why Mattermost Wins</a>
+      <a href="#how">How It Works</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#firestore">The Firestore Heart</a>
+      <a href="#erp">ERP Integration</a>
+      <a href="#implementation">Implementation Guide</a>
+      <a href="#backup">Backup &amp; Security</a>
+      <a href="#cost">Cost</a>
+      <a href="#migration">WhatsApp Migration</a>
+      <a href="#plan">12-Week Plan</a>
+      <a href="#zulip">The Zulip Option</a>
+      <a href="#builder">Builder's Walkthrough</a>
+      <a href="#glossary">Glossary</a>
+      <a href="#quick">Quick Card</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- ============================================================ -->
+    <!-- 01 THE PROBLEM -->
+    <!-- ============================================================ -->
+    <section class="block" id="problem">
+      <div class="kicker"><span class="num">01</span><span class="rule"></span></div>
+      <h2>The problem — why WhatsApp cannot scale</h2>
+      <p class="lede">WhatsApp is brilliant for chatting with friends and family. For a company with dozens of employees across shifts, machines, and quality checks, it quietly becomes a nightmare. Let us look at exactly why, in words anyone can follow.</p>
+
+      <div class="callout blue">
+        <span class="lab">Plain English</span>
+        <b>WhatsApp's core flaw is that all control is done by human hands.</b> Every time someone is hired, someone must manually add them to every group. Every time someone leaves, someone must manually remember to remove them everywhere. There is no central "off switch," no automatic way for another computer program to manage membership — and that is exactly what a growing factory needs.
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Six problems, one by one</h4><span class="tag">The real impact</span></div>
+        <table>
+          <tr><th>Problem</th><th>Real-world impact</th></tr>
+          <tr><td><b>Onboarding new staff</b></td><td>Each new person must be added to every relevant group <i>by hand</i>. There is no API for that — no way for the ERP to do it automatically. If HR forgets one group, the new hire misses important messages.</td></tr>
+          <tr><td><b>Offboarding terminated staff</b></td><td>When someone leaves, you must remember to remove them from <i>every</i> group. Miss one and they still see company messages. There is no central "deactivate" button.</td></tr>
+          <tr><td><b>No central administration</b></td><td>Any group admin can add or remove people. Nobody can prove, on one screen, who has access to what.</td></tr>
+          <tr><td><b>No audit trail</b></td><td>You cannot prove who saw what message, or when. In a dispute or a compliance review, WhatsApp gives you nothing.</td></tr>
+          <tr><td><b>Mixing personal and work</b></td><td>Employees use personal phone numbers. When they leave, your company's conversations stay on their personal device forever.</td></tr>
+          <tr><td><b>No programmatic control</b></td><td>You cannot write code that auto-creates a "Line 3 Night Shift QC Team" channel, or that posts a quality alert the instant a machine goes out of spec.</td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">The core requirement</h3>
+      <p class="body">We need a <b>programmatically controllable</b> chat system — a system where everything (creating users, creating channels, adding and removing people, sending messages) can be done by <b>code</b>, not by hand. When a new QC Manager is hired in the ERP, the chat system automatically creates their account and adds them to the right channels. When someone is terminated, their access is revoked instantly and completely — with a single action.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 02 REQUIREMENTS -->
+    <!-- ============================================================ -->
+    <section class="block" id="requirements">
+      <div class="kicker"><span class="num">02</span><span class="rule"></span></div>
+      <h2>What we need — the requirements</h2>
+      <p class="lede">Before choosing any software, we write down exactly what the system must do. This is the shopping list. If a platform does not tick these boxes, it is out of the running.</p>
+
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">!</div>
+          <h4>Must-have</h4>
+          <div class="who">Non-negotiable</div>
+          <div class="pros">
+            <span><b>✓</b> Self-hosted — data stays on our own servers</span>
+            <span><b>✓</b> REST API — the ERP can create users, channels, members, and messages by code</span>
+            <span><b>✓</b> Bulk user management — create, update, deactivate, import in bulk</span>
+            <span><b>✓</b> Programmatic channel membership — set the exact list of members per channel</span>
+            <span><b>✓</b> Role-based access — different permissions for admin, manager, staff</span>
+            <span><b>✓</b> Mobile apps — iOS and Android for floor workers</span>
+            <span><b>✓</b> Offline-capable — messages queue and send when connectivity returns</span>
+            <span><b>✓</b> File / image sharing — photos of machine readings and quality issues</span>
+            <span><b>✓</b> Search — search message history for past decisions</span>
+          </div>
+        </div>
+        <div class="m-card b">
+          <div class="m-ico">+</div>
+          <h4>Nice-to-have</h4>
+          <div class="who">Worth having, not required</div>
+          <div class="pros">
+            <span><b>✓</b> Single Sign-On (SSO) — one login for the ERP and chat</span>
+            <span><b>✓</b> Video / voice calls — remote supervisors talk to floor teams</span>
+            <span><b>✓</b> Bridges — e.g. receive WhatsApp messages from suppliers</span>
+            <span><b>✓</b> Threaded conversations — discussions organized by topic</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 03 OPTIONS -->
+    <!-- ============================================================ -->
+    <section class="block" id="options">
+      <div class="kicker"><span class="num">03</span><span class="rule"></span></div>
+      <h2>The options compared</h2>
+      <p class="lede">We researched the four platforms that dominate the self-hosted team-chat space. Here is every option with honest pros and cons — in plain language first, then in a comparison table.</p>
+
+      <div class="callout gold">
+        <span class="lab">Plain English</span>
+        <b>All four options are free to install and run on your own server.</b> They differ in how easy they are to set up, how their screens feel to employees, how cheap they are to run, and — most importantly for us — how well their automation (the "do it by code" part) works.
+      </div>
+
+      <h3 class="sec">Mattermost — the Slack lookalike</h3>
+      <p class="body">An open-source, self-hosted chat platform that looks and works almost exactly like Slack. Built in Go (backend) and React (frontend), and stores everything in the PostgreSQL database.</p>
+      <div class="table-card">
+        <div class="t-head"><h4>Mattermost fact sheet</h4><span class="tag">MIT license · free</span></div>
+        <table>
+          <tr><th>Fact</th><th>Detail</th></tr>
+          <tr><td><b>Language / Stack</b></td><td>Go (backend), React (frontend), PostgreSQL</td></tr>
+          <tr><td><b>Deployment</b></td><td>Docker Compose — running in under 5 minutes</td></tr>
+          <tr><td><b>Minimum RAM</b></td><td>~512 MB</td></tr>
+          <tr><td><b>Mobile apps</b></td><td>Excellent — native iOS and Android</td></tr>
+          <tr><td><b>API quality</b></td><td><span class="stars">★★★★★</span> Best-in-class REST API</td></tr>
+        </table>
+      </div>
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">+</div>
+          <h4>Pros</h4>
+          <div class="pros">
+            <span><b>✓</b> Best-in-class REST API — do everything by code</span>
+            <span><b>✓</b> Bulk membership API — set a channel's exact member list in one call</span>
+            <span><b>✓</b> Easiest deployment of all four</span>
+            <span><b>✓</b> Familiar Slack-like interface — near-zero learning curve</span>
+            <span><b>✓</b> Tiny resource usage for its power</span>
+            <span><b>✓</b> Excellent mobile apps with push notifications</span>
+            <span><b>✓</b> Big ecosystem of plugins and integrations</span>
+          </div>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">−</div>
+          <h4>Cons</h4>
+          <div class="pros">
+            <span class="no"><b>✗</b> No end-to-end encryption (server admins can read messages)</span>
+            <span class="no"><b>✗</b> No federation — one server is its own island (fine for one company)</span>
+            <span class="no"><b>✗</b> Some features (SSO, LDAP, compliance exports) are paid — solvable with modest code</span>
+            <span class="no"><b>✗</b> Video calls need a separate Jitsi server</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sec">Zulip — the topic-organizer</h3>
+      <p class="body">An open-source chat platform with a unique model: every message belongs to a <b>topic</b> (like a subject line). Created at Dropbox, later open-sourced. Written in Python and JavaScript with PostgreSQL.</p>
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">+</div>
+          <h4>Pros</h4>
+          <div class="pros">
+            <span><b>✓</b> Topic-based threading — skim 5 topics instead of 200 messages</span>
+            <span><b>✓</b> 100% open source — every feature included, no paid gate</span>
+            <span><b>✓</b> Excellent API and official Python SDK</span>
+            <span><b>✓</b> User groups with API-managed membership</span>
+            <span><b>✓</b> Guest accounts and advanced permissions for free</span>
+          </div>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">−</div>
+          <h4>Cons</h4>
+          <div class="pros">
+            <span class="no"><b>✗</b> Topic model needs a mental shift — a learning curve</span>
+            <span class="no"><b>✗</b> Smaller ecosystem of native integrations</span>
+            <span class="no"><b>✗</b> Higher memory needs than Mattermost (~2 GB)</span>
+            <span class="no"><b>✗</b> Mobile app is good but less polished</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sec">Matrix (Synapse + Element) — the encrypted network</h3>
+      <p class="body">Not one product but a <b>protocol</b> — a standard, like email — for decentralized chat. Anyone can run their own server and talk to anyone else's server. The most common server is Synapse; the most popular app is Element.</p>
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">+</div>
+          <h4>Pros</h4>
+          <div class="pros">
+            <span><b>✓</b> True end-to-end encryption — even server admins cannot read messages</span>
+            <span><b>✓</b> Federation — chat across company borders, like email</span>
+            <span><b>✓</b> Bridges to Slack, Discord, Telegram, WhatsApp, IRC</span>
+            <span><b>✓</b> Open standard, governed by a foundation</span>
+          </div>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">−</div>
+          <h4>Cons</h4>
+          <div class="pros">
+            <span class="no"><b>✗</b> Significantly harder to deploy and maintain</span>
+            <span class="no"><b>✗</b> Resource-hungry — 4–8 GB RAM for 200 active users</span>
+            <span class="no"><b>✗</b> Overkill when federation is not needed</span>
+            <span class="no"><b>✗</b> Admin/user-management tooling is less mature</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sec">Rocket.Chat — the all-in-one</h3>
+      <p class="body">An open-source chat platform written in Node.js (Meteor) with MongoDB. Famous for being a "kitchen sink" — nearly every feature imaginable, free.</p>
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">+</div>
+          <h4>Pros</h4>
+          <div class="pros">
+            <span><b>✓</b> Feature-rich — omnichannel, video calls, voice rooms</span>
+            <span><b>✓</b> More free features than Mattermost (LDAP, guests, custom roles)</span>
+            <span><b>✓</b> Federation via a Matrix bridge</span>
+            <span><b>✓</b> Slack-compatible webhooks</span>
+          </div>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">−</div>
+          <h4>Cons</h4>
+          <div class="pros">
+            <span class="no"><b>✗</b> Heavier stack — Node.js + MongoDB is harder to run and maintain</span>
+            <span class="no"><b>✗</b> Less polished user experience</span>
+            <span class="no"><b>✗</b> Slower performance under heavy load</span>
+            <span class="no"><b>✗</b> Smaller community and slower releases</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Head-to-head comparison</h4><span class="tag">★ = 1 point</span></div>
+        <table>
+          <tr><th>Criterion</th><th>Mattermost</th><th>Zulip</th><th>Matrix</th><th>Rocket.Chat</th></tr>
+          <tr><td><b>Bulk membership API</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★★☆☆</span></td><td><span class="stars">★★★★☆</span></td></tr>
+          <tr><td><b>Ease of deployment</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★☆☆☆</span></td><td><span class="stars">★★★★☆</span></td></tr>
+          <tr><td><b>Familiar UX (WhatsApp→Chat)</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★☆☆</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★★★☆</span></td></tr>
+          <tr><td><b>Resource efficiency</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★☆☆☆</span></td><td><span class="stars">★★★☆☆</span></td></tr>
+          <tr><td><b>Mobile app quality</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td></tr>
+          <tr><td><b>Free-tier features</b></td><td><span class="stars">★★★☆☆</span></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★★</span></td></tr>
+          <tr><td><b>Maintenance burden</b></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★★☆</span></td><td><span class="stars">★★☆☆☆</span></td><td><span class="stars">★★★☆☆</span></td></tr>
+          <tr><td><b>Overall for this use case</b></td><td><b>★ BEST</b></td><td>Good</td><td>Overkill</td><td>Good</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 04 RECOMMENDATION -->
+    <!-- ============================================================ -->
+    <section class="block" id="recommendation">
+      <div class="kicker"><span class="num">04</span><span class="rule"></span></div>
+      <h2>The recommendation — why Mattermost wins</h2>
+      <p class="lede">After all that analysis, the verdict is clear. Here is the reasoning in plain language — six reasons, each expressed so everyone can follow.</p>
+
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">1</div>
+          <h4>The API is built for what we need</h4>
+          <div class="who">Most important reason</div>
+          <p>Mattermost's bulk channel API (<code>PUT /api/v4/channels/{id}/members</code>) lets the sync service say: <i>"these 47 people should be in the QC Team channel"</i> — and Mattermost adds the missing ones and removes the extra ones, all in ONE call. No other platform has this exact reconciliation tool. It is purpose-built for the "ERP is the source of truth" pattern.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">2</div>
+          <h4>Easiest to deploy and maintain</h4>
+          <div class="who">No dedicated IT team needed</div>
+          <p>One Docker Compose file brings the whole system up in minutes. Updates are two commands. For a factory with no full-time IT team, this simplicity is worth more than any feature list.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">3</div>
+          <h4>The UX employees will actually use</h4>
+          <div class="who">Adoption is the #1 risk</div>
+          <p>Mattermost looks and behaves exactly like Slack — channels on the left, messages in the middle, reactions, threads, file uploads. Employees coming from WhatsApp understand it in minutes, not days. People are more likely to actually use it.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">4</div>
+          <h4>Low resource requirements</h4>
+          <div class="who">Cheap to run</div>
+          <p>~512 MB RAM minimum, 2 GB recommended for 200 users, about 10 GB of disk. It runs comfortably on a <b>$10–15/month VPS</b> — versus Matrix, which needs 4–8 GB for the same workload.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">5</div>
+          <h4>Strong integration story</h4>
+          <div class="who">Talk to anything</div>
+          <p>Incoming webhooks (Slack-compatible), outgoing webhooks, slash commands, bot accounts with API tokens, and a plugin framework. Any system can push a message to any channel with a simple HTTP POST.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">6</div>
+          <h4>The architect multiplier</h4>
+          <div class="who">Same stack, same skills</div>
+          <p>The in-house architect who built the ERP already knows Firebase/Firestore, REST APIs, and React — all the exact technologies Mattermost and the sync service use. No new stack to learn.</p>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <span class="lab">The verdict</span>
+        <b>Mattermost is the recommended platform.</b> It has the best API for automated management, the easiest deployment, the friendliest interface, the lowest cost — and it is free to use (MIT license, no license key). Full stop.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 05 HOW IT WORKS (NON-TECH) -->
+    <!-- ============================================================ -->
+    <section class="block" id="how">
+      <div class="kicker"><span class="num">05</span><span class="rule"></span></div>
+      <h2>How it works — for non-technical readers</h2>
+      <p class="lede">Before any technical detail, here is how the finished system feels to the people who use it — and what happens behind the scenes.</p>
+
+      <h3 class="sec">What employees will see</h3>
+      <p class="body">Every employee gets a <b>Mattermost account</b>. They install the free Mattermost app on their phone (or open the web browser on a desktop). After logging in, they see only the channels they belong to:</p>
+      <div class="table-card">
+        <table>
+          <tr><th>Channel</th><th>What it is for</th></tr>
+          <tr><td><b>#all-announcements</b></td><td>Company-wide messages from management</td></tr>
+          <tr><td><b>#production-line-2</b></td><td>Their specific production line's chat</td></tr>
+          <tr><td><b>#qc-team</b></td><td>Quality control team discussions</td></tr>
+          <tr><td><b>#night-shift</b></td><td>Shift-specific coordination</td></tr>
+          <tr><td><b>#hr-notices</b></td><td>HR announcements and policy changes</td></tr>
+        </table>
+      </div>
+      <p class="body">They can also direct-message any other employee, share photos (e.g. a photo of a machine error), and search past messages.</p>
+
+      <h3 class="sec">What HR and management experience</h3>
+      <div class="cards4">
+        <div class="m-card b">
+          <div style="font-size:20px;margin-bottom:10px;"><b>👋</b></div>
+          <h4>Onboarding a new hire</h4>
+          <ul class="tight">
+            <li>HR enters the employee's details in the ERP (Starium Rafa).</li>
+            <li>The system automatically creates their chat account and emails them login details.</li>
+            <li>Based on their role, it automatically adds them to the correct channels.</li>
+            <li>The new hire opens the app and sees everything — no manual group additions.</li>
+          </ul>
+        </div>
+        <div class="m-card r">
+          <div style="font-size:20px;margin-bottom:10px;"><b>🚪</b></div>
+          <h4>Offboarding a departing employee</h4>
+          <ul class="tight">
+            <li>HR deactivates the employee in the ERP (or marks them terminated).</li>
+            <li>The system automatically deactivates their chat account.</li>
+            <li>They are removed from ALL channels instantly.</li>
+            <li>They can no longer log in, see messages, or access anything.</li>
+            <li>One click in the ERP. No hunting through WhatsApp groups.</li>
+          </ul>
+        </div>
+        <div class="m-card g">
+          <div style="font-size:20px;margin-bottom:10px;"><b>➕</b></div>
+          <h4>Creating a new channel</h4>
+          <ul class="tight">
+            <li>A manager requests a channel for a new project or team.</li>
+            <li>The architect creates it once in the ERP and assigns members by role.</li>
+            <li>The channel appears automatically for everyone who needs it.</li>
+          </ul>
+        </div>
+        <div class="m-card g">
+          <div style="font-size:20px;margin-bottom:10px;"><b>⚙️</b></div>
+          <h4>Behind the scenes</h4>
+          <ul class="tight">
+            <li>A small program called the <b>Sync Service</b> runs continuously.</li>
+            <li>Every minute it checks: "Has anyone been hired, fired, or changed roles?"</li>
+            <li>If yes, it updates the chat system to match — instantly.</li>
+            <li>It also posts automatic ERP notifications (alerts, shift reminders, updates).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 06 ARCHITECTURE -->
+    <!-- ============================================================ -->
+    <section class="block" id="architecture">
+      <div class="kicker"><span class="num">06</span><span class="rule"></span></div>
+      <h2>Architecture overview</h2>
+      <p class="lede">Here is the whole system drawn as one picture. Don't worry about the terms — every box is explained in the table below in plain words.</p>
+
+      <div class="flow">
+        <div class="f-lab">System map</div>
+        <pre>
+┌───────────────────────────────────────────────────────┐
+│                 STARIUM RAFA ERP                        │
+│                                                        │
+│  ┌─────────────┐   ┌──────────────┐  ┌──────────────┐  │
+│  │  User DB    │   │ Role / Perms │  │ Sync Service │──┼────┐
+│  │  (Firestore)│   │    Engine    │  │  (Node.js)   │  │    │
+│  └─────────────┘   └──────────────┘  └──────────────┘  │    │
+└───────────────────────────────────────────────────────┘    │
+                                                             │  HTTP
+         ┌───────────────────────────────┐                   ▼
+         │      MATTERMOST SERVER        │   ┌──────────────────────────────┐
+         │                               │   │        NINE "COMPUTERS"      │
+         │  ┌─────────────────────────┐  │◀──│   (web, phone, desktop apps)  │
+         │  │  Mattermost App (Go+React)│  │   └──────────────────────────────┘
+         │  └───────────┬─────────────┘  │
+         │  ┌───────────▼─────────────┐  │
+         │  │   PostgreSQL DB         │  │   ← stores messages & channels
+         │  │   (messages, channels)  │  │
+         │  └─────────────────────────┘  │
+         │  ┌─────────────────────────┐  │
+         │  │   Nginx + HTTPS         │  │   ← locks down & serves traffic
+         │  └─────────────────────────┘  │
+         └───────────────────────────────┘
+        </pre>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Component breakdown</h4><span class="tag">What each piece does</span></div>
+        <table>
+          <tr><th>Component</th><th>What it does</th><th>Technology</th></tr>
+          <tr><td><b>Firestore (the ERP database)</b></td><td>Holds the truth about every employee: name, email, role, department, shift, whether they are active. The <b>single source of truth</b>.</td><td>Firebase Firestore</td></tr>
+          <tr><td><b>Sync Service</b></td><td>The bridge. Reads employees from Firestore, calls the Mattermost API to keep users and channels matched. Runs every 60 seconds as a background process.</td><td>Node.js</td></tr>
+          <tr><td><b>Mattermost Server</b></td><td>The chat platform itself. Handles messages, channels, file uploads, push notifications, mobile apps.</td><td>Go / React + PostgreSQL</td></tr>
+          <tr><td><b>Nginx Reverse Proxy</b></td><td>The front door. Handles HTTPS encryption and routes traffic to Mattermost.</td><td>Nginx + Let's Encrypt</td></tr>
+          <tr><td><b>Push Notification Server</b></td><td>(Optional) Makes phones buzz when the app is closed.</td><td>Mattermost Push Proxy</td></tr>
+        </table>
+      </div>
+
+      <div class="callout gold">
+        <span class="lab">Plain English — "source of truth"</span>
+        The ERP's Firestore database is the <b>official record</b> of who works at the company, what their role is, and whether they are active. The chat system is a <b>follower</b> — it mirrors whatever Firestore says. If Firestore says someone was fired, the chat system must follow. That one-way "Firestore decides, chat obeys" rule is the entire trick of this design.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 07 FIRESTORE HEART -->
+    <!-- ============================================================ -->
+    <section class="block" id="firestore">
+      <div class="kicker"><span class="num">07</span><span class="rule"></span></div>
+      <h2>The Firestore heart — the database that powers everything</h2>
+      <p class="lede">The ERP already runs on Firebase Firestore. We keep it, on purpose. This chapter explains what Firestore actually is, how it stores the people data the chat system depends on, and how to use it safely at scale — all in beginner-friendly terms.</p>
+
+      <div class="callout green">
+        <span class="lab">The big idea</span>
+        <b>Our recommendation is a hybrid that keeps Firestore exactly where it belongs:</b> Firestore stays the single source of truth for every employee, role, department, and channel rule. Mattermost is the "face" — the app people chat in. The Sync Service connects the two. Why not store chat messages in Firestore too and build our own WhatsApp? Because Mattermost already gives us polished mobile apps, push notifications, search, and file sharing for free — writing all of that from scratch would take months of custom code. The smart move: <b>don't rebuild WhatsApp. Just automate who is in it and what gets posted.</b>
+      </div>
+
+      <h3 class="sec">What Firestore is — in plain words</h3>
+      <p class="body">Imagine a highly organized digital filing cabinet. Everything is stored in <b>collections</b> (like drawers) that contain <b>documents</b> (like files). Each document holds fields: names, roles, numbers, true/false flags. Firestore is a <b>NoSQL</b> database — there are no rigid spreadsheet columns; each "file" can look slightly different. It lives in Google's cloud, is already running for the ERP, is secure, and works even when a phone has no signal (offline-first).</p>
+
+      <div class="code-block">
+        <div class="c-head"><span>What an employee looks like in Firestore</span><span>users / {employeeId}</span></div>
+        <pre>{
+  <span class="c-kw">full_name</span>: <span class="c-str">"Jane Doe"</span>,
+  <span class="c-kw">email</span>:      <span class="c-str">"jane.doe@factory.com"</span>,
+  <span class="c-kw">role</span>:       <span class="c-str">"qc_manager"</span>,      <span class="c-comment">// decides her channels</span>
+  <span class="c-kw">department</span>: <span class="c-str">"quality-control"</span>,
+  <span class="c-kw">shift</span>:      <span class="c-str">"day"</span>,
+  <span class="c-kw">is_active</span>:  <span class="c-kw">true</span>,               <span class="c-comment">// true = employed</span>
+  <span class="c-kw">mattermost_user_id</span>: <span class="c-str">"a1b2c3..."</span>  <span class="c-comment">// link to her chat account</span>
+}</pre>
+      </div>
+
+      <p class="body">Notice the last field, <b><code>mattermost_user_id</code></b>. It is the "ID tag" that connects the Firestore employee record to her chat account. When the Sync Service creates her chat account, it stores this ID back into Firestore — that one field is the glue between the two systems.</p>
+
+      <h3 class="sec">The channel rules — expressed as Firestore questions</h3>
+      <p class="body">Every channel needs a rule that answers: <i>"who should be in this channel?"</i> Because employee data lives in Firestore, each rule becomes a simple <b>query</b> — a question asked of the database. The channel sync then asks the database and gets the exact list of people.</p>
+
+      <div class="code-block">
+        <div class="c-head"><span>Channel membership rules as Firestore queries</span><span>Conceptual</span></div>
+        <pre><span class="c-comment">// Every channel is defined by "who belongs in it?"</span>
+#all-announcements  → users <span class="c-kw">WHERE</span> is_active = true
+#qc-team            → users <span class="c-kw">WHERE</span> role <span class="c-kw">in</span> [qc_manager, qc_staff, super_admin]
+                                    <span class="c-kw">AND</span> is_active = true
+#production-line-1  → users <span class="c-kw">WHERE</span> production_line = 1 <span class="c-kw">AND</span> is_active = true
+                                    <span class="c-kw">PLUS</span> all prod_managers &amp; super_admins
+#night-shift        → users <span class="c-kw">WHERE</span> shift = night <span class="c-kw">AND</span> is_active = true
+#management         → users <span class="c-kw">WHERE</span> role <span class="c-kw">in</span> [super_admin, qc_manager, prod_manager]
+                                    <span class="c-kw">AND</span> is_active = true
+#maintenance        → users <span class="c-kw">WHERE</span> department = maintenance <span class="c-kw">AND</span> is_active = true</pre>
+      </div>
+
+      <h3 class="sec">Online / offline presence — the "green dot"</h3>
+      <p class="body">Nice extra: show a green dot next to people who are online right now. Firestore does not track this by itself, but the standard pattern is: the phone's Firebase Realtime Database automatically marks a person offline the second their connection drops (<code>onDisconnect</code>), and a small <b>Cloud Function</b> copies that state into Firestore, where the whole company can see it.</p>
+
+      <div class="code-block">
+        <div class="c-head"><span>Presence sync into Firestore (Cloud Function)</span><span>Mirror online/offline</span></div>
+        <pre><span class="c-comment">// Runs whenever someone's connection state changes.</span>
+exports.onUserPresence =
+  functions.database.ref('/presence/{userId}')
+    .onUpdate(async (change) =&gt; {
+      <span class="c-kw">const</span> isOnline = change.after.val();
+      <span class="c-kw">return</span> firestore.doc(`users/${change.params.userId}`).update({
+        presence:  isOnline,
+        last_seen: Date.now(),
+      });
+    });</pre>
+      </div>
+
+      <h3 class="sec">Offline-first — work without signal</h3>
+      <p class="body">Factory floors have dead zones. Firestore's apps automatically <b>queue writes locally</b> and sync them the moment a connection returns — no code needed. That's the same promise we need on the chat side, and Mattermost's mobile apps do exactly that too: messages you send while offline get sent as soon as you're back. Both halves of the system are offline-capable by design.</p>
+
+      <h3 class="sec">Scaling rules of thumb (for the architect's notebook)</h3>
+      <p class="body">Firestore is tough, but some patterns are unwise. The short, plain-language version:</p>
+      <div class="cards4">
+        <div class="m-card">
+          <div class="m-ico">1</div>
+          <h4>Messages belong in subcollections</h4>
+          <p>Never cram hundreds of messages into one document. Store messages as separate documents inside a <b>subcollection</b> — <code>channels/{channelId}/messages/{messageId}</code>. Reads, writes, and security rules all scale naturally.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">2</div>
+          <h4>One document, ~1 write per second</h4>
+          <p>A single document is a "soft" bottleneck — very fast writers to the same document can slow down. That's why messages are each their own document, not a growing list in one file. (This is exactly why the "messages in a document" temptation must be avoided.)</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">3</div>
+          <h4>Sequential timestamps & hot spots</h4>
+          <p>Indexed timestamps can cap collections at ~500 writes/second. If a queue of messages ever needed more, you'd <b>shard</b> the timestamp or stop indexing it. A 200-person factory will never hit this — it's future-proofing.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">4</div>
+          <h4>Lock it down with rules</h4>
+          <p>Firestore <b>security rules</b> decide who can read and write what. The ERP app and the Sync Service operate from the server side (which bypasses rules via the Admin SDK), while any phone app gets tight rules — users can only read their own profile.</p>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <span class="lab">Bottom line</span>
+        Keep Firestore as the <b>brains</b> (employees, roles, channel rules, presence, audit trail). Let Mattermost be the <b>messenger</b> (the app people actually talk in). The Sync Service is the courier in between. This keeps all the hard parts already built, and keeps our own valuable data in the database we already own and operate.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 08 ERP INTEGRATION -->
+    <!-- ============================================================ -->
+    <section class="block" id="erp">
+      <div class="kicker"><span class="num">08</span><span class="rule"></span></div>
+      <h2>Integration with Starium Rafa ERP</h2>
+      <p class="lede">This is the heart of the build: four phases that connect the ERP to the chat system, from automatic account creation to single sign-on. Everything described here works off Firestore as the source of truth.</p>
+
+      <h3 class="sec">Phase 1 — automated onboarding &amp; offboarding</h3>
+      <p class="body"><b>Goal:</b> when a user is created, updated, or deactivated in the ERP, the exact same thing happens automatically in the chat system.</p>
+
+      <div class="code-block">
+        <div class="c-head"><span>The Sync Service loop</span><span>Runs every 60 seconds</span></div>
+        <pre><span class="c-comment">// 1. Read ALL active employees from Firestore</span>
+usersSnapshot = firestore.collection('users')
+                         .where('is_active', ==, true).get()
+
+<span class="c-comment">// 2. Read ALL users from the chat system</span>
+mmUsers = mattermost.getUsers(paginated)
+
+<span class="c-comment">// 3. Compute the difference (the "diff")</span>
+A) In ERP, not in chat   → CREATE account (+ save its ID back to Firestore)
+B) In chat, not in ERP   → DEACTIVATE account (they've left or been fired)
+C) In both, name changed → UPDATE the name</pre>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>ERP roles → chat roles</h4><span class="tag">Membership map</span></div>
+        <table>
+          <tr><th>ERP role</th><th>Chat role</th><th>Channel memberships</th></tr>
+          <tr><td><b>super_admin</b></td><td>System Admin</td><td>All channels (admin access)</td></tr>
+          <tr><td><b>qc_manager</b></td><td>Team Admin</td><td>QC Team, All Announcements, Management</td></tr>
+          <tr><td><b>qc_staff</b></td><td>Member</td><td>QC Team, their production line</td></tr>
+          <tr><td><b>prod_manager</b></td><td>Team Admin</td><td>Production Team, All Announcements, Management</td></tr>
+          <tr><td><b>prod_staff</b></td><td>Member</td><td>Their line, their shift channel</td></tr>
+          <tr><td><b>line_leader</b></td><td>Channel Admin</td><td>Their line (as admin)</td></tr>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <div class="c-head"><span>Create a user via the chat API</span><span>POST /users</span></div>
+        <pre>{
+  <span class="c-str">"email"</span>:     <span class="c-str">"jane.doe@factory.com"</span>,
+  <span class="c-str">"username"</span>:  <span class="c-str">"jane.doe"</span>,
+  <span class="c-str">"first_name"</span>: <span class="c-str">"Jane"</span>,
+  <span class="c-str">"last_name"</span>:  <span class="c-str">"Doe"</span>,
+  <span class="c-str">"password"</span>:  <span class="c-str">"temporary-random-password"</span>,  <span class="c-comment">// reset on first login</span>
+  <span class="c-str">"position"</span>:  <span class="c-str">"QC Manager"</span>
+}</pre>
+      </div>
+
+      <h3 class="sec">Phase 2 — department &amp; role-based channels</h3>
+      <p class="body"><b>Goal:</b> channels are created automatically from departments, roles, and shifts defined in the ERP — and users are added or removed automatically as roles change. This is where the bulk membership API shines.</p>
+
+      <div class="code-block">
+        <div class="c-head"><span>Reconcile one channel's membership</span><span>PUT /channels/{id}/members</span></div>
+        <pre><span class="c-kw">async function</span> reconcileChannel(channelId, desiredUserIds) {
+  <span class="c-comment">// One atomic call: Mattermost compares the desired list to current
+  // members, then ADDS the missing and REMOVES the extras.</span>
+  <span class="c-kw">await</span> mmApi.put(`/channels/${channelId}/members`, {
+    members: desiredUserIds
+  });
+}
+
+<span class="c-kw">async function</span> syncChannelMemberships() {
+  <span class="c-kw">for</span> (const rule of channelRules) {
+    <span class="c-comment">// Ask Firestore: "who belongs in this channel?"</span>
+    <span class="c-kw">const</span> snapshot = <span class="c-kw">await</span> firestore.collection('users')
+      .where('is_active', ==, true)
+      .where('role', 'in', rule.allowedRoles)
+      .get();
+
+    <span class="c-kw">const</span> memberIds = collectMattermostIds(snapshot);
+    <span class="c-kw">await</span> reconcileChannel(rule.channelId, memberIds);
+  }
+}</pre>
+      </div>
+
+      <h3 class="sec">Phase 3 — ERP-driven notifications &amp; alerts</h3>
+      <p class="body"><b>Goal:</b> the ERP posts automatic messages to the right channels the instant important events happen. No manual effort, no delay.</p>
+      <div class="table-card">
+        <div class="t-head"><h4>Example notifications</h4><span class="tag">Event → channel → message</span></div>
+        <table>
+          <tr><th>Event</th><th>Channel</th><th>What gets sent</th></tr>
+          <tr><td>QC check fails (weight out of spec)</td><td><b>#qc-team</b></td><td>🚨 ALERT: Line 2, Head 4 — String weight TOO LOW (18.2g). Needs immediate attention.</td></tr>
+          <tr><td>Machine downtime detected</td><td><b>#maintenance</b></td><td>⚠️ Machine 3 on Line 2 down 30 min. Impact: ~1,200 units.</td></tr>
+          <tr><td>Shift starts</td><td><b>#all-announcements</b></td><td>🔄 Morning shift started. 42 workers checked in.</td></tr>
+          <tr><td>Production target achieved</td><td><b>#production-line-1</b></td><td>🎉 Line 1 reached 85% of today's target — 8,500 units.</td></tr>
+          <tr><td>New employee onboarded</td><td><b>#management</b></td><td>👋 Jane Doe (QC Manager) joined today; auto-added to channels.</td></tr>
+        </table>
+      </div>
+      <p class="body">The easiest way to send these is an <b>incoming webhook</b> — a private URL that posts whatever you send it into its channel. One HTTP POST does everything:</p>
+      <div class="code-block">
+        <div class="c-head"><span>Send an alert with a webhook</span><span>From anywhere</span></div>
+        <pre><span class="c-kw">await</span> axios.post('<span class="c-str">https://chat.factory.com/hooks/xxxxx</span>', {
+  text:      <span class="c-str">'🚨 **ALERT:** Line 2, Head 4 — String weight **TOO LOW** (18.2g).'</span>,
+  username:  <span class="c-str">'QC Bot'</span>,
+});
+<span class="c-comment">// Even a machine's script can do this:</span>
+<span class="c-comment">// curl -X POST -H 'Content-Type: application/json' \</span>
+<span class="c-comment">//   -d '{"text":"⚠️ Machine 3 temp: 92°C exceeded"}' https://chat.factory.com/hooks/abc123</span></pre>
+      </div>
+
+      <h3 class="sec">Phase 4 — single sign-on (SSO)</h3>
+      <p class="body"><b>Goal:</b> log into the ERP once, and be automatically logged into chat. Since free Mattermost doesn't include SSO, we wrap it in a tiny program called an <b>OAuth proxy</b> — about 50 lines of code. (Optional; users can have separate passwords for Phase 1.)</p>
+      <div class="flow">
+        <div class="f-lab">SSO flow</div>
+        <pre>User visits  chat.factory.com
+      │
+      ▼
+OAuth Proxy  (checks: do you have a valid ERP login?)
+      ├── YES → create chat session token → redirect straight in
+      └── NO  → redirect to the ERP login page</pre>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 09 IMPLEMENTATION GUIDE -->
+    <!-- ============================================================ -->
+    <section class="block" id="implementation">
+      <div class="kicker"><span class="num">09</span><span class="rule"></span></div>
+      <h2>Detailed implementation guide</h2>
+      <p class="lede">The practical, how-to-build-it walkthrough. Every step assumes you can follow a recipe, and every turn is explained.</p>
+
+      <h3 class="sec">9.1 Deploying Mattermost</h3>
+      <div class="table-card">
+        <div class="t-head"><h4>Server recommendation</h4><span class="tag">~$15–20/month</span></div>
+        <table>
+          <tr><th>Spec</th><th>Recommended</th></tr>
+          <tr><td><b>CPU</b></td><td>2 vCPUs</td></tr>
+          <tr><td><b>RAM</b></td><td>4 GB</td></tr>
+          <tr><td><b>Storage</b></td><td>40 GB SSD</td></tr>
+          <tr><td><b>OS</b></td><td>Ubuntu 22.04 LTS</td></tr>
+        </table>
+      </div>
+      <div class="code-block">
+        <div class="c-head"><span>Deploy — it really is this short</span><span>Under 5 minutes</span></div>
+        <pre>mkdir ~/mattermost && cd ~/mattermost
+wget https://raw.githubusercontent.com/mattermost/docker/main/docker-compose.yml
+
+cat &gt; .env &lt;&lt; 'EOF'
+DOMAIN=chat.factory.com
+POSTGRES_PASSWORD=your_strong_password_here
+SITE_URL=https://chat.factory.com
+EOF
+
+docker compose up -d   <span class="c-comment"># wait ~60s, then visit the URL</span></pre>
+      </div>
+      <p class="body">Then, once, through the web console: create the System Admin account, enable <b>User Access Tokens</b>, and create a <b>Bot Account</b> for the Sync Service. Save its token — it's the secret key that lets the Sync Service manage users and channels.</p>
+
+      <h3 class="sec">9.2 The Sync Service (the bridge app)</h3>
+      <p class="body">A small Node.js program with a handful of files. Recommended stack: <b>Node.js</b> — same language as the ERP frontend, and the Firebase Admin SDK is first-class there.</p>
+      <div class="table-card">
+        <div class="t-head"><h4>Project layout</h4><span class="tag">sync-service/</span></div>
+        <table>
+          <tr><th>File</th><th>What it does</th></tr>
+          <tr><td><b>src/index.js</b></td><td>Entry point — starts the 60-second loop</td></tr>
+          <tr><td><b>src/config.js</b></td><td>Configuration (Firebase project, chat URL, token)</td></tr>
+          <tr><td><b>src/firestore.js</b></td><td>Queries Firestore for employees and channel members</td></tr>
+          <tr><td><b>src/mattermost-client.js</b></td><td>A tidy wrapper around the chat API</td></tr>
+          <tr><td><b>src/user-sync.js</b></td><td>Create / update / deactivate users</td></tr>
+          <tr><td><b>src/channel-sync.js</b></td><td>Reconcile channel membership</td></tr>
+          <tr><td><b>src/notification-router.js</b></td><td>Routes ERP events to the right channels</td></tr>
+          <tr><td><b>service-account.json</b></td><td>🔑 Firebase key — <i>never commit to git</i></td></tr>
+        </table>
+      </div>
+      <div class="code-block">
+        <div class="c-head"><span>Reading employees from Firestore</span><span>src/firestore.js</span></div>
+        <pre><span class="c-kw">async function</span> getActiveEmployees() {
+  <span class="c-kw">const</span> snapshot = <span class="c-kw">await</span> admin.firestore()
+    .collection('users')
+    .where('is_active', ==, true)
+    .get();
+
+  <span class="c-kw">return</span> mapDocs(snapshot, <span class="c-kw">d</span> =&gt; ({
+    firestoreId: <span class="c-kw">d</span>.id,
+    email:       <span class="c-kw">d</span>.data().email,
+    role:        <span class="c-kw">d</span>.data().role,
+    mattermostId:<span class="c-kw">d</span>.data().mattermost_user_id || null,
+    <span class="c-comment">// ...first/last name, department, shift, production_line</span>
+  }));
+}</pre>
+      </div>
+
+      <h3 class="sec">9.3 User lifecycle — end to end</h3>
+      <div class="cards4">
+        <div class="m-card b">
+          <h4>Onboarding flow</h4>
+          <ul class="tight">
+            <li>HR creates the user in the ERP (<code>is_active = true</code>).</li>
+            <li>Sync Service (60s later): detects new user → creates chat account → stores the chat user ID back into Firestore → emails a welcome note with a temporary password.</li>
+            <li>Next sync cycle: adds them to every channel their role deserves.</li>
+            <li>They log in and see everything waiting for them.</li>
+          </ul>
+        </div>
+        <div class="m-card r">
+          <h4>Offboarding flow</h4>
+          <ul class="tight">
+            <li>HR sets <code>is_active = false</code> in the ERP.</li>
+            <li>Sync Service detects it → deactivates the chat account via one API call.</li>
+            <li>Next channel sync omits them → they drop out of every channel.</li>
+            <li>Any login attempt returns "account deactivated." Complete, single-action revocation.</li>
+          </ul>
+        </div>
+        <div class="m-card g">
+          <h4>Role change flow</h4>
+          <ul class="tight">
+            <li>HR changes a role (e.g. prod_staff → qc_manager).</li>
+            <li>User account unchanged (still active), but channel sync now applies new rules.</li>
+            <li>Old line channels disappear; QC and management channels appear.</li>
+          </ul>
+        </div>
+        <div class="m-card g">
+          <h4>Adding a new channel type</h4>
+          <ul class="tight">
+            <li>Add one entry to the CHANNEL_DEFINITIONS list (name, display name, purpose, member rule).</li>
+            <li>Deploy. Next cycle creates it and populates it. No manual steps.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="sec">9.4 Sending notifications from the ERP</h3>
+      <p class="body">Two routes. The <b>webhook</b> is simplest (a pre-made URL, no auth to build). The <b>direct API</b> is tightest for complex, color-coded alert cards. Both accept the same message shape. And because the ERP runs on Firestore, the notifier is just a module you import and call from wherever business logic fires.</p>
+      <div class="code-block">
+        <div class="c-head"><span>Rich alert with edge color + fields</span><span>Inside the ERP code</span></div>
+        <pre><span class="c-kw">await</span> mattermost.postMessage(qcChannelId, {
+  text: <span class="c-str">'🚨 **QC ALERT — String Weight Out of Spec**'</span>,
+  attachments: [{
+    color: <span class="c-str">'#FF1744'</span>,               <span class="c-comment">// red strip for alerts</span>
+    title: <span class="c-str">`Machine: ${machine.name} — Head ${check.headNumber}`</span>,
+    fields: [
+      { title: <span class="c-str">'Reading'</span>,      value: <span class="c-str">`${check.weight}g`</span>,        short: <span class="c-kw">true</span> },
+      { title: <span class="c-str">'Target Range'</span>, value: <span class="c-str">`${spec.min}g — ${spec.max}g`</span>, short: <span class="c-kw">true</span> },
+      { title: <span class="c-str">'Operator'</span>,    value: check.operatorName,            short: <span class="c-kw">true</span> },
+      { title: <span class="c-str">'Time'</span>,        value: <span class="c-kw">new</span> Date(check.createdAt).toLocaleString(), short: <span class="c-kw">true</span> },
+    ],
+    text: <span class="c-str">`[View in ERP](${process.env.ERP_URL}/qc-sachet-production-checks)`</span>,
+  }]
+});</pre>
+      </div>
+
+      <h3 class="sec">9.5 Embedding chat into the ERP</h3>
+      <p class="body">Users shouldn't have to leave the ERP to chat. Three escalating options:</p>
+      <div class="table-card">
+        <div class="t-head"><h4>Embedding options</h4><span class="tag">Pick one (or all)</span></div>
+        <table>
+          <tr><th>Option</th><th>What it is</th><th>Effort</th></tr>
+          <tr><td><b>A. iframe embed</b></td><td>The whole chat UI inside a full page of the ERP.</td><td>~10 minutes</td></tr>
+          <tr><td><b>B. Chat sidebar</b></td><td>A collapsible 💬 bubble opening a 380px chat pane.</td><td>~1 hour</td></tr>
+          <tr><td><b>C. Message widget</b></td><td>A "Recent Messages" card on the dashboard pulling the user's last 10 chats.</td><td>Half a day</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 10 BACKUP & SECURITY -->
+    <!-- ============================================================ -->
+    <section class="block" id="backup">
+      <div class="kicker"><span class="num">10</span><span class="rule"></span></div>
+      <h2>Disaster recovery, backup &amp; security</h2>
+      <p class="lede">Trustworthy systems must survive broken servers and lost phones. This is the safety net — and it's nearly all free, built-in tooling.</p>
+
+      <div class="cards4">
+        <div class="m-card">
+          <div class="m-ico">DB</div>
+          <h4>Database backup</h4>
+          <p>Back up PostgreSQL nightly with one command, keep 30 days, and (optionally) copy to cloud storage.</p>
+          <div class="pros">
+            <span><b>✓</b> <code>docker exec ... pg_dump | gzip</code> → <code>.sql.gz</code></span>
+            <span><b>✓</b> cron at 2 AM daily</span>
+          </div>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">FILE</div>
+          <h4>File storage backup</h4>
+          <p>User-uploaded photos and PDFs live in a Docker volume — tar it up on the same cron.</p>
+          <div class="pros">
+            <span><b>✓</b> <code>tar -czf .../mattermost-files-$DATE.tar.gz &lt;volume&gt;</code></span>
+          </div>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">↺</div>
+          <h4>Restore &amp; RTO</h4>
+          <p>Stop, restore DB, restore files, start. Target: <b>~15 min restore</b>, ~1 hour full rebuild.</p>
+          <div class="pros">
+            <span><b>✓</b> Test the restore at least once — untested backups are hopes, not backups</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">🔒</div>
+          <h4>Security baseline</h4>
+          <p>Encryption at rest and in transit, 2FA on admin accounts, bot tokens instead of personal tokens, and admin power restricted to the bot + the architect.</p>
+          <div class="pros">
+            <span><b>✓</b> TLS 1.3 everywhere, Let's Encrypt auto-renewal</span>
+            <span><b>✓</b> Compliance exports or a nightly custom message-export job</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Data retention policy</h4><span class="tag">Suggested</span></div>
+        <table>
+          <tr><th>Data type</th><th>Retention</th></tr>
+          <tr><td><b>Regular messages</b></td><td>Indefinite (or auto-delete after N years)</td></tr>
+          <tr><td><b>File uploads</b></td><td>1 year (or as compliance requires)</td></tr>
+          <tr><td><b>Deactivated user data</b></td><td>Anonymized after 90 days</td></tr>
+          <tr><td><b>Audit logs</b></td><td>3 years</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 11 COST -->
+    <!-- ============================================================ -->
+    <section class="block" id="cost">
+      <div class="kicker"><span class="num">11</span><span class="rule"></span></div>
+      <h2>Cost breakdown</h2>
+      <p class="lede">The numbers that matter to any decision-maker. The software is $0; the real cost is a small server and some of the architect's time.</p>
+
+      <div class="cards4">
+        <div class="m-card b">
+          <div class="m-ico">HW</div>
+          <h4>Hardware / hosting (monthly)</h4>
+          <div class="pros">
+            <span><b>✓</b> VPS (2 CPU, 4 GB RAM, 40 GB SSD): <b>$15–20</b></span>
+            <span><b>✓</b> Domain (chat.factory.com): <b>$1–2</b></span>
+            <span><b>✓</b> SSL certificate: <b>$0</b> (Let's Encrypt)</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">SW</div>
+          <h4>Software (all $0)</h4>
+          <div class="pros">
+            <span><b>✓</b> Mattermost Team Edition — MIT license</span>
+            <span><b>✓</b> PostgreSQL — open source</span>
+            <span><b>✓</b> Nginx — open source</span>
+            <span><b>✓</b> Jitsi Meet (optional video) — free</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">⏱</div>
+          <h4>Development effort</h4>
+          <div class="pros">
+            <span><b>✓</b> Deploy Mattermost — 2–4 hours</span>
+            <span><b>✓</b> Sync service — 3–5 days</span>
+            <span><b>✓</b> Channel rules — 1 day (HR + architect)</span>
+            <span><b>✓</b> ERP notifications — 2–3 days</span>
+            <span><b>✓</b> SSO (optional) — 2–3 days</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">¥</div>
+          <h4>First-year cash cost</h4>
+          <div class="pros">
+            <span><b>✓</b> Hosting: $180–240</span>
+            <span><b>✓</b> Domain: $12–24</span>
+            <span><b>✓</b> Software licenses: $0</span>
+            <span class="no"><b>≈ ~$200–265 total</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Compare with the big names</h4><span class="tag">200 users</span></div>
+        <table>
+          <tr><th>Platform</th><th>Annual cost</th><th class="note">Why</th></tr>
+          <tr><td><b>Slack Pro</b></td><td class="money">$21,000</td><td>$8.75/user/month × 200</td></tr>
+          <tr><td><b>Microsoft Teams Business Basic</b></td><td class="money">$14,400</td><td>$6/user/month × 200</td></tr>
+          <tr><td><b>WhatsApp Business API</b></td><td class="money gold">Variable</td><td>~$0.005/message + integration work</td></tr>
+          <tr><td><b>Self-hosted Mattermost</b></td><td class="money green">~$200</td><td>Server + domain + architect's time</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 12 MIGRATION -->
+    <!-- ============================================================ -->
+    <section class="block" id="migration">
+      <div class="kicker"><span class="num">12</span><span class="rule"></span></div>
+      <h2>Migration from WhatsApp</h2>
+      <p class="lede">Changing the tool people use is 20% technology and 80% people management. Here is the calm, staged path — plus how to answer the objections you'll hear.</p>
+
+      <div class="check-list">
+        <li><b>Week 1 — Intro &amp; beta.</b> Deploy chat; give 5–10 managers and team leads accounts; they use both WhatsApp and chat for a week while you collect feedback.</li>
+        <li><b>Weeks 2–3 — Department rollout.</b> Turn on the sync service for everyone; announce the move in a company meeting with the <b>why</b>; distribute a one-page login guide; HR sends logins by email/SMS.</li>
+        <li><b>Week 4 — The switch.</b> All official communication moves to chat; WhatsApp groups go read-only; notices say "for details, check Mattermost."</li>
+        <li><b>Week 6 — Retirement.</b> Archive/deactivate WhatsApp groups; a final bot message points people to the new system; monitor for edge cases.</li>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Handling resistance</h4><span class="tag">Common objections</span></div>
+        <table>
+          <tr><th>The objection</th><th>The response</th></tr>
+          <tr><td>"Why learn something new?"</td><td>"WhatsApp is for friends. For work we need a system that manages access and keeps records automatically. One login, one app, all work communication in one place."</td></tr>
+          <tr><td>"Will it work on my phone?"</td><td>"Yes — free iPhone and Android apps, works on WiFi or mobile data, even with weak signal in the factory."</td></tr>
+          <tr><td>"What about WhatsApp history?"</td><td>"Important decisions and SOPs are reposted to chat. Old WhatsApp noise stays behind."</td></tr>
+          <tr><td>"It's too complicated."</td><td>"You join a few channels based on your role — that's it. If you can use a WhatsApp group, you can use this."</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 13 12-WEEK PLAN -->
+    <!-- ============================================================ -->
+    <section class="block" id="plan">
+      <div class="kicker"><span class="num">13</span><span class="rule"></span></div>
+      <h2>The 12-week implementation plan</h2>
+      <p class="lede">Every component from this document, tied into one phased rollout — with owners, deliverables, risks, and success metrics. Each phase builds on the last.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Phases &amp; milestones</h4><span class="tag">Weeks 1–12</span></div>
+        <table>
+          <tr><th>Phase</th><th>Timing</th><th>Milestone</th></tr>
+          <tr><td><b>0 · Foundation</b></td><td>Week 1</td><td>Mattermost live, SSL, backups, email, bot account, base channels.</td></tr>
+          <tr><td><b>1 · Sync Service</b></td><td>Weeks 2–3</td><td>ERP hire → chat account + channels. ERP deactivation → instant full revocation.</td></tr>
+          <tr><td><b>2 · Pilot</b></td><td>Week 4</td><td>10–15 pilot users active; feedback collected and addressed.</td></tr>
+          <tr><td><b>3 · Company rollout</b></td><td>Weeks 5–6</td><td>Everyone onboarded; WhatsApp read-only; adoption tracked.</td></tr>
+          <tr><td><b>4 · Notifications</b></td><td>Weeks 7–8</td><td>QC / production / maintenance / HR bots posting color-coded, clickable alerts.</td></tr>
+          <tr><td><b>5 · Embedding &amp; SSO</b></td><td>Weeks 9–10</td><td>One login, chat sidebar in the ERP, dashboard widget.</td></tr>
+          <tr><td><b>6 · WhatsApp retirement</b></td><td>Weeks 11–12</td><td>Groups closed, optional supplier bridge, runbook and backup operator trained.</td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">Risk register</h3>
+      <div class="table-card">
+        <div class="t-head"><h4>What could go wrong — and the plan</h4><span class="tag">Risk management</span></div>
+        <table>
+          <tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr>
+          <tr><td>Users resist switching</td><td>Medium</td><td>High</td><td>Clear "why", pilot champions, management mandate</td></tr>
+          <tr><td>Sync bug creates duplicates</td><td>Low</td><td>Medium</td><td>Email-based dedup; test with synthetic data; manual merge tool</td></tr>
+          <tr><td>Chat server down</td><td>Low</td><td>High</td><td>Daily backups, restart policy, monitoring, 1-hr RTO</td></tr>
+          <tr><td>Floor network unreliable</td><td>Medium</td><td>Medium</td><td>Offline queueing on mobile; sync service retries</td></tr>
+          <tr><td>Forgotten password</td><td>Medium</td><td>Low</td><td>Email reset; HR can reset via API</td></tr>
+          <tr><td>Department restructure</td><td>Low</td><td>Low</td><td>Edit CHANNEL_DEFINITIONS; next cycle handles it</td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">Success metrics</h3>
+      <div class="table-card">
+        <div class="t-head"><h4>How we know it worked</h4><span class="tag">Measurable</span></div>
+        <table>
+          <tr><th>Metric</th><th>Target</th></tr>
+          <tr><td><b>Adoption</b></td><td>&gt;95% active within 2 weeks of Phase 3</td></tr>
+          <tr><td><b>Onboarding time</b></td><td>&lt;5 min from ERP entry to chat access</td></tr>
+          <tr><td><b>Offboarding time</b></td><td>&lt;60 sec from deactivation to revoked access</td></tr>
+          <tr><td><b>Notification delivery</b></td><td>&lt;30 sec from ERP event to chat message</td></tr>
+          <tr><td><b>Membership accuracy</b></td><td>100% — every user in exactly the right channels</td></tr>
+          <tr><td><b>User satisfaction</b></td><td>&gt;80% positive feedback after migration</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 14 ZULIP OPTION -->
+    <!-- ============================================================ -->
+    <section class="block" id="zulip">
+      <div class="kicker"><span class="num">14</span><span class="rule"></span></div>
+      <h2>The "literally everything is free" alternative — Zulip</h2>
+      <p class="lede">Mattermost's free tier is excellent — but a few enterprise features (SSO, LDAP, compliance exports) require a paid upgrade unless you build small workarounds. If you want a platform where <b>every single feature is free forever</b>, Zulip is that platform. Here is the honest trade-off.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Free tier face-off</h4><span class="tag">Per-user pricing: $0</span></div>
+        <table>
+          <tr><th>Feature</th><th>Mattermost Team (Free)</th><th>Zulip Self-hosted (Free)</th></tr>
+          <tr><td><b>SAML / SSO</b></td><td>❌ Enterprise-only ($)</td><td>✅ Free</td></tr>
+          <tr><td><b>LDAP / AD auth</b></td><td>❌ Enterprise-only ($)</td><td>✅ Free</td></tr>
+          <tr><td><b>Guest accounts</b></td><td>❌ Enterprise-only ($)</td><td>✅ Free</td></tr>
+          <tr><td><b>Custom roles</b></td><td>❌ Enterprise-only ($)</td><td>✅ Free</td></tr>
+          <tr><td><b>Compliance exports</b></td><td>❌ Enterprise-only ($)</td><td>✅ Free</td></tr>
+          <tr><td><b>Data exports</b></td><td>✅ Free</td><td>✅ Free</td></tr>
+          <tr><td><b>Topic-based threading</b></td><td>❌ Linear chat</td><td>✅ Unique topic model</td></tr>
+          <tr><td><b>Mobile apps</b></td><td>✅ Polished</td><td>✅ Good</td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">Zulip's signature idea: topics</h3>
+      <p class="body">Instead of one unbroken scroll, Zulip groups messages by <b>topic</b>. Come back after a day off and you see 5 topic titles instead of 200 messages:</p>
+      <div class="flow">
+        <div class="f-lab">How a stream of topics looks</div>
+        <pre>Stream: #production-line-2
+─────────────────────────────────────────────────
+◉ Machine 4 down — need maintenance   3:42 PM   (2 replies)
+◉ Shift end report — June 30          4:01 PM   (5 replies)
+◉ QC alert: Head 2 weight too low     2:15 PM   (8 replies)</pre>
+      </div>
+      <p class="body">Great for focused teams; harder to adopt because every message must be assigned to a topic. If people resist, the benefit silently collapses into a pile of "(no topic)" messages.</p>
+
+      <h3 class="sec">The verdict — which to pick</h3>
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">M</div>
+          <h4>Pick Mattermost if…</h4>
+          <div class="pros">
+            <span><b>✓</b> Zero learning curve matters most</span>
+            <span><b>✓</b> Simplest possible deployment</span>
+            <span><b>✓</b> The bulk membership API matters (cleanest reconciliation)</span>
+            <span><b>✓</b> You're fine writing the small SSO workaround</span>
+          </div>
+        </div>
+        <div class="m-card b">
+          <div class="m-ico">Z</div>
+          <h4>Pick Zulip if…</h4>
+          <div class="pros">
+            <span><b>✓</b> You want zero paid features, ever</span>
+            <span><b>✓</b> Teams are disciplined about topics</span>
+            <span><b>✓</b> Built-in SSO without writing code</span>
+            <span><b>✓</b> You'd rather work in Python</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout gold">
+        <span class="lab">The honest recommendation</span>
+        <b>For this factory, Mattermost is still the better pick.</b> Adoption is the #1 risk, and Mattermost's Slack-like interface means almost no learning curve for people coming from WhatsApp. The workarounds for SSO and LDAP are a handful of straightforward functions the architect writes once. But if you want the peace of mind that you'll never see a "requires an upgrade" screen — Zulip is a fantastic, equally-free choice. You cannot make a wrong decision here.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 15 BUILDER'S WALKTHROUGH -->
+    <!-- ============================================================ -->
+    <section class="block" id="builder">
+      <div class="kicker"><span class="num">15</span><span class="rule"></span></div>
+      <h2>The builder's walkthrough — from zero to working</h2>
+      <p class="lede">A complete recipe for a developer starting with nothing but a server. Every part, in order, with checkpoints so you always know whether you've finished correctly. It intentionally uses only the free features.</p>
+
+      <h3 class="sec">Part A — deploy the chat server</h3>
+      <div class="code-block">
+        <div class="c-head"><span>Server setup, step by step</span><span>SSH → Docker → Deploy</span></div>
+        <pre>ssh root@your-server-ip
+
+<span class="c-comment"># 1. Install Docker + Compose</span>
+curl -fsSL https://get.docker.com -o get-docker.sh &amp;&amp; sudo sh get-docker.sh
+sudo apt-get install -y docker-compose-plugin
+docker --version        <span class="c-comment"># expect: Docker version 24.x</span>
+docker compose version  <span class="c-comment"># expect: v2.x</span>
+
+<span class="c-comment"># 2. Deploy Mattermost</span>
+mkdir ~/mattermost &amp;&amp; cd ~/mattermost
+wget https://raw.githubusercontent.com/mattermost/docker/main/docker-compose.yml
+cat &gt; .env &lt;&lt; 'EOF'
+DOMAIN=chat.yourfactory.com
+POSTGRES_PASSWORD=your-strong-password-here
+SITE_URL=https://chat.yourfactory.com
+EOF
+sudo docker compose up -d
+sudo docker compose ps   <span class="c-comment"># all three services should show "Up"</span></pre>
+      </div>
+      <p class="body"><b>Point DNS:</b> an <b>A record</b> named <code>chat</code> pointing at your server's IP. Then visit the HTTPS URL, complete the first-run wizard, and create the System Admin account. In System Console, enable <b>Bot Accounts</b>, create a <b>sync-bot</b>, and generate its token (via the UI or <code>mmctl token generate sync-bot</code>). Create the team and initial channels either in the UI or with <code>curl</code>.</p>
+
+      <div class="check-list">
+        <li><b>Part A done when:</b> server runs Mattermost, HTTPS works, bot account has a token, a team exists, 3+ channels exist.</li>
+      </div>
+
+      <h3 class="sec">Part B — build the sync service</h3>
+      <div class="code-block">
+        <div class="c-head"><span>Scaffold the Node.js project</span><span>npm init</span></div>
+        <pre>mkdir ~/sync-service &amp;&amp; cd ~/sync-service
+npm init -y
+npm install axios firebase-admin dotenv     <span class="c-comment">// HTTP, Firestore, config</span>
+mkdir src</pre>
+      </div>
+      <div class="code-block">
+        <div class="c-head"><span>Configuration — .env</span><span>Secrets live here, never in git</span></div>
+        <pre>MATTERMOST_URL=https://chat.yourfactory.com
+MATTERMOST_BOT_TOKEN=your-bot-token-here
+MATTERMOST_TEAM_ID=your-team-id-here
+
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json   <span class="c-comment"># 🔑 from Firebase Console</span>
+FIREBASE_PROJECT_ID=your-firebase-project-id
+SYNC_INTERVAL=60</pre>
+      </div>
+      <p class="body">The <code>service-account.json</code> is the Firebase "password file" — it lets the service read Firestore. <b>Never commit it to git.</b> Add it to <code>.gitignore</code>.</p>
+      <p class="body">The codebase is four files (all shown in concept earlier in this document): a <code>MattermostClient</code> wrapper, a <code>FirestoreDB</code> reader, the <code>SyncEngine</code> loop, and <code>index.js</code> that ties them together and runs the 60-second timer. The heart of it — one "magic line" per channel:</p>
+      <div class="code-block">
+        <div class="c-head"><span>The line that does the reconciliation</span><span>Bulk membership</span></div>
+        <pre><span class="c-kw">await</span> this.mm.setChannelMembers(channel.id, memberIds);
+<span class="c-comment">// Mattermost compares, adds missing, removes extras — in one call.</span></pre>
+      </div>
+      <p class="body">Run it once with <code>node src/index.js</code> and watch the console log users being created and channels being populated. Then keep it alive forever with a process manager:</p>
+      <div class="code-block">
+        <div class="c-head"><span>Make it run forever</span><span>pm2</span></div>
+        <pre>npm install -g pm2
+pm2 start src/index.js --name sync-service
+pm2 save &amp;&amp; pm2 startup     <span class="c-comment">// survives server reboots</span>
+pm2 status / logs sync-service</pre>
+      </div>
+
+      <div class="check-list">
+        <li><b>Part B done when:</b> the sync service runs, new users appear in chat automatically, and users land in the right channels.</li>
+      </div>
+
+      <h3 class="sec">Part C — connect the ERP to the chat</h3>
+      <p class="body">Create bot accounts for senders — QC Bot, Production Bot, Maintenance Bot, HR Bot — each with its own token, then add a single reusable notifier module to the ERP and call it wherever business events fire.</p>
+      <div class="table-card">
+        <div class="t-head"><h4>Where to drop the "notify" call in the ERP</h4><span class="tag">Existing code</span></div>
+        <table>
+          <tr><th>ERP event</th><th>File</th><th>Call</th></tr>
+          <tr><td>QC check submitted</td><td><b>services/qcStringWeightOperations.js</b></td><td><code>notifier.sendQcAlert({...})</code></td></tr>
+          <tr><td>Machine downtime logged</td><td><b>services/downtimeOperations.js</b></td><td><code>notifier.sendMaintenanceAlert({...})</code></td></tr>
+          <tr><td>Shift started/ended</td><td><b>services/shiftOperations.js</b></td><td><code>notifier.sendProductionUpdate({...})</code></td></tr>
+          <tr><td>Employee added/removed</td><td><b>services/userOperations.js</b></td><td><code>notifier.sendHrNotification({...})</code></td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">Part D — free single sign-on</h3>
+      <p class="body">A ~50-line proxy sits in front of the chat URL. It checks the user's ERP session cookie and, if valid, lets them straight in; if not, it sends them to the ERP login. No paid license needed — just one small <code>sso-proxy/server.js</code> and a DNS or Nginx change to route traffic through it.</p>
+
+      <h3 class="sec">Part E — embed the chat in the app</h3>
+      <p class="body">A floating 💬 button in the ERP opens an iframe pane pointing at the chat URL (React snippet shown earlier). With SSO from Part D, the pane is already authenticated — one seamless feel.</p>
+
+      <h3 class="sec">Part F — push notifications for free</h3>
+      <div class="cards4">
+        <div class="m-card">
+          <div class="m-ico">P1</div>
+          <h4>Up to 10 users</h4>
+          <p>Point the console at Mattermost's hosted push server: <code>https://push.mattermost.com</code>. Free, zero setup.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">P2</div>
+          <h4>Any number of users</h4>
+          <p>Run the open-source <b>Mattermost Push Proxy</b> on the same VPS (one Docker build + run), then point Mattermost at it. Still $0.</p>
+        </div>
+      </div>
+
+      <h3 class="sec">Part G — backups</h3>
+      <p class="body">One cron script backs up the database plus file volumes daily to <code>/backups</code>, keeps 30 days, and is tested monthly by a real restore drill. Restore = down, import, up (~15 minutes).</p>
+
+      <h3 class="sec">Wait — why not just use Slack APIs?</h3>
+      <div class="table-card">
+        <div class="t-head"><h4>The Slack reality check</h4><span class="tag">Free plan limits</span></div>
+        <table>
+          <tr><th>What we need</th><th>Slack Free</th><th>Slack Pro</th><th>Mattermost Free</th></tr>
+          <tr><td>Create users via API</td><td>❌</td><td>❌ (needs Business+ at $15/user/mo)</td><td><b>✅</b></td></tr>
+          <tr><td>Deactivate users via API</td><td>❌</td><td>❌ (needs Business+)</td><td><b>✅</b></td></tr>
+          <tr><td>Bulk channel membership</td><td>❌ manual</td><td>❌ manual</td><td><b>✅</b> bulk API</td></tr>
+          <tr><td>Unlimited message history</td><td>❌ 90 days</td><td>✅</td><td><b>✅</b></td></tr>
+          <tr><td>Self-hosted data control</td><td>❌</td><td>❌</td><td><b>✅</b></td></tr>
+          <tr><td>10-app limit on free</td><td>❌</td><td>—</td><td><b>✅</b> no limit</td></tr>
+          <tr><td><b>Cost for 200 users</b></td><td>$0 (crippled)</td><td>$21,000/yr</td><td><b>$120–240/yr</b></td></tr>
+        </table>
+      </div>
+      <div class="callout red">
+        <span class="lab">Slack verdict</span>
+        Slack's SCIM user-provisioning API is <b>Business+ only</b> — roughly $36,000/year for 200 users. Slack's free tier can only send webhook notifications; it cannot automate the onboarding/offboarding that is the entire point of this project. If alerts alone are the goal, webhooks work. For the full system, Mattermost is the only option that does it all for free.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 16 GLOSSARY -->
+    <!-- ============================================================ -->
+    <section class="block" id="glossary">
+      <div class="kicker"><span class="num">16</span><span class="rule"></span></div>
+      <h2>Glossary — every term, in plain English</h2>
+      <p class="lede">Every technical word used in this document, translated once, here, so anyone can follow the whole plan.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Terms explained</h4><span class="tag">No jargon</span></div>
+        <table>
+          <tr><th>Term</th><th>Plain-English meaning</th></tr>
+          <tr><td><b>API</b></td><td>A way for one program to talk to another. The ERP "calls the chat API" to create a user — like a waiter carrying an order between kitchen and customer.</td></tr>
+          <tr><td><b>REST API</b></td><td>A standard style of API using web addresses and simple verbs: GET = read, POST = create, PUT = update, DELETE = remove.</td></tr>
+          <tr><td><b>Self-hosted</b></td><td>The software runs on your own server rather than someone's cloud. Owning your building vs renting an office.</td></tr>
+          <tr><td><b>Docker / Docker Compose</b></td><td>Packages software into containers that run identically anywhere — a shipping container for programs.</td></tr>
+          <tr><td><b>PostgreSQL</b></td><td>A database — a highly organized filing cabinet for storing and retrieving data. The chat server uses it.</td></tr>
+          <tr><td><b>Firestore</b></td><td>A cloud NoSQL database — the ERP's filing cabinet. Collections (drawers) hold documents (files).</td></tr>
+          <tr><td><b>VPS</b></td><td>A rented computer in a data center that runs 24/7. The chat server lives on one.</td></tr>
+          <tr><td><b>SSO (Single Sign-On)</b></td><td>Log in once, everywhere. Log into the ERP and you're automatically in chat.</td></tr>
+          <tr><td><b>Webhook</b></td><td>A doorbell: one system presses the button (HTTP POST) and a bell rings elsewhere (message posted).</td></tr>
+          <tr><td><b>Bot</b></td><td>An automated account that posts or acts on command. A program, not a person.</td></tr>
+          <tr><td><b>OAuth 2.0</b></td><td>An industry standard for one system securely acting on a user's behalf — a valet key with limited access.</td></tr>
+          <tr><td><b>TLS / HTTPS</b></td><td>Encryption that scrambles data in transit — a sealed envelope for the internet.</td></tr>
+          <tr><td><b>Nginx</b></td><td>A web server and traffic cop: routing requests, handling encryption, guarding the backend.</td></tr>
+          <tr><td><b>Sync Service</b></td><td>A small background program that keeps two systems matched (ERP ↔ chat). A translator who never sleeps.</td></tr>
+          <tr><td><b>Channel</b></td><td>A chat room for one topic or team — like a WhatsApp group, managed by code.</td></tr>
+          <tr><td><b>Federation</b></td><td>Different chat servers talking to each other, like email across providers.</td></tr>
+          <tr><td><b>Cloud Function</b></td><td>A snippet of code that runs automatically when something changes in Firebase (e.g. presence flip).</td></tr>
+          <tr><td><b>Subcollection</b></td><td>A drawer inside a file — e.g. messages stored under a channel. Keeps things fast and organized.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 17 QUICK CARD -->
+    <!-- ============================================================ -->
+    <section class="block" id="quick">
+      <div class="kicker"><span class="num">17</span><span class="rule"></span></div>
+      <h2>The quick card</h2>
+      <p class="lede">The whole plan on one screen — print it, pin it, argue with it.</p>
+
+      <div class="quick-card">
+        <div class="qk-lab">The company communication platform · at a glance</div>
+        <div class="qk-grid">
+          <div class="qk-item">
+            <h5>Problem</h5>
+            <p>WhatsApp can't scale: manual onboarding, no central off-switch, no audit trail, no automation.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Winner</h5>
+            <p><b>Mattermost (Team Edition)</b> — best API, easiest deploy, Slack-like UX, cheap, free license.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Database</h5>
+            <p><b>Firebase Firestore stays.</b> It's the source of truth for people, roles, and channel rules; the Sync Service reads it and drives chat.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Sync Service</h5>
+            <p>A Node.js background process, every 60s: create/deactivate/update users, reconcile every channel's member list via the bulk API.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Cost</h5>
+            <p>Software <b>$0</b>. Server ~$200/year. Slack would cost <b>$21,000/year</b> at 200 users.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Timeline</h5>
+            <p><b>12 weeks.</b> Deploy (wk1) → sync (2–3) → pilot (4) → rollout (5–6) → notifications (7–8) → SSO+embed (9–10) → WhatsApp out (11–12).</p>
+          </div>
+          <div class="qk-item">
+            <h5>Plan B</h5>
+            <p>Want <b>every</b> feature free forever, forever? Zulip. Just learn to love topics.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Golden rule</h5>
+            <p>Firestore decides who's who. Chat obeys. One source of truth, everything else follows.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand">DAMMIE OPTIMUS <span>SOLUTIONS</span></div>
+      <p>Company-Wide Communication Platform — research and implementation plan. Prepared by the in-house architecture desk. Status: complete and ready to begin Phase 0. Built to be understood by everyone from the Boardroom to the factory floor.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
