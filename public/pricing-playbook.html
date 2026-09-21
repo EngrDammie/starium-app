@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing &amp; Billing Playbook — Dammie Optimus Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101418;
+    --ink-2: #1c232b;
+    --ink-3: #2a333d;
+    --paper: #faf8f4;
+    --card: #ffffff;
+    --line: #e8e2d4;
+    --gold: #C9962E;
+    --gold-soft: #f2e3bd;
+    --green: #12674a;
+    --green-soft: #dfeee7;
+    --red: #a5312a;
+    --red-soft: #f6e3e0;
+    --muted: #6b6f76;
+    --shadow: 0 1px 3px rgba(16,20,24,.06), 0 14px 40px rgba(16,20,24,.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .mono { font-family: 'Manrope', sans-serif; }
+  h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: linear-gradient(140deg, #0d1117 0%, #161e27 60%, #1d2632 100%);
+    color: #fff;
+    padding: 68px 24px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -160px; top: -160px;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,150,46,.22), transparent 62%);
+  }
+  .hero-inner { max-width: 1060px; margin: 0 auto; position: relative; z-index: 2; }
+  .overflow {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 4.6vw, 58px);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -.02em;
+    max-width: 20ch;
+  }
+  .hero h1 em {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .hero .sub {
+    margin-top: 18px;
+    max-width: 62ch;
+    color: #c7ccd3;
+    font-size: 17px;
+  }
+  .hero-chips { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #dde2e8;
+    background: rgba(255,255,255,.04);
+  }
+  .chip b { color: var(--gold); font-weight: 700; }
+
+  /* ===== STICKY NAV ===== */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250,248,244,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .toc-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toc-inner::-webkit-scrollbar { display: none; }
+  .toc-inner a {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 16px 12px;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+  }
+  .toc-inner a:hover { color: var(--ink); }
+  .toc-inner a.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* ===== LAYOUT ===== */
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 24px; }
+  section.block { margin: 56px 0; }
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .kicker .num {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2em;
+    color: var(--gold);
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  .kicker .rule { flex: 1; height: 1px; background: var(--line); }
+  section.block h2 {
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 800;
+    letter-spacing: -.015em;
+    margin-bottom: 10px;
+  }
+  section.block > p.lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 68ch;
+    margin-bottom: 26px;
+  }
+  h3.sec {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 30px 0 12px;
+  }
+
+  /* ===== CALLOUTS ===== */
+  .callout {
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 22px 0;
+    font-size: 15px;
+    border-left: 5px solid;
+  }
+  .callout.gold { background: var(--gold-soft); border-color: var(--gold); }
+  .callout.green { background: var(--green-soft); border-color: var(--green); }
+  .callout.red { background: var(--red-soft); border-color: var(--red); }
+  .callout b { font-family: 'Manrope', sans-serif; }
+  .callout .lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .callout.gold .lab { color: #8a6418; }
+  .callout.green .lab { color: var(--green); }
+  .callout.red .lab { color: var(--red); }
+
+  /* ===== TABLES ===== */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin: 18px 0 28px;
+  }
+  .table-card .t-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .table-card .t-head h4 { font-size: 15px; font-weight: 800; }
+  .table-card .t-head .tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--paper);
+    border-radius: 100px;
+    padding: 5px 12px;
+    white-space: nowrap;
+  }
+  .table-card table { width: 100%; border-collapse: collapse; }
+  .table-card th {
+    text-align: left;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: #f6f3ec;
+    padding: 12px 22px;
+    white-space: nowrap;
+  }
+  .table-card td {
+    padding: 13px 22px;
+    font-size: 14.5px;
+    border-top: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .table-card td b { font-family: 'Manrope', sans-serif; }
+  .table-card tr:last-child td { border-bottom: none; }
+  .table-card .money { font-family: 'Manrope', sans-serif; font-weight: 700; white-space: nowrap; }
+  .table-card .money.gold { color: #8a6418; }
+  .table-card .money.green { color: var(--green); }
+  .table-card td.note { color: var(--muted); font-size: 13px; }
+
+  /* ===== CARDS GRID ===== */
+  .cards4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .m-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+  .m-card .m-ico {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 14px;
+    color: var(--ink);
+    background: var(--gold-soft);
+  }
+  .m-card.g .m-ico { background: var(--green-soft); color: var(--green); }
+  .m-card.r .m-ico { background: var(--red-soft); color: var(--red); }
+  .m-card h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .m-card .who { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .m-card p { font-size: 14px; color: var(--ink-2); }
+  .m-card .pros { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+  .m-card .pros span { display: block; margin: 3px 0; color: var(--muted); }
+  .m-card .pros b { color: var(--green); }
+  .m-card .pros .no b { color: var(--red); }
+
+  /* ===== WORKED EXAMPLE ===== */
+  .equation {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 16px;
+    padding: 28px 28px;
+    margin: 18px 0 28px;
+  }
+  .equation .eq-lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .eq-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .eq-cell {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .eq-cell .k { font-size: 12px; color: #9aa4af; display: block; margin-bottom: 4px; }
+  .eq-cell .v { font-family: 'Manrope', sans-serif; font-size: 22px; font-weight: 800; }
+  .eq-cell .v small { font-size: 11px; font-weight: 600; color: #9aa4af; }
+  .eq-formula {
+    margin-top: 18px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1.7;
+  }
+  .eq-formula span { color: #fff; }
+
+  /* ===== QUOTE / SCRIPT ===== */
+  .script {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--green);
+    border-radius: 0 16px 16px 0;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin: 18px 0;
+    font-size: 15px;
+  }
+  .script .who { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--green); display: block; margin-bottom: 8px; }
+  .script p { color: var(--ink-2); }
+
+  /* ===== CHECKLIST ===== */
+  .check-list { list-style: none; margin: 14px 0; }
+  .check-list li {
+    padding: 12px 16px 12px 20px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: var(--card);
+    font-size: 14.5px;
+    position: relative;
+  }
+  .check-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0; top: 0;
+    width: 20px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    color: var(--green);
+  }
+  .check-list li b { font-family: 'Manrope', sans-serif; }
+
+  /* ===== QUICK CARD ===== */
+  .quick-card {
+    background: radial-gradient(130% 140% at 0% 0%, #18222e 0%, #0e1319 100%);
+    border-radius: 20px;
+    padding: 36px 30px;
+    color: #fff;
+    box-shadow: var(--shadow);
+    margin: 30px 0;
+  }
+  .quick-card .qk-lab {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .qk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .qk-item {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 18px 18px;
+  }
+  .qk-item h5 { font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #cfd6de; margin-bottom: 8px; }
+  .qk-item p { font-size: 13.5px; color: #aeb6bf; line-height: 1.55; }
+  .qk-item p b { color: #fff; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--ink);
+    color: #7d8894;
+    margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    font-size: 13px;
+  }
+  .footer-inner .brand { font-family: 'Manrope', sans-serif; font-weight: 800; color: #fff; letter-spacing: .06em; }
+  .footer-inner .brand span { color: var(--gold); }
+  .footer-inner p { margin-top: 8px; max-width: 78ch; line-height: 1.6; }
+  .footer-inner .sources { margin-top: 18px; padding-top: 18px; border-top: 1px solid #2a333d; font-size: 12px; color: #5c6773; }
+
+  @media (max-width: 760px) {
+    .cards4, .cards3 { grid-template-columns: 1fr; }
+    .hero { padding: 48px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div class="hero-inner">
+      <span class="overflow">Pricing &amp; Billing · 2026 Edition</span>
+      <h1>The <em>Pricing Playbook</em> — charge like a pro, never get cheated.</h1>
+      <p class="sub">Every scenario, one playbook: hourly vs fixed vs retainer vs value-based, what to charge in naira and in dollars, how to price maintenance, hosting and subscriptions — and the exact payment terms that keep you profitable.</p>
+      <div class="hero-chips">
+        <span class="chip">4 core <b>pricing models</b></span>
+        <span class="chip">Nigeria + <b>international rates</b></span>
+        <span class="chip">15–25% <b>maintenance rule</b></span>
+        <span class="chip">Naira &amp; <b>USD quote strategy</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== STICKY TOC ===== -->
+  <nav class="toc">
+    <div class="toc-inner">
+      <a href="#models">The 4 Models</a>
+      <a href="#decide">Decision Rule</a>
+      <a href="#floor">Your Floor Rate</a>
+      <a href="#markets">Naira vs Dollar</a>
+      <a href="#projects">Project Benchmarks</a>
+      <a href="#maintenance">Maintenance &amp; Hosting</a>
+      <a href="#value">Value-Based</a>
+      <a href="#closing">Presenting &amp; Closing</a>
+      <a href="#protection">Scope Protection</a>
+      <a href="#rules">Golden Rules</a>
+      <a href="#quick">Quick Card</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- ===== 01 MODELS ===== -->
+    <section class="block" id="models">
+      <div class="kicker"><span class="num">01</span><span class="rule"></span></div>
+      <h2>The four core pricing models</h2>
+      <p class="lede">There is no single "best" model — only the right one for a given scope, client and outcome. Most successful freelancers run two or three at once: retainers for stable income, fixed projects for upside, hourly only for genuinely uncertain work.</p>
+
+      <div class="cards4">
+        <div class="m-card">
+          <div class="m-ico">₹</div>
+          <h4>Hourly</h4>
+          <div class="who">Sell time · scope is uncertain</div>
+          <p>You bill actual hours worked. The client carries the risk of the work taking longer.</p>
+          <div class="pros">
+            <span><b>✓</b> Safe for unknown scope, debugging, audits, new clients</span>
+            <span class="no"><b>✗</b> Caps your income; punishes you for getting faster</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">¶</div>
+          <h4>Fixed / Project</h4>
+          <div class="who">Sell a deliverable · scope defined</div>
+          <p>One price for a clearly defined deliverable. You keep the margin when you deliver fast.</p>
+          <div class="pros">
+            <span><b>✓</b> Rewards speed; client knows the total cost upfront</span>
+            <span class="no"><b>✗</b> Scope creep eats margin without a change-order clause</span>
+          </div>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">⟳</div>
+          <h4>Retainer</h4>
+          <div class="who">Sell availability · recurring need</div>
+          <p>A fixed monthly fee for a defined scope or hour bank. Steady, predictable income.</p>
+          <div class="pros">
+            <span><b>✓</b> Kills feast-or-famine; paid in advance</span>
+            <span class="no"><b>✗</b> Can become underpaid employment without scope + SLA</span>
+          </div>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">★</div>
+          <h4>Value-Based</h4>
+          <div class="who">Sell the outcome · measurable value</div>
+          <p>Price at 10–20% of the measured value your work creates — revenue gained, cost saved.</p>
+          <div class="pros">
+            <span><b>✓</b> Highest ceiling; income decoupled from hours</span>
+            <span class="no"><b>✗</b> Needs a value both sides agree on in writing before you start</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Model comparison at a glance</h4><span class="tag">2026</span></div>
+        <table>
+          <tr><th>Dimension</th><th>Hourly</th><th>Fixed price</th><th>Retainer</th><th>Value-based</th></tr>
+          <tr><td><b>What you sell</b></td><td>Time</td><td>A deliverable</td><td>Availability / scope</td><td>A measurable outcome</td></tr>
+          <tr><td><b>Who carries scope risk</b></td><td>Client</td><td>You</td><td>Shared</td><td>You, heavily</td></tr>
+          <tr><td><b>Income predictability</b></td><td>Low</td><td>Medium, lumpy</td><td>High, recurring</td><td>Low, high variance</td></tr>
+          <tr><td><b>Reward for getting faster</b></td><td>Negative</td><td>Strong</td><td>Neutral to positive</td><td>Strong</td></tr>
+          <tr><td><b>Scaling ceiling</b></td><td>Hard cap</td><td>Higher</td><td>Medium</td><td>Highest — off the clock</td></tr>
+          <tr><td><b>Typical failure mode</b></td><td>"Why so slow?"</td><td>Scope creep</td><td>Becoming an employee</td><td>"How do we know you caused that?"</td></tr>
+        </table>
+      </div>
+
+      <div class="callout gold">
+        <span class="lab">Rule of thumb</span>
+        <p><b>Year-1 freelancers usually run 80–100% hourly.</b> By year five, the best-run books are 0–20% hourly, split across retainers (stability), fixed projects (upside) and one productized or value-based offer (scale). Pure hourly is the lowest-earning model after your first 18 months.</p>
+      </div>
+    </section>
+
+    <!-- ===== 02 DECISION ===== -->
+    <section class="block" id="decide">
+      <div class="kicker"><span class="num">02</span><span class="rule"></span></div>
+      <h2>The decision rule — pick the model before you quote</h2>
+      <p class="lede">Ask three questions in order. Whichever question stops you cleanly tells you the answer.</p>
+
+      <div class="cards3">
+        <div class="m-card">
+          <div class="m-ico">1</div>
+          <h4>Is the scope clear &amp; stable?</h4>
+          <p>If the client cannot describe "done", <b>you cannot price done.</b> Unclear scope → hourly or retainer. Fixed-pricing a fuzzy scope is the single most common way freelancers lose money.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">2</div>
+          <h4>Is the work recurring?</h4>
+          <p>Ongoing needs (hosting, updates, features, support) → retainer, paid in advance. Accept a modestly lower effective rate in exchange for predictability — predictability has real monetary value.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">3</div>
+          <h4>Is the outcome measurable &amp; attributable?</h4>
+          <p>Value-based pricing needs <b>all three</b>: measurable in money, cleanly caused by your work, and agreed in writing before you start. If a client disputes measurement later, the model collapses.</p>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <span class="lab">Default when nothing decides it</span>
+        <p><b>Fixed price on a tightly defined deliverable.</b> It caps the client's uncertainty, and it makes getting better directly profitable. Then protect it with a written change-order clause.</p>
+      </div>
+    </section>
+
+    <!-- ===== 03 FLOOR ===== -->
+    <section class="block" id="floor">
+      <div class="kicker"><span class="num">03</span><span class="rule"></span></div>
+      <h2>Your floor rate — the number you never go below</h2>
+      <p class="lede">An hourly rate that only covers delivery time is not a rate — it's a subsidy you're paying your clients. Your floor covers your real life, blank months, taxes and business costs. Everything below it is you losing money.</p>
+
+      <div class="equation">
+        <div class="eq-lab">Worked example — a Nigerian freelancer who wants ₦400,000/month take-home</div>
+        <div class="eq-row">
+          <div class="eq-cell"><span class="k">Monthly living needs (rent, food, power, transport, data, family)</span><div class="v">₦400,000</div></div>
+          <div class="eq-cell"><span class="k">Monthly business costs (tools, backups, marketing)</span><div class="v">₦80,000</div></div>
+          <div class="eq-cell"><span class="k">Realistic billable hours / month</span><div class="v">~96 <small>of 160 worked hours</small></div></div>
+          <div class="eq-cell"><span class="k">Minimum hourly rate (floor)</span><div class="v">₦5,000 <small>/ hr</small></div></div>
+          <div class="eq-cell"><span class="k">Actual rate with profit + buffer</span><div class="v">₦10,000–15,000 <small>/ hr</small></div></div>
+        </div>
+        <div class="eq-formula">Floor = (monthly needs + business costs) ÷ billable hours &nbsp;<span>→</span>&nbsp; then multiply by <span>2–3×</span> for profit, slow months and currency protection.</div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Nigerian personal income tax brackets (FIRS, as amended)</h4><span class="tag">talk to a tax adviser before trusting</span></div>
+        <table>
+          <tr><th>Annual income</th><th>Rate</th></tr>
+          <tr><td>Up to ₦300,000</td><td>7%</td></tr>
+          <tr><td>₦300,001 – ₦600,000</td><td>11%</td></tr>
+          <tr><td>₦600,001 – ₦1,100,000</td><td>15%</td></tr>
+          <tr><td>₦1,100,001 – ₦1,600,000</td><td>19%</td></tr>
+          <tr><td>₦1,600,001 – ₦3,200,000</td><td>21%</td></tr>
+          <tr><td>Above ₦3,200,000</td><td>24%</td></tr>
+        </table>
+      </div>
+
+      <div class="callout green">
+        <span class="lab">Check your rate every six months</span>
+        <p><b>With Nigeria's inflation consistently above 20%, a rate you set two years ago is a 40–50% pay cut today.</b> Review every 6 months and raise 15–25% a year. Give existing clients 30–60 days notice. Raise immediately when you're booked 3+ weeks out or you've shipped a strong new proof.</p>
+      </div>
+    </section>
+
+    <!-- ===== 04 MARKETS ===== -->
+    <section class="block" id="markets">
+      <div class="kicker"><span class="num">04</span><span class="rule"></span></div>
+      <h2>Naira clients vs Dollar clients — two currencies, two books</h2>
+      <p class="lede">This is the single biggest leverage decision in the playbook. International clients always get quoted in their own hard currency; local clients in naira. Mixing them quietly bleeds you.</p>
+
+      <div class="callout red">
+        <span class="lab">The naira trap</span>
+        <p>Quoting an international client in naira anchors them to a number that shrinks in dollar terms every time the naira weakens. <b>Dollar clients → quote in USD. Always.</b> Local clients → naira, on fixed terms.</p>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Nigeria market rates — web development (observed 2026)</h4><span class="tag">naira &amp; USD</span></div>
+        <table>
+          <tr><th>Level</th><th>Naira / hour</th><th>Project (full-stack)</th><th>USD / hour</th><th>USD / project</th></tr>
+          <tr><td><b>Entry</b></td><td>₦5,000 – ₦10,000</td><td>₦150,000 – ₦600,000</td><td>$20 – $75</td><td>$500 – $5,000</td></tr>
+          <tr><td><b>Mid-level</b></td><td>₦12,000 – ₦25,000</td><td>₦300,000 – ₦1,200,000</td><td>$23 – $35</td><td>$1,000 – $10,000</td></tr>
+          <tr><td><b>Senior (you are here)</b></td><td>₦30,000 – ₦60,000</td><td>₦1,500,000 – ₦5,000,000</td><td>$23 – $45 <span class="note">(avg ≈ $32)</span></td><td>$4,000 – $25,000</td></tr>
+          <tr><td><b>Specialist / architect</b></td><td>₦60,000+</td><td>₦5,000,000+</td><td>$34 – $51+ <span class="note">(Node/React top)</span></td><td>custom, five figures</td></tr>
+        </table>
+      </div>
+
+      <div class="callout gold">
+        <span class="lab">Reality check — why it pays to look international</span>
+        <p>A naira client at ₦12,000/hr earns ~₦480,000/month. The <b>same effort for an international client at $20/hr</b> is ₦1.26M/month at a ₦1,580/₦1 rate — <b>6× more naira for identical work.</b> Your flyer and proof (the live factory ERP) are what pull you up-market. Use them.</p>
+      </div>
+    </section>
+
+    <!-- ===== 05 PROJECTS ===== -->
+    <section class="block" id="projects">
+      <div class="kicker"><span class="num">05</span><span class="rule"></span></div>
+      <h2>Project benchmarks — what to quote per build</h2>
+      <p class="lede">Fixed-fee ranges for 2026, freelancer rates. Start from your hourly floor × honest hours, then add the scope buffer — 15% for a tight spec, 35% typical, 50–65% for a vague one. Present it as a single project price, never an hourly breakdown.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Fixed-price ranges by project type (freelancer, 2026)</h4><span class="tag">USD</span></div>
+        <table>
+          <tr><th>Project type</th><th>Entry</th><th>Mid-level</th><th>Senior / specialist</th></tr>
+          <tr><td><b>Landing page</b></td><td class="money">$500 – $1,200</td><td class="money">$1,200 – $3,000</td><td class="money">$3,000 – $6,000</td></tr>
+          <tr><td><b>Business website (5–10 pages)</b></td><td class="money">$1,500 – $3,500</td><td class="money">$3,000 – $8,000</td><td class="money">$8,000 – $20,000</td></tr>
+          <tr><td><b>Website redesign</b> <span class="note">(10–20% discount vs new build)</span></td><td class="money">$1,500 – $4,000</td><td class="money">$4,000 – $10,000</td><td class="money">$10,000 – $25,000</td></tr>
+          <tr><td><b>E-commerce / store</b></td><td class="money">$2,000 – $5,000</td><td class="money">$5,000 – $15,000</td><td class="money">$15,000 – $45,000</td></tr>
+          <tr><td><b>Web app / SaaS MVP</b></td><td class="money">$5,000 – $15,000</td><td class="money">$15,000 – $50,000</td><td class="money">$50,000 – $150,000</td></tr>
+          <tr><td><b>API / backend integration</b></td><td class="money">$1,500 – $4,000</td><td class="money">$4,000 – $12,000</td><td class="money">$12,000 – $35,000</td></tr>
+          <tr><td><b>Internal tool / admin dashboard</b></td><td class="money">$8,000 – $20,000</td><td class="money">$15,000 – $35,000</td><td class="money">$30,000 – $70,000</td></tr>
+          <tr><td><b>Custom CRM / ERP</b> <span class="note">(your home turf)</span></td><td class="money">—</td><td class="money">$40,000 – $120,000</td><td class="money">$120,000 – $280,000</td></tr>
+        </table>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Compare the senior band — what skilled ECMs actually bill for web apps</h4><span class="tag">freelancer, USD</span></div>
+        <table>
+          <tr><th>Complexity tier</th><th>Simple</th><th>Medium</th><th>Complex (real-time / AI)</th></tr>
+          <tr><td><b>Web app build</b></td><td class="money">$16K – $32K</td><td class="money">$26K – $52K</td><td class="money">$36K – $73K</td></tr>
+          <tr><td><b>Agencies on the same spec</b> <span class="note">(≈1.7× more)</span></td><td class="money">$25K – $50K</td><td class="money">$40K – $90K</td><td class="money">$62K – $125K</td></tr>
+          <tr><td><b>Typical timeline</b></td><td class="note">8–12 wks</td><td class="note">12–16 wks</td><td class="note">16–24 wks</td></tr>
+        </table>
+      </div>
+
+      <div class="callout green">
+        <span class="lab">Use the agency gap as your sales line</span>
+        <p>An agency bills 1.5–2.5× a freelancer's effective rate for the <b>same</b> spec — that overhead is sales, account management and bench you don't have. When a buyer quotes you an agency number and asks why you're cheaper, that gap is exactly what you point at.</p>
+      </div>
+    </section>
+
+    <!-- ===== 06 MAINTENANCE ===== -->
+    <section class="block" id="maintenance">
+      <div class="kicker"><span class="num">06</span><span class="rule"></span></div>
+      <h2>Maintenance, hosting &amp; subscriptions — turn builds into rent</h2>
+      <p class="lede">A one-off build pays you once. The same client on a monthly care plan pays you 3–4× over a year. This is the healthiest revenue line in the whole business — build it into deals <b>from day one</b>, not as an afterthought.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>The 15–25% rule — annual maintenance as a share of build cost</h4><span class="tag">industry benchmark</span></div>
+        <table>
+          <tr><th>Build cost (₦)</th><th>Fair maintenance (₦ / year)</th><th>Monthly equivalent</th></tr>
+          <tr><td>₦5,000,000 project</td><td class="money">₦750,000 – ₦1,250,000</td><td class="money">≈ ₦62,500 – ₦104,000 / month</td></tr>
+          <tr><td>₦15,000,000 project</td><td class="money">₦2,250,000 – ₦3,750,000</td><td class="money">≈ ₦187,500 – ₦312,500 / month</td></tr>
+          <tr><td>₦40,000,000 project</td><td class="money">₦6,000,000 – ₦10,000,000</td><td class="money">≈ ₦500,000 – ₦833,000 / month</td></tr>
+        </table>
+      </div>
+
+      <h3 class="sec">Three ways to sell ongoing care</h3>
+      <div class="cards3">
+        <div class="m-card">
+          <div class="m-ico">♦</div>
+          <h4>Hour-bank retainer</h4>
+          <p>A set pool of hours per month (5 / 10 / 20) with a response-time SLA. Unused hours roll over up to a cap (e.g. 50%), then expire.</p>
+          <p style="margin-top:10px;color:var(--green);font-family:Manrope;font-weight:700;">Small apps often start around $300–$800/mo.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">◈</div>
+          <h4>Managed care plan</h4>
+          <p>Hosting + updates + backups + security + monitoring bundled into one monthly fee. Sell reliability, not line items — never let the client compare your price to a $5 shared host.</p>
+          <p style="margin-top:10px;color:var(--green);font-family:Manrope;font-weight:700;">Solo sweet spot ≈ $100 – $200/mo per site.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">◉</div>
+          <h4>Continuous-development retainer</h4>
+          <p>Maintenance plus a monthly feature backlog, QA and regular releases. The client buys an outcome and access, not tracked time.</p>
+          <p style="margin-top:10px;color:var(--green);font-family:Manrope;font-weight:700;">Frequently-evolving products: $500 – $2,000+/mo.</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Tiered care-plan structure (the proven pattern)</h4><span class="tag">price the middle for the client you want</span></div>
+        <table>
+          <tr><th>Tier</th><th>What's included</th><th>USD / month</th></tr>
+          <tr><td><b>Basic</b></td><td class="note">Hosting, uptime monitoring, core + plugin security updates, daily backups</td><td class="money">$49 – $99</td></tr>
+          <tr><td><b>Standard</b> <span class="note">(where most land)</span></td><td class="note">Everything in Basic + priority support + monthly one-page report + minor content edits (capped)</td><td class="money">$125 – $200</td></tr>
+          <tr><td><b>Premium</b></td><td class="note">Everything in Standard + staging environment, performance checks, quarterly review call, faster SLA</td><td class="money">$250 – $500</td></tr>
+        </table>
+      </div>
+
+      <div class="callout gold">
+        <span class="lab">Hosting math that compounds</span>
+        <p>One $1,500 build with no care plan = <b>$1,500 total, ever.</b> The same client on a $300/month care plan = <b>$5,100 over the year — 3.4× the revenue</b>, and it doesn't reset to zero in January. Even five clients at $99/month is ₦800,000+/year of rent on work you'd be doing anyway. Bundle hosting into the plan; define scope in writing; cap content edits.</p>
+      </div>
+    </section>
+
+    <!-- ===== 07 VALUE BASED ===== -->
+    <section class="block" id="value">
+      <div class="kicker"><span class="num">07</span><span class="rule"></span></div>
+      <h2>Value-based pricing — price the outcome, not the hours</h2>
+      <p class="lede">Your proof (a factory ERP that replaces paper, cut reporting effort, stop guessing from memory) is a value story. When a client can name the money your work saves or makes, you charge a share of it — not a multiple of your time.</p>
+
+      <div class="equation">
+        <div class="eq-lab">The value formula</div>
+        <div class="eq-row">
+          <div class="eq-cell"><span class="k">Measured annual value your software creates (revenue gained / cost saved)</span><div class="v">₦10,000,000</div></div>
+          <div class="eq-cell"><span class="k">Your fee = 10–20% of that value</span><div class="v" style="color:var(--gold)">₦1,000,000 – ₦2,000,000</div></div>
+          <div class="eq-cell"><span class="k">Even if you only spent</span><div class="v">200 hours</div></div>
+          <div class="eq-cell"><span class="k">Effective hourly rate</span><div class="v" style="color:var(--gold)">₦5,000 – ₦10,000 <small>/ hr</small></div></div>
+        </div>
+        <div class="eq-formula">Fee = <span>10–20%</span> × agreed, measurable business value <span>— agreed in writing before you start.</span></div>
+      </div>
+
+      <div class="script">
+        <span class="who">The frame that opens wallets</span>
+        <p>"Without this system, the factory loses roughly [₦X] per month in lost records, rework and decisions made from memory. The fee is a fraction of what it will save — that's the reason the price is what it is." <b>Frame the cost of inaction first, then the price makes sense.</b></p>
+      </div>
+    </section>
+
+    <!-- ===== 08 CLOSING ===== -->
+    <section class="block" id="closing">
+      <div class="kicker"><span class="num">08</span><span class="rule"></span></div>
+      <h2>Presenting &amp; closing — the anatomy of a quote</h2>
+      <p class="lede">How you present the number decides whether it closes. Lead with the deliverable and its value, state your terms in the same breath as the price, and let the client choose between scope options — never between you and a lower rate.</p>
+
+      <div class="cards4">
+        <div class="m-card g">
+          <div class="m-ico">1</div>
+          <h4>Anchor to the deliverable</h4>
+          <p>"$8,500 for a fully responsive 8-page site, SEO setup, CMS and 2 rounds of revisions, in 4 weeks." The client evaluates a package — not whether you're worth $170/hr.</p>
+        </div>
+        <div class="m-card g">
+          <div class="m-ico">2</div>
+          <h4>Terms in the same breath</h4>
+          <p>Payment schedule is part of the price. Under $15K → 50% deposit, 50% on delivery. Larger → 40% start / 30% midpoint / 30% delivery.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">3</div>
+          <h4>Pushback → adjust scope, never rate</h4>
+          <p>"I can bring it to $6,000 by cutting to 5 pages and 1 revision round." Dropping your rate teaches clients your prices are negotiable every single time.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">4</div>
+          <h4>Never lead with hourly</h4>
+          <p>Show project prices and retainers only. A public hourly rate anchors every negotiation on time instead of outcome — and caps what you'll earn.</p>
+        </div>
+      </div>
+
+      <div class="script">
+        <span class="who">Reframe script when they ask your hourly rate</span>
+        <p>"I structure engagements around outcomes rather than hours, because it aligns our incentives — you know exactly what the final cost is, and I'm motivated to be efficient. For this project the investment is [₦X], which covers everything needed to hit [the outcome]."</p>
+      </div>
+    </section>
+
+    <!-- ===== 09 PROTECTION ===== -->
+    <section class="block" id="protection">
+      <div class="kicker"><span class="num">09</span><span class="rule"></span></div>
+      <h2>Scope protection — the clauses that save your margin</h2>
+      <p class="lede">Every fixed price needs armor before you start. These are the standard protections that separate a professional quote from a leaky one.</p>
+
+      <div class="table-card">
+        <div class="t-head"><h4>Risk multiplier — how to load uncertainty into a fixed price</h4><span class="tag">multiply, don't guess</span></div>
+        <table>
+          <tr><th>Factor</th><th>Range</th><th>When it applies</th></tr>
+          <tr><td><b>Scope ambiguity</b></td><td class="money">1.0 – 1.5×</td><td class="note">Vague client; thin brief; requirements still moving</td></tr>
+          <tr><td><b>Technical complexity</b></td><td class="money">1.0 – 1.4×</td><td class="note">Real-time features, hard domain logic, scaling</td></tr>
+          <tr><td><b>Integration risk</b></td><td class="money">1.0 – 1.3×</td><td class="note">Payments, third-party APIs, external systems</td></tr>
+          <tr><td><b>Client maturity</b></td><td class="money">1.0 – 1.3×</td><td class="note">New relationship; approval chains; slow responses</td></tr>
+          <tr><td><b>Timeline pressure</b></td><td class="money">1.0 – 1.2×</td><td class="note">Rush delivery, weekend/evening work (add 20–30%)</td></tr>
+          <tr><td colspan="3" class="note">A clean project ≈ 1.1× total. An ambiguous, rushed, integration-heavy job can justify 2.0×+. A well-defined spec should only need the +15% buffer; a vague one, +50–65%.</td></tr>
+        </table>
+      </div>
+
+      <ul class="check-list">
+        <li><b>Change-order clause:</b> anything beyond the written spec is billed at a stated rate, pre-approved in writing. 1–2 revision rounds max included.</li>
+        <li><b>Explicit exclusions:</b> list what's NOT included (copywriting, integrations, 3rd-party licences, migrations) so "can you just add…" is answered by the contract.</li>
+        <li><b>Milestone billing, not completion billing:</b> deposit + milestones keep you never more than one phase from money. Terms discussed after the work is done are terms you've lost.</li>
+        <li><b>Scope-creep threshold:</b> e.g. deviations beyond 15% of the approved spec trigger the change-order process automatically.</li>
+        <li><b>Payment term in the proposal:</b> net-7 or net-14 for balance, penalties for late payment, access/credentials released only after final payment.</li>
+      </ul>
+
+      <div class="callout red">
+        <span class="lab">Fixed-price discipline</span>
+        <p>Estimate hours honestly (worst case), multiply by your target flush rate, then add the buffer — and after every delivery, calculate your <b>effective hourly rate</b>. If two of your last three projects pay below your target, your estimating is the problem, not the market.</p>
+      </div>
+    </section>
+
+    <!-- ===== 10 RULES ===== -->
+    <section class="block" id="rules">
+      <div class="kicker"><span class="num">10</span><span class="rule"></span></div>
+      <h2>Golden rules — the dos and don'ts of getting paid properly</h2>
+      <p class="lede">A dozen lessons compressed from the market data and practitioner experience above.</p>
+
+      <div class="cards4">
+        <div class="m-card">
+          <div class="m-ico">✓</div>
+          <h4>Charge a deposit</h4>
+          <p>Upfront payment is both cash flow and a filter — it removes clients who were never going to pay well. 40–50% is standard.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">✓</div>
+          <h4>Price in phases</h4>
+          <p>Bill discovery separately and quote a range until requirements are locked. Undefined scope bid low is how freelance horror stories start.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">✓</div>
+          <h4>Maintenance from day one</h4>
+          <p>Quote the build with the care plan beside it. Converting old clients later is fine — selling it into the original deal is better.</p>
+        </div>
+        <div class="m-card">
+          <div class="m-ico">✓</div>
+          <h4>Rush premium</h4>
+          <p>48-hour turnaround → +25–50%. Weekend/evening work → +20–30%. Difficult-client tax → +15–25%. Ask for it; it works.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">✗</div>
+          <h4>Don't default to hourly</h4>
+          <p>Hourly is for genuinely uncertain scope only. For repeatable deliverables, project pricing earns ~27% more on average in effective terms.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">✗</div>
+          <h4>Don't discount to win</h4>
+          <p>Undercutting teaches the client your work is negotiable. Adjust scope to fit budgets; never the rate.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">✗</div>
+          <h4>Don't quote stale naira</h4>
+          <p>With 20%+ inflation, a rate set two years ago is a silent pay cut. Review every 6 months; raise 15–25% yearly.</p>
+        </div>
+        <div class="m-card r">
+          <div class="m-ico">✗</div>
+          <h4>Don't make retainers infinite</h4>
+          <p>Defined scope, capped hours/edits, monthly report, quarterly renegotiation. Otherwise the retainer becomes an unpaid salary.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== QUICK CARD ===== -->
+    <section class="block" id="quick">
+      <div class="kicker"><span class="num">★</span><span class="rule"></span></div>
+      <h2>One-glance cheat card</h2>
+      <p class="lede">Pin this. Quote from here.</p>
+      <div class="quick-card">
+        <div class="qk-lab">Dammie Optimus Solutions — pricing pocket card</div>
+        <div class="qk-grid">
+          <div class="qk-item">
+            <h5>Pick the model</h5>
+            <p>Uncertain scope → <b>hourly</b>. Defined deliverable → <b>fixed</b>. Recurring need → <b>retainer</b>. Measurable value agreed in writing → <b>value-based</b>.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Your floor rate</h5>
+            <p>Seniors: <b>₦30,000–₦60,000/hr</b> · <b>$23–$45/hr</b>. Never go below cost + profit; add 15–20% currency buffer on dollar work.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Project anchors</h5>
+            <p>Landing <b>$1.5–6K</b> · Business site <b>$4–20K</b> · Web app <b>$15–80K</b> · Custom ERP <b>$40K+</b>. Add 15% tight / 35% typical / 50–65% vague buffer.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Maintenance</h5>
+            <p>15–25% of build cost per year. Care plans <b>$100–$200/mo</b> typical for solo. Hosting bundled, never itemized.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Payment terms</h5>
+            <p>≤ $15K: <b>50% now, 50% at delivery</b>. Bigger: <b>40 / 30 / 30</b> by milestone. Term in the proposal, not the invoice.</p>
+          </div>
+          <div class="qk-item">
+            <h5>Currency</h5>
+            <p><b>Dollar clients in USD, naira clients in naira.</b> 15–20% buffer. Convert and re-anchor every six months.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand">DAMMIE <span>OPTIMUS</span> SOLUTIONS</div>
+      <p>Personal pricing playbook for freelance app development and tech solutions — software development, business systems, maintenance and hosting for clients of every size.</p>
+      <p style="margin-top:6px;">Proof of the capability behind this business: the Starium Rafa Enterprise ERP — a factory QC and waste-tracking system built, deployed and running for a real company, offline-first and live.</p>
+      <div class="sources">
+        Benchmarks compiled from 2026 market sources: freelance pricing surveys and rate calculators (FreelanceCalc, WhatShouldICharge, CalcHeadquarters, TrustAm, DailyRealityNG, CareerDoor, Tranarc, Lemon.io growth reports), software maintenance cost analyses (SoftProgrammer, hafencity.dev, Zaniss, ASD Solutions, NINEHertz, Groenewold IT), and recurring-revenue practitioner guides (TopSyde, Verpex, Hosting.com, DietzenDev, GigaPress, Flowly, Damongo, CEOtudent, Arc.dev, projectcostestimator.com). Indicative ranges only — final prices depend on your specific scope, market, and client.</div>
+    </div>
+  </footer>
+
+  <script>
+    // highlight active toc section on scroll
+    const links = document.querySelectorAll('.toc-inner a');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+        }
+      });
+    }, { rootMargin: '-120px 0px -70% 0px' });
+    document.querySelectorAll('section.block').forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>
