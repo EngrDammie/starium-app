@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cover Letter — Engr. Damilare Paul Ayodele — Chief Software Architect, Ariel Foods FZE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #2E6B43;
+    --green: #3F7D4E;
+    --leaf: #6FAF6F;
+    --gold: #E68A00;
+    --earth: #C28C35;
+    --peanut: #8A5A2B;
+    --cream: #FBF5E9;
+    --paper: #FFFDF7;
+    --ink: #2F2A21;
+    --muted: #6D6556;
+    --hairline: #E9DFC8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #F2EDE0;
+    color: var(--ink);
+    padding: 28px 20px;
+    font-size: 17.5px;
+    line-height: 1.68;
+  }
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(47,42,33,.08), 0 18px 50px rgba(47,42,33,.12);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* Letterhead */
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 40px 56px 22px;
+    border-bottom: 3px solid var(--green);
+    position: relative;
+  }
+  .head::after {
+    content: "";
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 120px; height: 3px;
+    background: var(--gold);
+  }
+  .overline {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .lh-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--forest);
+    line-height: 1.15;
+  }
+  .lh-role {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--peanut);
+    margin-top: 5px;
+  }
+  .lh-contact {
+    text-align: right;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.75;
+    white-space: nowrap;
+  }
+  .lh-contact strong { color: var(--ink); font-weight: 600; }
+
+  .body-letter { padding: 36px 56px 44px; }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 26px;
+  }
+  .recipient p { line-height: 1.55; }
+  .date-line { text-align: right; color: var(--muted); white-space: nowrap; }
+
+  .subject {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 19px;
+    color: var(--forest);
+    margin-bottom: 20px;
+    padding-left: 14px;
+    border-left: 4px solid var(--gold);
+  }
+  .salutation { font-weight: 600; margin-bottom: 16px; color: var(--forest); }
+  .body-letter > p { margin-bottom: 15px; }
+  em.tint { font-style: normal; color: var(--green); font-weight: 600; }
+  strong { color: var(--forest); }
+
+  .vision {
+    margin: 22px 0;
+    padding: 22px 26px;
+    background: var(--cream);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+  }
+  .vision p {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+    color: #3A352B;
+    margin-bottom: 14px;
+  }
+  .vision p:last-child { margin-bottom: 0; }
+  .imagine-word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    color: var(--peanut);
+  }
+
+  .asks { list-style: none; margin: 18px 0 4px; }
+  .asks li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .asks li:last-child { border-bottom: none; }
+  .asks li::before {
+    content: "→";
+    position: absolute; left: 4px;
+    color: var(--leaf);
+    font-weight: 800;
+  }
+
+  .signoff { margin-top: 28px; }
+  .sig-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--forest);
+    margin-top: 2px;
+  }
+  .enc {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footnote-band {
+    background: var(--cream);
+    padding: 15px 56px;
+    font-size: 14px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footnote-band strong { color: var(--green); }
+
+  @media (max-width: 640px) {
+    .head, .body-letter, .footnote-band { padding-left: 26px; padding-right: 26px; }
+    .head { flex-direction: column; align-items: flex-start; }
+    .lh-contact { text-align: left; white-space: normal; }
+    .meta-row { flex-direction: column; }
+    .date-line { text-align: left; }
+  }
+
+  /* ---- Credentials & documents (screen only) ---- */
+  .cred-panel {
+    margin: 30px 0 0;
+    padding: 26px 28px 20px;
+    border: 1.5px dashed var(--gold);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(230,138,0,.07), transparent 55%), #fff;
+  }
+  .cred-eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px; font-weight: 800;
+    letter-spacing: .3em; text-transform: uppercase;
+    color: var(--peanut);
+    margin-bottom: 6px;
+  }
+  .cred-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18.5px; font-weight: 800;
+    color: var(--forest);
+    margin-bottom: 4px;
+  }
+  .cred-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .cred-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 10px;
+  }
+  .cred-btn {
+    display: flex; align-items: center; gap: 11px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--hairline);
+    border-radius: 12px;
+    background: #fff;
+    text-decoration: none;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .cred-btn:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(46,107,67,.13);
+  }
+  .cb-icon {
+    width: 40px; height: 40px; flex: 0 0 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    border-radius: 10px;
+    background: var(--cream);
+  }
+  .cb-text { display: flex; flex-direction: column; min-width: 0; }
+  .cb-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px; font-weight: 800; color: var(--forest);
+    line-height: 1.25;
+  }
+  .cb-sub {
+    font-size: 10.5px; color: var(--muted); font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; margin-top: 2px;
+  }
+  .cred-note { margin-top: 14px; font-size: 11.5px; color: var(--muted); font-style: italic; }
+  @media print { .cred-panel { display: none !important; } }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 12mm; }
+    .vision { background: #fff; }
+    section, .asks li, .vision { break-inside: avoid; }
+  }
+
+  /* ===== PURE-BLACK PRINT · MAXIMUM SHARPNESS · SEAMLESS FLOW ===== */
+  @media print {
+    *, *::before, *::after {
+      color: #000 !important;
+      background: transparent !important;
+      border-color: #000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    html, body { background: #fff !important; }
+    .mast-rule, .title-line .dot { background: #000 !important; }
+    .sheet, .page {
+      max-width: none !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+    .masthead, .letter, .content, .resume-band, .signature, .contact-footer,
+    .foot-band, .head, .body-letter, .footnote-band {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    /* ---- flow: big containers may split, leaves stay intact ---- */
+    .sec, .signature-project, .resume-band, .imagine, .contact-footer,
+    .target-panel, .verdict, .warn-panel, .story-panel, .vision,
+    .module-grid, .options, .uses, .tco-row, .just-list, .roadmap, .faq,
+    .capabilities, .jb, .chips, .impact-row, .money, .resume-grid,
+    .two-col, .side-block, .columns, .main-col, .side-col, .timeline,
+    .checklist, .sp-points, ul.points, .asks, .enc, .skills,
+    .section-head, .sec-head, .contact-strip, .title-line, .meta-row {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+    tr, .opt, .use, .faq-item, .money-cell, .module-card, .tco-card,
+    .just-item, .roadmap-item, .asks li, .checklist li, .sp-points li,
+    ul.points li, .xp-item, .edu-item, .ref-item, .skill-group,
+    .data-table tr, .t-item, .impact, .cf-line, .jb tr, .arch-item {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    h1, h2, h3, h4, h5, .sec-title, .sb-title, .section-title {
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
+    p, li { orphans: 3; widows: 3; }
+
+    /* ---- fit wide layouts onto A4 ---- */
+    table { width: 100% !important; }
+    td:first-child, .price, .t-date, .cf-value, .xp-org { white-space: normal !important; }
+    .resume-grid { grid-template-columns: 1fr 34% !important; }
+  }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div>
+      <div class="overline">Cover Letter</div>
+      <div class="lh-name">Engr. Damilare Paul Ayodele</div>
+      <div class="lh-role">Software Architect · Quality Professional</div>
+    </div>
+    <div class="lh-contact">
+      <strong>ayodele.damilare@gmail.com</strong><br>
+      Phone: <strong>0802 897 5816</strong> · WhatsApp: <strong>0705 333 1253</strong><br>
+      4 Olugbenga Close, Iraye-Oke, Epe, Lagos State
+    </div>
+  </div>
+
+  <div class="body-letter">
+
+    <div class="meta-row">
+      <div class="recipient">
+        <p><strong>The Managing Director &amp; Leadership Team</strong><br>
+        Ariel Foods FZE<br>
+        Alaro City, North West Quadrant, Lekki Free Trade Zone,<br>
+        Epe, Lagos State, Nigeria</p>
+      </div>
+      <div class="date-line">22 September 2026</div>
+    </div>
+
+    <div class="subject">Application for the Position of Chief Software Architect — Building the Data Spine That Helps Africa Feed Africa</div>
+
+    <p class="salutation">Dear Sir/Madam,</p>
+
+    <p>I am writing to you from your own neighbourhood — I live in Iraye-Oke, Epe, minutes from your gates at Alaro City, where you operate the <strong>largest ready-to-use therapeutic food factory in Africa</strong> — to offer myself as your <strong>Chief Software Architect</strong>. What I bring is not a résumé of theories but a rare, concrete proof: while serving as a Quality Control officer at Starium Rafa Detergents, a factory floor I know the way you know yours, I personally designed, built and deployed a complete enterprise ERP for that company — fully functional, offline-resilient, running live in my own test environments today, and awaiting only management approval to enter daily operations, all at zero software cost to my employer.</p>
+
+    <p>That platform was born of the same conditions your plant guards against every day. I did not learn manufacturing's data problems from slides; I learned them holding a clipboard beside running machines. Every shift I watched critical figures — densities, weights, waste, machine stoppages, pallet movements — vanish into paper notebooks, transcribed late, aggregated later, acted upon rarely. In a detergent plant that gap costs money. For a producer of therapeutic food, where UNICEF, WFP and USAID require proof of every lot's moisture, aflatoxin and micronutrient results, that gap can cost a batch — and a batch is a child's recovery. I concluded that the distance between a factory floor and what leadership knows is fundamentally <em class="tint">a software problem</em> — and I solved it. The platform covers QC testing, inspection and batch lineage, waste and yield intelligence, machine and silo health, pallet and stores tracking, governance with three-tier role-based access, and boardroom-grade reporting — all synchronised in real time and hardened against power and connectivity failure through an offline-first architecture.</p>
+
+    <p>Why does this matter to Ariel Foods, beyond good engineering? Because you are standing at the precise moment where software stops being a convenience and becomes strategy. The <strong>US$2.5 million UNCDF investment</strong> under the UNCDF–UNICEF Nutrition Supplier Finance Facility is putting new equipment on your floor to process more locally grown peanuts, soy and chickpeas — bringing as many as <strong>1,500 smallholder farmers</strong> into your chain and helping partners reach an estimated <strong>25,000 more children every year by 2030</strong>. Imported peanuts arrive with certificates; local peanuts arrive with stories. Turning those stories into audit-grade, traceability-ready supply-chain data is the engineering I practise. Your accession to the <strong>UN Global Compact in May 2026</strong> adds a public commitment to report progress against the Sustainable Development Goals — a system I can make effortless.</p>
+
+    <div class="vision">
+      <p><span class="imagine-word">Imagine</span> every peanut lot that passes through Alaro City—from a Kano smallholder's farm gate to the exact foil-sachet lot number — logged, weighed, screened, and traceable in seconds, for every audit and every tender.</p>
+      <p><span class="imagine-word">Imagine</span> roasters, blenders and fillers reporting their own health by the second, alerting an operator before a deviation becomes a disposal — and your team in Lagos, Nairobi or London watching production, yield and release rates live.</p>
+      <p><span class="imagine-word">Imagine</span> quality results captured on tablets at the lab bench, batch release approved with named digital signatures, and compliance packs — HACCP-ready, UNICEF-ready, NAFDAC-ready — generated in minutes, not days.</p>
+    </div>
+
+    <p>This future requires no waiting. Every component of it is technology I have already shipped once, built inside a real factory's walls under genuine constraints, and proven end-to-end in live testing. Given the mandate, here is how I would begin:</p>
+
+    <ul class="asks">
+      <li><strong>First 30 days</strong> — walk the full Alaro City chain (peanut intake, roasting and milling, blending, QC labs, packing, warehousing, dispatch to agencies and ports) and publish a current-state map with its cost in hours and errors per batch.</li>
+      <li><strong>First 60 days</strong> — deliver visible quick wins: digital QC/lab and batch-lot records with offline capture, plus sachet and pallet tracking, adapted from a platform already proven end-to-end in live factory testing.</li>
+      <li><strong>First 100 days</strong> — present the blueprint for Ariel's integrated core (inventory, batch genealogy, procurement, production orders, finance integration) plus executive dashboards for production versus plan, yield, QC pass rates and traceability coverage.</li>
+    </ul>
+
+    <p>With over a decade of enterprise engineering — senior .NET development at The GIG Group's logistics systems, banking integrations at Longbridge, HR systems at Alliedsoft Xceed365, field hardware at EasyFuel — combined with my current life on a production floor and my leadership of a 700-member nutrition-focused network, I offer Ariel a builder who speaks both languages fluently: the language of machines, shifts and peanut yields, and the language of databases, dashboards and audit-ready records. My enclosed CV tells the fuller story; my references will confirm the character behind it.</p>
+
+    <p>I would be honoured to demonstrate the live system — floor, code and dashboards — at Alaro City at your convenience, and to discuss how this technology accelerates the mission your founder has stated so plainly: Africa serving Africa. Thank you for your time and consideration.</p>
+
+    <div class="signoff">
+      <p>Yours faithfully,</p>
+      <p class="sig-name">Engr. Damilare Paul Ayodele</p>
+    </div>
+
+    <div class="enc"><strong>Enclosures:</strong> Curriculum Vitae · Live system demonstration available on request · Video walkthroughs available online</div>
+
+    <div class="cred-panel">
+      <div class="cred-eyebrow">Screen Only · Excluded From Printouts</div>
+      <div class="cred-title">Credentials, Certificates &amp; Live Proof</div>
+      <div class="cred-sub">Every claim in this letter, one click away.</div>
+      <div class="cred-grid">
+        <a class="cred-btn" href="https://www.dropbox.com/scl/fi/7wgyoteeg8q5xk0chays7/dammieBSc.pdf?rlkey=o1hluuugbsdc26pjdb0v6ztls&st=u81cq1el&dl=0" target="_blank" rel="noopener">
+          <span class="cb-icon">🎓</span>
+          <span class="cb-text"><span class="cb-name">B.Sc. Certificate</span><span class="cb-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="cred-btn" href="https://www.dropbox.com/scl/fi/kh4jwadt9h6u0j6eq8svx/dammieNYSC.pdf?rlkey=ywun0j8mufxyaynecv0uy4gih&st=jc1g805e&dl=0" target="_blank" rel="noopener">
+          <span class="cb-icon">🏅</span>
+          <span class="cb-text"><span class="cb-name">NYSC Certificate</span><span class="cb-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="cred-btn" href="https://www.dropbox.com/scl/fi/9uua9ssfraqnfvf1xlbj6/dammieGCE.pdf?rlkey=mtuitb6i8hnqymmobiftv9yex&st=pg6b43ry&dl=0" target="_blank" rel="noopener">
+          <span class="cb-icon">📜</span>
+          <span class="cb-text"><span class="cb-name">GCE Certificate</span><span class="cb-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="cred-btn" href="https://www.dropbox.com/scl/fi/x09f2dnlr1pd9gg3ri3sq/dammieBirthCert.pdf?rlkey=ycp1mnhlex9v18vib33whb4j7&st=4vv035tn&dl=0" target="_blank" rel="noopener">
+          <span class="cb-icon">🧾</span>
+          <span class="cb-text"><span class="cb-name">Birth Certificate</span><span class="cb-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="cred-btn" href="https://starium-app.dammieoptimus.workers.dev/" target="_blank" rel="noopener">
+          <span class="cb-icon">🏭</span>
+          <span class="cb-text"><span class="cb-name">Starium Rafa ERP</span><span class="cb-sub">Open the live system</span></span>
+        </a>
+        <a class="cred-btn" href="https://www.youtube.com/watch?v=EjhFWjsLDcA" target="_blank" rel="noopener">
+          <span class="cb-icon">▶️</span>
+          <span class="cb-text"><span class="cb-name">Demo Video 1</span><span class="cb-sub">Command Centre &amp; QC · YouTube</span></span>
+        </a>
+        <a class="cred-btn" href="https://www.youtube.com/watch?v=Z32CKJGERfg" target="_blank" rel="noopener">
+          <span class="cb-icon">▶️</span>
+          <span class="cb-text"><span class="cb-name">Demo Video 2</span><span class="cb-sub">Pallet Transfer &amp; Reports · YouTube</span></span>
+        </a>
+        <a class="cred-btn" href="ariel-email.html" target="_blank" rel="noopener">
+          <span class="cb-icon">📄</span>
+          <span class="cb-text"><span class="cb-name">Email Tapestry</span><span class="cb-sub">Letter · résumé · contacts in one flow</span></span>
+        </a>
+        <a class="cred-btn" href="ariel-cv.html" target="_blank" rel="noopener">
+          <span class="cb-icon">📋</span>
+          <span class="cb-text"><span class="cb-name">Curriculum Vitae</span><span class="cb-sub">View the résumé</span></span>
+        </a>
+
+      </div>
+      <p class="cred-note">These interactive buttons appear only on the web version of this letter — they are automatically excluded from printouts and PDF exports.</p>
+    </div>
+
+  </div>
+
+  <div class="footnote-band">
+    <span><strong>"Africa serving Africa."</strong></span>
+    <span>Your neighbour in Epe, ready to build.</span>
+  </div>
+
+</div>
+</body>
+</html>
