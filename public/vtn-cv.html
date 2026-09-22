@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curriculum Vitae — Damilare Paul Ayodele — Fullstack Web Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #14233F;
+    --deep: #1C335C;
+    --blue: #33558B;
+    --sky: #4B74B8;
+    --gold: #D9A441;
+    --sand: #E8B96A;
+    --ink: #232A38;
+    --muted: #5A6478;
+    --paper: #FFFFFF;
+    --cream: #F7F4EC;
+    --hairline: #E3E0D4;
+    --faint: #EEEAE0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #ECE9DF;
+    color: var(--ink);
+    padding: 26px 18px;
+    font-size: 16.5px;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sheet {
+    max-width: 1150px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(35,42,56,.08), 0 16px 44px rgba(35,42,56,.12);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .masthead { padding: 42px 52px 0; }
+  .overline {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  h1.name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 47px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.05;
+    color: var(--navy);
+  }
+  .title-line {
+    margin-top: 9px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .title-line .role {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--blue);
+    text-transform: uppercase;
+    font-size: 17px;
+  }
+  .title-line .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+  .title-line .tagline {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 15.2px;
+    color: var(--muted);
+  }
+  .contact-strip {
+    margin-top: 20px;
+    padding: 11px 0 12px;
+    border-top: 2px solid var(--navy);
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 26px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .contact-strip::after {
+    content: "";
+    position: absolute; top: -2px; left: 0;
+    width: 110px; height: 2px; background: var(--blue);
+  }
+  .contact-strip b { color: var(--ink); font-weight: 600; }
+
+  /* ── Layout ── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: 46px;
+    padding: 30px 52px 40px;
+  }
+  .main-col { min-width: 0; }
+  .side-col { border-left: 1px solid var(--hairline); padding-left: 24px; }
+
+  /* ── Section headings ── */
+  .sec { margin-bottom: 24px; break-inside: avoid; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .sec-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .sec-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-3px); }
+
+  /* ── Summary ── */
+  .summary { font-size: 16.8px; line-height: 1.66; color: #333A48; }
+  .summary strong { color: var(--blue); font-weight: 600; }
+
+  /* ── Signature project panel ── */
+  .signature-project {
+    position: relative;
+    border: 1.5px solid var(--blue);
+    border-radius: 10px;
+    padding: 18px 20px 15px;
+    margin-bottom: 24px;
+    break-inside: avoid;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(217,164,65,.08) 0, transparent 42%),
+      #FFFFFF;
+  }
+  .sp-flag {
+    position: absolute;
+    top: -9px; left: 16px;
+    background: var(--navy);
+    color: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .sp-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-top: 4px;
+    letter-spacing: -.01em;
+  }
+  .sp-sub { font-size: 14.4px; color: var(--muted); margin-top: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 12px; }
+  .chip {
+    font-size: 12.8px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--blue);
+    border: 1px solid #D6E0F0;
+    border-radius: 20px;
+    padding: 3px 10px;
+    background: #fff;
+  }
+  .sp-points li, ul.points li {
+    list-style: none;
+    position: relative;
+    padding: 4px 0 4px 18px;
+    font-size: 15.4px;
+    line-height: 1.55;
+    color: #333A48;
+  }
+  .sp-points li::before, ul.points li::before {
+    content: "";
+    position: absolute;
+    left: 2px; top: 10px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.6px solid var(--gold);
+  }
+  .impact-row {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px dashed var(--hairline);
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .impact { min-width: 96px; }
+  .impact .num {
+    font-family: 'Manrope', sans-serif;
+    font-size: 25px;
+    font-weight: 800;
+    color: var(--deep);
+    letter-spacing: -.01em;
+  }
+  .impact .lbl { font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+
+  /* ── Timeline ── */
+  .timeline { border-left: 2px solid var(--faint); margin-left: 5px; }
+  .t-item {
+    position: relative;
+    padding: 0 0 17px 22px;
+    break-inside: avoid;
+  }
+  .t-item:last-child { padding-bottom: 2px; }
+  .t-item::before {
+    content: "";
+    position: absolute;
+    left: -6.5px; top: 3px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid var(--blue);
+  }
+  .t-item.minor::before { border-color: #C7CDD6; width: 9px; height: 9px; left: -5.5px; }
+  .t-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+  .t-role { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 17px; color: var(--ink); letter-spacing: -.005em; }
+  .t-date {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .t-org { font-size: 14.4px; color: var(--blue); font-weight: 600; margin-top: 1px; }
+  .t-org span { color: var(--muted); font-weight: 400; }
+  .t-desc { font-size: 15px; color: #44495A; margin-top: 5px; line-height: 1.58; }
+  .t-desc em { color: var(--muted); }
+
+  /* ── Sidebar blocks ── */
+  .sb-block { margin-bottom: 21px; break-inside: avoid; }
+  .sb-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--navy);
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid var(--navy);
+    margin-bottom: 9px;
+  }
+  .skill-group { margin-bottom: 10px; }
+  .skill-group h4 {
+    font-size: 11.8px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .skill-group p { font-size: 14.6px; color: #333A48; line-height: 1.5; }
+  .edu-item { margin-bottom: 10px; }
+  .edu-deg { font-size: 14.6px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+  .edu-meta { font-size: 13.4px; color: var(--muted); }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table td {
+    font-size: 14.2px;
+    padding: 3px 0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  .data-table td:first-child { color: var(--muted); width: 84px; font-weight: 500; }
+  .data-table td:last-child { color: var(--ink); font-weight: 500; }
+  .ref-item { margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+  .ref-name { font-weight: 700; color: var(--ink); }
+  .ref-detail { color: var(--muted); }
+  .ref-contact { color: var(--blue); font-size: 13px; word-break: break-all; }
+
+  /* ── Footer band ── */
+  .foot-band {
+    border-top: 2px solid var(--navy);
+    padding: 13px 52px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 11.5px; color: var(--muted); }
+  .foot-right {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .masthead { padding: 30px 24px 0; }
+    .columns { grid-template-columns: 1fr; padding: 24px; gap: 28px; }
+    .side-col { border-left: none; padding-left: 0; border-top: 1px solid var(--hairline); padding-top: 22px; }
+    h1.name { font-size: 28px; }
+    .foot-band { padding: 13px 24px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 13.2px; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 10mm 11mm; }
+    .signature-project { background: #fff; }
+    .sec, .t-item, .sp-points li, ul.points li, .sb-block, .impact-row, .edu-item, .ref-item { break-inside: avoid; }
+    .timeline { page-break-inside: auto; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* ===== PURE-BLACK PRINT · MAXIMUM SHARPNESS · SEAMLESS FLOW ===== */
+  @media print {
+    *, *::before, *::after {
+      color: #000 !important;
+      background: transparent !important;
+      border-color: #000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    html, body { background: #fff !important; }
+    .mast-rule, .title-line .dot { background: #000 !important; }
+    .sheet, .page {
+      max-width: none !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+    .masthead, .letter, .content, .resume-band, .signature, .contact-footer,
+    .foot-band, .head, .body-letter, .footnote-band {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    .sec, .signature-project, .resume-band, .imagine, .contact-footer,
+    .target-panel, .verdict, .warn-panel, .story-panel, .vision,
+    .module-grid, .options, .uses, .tco-row, .just-list, .roadmap, .faq,
+    .capabilities, .jb, .chips, .impact-row, .money, .resume-grid,
+    .two-col, .side-block, .columns, .main-col, .side-col, .timeline,
+    .checklist, .sp-points, ul.points, .asks, .enc, .skills,
+    .section-head, .sec-head, .contact-strip, .title-line, .meta-row {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+    tr, .opt, .use, .faq-item, .money-cell, .module-card, .tco-card,
+    .just-item, .roadmap-item, .asks li, .checklist li, .sp-points li,
+    ul.points li, .xp-item, .edu-item, .ref-item, .skill-group,
+    .data-table tr, .t-item, .impact, .cf-line, .jb tr, .arch-item {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    h1, h2, h3, h4, h5, .sec-title, .sb-title, .section-title {
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
+    p, li { orphans: 3; widows: 3; }
+
+    table { width: 100% !important; }
+    td:first-child, .price, .t-date, .cf-value, .xp-org { white-space: normal !important; }
+    .resume-grid { grid-template-columns: 1fr 34% !important; }
+  }
+
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="overline">Curriculum Vitae</div>
+    <h1 class="name">Damilare Paul Ayodele</h1>
+    <div class="title-line">
+      <span class="role">Fullstack Web Developer Candidate</span>
+      <span class="dot"></span>
+      <span class="tagline">Ten years of shipped software — and a live, 20-module web platform built solo, running today.</span>
+    </div>
+    <div class="contact-strip">
+      <span><b>E:</b> ayodele.damilare@gmail.com</span>
+      <span><b>P:</b> 0802 897 5816</span>
+      <span><b>W:</b> 0705 333 1253 (WhatsApp)</span>
+      <span><b>Web:</b> starium-app.dammieoptimus.workers.dev</span>
+      <span><b>A:</b> Epe, Lagos State, Nigeria (remote-ready)</span>
+    </div>
+  </div>
+
+  <!-- Columns -->
+  <div class="columns">
+
+    <!-- MAIN -->
+    <div class="main-col">
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-title">Professional Profile</span><span class="sec-line"></span></div>
+        <p class="summary">Full-stack web developer with <strong>over ten years of enterprise software delivery</strong> — REST/JSON API design, relational data modelling, and JavaScript/React front-end engineering, proven inside logistics platforms at The GIG Group, banking integrations for First Bank, HR systems across West Africa and, most recently, a complete enterprise web platform built solo and running live today. From inside a Quality Control role at Starium Rafa Detergents, I designed and shipped the company's <strong>20+ module ERP as a single-page React application</strong>: real-time, offline-first, role-governed, deployed on triple-redundant hosting at zero licence cost. That is uptime, performance, clean code and fast turnaround demonstrated with production results — the engineering your team builds on. I work autonomously, write clearly, and deliver remotely as my default operating mode.</p>
+      </div>
+
+      <div class="signature-project">
+        <div class="sp-flag">Signature Project · Built Solo · Live Right Now</div>
+        <div class="sp-title">Starium Rafa Enterprise ERP — Web Application</div>
+        <div class="sp-sub">Full-lifecycle architect, developer &amp; operator · React SPA / real-time engine / Firebase &amp; Cloudflare Workers · Feb 2026 – Present</div>
+        <div class="chips">
+          <span class="chip">React SPA</span>
+          <span class="chip">Real-Time Sync</span>
+          <span class="chip">Offline-First Queue Engine</span>
+          <span class="chip">Responsive UI</span>
+          <span class="chip">REST / JSON Data Layer</span>
+          <span class="chip">RBAC Governance</span>
+          <span class="chip">Executive Dashboards</span>
+          <span class="chip">CSV / Print Reports</span>
+          <span class="chip">Triple-Redundant Hosting</span>
+          <span class="chip">20+ Modules</span>
+        </div>
+        <ul class="sp-points">
+          <li>Designed an <strong>offline-first data engine</strong> — nine independent local queues reconcile automatically after outages, making zero data loss a structural property, not a policy. Uptime that survives hostile networks.</li>
+          <li>Deployed <strong>triple-redundant hosting</strong> (Firebase Hosting + GitHub Pages + Cloudflare Workers Pages) so the app survives any single platform failure with no user-facing downtime.</li>
+          <li>Built a responsive React interface with three-tier security, named sign-off workflows and professional report layouts — usable on a phone on a factory floor.</li>
+          <li>Ran the whole product as a remote operator: performance, backups, deployments, support — the ownership a small, trusted team relies on.</li>
+          <li>Delivered all of this <strong>outside working hours, at zero cost</strong> to the employer — proof of autonomy and ownership.</li>
+        </ul>
+        <div class="impact-row">
+          <div class="impact"><div class="num">20+</div><div class="lbl">Modules shipped</div></div>
+          <div class="impact"><div class="num">0 ₦</div><div class="lbl">Software licence cost</div></div>
+          <div class="impact"><div class="num">3×</div><div class="lbl">Redundant hosting</div></div>
+          <div class="impact"><div class="num">100%</div><div class="lbl">Offline capture</div></div>
+          <div class="impact"><div class="num">1</div><div class="lbl">Developer — me</div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-title">Professional Experience</span><span class="sec-line"></span></div>
+        <div class="timeline">
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Quality Control Officer &amp; Web Systems Builder</span><span class="t-date">Feb 2026 – Present</span></div>
+            <div class="t-org">Starium Rafa Detergents <span>· Epe, Lagos</span></div>
+            <p class="t-desc">Dual role: quality-control testing on production lines, plus conception, design and solo delivery of the company-wide web ERP described above — live in test environments and awaiting deployment approval — while sustaining full QC duties.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Business Consultant &amp; Team Lead</span><span class="t-date">Jul 2021 – Present</span></div>
+            <div class="t-org">Top-Up &amp; Get Reward Ltd / AG Nutrition International <span>· Lagos</span></div>
+            <p class="t-desc">Digital-platform leadership for a 900-plus-member business network; CRM and portal monitoring, dashboards and training for non-technical users — wrangling real users and real data through live systems.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">Senior .NET Software Developer</span><span class="t-date">Feb 2019 – Jul 2021</span></div>
+            <div class="t-org">The GIG Group (God is Good Motors) <span>· Jibowu, Lagos</span></div>
+            <p class="t-desc">Designed REST API endpoints powering internal logistics and transport applications; built Windows Services for scheduled jobs (payroll, notifications, data sync); database performance optimisation; Azure DevOps source control and CI/CD pipelines; terminal-staff support.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">.NET Software Developer</span><span class="t-date">May 2018 – Jan 2019</span></div>
+            <div class="t-org">Longbridge Technologies <span>· Ikeja, Lagos</span></div>
+            <p class="t-desc">Created integration web services bridging First Bank's Microsoft Dynamics 365 CRM with core banking applications; resolved service issues on banking servers; collaborated on uptime and data integrity — production web services under stringent availability expectations.</p>
+          </div>
+
+          <div class="t-item">
+            <div class="t-head"><span class="t-role">.NET Software Developer</span><span class="t-date">Aug 2014 – May 2018</span></div>
+            <div class="t-org">Alliedsoft (Xceed365) Limited <span>· Marina, Lagos</span></div>
+            <p class="t-desc">Maintained Xceed365 enterprise HR software for clients across West Africa; developed new modules in VB.NET and C#; produced complex SSRS reports; SQL Server administration including scripting, stored procedures and backups — relational data at the core of a multi-tenant product.</p>
+          </div>
+
+          <div class="t-item minor">
+            <div class="t-head"><span class="t-role">Software Implementer</span><span class="t-date">Sep 2013 – Aug 2014</span></div>
+            <div class="t-org">Coniah Systems Support Limited <span>· Ikeja, Lagos</span></div>
+            <p class="t-desc">Client-site installations, database setup, system deployment and user training.</p>
+          </div>
+
+          <div class="t-item minor">
+            <div class="t-head"><span class="t-role">.NET Developer &amp; Operations Engineer</span><span class="t-date">Aug 2011 – Apr 2012</span></div>
+            <div class="t-org">EasyFuel Limited <span>· Lagos</span></div>
+            <p class="t-desc">Installed and maintained fuel-management equipment, POS terminals and IT hardware across filling stations; maintained internal .NET applications and remote devices — field-tested reliability work.</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="side-col">
+
+      <div class="sb-block">
+        <div class="sb-title">Core Competencies</div>
+        <div class="skill-group"><h4>Front-End</h4><p>HTML5, CSS3, JavaScript (ES6+), React, single-page architecture, responsive &amp; mobile-first design, accessible semantics</p></div>
+        <div class="skill-group"><h4>Back-End &amp; APIs</h4><p>REST / JSON web services, ASP.NET Core, Web APIs, Windows Services, JavaScript service layers, Node.js-ready, real-time sync engines</p></div>
+        <div class="skill-group"><h4>Data</h4><p>SQL Server, MySQL, Entity Framework, stored procedures, JSON payloads, reporting &amp; dashboard design</p></div>
+        <div class="skill-group"><h4>Reliability &amp; Delivery</h4><p>Offline-first queueing, triple-redundant hosting, uptime discipline, Azure DevOps, CI/CD, Docker, Git, IIS configuration</p></div>
+        <div class="skill-group"><h4>Quality &amp; Web Standards</h4><p>Performance budgeting and Core Web Vitals awareness, semantic + SEO-minded markup, RBAC security models, AI-assisted rapid development</p></div>
+        <div class="skill-group"><h4>Domain Strengths</h4><p>Logistics &amp; fleet, banking integrations, enterprise HR, manufacturing, business networks, field hardware, user training</p></div>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">Education</div>
+        <div class="edu-item">
+          <div class="edu-deg">B.Sc. (Honours) Electronics &amp; Computer Engineering</div>
+          <div class="edu-meta">Lagos State University · Second Class Upper · 2004–2010</div>
+        </div>
+        <div class="edu-item">
+          <div class="edu-deg">WAEC / GCE</div>
+          <div class="edu-meta">Epe Grammar School, Epe · 1995–2002</div>
+        </div>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">Personal Data</div>
+        <table class="data-table">
+          <tr><td>Date of Birth</td><td>13 November 1984</td></tr>
+          <tr><td>State of Origin</td><td>Ekiti State (Efon LGA)</td></tr>
+          <tr><td>Place of Birth</td><td>Lagos</td></tr>
+          <tr><td>Residence</td><td>Epe, Lagos State</td></tr>
+          <tr><td>Work Mode</td><td>Remote-ready, full-time, 40h/wk</td></tr>
+        </table>
+      </div>
+
+      <div class="sb-block">
+        <div class="sb-title">References</div>
+        <div class="ref-item">
+          <div class="ref-name">Alagbe Adeyombo Olusegun</div>
+          <div class="ref-detail">Deputy Registrar / Head, Alumni Relations Unit, LASU Ojo Campus</div>
+          <div class="ref-contact">alayombo@gmail.com · 0810 197 3764</div>
+        </div>
+        <div class="ref-item">
+          <div class="ref-name">Prof. K.F.K. Oyedeko</div>
+          <div class="ref-detail">Chemical Engineering Dept., Faculty of Engineering, Lagos State University</div>
+          <div class="ref-contact">kamilu.oyedeko@lasu.edu.ng · 0803 470 9811</div>
+        </div>
+        <div class="ref-item">
+          <div class="ref-name">Mr. Abiodun Oladejo</div>
+          <div class="ref-detail">Group Head of Finance, Bracken Media Solutions, Ikeja GRA</div>
+          <div class="ref-contact">abiodun.olamileke@brackenads.com · 0802 333 8180</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="foot-band">
+    <span class="foot-left">"Once through the machines, once through the data — I build systems the next economy quietly depends on."</span>
+    <span class="foot-right">Damilare Paul Ayodele · Epe, Lagos</span>
+  </div>
+
+</div>
+
+<style>
+.qlink-wrap { max-width: 1100px; margin: 36px auto 44px; padding: 0 22px; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+.qlink-panel {
+  border: 1.5px dashed #D9A441; border-radius: 14px;
+  padding: 26px 28px 20px;
+  background: linear-gradient(135deg, rgba(217,164,65,.07), transparent 55%), #fff;
+}
+.ql-eyebrow { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: #33558B; margin-bottom: 6px; }
+.ql-title { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 19px; font-weight: 800; color: #14233F; margin-bottom: 16px; }
+.ql-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ql-btn {
+  display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+  border: 1.5px solid #E3E0D4; border-radius: 12px; background: #fff; text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.ql-btn:hover { border-color: #D9A441; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(28,51,92,.13); }
+.ql-icon { width: 40px; height: 40px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 19px; border-radius: 10px; background: #F7F4EC; }
+.ql-name { font-family: Manrope, 'Segoe UI', sans-serif; font-size: 13.5px; font-weight: 800; color: #14233F; line-height: 1.25; display: block; }
+.ql-sub { font-size: 10.5px; color: #5A6478; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; display: block; }
+@media print { .qlink-wrap { display: none !important; } }
+</style>
+
+<!-- Quick Links (screen only) -->
+<div class="qlink-wrap">
+  <div class="qlink-panel">
+    <div class="ql-eyebrow">Screen Only · Excluded From Printouts</div>
+    <div class="ql-title">Quick Links — Everything, One Click Away</div>
+    <div class="ql-grid">
+        <a class="ql-btn" href="vtn-cover-letter.html">
+          <span class="ql-icon">✉️</span>
+          <span><span class="ql-name">Cover Letter</span><span class="ql-sub">Read the full letter</span></span>
+        </a>
+        <a class="ql-btn" href="vtn-cv.html">
+          <span class="ql-icon">📋</span>
+          <span><span class="ql-name">Curriculum Vitae</span><span class="ql-sub">Open this résumé</span></span>
+        </a>
+        <a class="ql-btn" href="vtn-hr-email.html">
+          <span class="ql-icon">📨</span>
+          <span><span class="ql-name">Email · HR</span><span class="ql-sub">Send the application</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/7wgyoteeg8q5xk0chays7/dammieBSc.pdf?rlkey=o1hluuugbsdc26pjdb0v6ztls&st=u81cq1el&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🎓</span>
+          <span><span class="ql-name">B.Sc. Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/kh4jwadt9h6u0j6eq8svx/dammieNYSC.pdf?rlkey=ywun0j8mufxyaynecv0uy4gih&st=jc1g805e&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🎖️</span>
+          <span><span class="ql-name">NYSC Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/9uua9ssfraqnfvf1xlbj6/dammieGCE.pdf?rlkey=mtuitb6i8hnqymmobiftv9yex&st=pg6b43ry&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">📜</span>
+          <span><span class="ql-name">GCE Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.dropbox.com/scl/fi/x09f2dnlr1pd9gg3ri3sq/dammieBirthCert.pdf?rlkey=ycp1mnhlex9v18vib33whb4j7&st=4vv035tn&dl=0" target="_blank" rel="noopener">
+          <span class="ql-icon">🧾</span>
+          <span><span class="ql-name">Birth Certificate</span><span class="ql-sub">View PDF · Dropbox</span></span>
+        </a>
+        <a class="ql-btn" href="https://starium-app.dammieoptimus.workers.dev/" target="_blank" rel="noopener">
+          <span class="ql-icon">🏭</span>
+          <span><span class="ql-name">Live System — Starium ERP</span><span class="ql-sub">Open the running web app</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.youtube.com/watch?v=EjhFWjsLDcA" target="_blank" rel="noopener">
+          <span class="ql-icon">▶️</span>
+          <span><span class="ql-name">Demo Video 1</span><span class="ql-sub">Command Centre & QC · YouTube</span></span>
+        </a>
+        <a class="ql-btn" href="https://www.youtube.com/watch?v=Z32CKJGERfg" target="_blank" rel="noopener">
+          <span class="ql-icon">▶️</span>
+          <span><span class="ql-name">Demo Video 2</span><span class="ql-sub">Pallet Transfer & Reports · YouTube</span></span>
+        </a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
