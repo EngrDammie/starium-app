@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Leave Management Blueprint | Dammie Optimus Solutions</title>
+<meta name="description" content="The complete engineering blueprint for Employee Onboarding and Leave Management in the Starium Rafa ERP — every assumption, every design decision, and exactly how to change any of them when HR fills in the gaps." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT DESIGN SYSTEM
+   Self-contained. Mirrors public/assets/docs.css in the
+   portfolio repo, inlined so this file stands alone.
+   ============================================================ */
+
+:root {
+  --emerald: #10b981;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --grad: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+
+  --bg: #020617;
+  --bg-2: #0f172a;
+  --bg-3: #1e293b;
+  --border: #1e293b;
+  --border-soft: #334155;
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --text-3: #94a3b8;
+  --code-bg: #020617;
+  --shadow: 0 18px 40px -12px rgba(0, 0, 0, .6);
+  --radius: 16px;
+
+  --emerald-ink: #34d399;
+  --cyan-ink: #22d3ee;
+  --amber-ink: #fbbf24;
+  --rose-ink: #fb7185;
+  --syn-key: #c084fc;
+  --syn-str: #86efac;
+  --syn-num: #fbbf24;
+}
+html[data-theme="light"] {
+  --bg: #eaeff5;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --border: #cbd5e1;
+  --border-soft: #94a3b8;
+  --text: #020617;
+  --text-2: #1e293b;
+  --text-3: #334155;
+  --code-bg: #f1f5f9;
+  --shadow: 0 12px 28px -10px rgba(15, 23, 42, .22);
+
+  --emerald-ink: #047857;
+  --cyan-ink: #0e7490;
+  --amber-ink: #b45309;
+  --rose-ink: #be123c;
+  --syn-key: #7e22ce;
+  --syn-str: #15803d;
+  --syn-num: #b45309;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(760px 420px at 12% -8%, rgba(16, 185, 129, .14), transparent 62%),
+    radial-gradient(700px 400px at 92% 4%, rgba(6, 182, 212, .12), transparent 60%);
+}
+.wrap { position: relative; z-index: 1; }
+
+a { color: var(--cyan-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: var(--grad); z-index: 60; transition: width .1s linear;
+}
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1.5px solid var(--border);
+}
+.hdr { max-width: 1240px; margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+.brandbox {
+  display: flex; align-items: center; justify-content: center;
+  padding: 7px; border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 35%, transparent);
+  box-shadow: 0 6px 18px -8px rgba(16, 185, 129, .4);
+  flex-shrink: 0;
+}
+.brandbox svg { width: 40px; height: 30px; display: block; }
+.brandtext { line-height: 1.25; min-width: 0; }
+.brandname { font-weight: 800; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; }
+.brandsub { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+.hdr-spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1.5px solid var(--border-soft); background: var(--bg-2); color: var(--text-2);
+  padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; transition: all .15s ease; white-space: nowrap;
+}
+.btn:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+.btn.ghost { background: transparent; }
+
+@media (max-width: 780px) {
+  .hdr { flex-wrap: wrap; row-gap: 10px; padding: 12px 16px; }
+  .hdr-spacer { display: none; }
+  .brandtext { flex: 1 1 auto; }
+  .btn { font-size: 12.5px; padding: 7px 11px; }
+}
+
+.layout { max-width: 1240px; margin: 0 auto; padding: 34px 22px 90px; display: grid; grid-template-columns: 252px 1fr; gap: 44px; align-items: start; }
+.layout > * { min-width: 0; }
+@media (max-width: 940px) { .layout { grid-template-columns: 1fr; gap: 26px; } .toc { display: none; } }
+
+.toc {
+  position: sticky; top: 92px;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-soft) transparent;
+}
+.toc::-webkit-scrollbar { width: 7px; }
+.toc::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 99px; }
+.toc::-webkit-scrollbar-thumb:hover { background: var(--emerald); }
+@supports (max-height: 100dvh) { .toc { max-height: calc(100dvh - 116px); } }
+.toc-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 12px; padding-bottom: 8px;
+  position: sticky; top: 0; z-index: 1;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.toc a {
+  display: block; padding: 7px 12px; margin-bottom: 2px; border-radius: 9px;
+  font-size: 13.5px; color: var(--text-3); border-left: 2.5px solid transparent; transition: all .15s ease;
+}
+.toc a:hover { background: var(--bg-2); color: var(--text); text-decoration: none; }
+.toc a.active { color: var(--emerald-ink); border-left-color: var(--emerald); background: color-mix(in srgb, var(--emerald) 8%, transparent); font-weight: 600; }
+.toc .back { border-left-color: var(--cyan); color: var(--cyan-ink); font-weight: 600; margin-bottom: 14px; }
+
+.hero {
+  border: 1.5px solid var(--border); border-radius: 22px; padding: 38px 34px;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg));
+  box-shadow: var(--shadow); margin-bottom: 38px; position: relative; overflow: hidden;
+}
+.hero::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad); }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--emerald) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 32%, transparent); color: var(--emerald-ink);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 9px var(--emerald); }
+h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.028em; line-height: 1.14; margin-bottom: 15px; }
+.grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { color: var(--text-2); font-size: 16.5px; max-width: 66ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+  background: var(--bg-3); border: 1.5px solid var(--border); color: var(--text-3);
+}
+
+section { margin-bottom: 46px; scroll-margin-top: 92px; }
+h2 { font-size: clamp(21px, 3vw, 26px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; display: flex; align-items: baseline; gap: 13px; }
+h2 .num {
+  font-size: 13px; font-weight: 700; color: var(--emerald-ink);
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 30%, transparent);
+  padding: 3px 10px; border-radius: 8px; flex-shrink: 0; align-self: center;
+}
+.lede { color: var(--text-2); font-size: 15.5px; margin-bottom: 22px; max-width: 70ch; }
+h3 { font-size: 17px; font-weight: 700; margin: 26px 0 11px; letter-spacing: -.01em; }
+h4 { font-size: 14.5px; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+p { margin-bottom: 13px; color: var(--text-2); }
+ul, ol { margin: 0 0 15px 22px; color: var(--text-2); }
+li { margin-bottom: 8px; }
+strong { color: var(--text); font-weight: 650; }
+
+.card { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg-2); padding: 24px; margin: 20px 0; box-shadow: var(--shadow); }
+.grid2 > *, .grid3 > * { min-width: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card-t { font-size: 15px; font-weight: 700; margin-bottom: 11px; display: flex; align-items: center; gap: 9px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+.callout { border-radius: 13px; padding: 17px 19px; margin: 19px 0; border: 1.5px solid; font-size: 14.5px; display: flex; gap: 13px; align-items: flex-start; }
+.callout .ic { flex-shrink: 0; font-size: 17px; line-height: 1.45; }
+.callout .bd { min-width: 0; }
+.callout .ct { font-weight: 700; margin-bottom: 5px; font-size: 13.5px; letter-spacing: .01em; }
+.callout p { margin: 0; font-size: 14.5px; }
+.callout p + p { margin-top: 8px; }
+.callout ul { margin: 8px 0 0 20px; }
+.callout li { font-size: 14px; }
+.co-info { background: rgba(6, 182, 212, .08); border-color: rgba(6, 182, 212, .32); }
+.co-info .ct { color: var(--cyan-ink); }
+.co-good { background: rgba(16, 185, 129, .08); border-color: rgba(16, 185, 129, .32); }
+.co-good .ct { color: var(--emerald-ink); }
+.co-warn { background: rgba(245, 158, 11, .08); border-color: rgba(245, 158, 11, .34); }
+.co-warn .ct { color: var(--amber-ink); }
+.co-stop { background: rgba(244, 63, 94, .08); border-color: rgba(244, 63, 94, .32); }
+.co-stop .ct { color: var(--rose-ink); }
+
+.tw { overflow-x: auto; margin: 20px 0; border: 1.5px solid var(--border); border-radius: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+th { text-align: left; padding: 13px 16px; background: var(--bg-3); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); border-bottom: 1.5px solid var(--border); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--emerald) 4%, transparent); }
+td code, p code, li code, .codechip {
+  font-family: 'Geist Mono', monospace; font-size: .89em;
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 1.5px 6px; border-radius: 6px; color: var(--cyan-ink);
+}
+
+.codewrap { position: relative; margin: 19px 0; }
+pre {
+  background: var(--code-bg); border: 1.5px solid var(--border); border-radius: 13px;
+  padding: 17px 19px; overflow-x: auto; font-family: 'Geist Mono', monospace;
+  font-size: 13px; line-height: 1.68; color: var(--text-2);
+}
+pre .c { color: var(--text-3); font-style: italic; }
+pre .k { color: var(--syn-key); }
+pre .s { color: var(--syn-str); }
+pre .n { color: var(--syn-num); }
+.copy {
+  position: absolute; top: 9px; right: 9px; z-index: 2;
+  font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 8px;
+  background: var(--bg-2); border: 1.5px solid var(--border-soft); color: var(--text-3);
+  cursor: pointer; font-family: inherit; transition: all .15s ease;
+}
+.copy:hover { border-color: var(--emerald); color: var(--emerald-ink); }
+.copy.done { border-color: var(--emerald); color: var(--emerald-ink); }
+.fname { font-size: 11.5px; color: var(--text-3); font-weight: 600; margin-bottom: -8px; padding-left: 3px; font-family: 'Geist Mono', monospace; }
+
+.step { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+.badge {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #020617;
+  background: var(--grad); box-shadow: 0 6px 16px -6px rgba(16, 185, 129, .55);
+}
+.step-b { min-width: 0; flex: 1; padding-top: 2px; }
+.step-b h4 { margin-top: 0; font-size: 15.5px; }
+.step-b > :last-child { margin-bottom: 0; }
+.do { display: flex; gap: 11px; align-items: flex-start; margin: 11px 0; font-size: 14px; }
+.do .mk { flex-shrink: 0; width: 19px; height: 19px; border-radius: 5px; background: color-mix(in srgb, var(--emerald) 18%, transparent); border: 1.5px solid color-mix(in srgb, var(--emerald) 40%, transparent); color: var(--emerald-ink); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-top: 2px; }
+
+.flow { display: flex; flex-direction: column; gap: 9px; margin: 20px 0; }
+.fnode { display: flex; align-items: center; gap: 13px; padding: 13px 17px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg-2); font-size: 14px; }
+.fnode .fi { font-size: 17px; flex-shrink: 0; }
+.fnode .ft { font-weight: 600; color: var(--text); }
+.fnode .fs { color: var(--text-3); font-size: 12.5px; }
+.fnode.hi { border-color: color-mix(in srgb, var(--emerald) 45%, transparent); background: color-mix(in srgb, var(--emerald) 8%, var(--bg-2)); }
+.farrow { text-align: center; color: var(--emerald); font-size: 17px; line-height: 1; margin: -3px 0; }
+
+.gloss { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .gloss { grid-template-columns: 1fr; } }
+.gitem { border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 17px; background: var(--bg-2); }
+.gterm { font-weight: 700; color: var(--emerald-ink); font-size: 14px; margin-bottom: 5px; font-family: 'Geist Mono', monospace; }
+.gdef { font-size: 13.5px; color: var(--text-2); line-height: 1.62; }
+
+.check { list-style: none; margin-left: 0; }
+.check li { padding-left: 29px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 0; top: -1px; font-size: 17px; color: var(--emerald-ink); line-height: 1.45; }
+
+.links-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .links-strip { grid-template-columns: 1fr; } }
+.linkbox { border: 1.5px solid var(--border); border-radius: 13px; padding: 16px 18px; background: var(--bg-2); text-decoration: none; display: block; transition: all .15s ease; }
+.linkbox:hover { border-color: var(--emerald); text-decoration: none; transform: translateY(-2px); }
+.linkbox .lb-t { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.linkbox .lb-d { font-size: 12.5px; color: var(--text-3); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 18px; border-radius: 11px; font-size: 13.5px; font-weight: 700;
+  background: var(--grad); color: #020617; border: none; font-family: inherit;
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, .6); transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 12px 26px -8px rgba(16, 185, 129, .7); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 17px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  background: transparent; border: 1.5px solid var(--border-soft); color: var(--text-2); transition: all .15s ease;
+}
+.btn-secondary:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+
+footer { border-top: 1.5px solid var(--border); margin-top: 56px; padding-top: 30px; }
+.fgrid { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; justify-content: space-between; }
+.fnote { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+.fnote strong { color: var(--text-2); }
+
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(90px);
+  background: var(--bg-2); border: 1.5px solid var(--emerald); color: var(--text);
+  padding: 11px 21px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  box-shadow: var(--shadow); z-index: 80; transition: transform .28s cubic-bezier(.2, .9, .3, 1.2);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media print {
+  header, .toc, #progress, .copy, .toast { display: none !important; }
+  body { background: #fff; color: #000; }
+  .layout { grid-template-columns: 1fr; }
+  .card, .tw, pre, .callout { break-inside: avoid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="dosGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="progress"></div>
+
+<header>
+  <div class="hdr">
+    <div class="brandbox">
+      <svg viewBox="0 0 160 120" fill="none" aria-label="Dammie Optimus Monogram">
+        <g stroke="url(#dosGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 30 25 L 30 95" />
+          <path d="M 30 25 L 60 25 A 35 35 0 0 1 60 95 L 30 95" />
+          <circle cx="100" cy="60" r="35" />
+        </g>
+        <circle cx="100" cy="60" r="10" fill="url(#dosGrad)" />
+      </svg>
+    </div>
+    <div class="brandtext">
+      <div class="brandname">Dammie Optimus Solutions</div>
+      <div class="brandsub">Starium Rafa ERP · Engineering Blueprint</div>
+    </div>
+    <div class="hdr-spacer"></div>
+    <button class="btn ghost" id="themeBtn" type="button" aria-label="Toggle colour theme">
+      <span id="themeIcon">◐</span> <span id="themeLabel">Light</span>
+    </button>
+    <a class="btn" href="documents.html">← Document Hub</a>
+    <button class="btn" id="printBtn" type="button">⎙ Save / Print</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a class="back" href="documents.html">← Document Hub</a>
+    <a href="#ask">01 · What HR actually asked for</a>
+    <a href="#problem">02 · Why the paper form breaks</a>
+    <a href="#what">03 · What we are building</a>
+    <a href="#assumptions">04 · The 24 assumptions</a>
+    <a href="#law">05 · What Nigerian law requires</a>
+    <a href="#bestpractice">06 · What good systems do</a>
+    <a href="#d1">07 · Decision 1 — People first</a>
+    <a href="#d2">08 · Decision 2 — The maths</a>
+    <a href="#d3">09 · Decision 3 — Three signatures</a>
+    <a href="#d4">10 · Decision 4 — Offline, with one exception</a>
+    <a href="#data">11 · What we store</a>
+    <a href="#screens">12 · The screens we build</a>
+    <a href="#order">13 · The build order</a>
+    <a href="#risks">14 · What could go wrong</a>
+    <a href="#change">15 · Changing an assumption</a>
+    <a href="#demo">16 · How to demo it</a>
+    <a href="#glossary">17 · Words explained</a>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main>
+
+    <div class="hero">
+      <div class="pill"><span class="dot"></span> Ready to build</div>
+      <h1>Leave Management<br /><span class="grad-text">The Complete Blueprint</span></h1>
+      <p>
+        Everything needed to build Employee Onboarding and Leave Management inside the Starium
+        Rafa ERP — every decision, every assumption, and exactly how to change any of them when
+        HR fills in the gaps. Written so a five-year-old could follow it, and detailed enough
+        that an engineer could build it without asking a single question.
+      </p>
+      <div class="meta">
+        <span class="chip">For: HR &amp; Management</span>
+        <span class="chip">Status: ready to build</span>
+        <span class="chip">24 assumptions documented</span>
+        <span class="chip">22 build tasks</span>
+        <span class="chip">Read time: ~18 minutes</span>
+      </div>
+    </div>
+
+    <!-- 01 -->
+    <section id="ask">
+      <h2><span class="num">01</span> What HR actually asked for</h2>
+      <p class="lede">HR sent one photograph: a printed <strong>Leave Request Form</strong>, filled in by hand. Let's read it carefully, because every box on it is a requirement.</p>
+
+      <h3>The three parts of the paper form</h3>
+      <div class="grid3">
+        <div class="card">
+          <div class="card-t"><span>📝</span> Section 1 — The staff member</div>
+          <p class="card-body">Who you are, which leave type, which dates, and how many days you have left. Filled in by the person taking leave.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✍️</span> Section 2 — The promise</div>
+          <p class="card-body">"I have handed my work to ____." Then a signature and a date. This is the handover note.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> Section 3 — The three approvals</div>
+          <p class="card-body">Supervisor signs. HOD/Subsidiary signs. Head of HR signs. Three signatures, in that order, with three dates.</p>
+        </div>
+      </div>
+
+      <h3>Every single box on the form</h3>
+      <p>Here is the whole form, field by field. Nothing has been left out. Later, in <a href="#screens">section 12</a>, we show exactly where each one lives in the app.</p>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>The box on the paper</th><th>What it means</th><th>Who fills it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Date</td><td>The day the form was filled in</td><td>Staff</td></tr>
+            <tr><td>Name</td><td>The employee's full name</td><td>Staff</td></tr>
+            <tr><td>Cadre / Designation</td><td>Job title — "Production Officer", "Maintenance Officer"</td><td>Staff</td></tr>
+            <tr><td>Department</td><td>Quality Control, Production, Packaging, HR…</td><td>Staff</td></tr>
+            <tr><td>SAP No.</td><td>The staff number the company already uses</td><td>Staff</td></tr>
+            <tr><td>Shift</td><td>DAY or NIGHT</td><td>Staff</td></tr>
+            <tr><td>Type of Leave</td><td>One box ticked: Annual, Maternity, Casual, Compassionate or Examination</td><td>Staff</td></tr>
+            <tr><td>If Casual, purpose</td><td>Why — only shown if Casual was ticked</td><td>Staff</td></tr>
+            <tr><td>Leave Year</td><td>Which year's allowance is being used — 2026</td><td>Staff</td></tr>
+            <tr><td>Annual Leave Days entitled</td><td>How many days they get in total</td><td>Staff</td></tr>
+            <tr><td>No. of days already taken</td><td>How many they have used up already</td><td>Staff</td></tr>
+            <tr><td>Total Days this Vacation</td><td>How many days this request is asking for</td><td>Staff</td></tr>
+            <tr><td>Outstanding after this Vacation</td><td>What will be left afterwards</td><td>Staff</td></tr>
+            <tr><td>Public Holidays included</td><td>Any holiday dates that fall inside the leave</td><td>Staff</td></tr>
+            <tr><td>Leave Commences</td><td>First day of leave</td><td>Staff</td></tr>
+            <tr><td>Leave Ends</td><td>Last day of leave</td><td>Staff</td></tr>
+            <tr><td>Resumption Date</td><td>The day they come back to work</td><td>Staff</td></tr>
+            <tr><td>Contact Address while on leave</td><td>Where they can be reached</td><td>Staff</td></tr>
+            <tr><td>Contact Phone No.</td><td>Phone number while away</td><td>Staff</td></tr>
+            <tr><td>Contact E-mail</td><td>Email while away</td><td>Staff</td></tr>
+            <tr><td>Handover note to ___</td><td>Who now holds this person's work</td><td>Staff</td></tr>
+            <tr><td>Applicant's Signature + Date</td><td>Confirmation the form is true</td><td>Staff</td></tr>
+            <tr><td>Supervisor's Signature + Date</td><td>First approval</td><td>Supervisor</td></tr>
+            <tr><td>HOD / Subsidiary's Signature + Date</td><td>Second approval</td><td>HOD</td></tr>
+            <tr><td>Head of HR Signature + Date</td><td>Final approval — the one that unlocks the leave</td><td>Head of HR</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">📌</span>
+        <div class="bd">
+          <div class="ct">Two instructions at the top of the form</div>
+          <p><strong>"Staff are expected to give a NOTICE OF ONE WEEK"</strong> — so seven days' warning before annual leave.</p>
+          <p><strong>"Staff should not proceed until they have received formal Approval Coupon from HR Department"</strong> — so nobody goes on leave until the Head of HR has signed.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">📋</span>
+        <div class="bd">
+          <div class="ct">And one instruction at the bottom</div>
+          <p>"On resumption of duty, Section B of the attached should be duly completed by staff and forward to Human Resources Department."</p>
+          <p>So the form has a <strong>second life</strong>: something happens when the person comes back. Most leave systems forget this step. We will not.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="problem">
+      <h2><span class="num">02</span> Why the paper form breaks</h2>
+      <p class="lede">The form works. It has worked for years. But it has four specific problems, and one of them is a genuine arithmetic error sitting in the photograph HR sent.</p>
+
+      <h3>Problem 1 — The numbers do not add up</h3>
+      <p>Here is what the filled-in form actually says:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Box</th><th>Value written by hand</th></tr></thead>
+          <tbody>
+            <tr><td>Annual Leave Days entitled</td><td><strong>21</strong></td></tr>
+            <tr><td>No. of days already taken</td><td><strong>8</strong></td></tr>
+            <tr><td>Total Days this Vacation</td><td><strong>4</strong></td></tr>
+            <tr><td>Outstanding No. of Days after this Vacation</td><td><strong>11</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>But 21 − 8 − 4 = <strong>9</strong>, not 11. So one of three things is true:</p>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="card-t"><span>🥇</span> Most likely: carry-over</div>
+          <p class="card-body">The employee carried 2 days over from 2025. Then 23 − 8 − 4 = <strong>11</strong>. This matches perfectly.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🥈</span> Possible: a public holiday</div>
+          <p class="card-body">A holiday inside the range made some days non-working. But 5–8 October has no Nigerian public holiday, so this is less likely here.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🥉</span> Also possible: a slip of the pen</div>
+          <p class="card-body">Nobody is claiming HR is wrong. But this is exactly the class of mistake a human makes at 4pm with a queue at the door.</p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">💡</span>
+        <div class="bd">
+          <div class="ct">This is actually the best argument for the whole project</div>
+          <p>A machine does not get tired and does not mis-add. Once the computer works out the numbers, this class of mistake disappears completely — and we will never have to ask HR which of the three explanations was correct.</p>
+          <p><strong>We will build carry-over into the system anyway</strong>, because it is the most likely explanation and it is standard practice. If HR later says the answer was something else, it is one setting.</p>
+        </div>
+      </div>
+
+      <h3>Problem 2 — Everyone retypes the same details</h3>
+      <p>Look at the first six boxes: Name, Cadre/Designation, Department, SAP No., Shift. These never change between one leave form and the next. Yet HR and the employee write them out again, every single time, by hand, on every single form. That is five boxes of pure copying — and copying is exactly where mistakes get made.</p>
+
+      <h3>Problem 3 — Nobody can see who is away</h3>
+      <p>Approved leave lives in a folder. If the HOD wants to know whether three people from the same machine crew are off at once, the honest answer is "let me go and check the folder". In a factory, that answer causes a stopped line nobody knew was short-staffed.</p>
+
+      <h3>Problem 4 — Balances live in someone's head</h3>
+      <p>"How many days has Ahmed got left?" The answer is a sum, spread across a folder, done by memory. Nobody is lying — the number is just not written down anywhere a computer can read.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🎯</span>
+        <div class="bd">
+          <div class="ct">The one-line summary</div>
+          <p>The paper form asks <strong>humans to be calculators and typists</strong>. Both are things computers are dramatically better at. Our job is to keep the humans doing the parts that need judgement — approving, and covering the work.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="what">
+      <h2><span class="num">03</span> What we are building</h2>
+      <p class="lede">Two new modules inside the app that already runs the factory. Nothing is replaced; everything that works today keeps working.</p>
+
+      <h3>The short version</h3>
+      <div class="callout co-good">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">In one sentence</div>
+          <p><strong>A list of every employee, and a leave system that fills in the paper form for you, works out the days for you, and sends it round for three signatures.</strong></p>
+        </div>
+      </div>
+
+      <h3>The two modules</h3>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>👥</span> Module A — Employee Roster</div>
+          <p class="card-body">One record per person: SAP number, name, job title, department, shift, phone, email, date joined. HR fills it in once. Every leave form ever after pulls the details from it automatically.</p>
+          <p class="card-body"><strong>Bonus:</strong> this page is already advertised in the app's sidebar menu but has never been built. It is a dead link users can click today. We are closing it.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📅</span> Module B — Leave Management</div>
+          <p class="card-body">The digital version of the paper form. Staff fill it in on their phone. The app works out the days and the balance. Supervisor, HOD and Head of HR approve in order. HR gets a printable form that looks like the paper one, plus reports.</p>
+          <p class="card-body"><strong>Also included:</strong> "who is on leave today" on the Command Center dashboard, and a year-end balance report.</p>
+        </div>
+      </div>
+
+      <h3>Why employee records must come first</h3>
+      <p>This is the most important structural decision in the project, so it is worth explaining slowly.</p>
+
+      <p>Right now, the app stores a list of people who can <em>log in</em>. That list holds a first name, a last name, an email address and some permissions. It has no SAP number. No job title. No department. No shift. It is a <strong>door-key list, not an employee record</strong>.</p>
+
+      <p>Leave Management needs all of those missing pieces. So we build a proper employee record first.</p>
+
+      <div class="callout co-stop">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">The mistake we are deliberately avoiding</div>
+          <p>A tempting shortcut is to bolt the new fields onto the existing user list. <strong>Do not do that.</strong></p>
+          <p>It would break the moment someone needs leave but does not need a login — and in a factory, that is very common. A cleaner hands over their work at the end of a shift. A driver signs a delivery note. They never open the app. If they are not in the user list, they are not in the system at all.</p>
+          <p>So: <strong>every employee gets a record. A login is optional and simply links to it.</strong> A person can have a record with no login, and that is normal, not an error.</p>
+        </div>
+      </div>
+
+      <h3>The full journey, from form to filing</h3>
+      <div class="flow">
+        <div class="fnode hi"><span class="fi">👥</span><div><span class="ft">HR registers the employee once</span><div class="fs">SAP number, name, title, department, shift, contacts. Reused forever after.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">📱</span><div><span class="ft">Staff opens My Leave</span><div class="fs">Sees their own balance already filled in. No typing.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">✍️</span><div><span class="ft">They pick type and dates</span><div class="fs">The app counts the days and updates the balance live, as they choose.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🤝</span><div><span class="ft">They name who is covering their work</span><div class="fs">The handover note. Required for anything more than a couple of days.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">✅</span><div><span class="ft">Three signatures, in order</span><div class="fs">Supervisor → HOD → Head of HR. Each one unlocks the next.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🖨️</span><div><span class="ft">HR prints the form and files it</span><div class="fs">Identical to the paper original, with real names and dates on the signature lines.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">↩️</span><div><span class="ft">They come back and confirm</span><div class="fs">Section B of the paper form, completed in the app. Closes the record.</div></div></div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="assumptions">
+      <h2><span class="num">04</span> The 24 assumptions we are shipping</h2>
+      <p class="lede">HR has not answered any questions yet — deliberately, because the point is to show him something working first. So we are shipping sensible, professional defaults. <strong>Every single one can be changed later without touching code.</strong></p>
+
+      <div class="callout co-good">
+        <span class="ic">🔧</span>
+        <div class="bd">
+          <div class="ct">This is the whole trick</div>
+          <p>Leave policy is <strong>not written in the code</strong>. It lives in the app's settings screen, where HR can edit it. Changing the annual entitlement from 21 days to 24 is a typing job in System Config, not a job for a developer.</p>
+          <p>That is why we can build this now and correct it later without rewriting anything.</p>
+        </div>
+      </div>
+
+      <h3>The assumptions, and how confident we are</h3>
+      <p>The <strong>Confidence</strong> column is honest. <strong>High</strong> means we are confident this is what Starium would choose. <strong>Medium</strong> means it is a reasonable industry default. Every <strong>Medium</strong> one is the first thing to raise with HR.</p>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>#</th><th>What we had to decide</th><th>What we are shipping</th><th>Why</th><th>Confidence</th><th>To change it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>A1</strong></td><td>Which leave types exist</td><td>The paper form's exact five: Annual, Maternity, Casual, Compassionate, Examination</td><td>Inventing types the form does not have would be presumptuous</td><td>High</td><td>Switch on or off in System Config</td></tr>
+            <tr><td><strong>A2</strong></td><td>Which types have a day allowance</td><td>Only <strong>Annual</strong> (21 days) and <strong>Casual</strong> (12 days). Maternity, Compassionate and Examination have no balance — they are approved on merit</td><td>Only a type with a fixed quota needs balance maths. The others are one-off life events</td><td>Med-High</td><td>Toggle "counts against a balance" per type</td></tr>
+            <tr><td><strong>A3</strong></td><td>How many annual days</td><td><strong>21 working days</strong>, the same for every grade</td><td>The form shows 21 for a Maintenance staff member. That suggests a flat company figure, well above the 6-day legal minimum</td><td>Medium</td><td>One number in System Config; per-grade override supported</td></tr>
+            <tr><td><strong>A4</strong></td><td>How many casual days</td><td><strong>12 working days per year</strong>, separate from annual</td><td>Common private-sector practice in Nigeria</td><td>Medium</td><td>One number in System Config</td></tr>
+            <tr><td><strong>A5</strong></td><td>Maternity duration</td><td><strong>12 weeks</strong> — six weeks before and six after</td><td>This is the statutory figure in the Nigerian Labour Act</td><td>High</td><td>One number in System Config</td></tr>
+            <tr><td><strong>A6</strong></td><td>How much warning is needed</td><td><strong>7 working days</strong> for annual leave only. No notice needed for casual. None for maternity, compassionate or examination</td><td>The form says "NOTICE OF ONE WEEK". Event-driven leave cannot reasonably require a week</td><td>High</td><td>Choose which types need it, and how many days</td></tr>
+            <tr><td><strong>A7</strong></td><td>Which days are not working days</td><td><strong>Sunday only.</strong> Saturday is a working day</td><td>Typical for a Nigerian production plant running long days. <strong>This single setting changes every day count in the system</strong>, so it is the first thing to confirm</td><td>Medium</td><td>Tick or untick days in System Config</td></tr>
+            <tr><td><strong>A8</strong></td><td>What a "leave year" is</td><td>The <strong>calendar year</strong>, 1 January to 31 December</td><td>Simplest, and the app's existing shift logic already counts in calendar days</td><td>High</td><td>Change the starting month</td></tr>
+            <tr><td><strong>A9</strong></td><td>Can unused leave roll over?</td><td><strong>Yes, up to 5 working days.</strong> Anything above 5 is lost on 1 January</td><td>Standard practice. The cap stops a large unused balance from snowballing and blocking future leave</td><td>Medium</td><td>Switch on or off, and change the cap</td></tr>
+            <tr><td><strong>A10</strong></td><td>What about new employees?</td><td><strong>Pro-rated by joining date.</strong> Someone who joined in July gets a share of the year's allowance, not zero and not a full year</td><td>Current best practice. It is also the fairer treatment</td><td>Med-High</td><td>Switch pro-rating on or off</td></tr>
+            <tr><td><strong>A11</strong></td><td>Warning about expiring leave</td><td>HR gets a warning when an employee is carrying a high balance in December</td><td>Without this, people quietly lose days they never knew they had. It is a trust problem, not a data problem</td><td>Medium</td><td>Switch on or off</td></tr>
+            <tr><td><strong>A12</strong></td><td>Public holidays</td><td>Seeded with the <strong>12 dates the Federal Government declared for 2026</strong> (see <a href="#law">section 05</a>)</td><td>These move every year. Seed them so the demo is correct today; HR updates them each January</td><td>High</td><td>Add or remove dates in System Config</td></tr>
+            <tr><td><strong>A13</strong></td><td>Can someone go below zero?</td><td><strong>No.</strong> A request that exceeds the balance is blocked. An approver may still override and sign it</td><td>Stops leave debt building up silently</td><td>High</td><td>Allow or block, and allow or block approver override</td></tr>
+            <tr><td><strong>A14</strong></td><td>Two people off on the same day</td><td><strong>Warned, but allowed.</strong> Two people being off together is often fine</td><td>Blocking outright would be frustrating in a small plant where half the team is in the same department</td><td>High</td><td>Change warning to a hard block</td></tr>
+            <tr><td><strong>A15</strong></td><td>Too many off at once</td><td>Warn when <strong>2 or more</strong> people from the same department overlap</td><td>Current best practice separates a gentle "overlap" from a serious "coverage conflict"</td><td>Medium</td><td>Change the threshold number</td></tr>
+            <tr><td><strong>A16</strong></td><td>Approval order</td><td><strong>Supervisor → HOD → Head of HR, strictly in that order</strong></td><td>The paper form's signature layout is unambiguous about this</td><td>High</td><td>Order is fixed by the form; stages can be added or removed</td></tr>
+            <tr><td><strong>A17</strong></td><td>Rejecting a request</td><td><strong>A reason is mandatory</strong> before Reject will work</td><td>The employee deserves to know why. HR needs the record for any dispute</td><td>High</td><td>Make it optional</td></tr>
+            <tr><td><strong>A18</strong></td><td>Who approves when the approver is away?</td><td>A <strong>named deputy</strong> can be set for each approval stage</td><td>The single most common way a leave system deadlocks: the approver is on leave and nobody can move the request</td><td>Med-High</td><td>Set or clear a deputy per stage</td></tr>
+            <tr><td><strong>A19</strong></td><td>Automatic approval</td><td><strong>Off.</strong> Every request goes to a human</td><td>In a factory, a person going missing from a line is expensive. A human should always see it</td><td>High</td><td>Switch on, with a day limit</td></tr>
+            <tr><td><strong>A20</strong></td><td>Handover note</td><td><strong>Required for leave of 3 working days or more</strong></td><td>Proportional. A single day off does not need a handover; a week certainly does</td><td>Medium</td><td>Change the number of days, or require it always</td></tr>
+            <tr><td><strong>A21</strong></td><td>The signature</td><td><strong>Typed full name plus a timestamp</strong> in the app. A wet signature line stays on the printed form</td><td>Standard practice for digital leave systems, and it is the only version that carries a provable timestamp</td><td>Medium</td><td>Wet signature only, with HR countersigning on paper</td></tr>
+            <tr><td><strong>A22</strong></td><td>Paying out unused leave</td><td><strong>Not included.</strong> Noted as a separate future module</td><td>Nigerian Labour Act s.18(3) makes it unlawful to pay an employee cash in lieu of annual leave while the employment continues. Only on leaving is it payable</td><td>High</td><td>Separate project</td></tr>
+            <tr><td><strong>A23</strong></td><td>Departments</td><td><strong>Quality Control, Production, Packaging, Human Resources, Administration</strong></td><td>These are already the departments in the app's own role system</td><td>High</td><td>Add or rename in System Config</td></tr>
+            <tr><td><strong>A24</strong></td><td>Shifts</td><td><strong>DAY and NIGHT</strong>, reusing the shift hours the app already uses</td><td>Already configured — day starts 07:00, night starts 19:00. No new concept needed</td><td>High</td><td>Already editable in System Config today</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">🎯</span>
+        <div class="bd">
+          <div class="ct">If HR only answers one thing, answer this</div>
+          <p><strong>A7 — which days are not working days.</strong> Sunday only, or Sunday and Saturday?</p>
+          <p>Every single day count in the system depends on this answer. If we get it wrong, every balance on every screen is wrong, and the whole thing loses trust on day one. It is one click in System Config, but it must be right.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="law">
+      <h2><span class="num">05</span> What Nigerian law already requires</h2>
+      <p class="lede">We are not inventing policy. These are the legal floors the system must never drop below. Whatever HR decides, these are the minimums.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Leave</th><th>The legal minimum</th><th>Source</th><th>What we assume</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Annual leave</strong></td>
+              <td>At least <strong>6 working days</strong> with full pay, after 12 months' continuous service. (12 days for staff under 16.) An employer may agree to defer it, but never beyond a 24-month earning period.</td>
+              <td>Labour Act, s.18</td>
+              <td>21 days — well above the legal floor, as the paper form shows</td>
+            </tr>
+            <tr>
+              <td><strong>Maternity leave</strong></td>
+              <td><strong>12 weeks</strong> — six weeks before and six after. Not less than 50% of wages where the employee has served 6 months.</td>
+              <td>Labour Act, ss.54–58</td>
+              <td>12 weeks, fully paid</td>
+            </tr>
+            <tr>
+              <td><strong>Sick leave</strong></td>
+              <td>Up to <strong>12 working days</strong> per calendar year, where certified by a medical practitioner.</td>
+              <td>Labour Act, s.16</td>
+              <td>Not on the current form. Can be added as a sixth type</td>
+            </tr>
+            <tr>
+              <td><strong>Rest day</strong></td>
+              <td>One day of rest in every seven, of at least 24 consecutive hours.</td>
+              <td>Labour Act, s.14</td>
+              <td>Sundays are non-working (A7)</td>
+            </tr>
+            <tr>
+              <td><strong>Payment in lieu</strong></td>
+              <td>Unlawful to pay wages instead of the holiday while the contract continues. Payable only on leaving, pro-rata.</td>
+              <td>Labour Act, s.18(3)–(4)</td>
+              <td>Out of scope (A22)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">⚖️</span>
+        <div class="bd">
+          <div class="ct">Why this matters commercially</div>
+          <p>Starium is above the statutory floor on annual leave already. Keeping an accurate record of entitlement, taken days and approval is how a company stays demonstrably compliant. When a staff member disputes a balance two years later, the answer is a query, not an argument.</p>
+          <p>This is a quiet benefit of the module that never appears on a feature list, and it is a real one.</p>
+        </div>
+      </div>
+
+      <h3>Public holidays we have seeded for 2026</h3>
+      <p>These are the dates the Federal Government declared. They move every year, so HR updates them each January — that is what the System Config screen is for.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Date (2026)</th><th>Day</th><th>Holiday</th></tr></thead>
+          <tbody>
+            <tr><td>1 January</td><td>Thursday</td><td>New Year's Day</td></tr>
+            <tr><td>20 March</td><td>Friday</td><td>Eid-ul-Fitr</td></tr>
+            <tr><td>3 April</td><td>Friday</td><td>Good Friday</td></tr>
+            <tr><td>6 April</td><td>Monday</td><td>Easter Monday</td></tr>
+            <tr><td>1 May</td><td>Friday</td><td>Workers' Day</td></tr>
+            <tr><td>27 May</td><td>Wednesday</td><td>Eid-ul-Adha</td></tr>
+            <tr><td>28 May</td><td>Thursday</td><td>Eid-ul-Adha (second day)</td></tr>
+            <tr><td>12 June</td><td>Friday</td><td>Democracy Day</td></tr>
+            <tr><td>26 August</td><td>Wednesday</td><td>Maulud (Prophet's Birthday)</td></tr>
+            <tr><td>1 October</td><td>Thursday</td><td>Independence Day</td></tr>
+            <tr><td>25 December</td><td>Friday</td><td>Christmas Day</td></tr>
+            <tr><td>26 December</td><td>Saturday</td><td>Boxing Day</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">📅</span>
+        <div class="bd">
+          <div class="ct">One neat detail worth pointing out to HR</div>
+          <p>The sample leave form was filled in on <strong>2 October 2026</strong> and the leave started on <strong>5 October</strong>. Two days after Independence Day. With a seven-working-day notice rule, that request would be <strong>short notice</strong> — and our system will say so on screen before it is submitted.</p>
+          <p>That is the system being useful, not fussy. It shows HR exactly the situation the paper form was designed to catch, without anyone having to work it out.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="bestpractice">
+      <h2><span class="num">06</span> What good leave systems do</h2>
+      <p class="lede">We studied how mature leave products and HR teams actually run these. Nine practices came up repeatedly. Eight of them are already in the blueprint.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>#</th><th>The practice</th><th>The failure it prevents</th><th>Are we doing it?</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>One single digital intake form for every request</td><td>Lost forms and "I told you last week" arguments</td><td>Yes — one form, every type</td></tr>
+            <tr><td>2</td><td>Check the balance <em>before</em> it goes for approval</td><td>Wasting an approver's time on a request that cannot be granted</td><td>Yes — live balance, blocks over-requests</td></tr>
+            <tr><td>3</td><td>Route to the right approver, by reporting line</td><td>Requests sitting in an unattended inbox</td><td>Yes — three named stages</td></tr>
+            <tr><td>4</td><td>Allow a deputy when an approver is away</td><td>The queue freezing because the approver is on leave</td><td>Yes — A18</td></tr>
+            <tr><td>5</td><td>Require a handover note for longer absences</td><td>The coverage gap nobody planned for</td><td>Yes — A20</td></tr>
+            <tr><td>6</td><td>Push approved leave to a shared calendar</td><td>Invisible overlaps and double-staffing</td><td>Yes — dashboard card and reports</td></tr>
+            <tr><td>7</td><td>Notify the employee at every status change</td><td>"Did anyone see my request?" phone calls</td><td>Yes — alerts on every transition</td></tr>
+            <tr><td>8</td><td>Require a reason when rejecting</td><td>Arguments with no record of why</td><td>Yes — A17</td></tr>
+            <tr><td>9</td><td>Automatically approve trivial one-day requests</td><td>Approvers drowning in paperwork</td><td><strong>No — deliberately off (A19)</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-stop">
+        <span class="ic">🚫</span>
+        <div class="bd">
+          <div class="ct">Where we disagree with the standard advice, on purpose</div>
+          <p>Every product in the research suggests auto-approving short leave. <strong>We are not doing it.</strong></p>
+          <p>The reasoning is factory-specific: in a plant, one absent operator can stop a line. The cost of a person missing is not the same as the cost of a meeting being missed in an office. A human should see every single request. If HR disagrees later, it is one setting (A19).</p>
+        </div>
+      </div>
+
+      <h3>Two ideas from the research worth stealing</h3>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>🔢</span> "Overlap" and "conflict" are different</div>
+          <p class="card-body">Mature systems distinguish two things. An <strong>overlap</strong> means a colleague is also away — just information. A <strong>conflict</strong> means the department's coverage limit is reached — that deserves real attention.</p>
+          <p class="card-body">We do the same, with a threshold of two (A15). It stops the app crying wolf on every request while still catching the real risk.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📒</span> Every credit needs a reason</div>
+          <p class="card-body">Best-in-class systems write an entry every time a balance changes, so a number is never "just a number". If someone asks why a balance is 9, there is an answer.</p>
+          <p class="card-body">Our equivalent: the balance is <strong>derived</strong> from the request history rather than stored in a counter. The history is the ledger, so there is nothing that can drift out of step. Explained in <a href="#d2">section 08</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="d1">
+      <h2><span class="num">07</span> Decision 1 — People first, then leave</h2>
+      <p class="lede">Employee Onboarding is not something we are adding "because it seemed useful". It is a hard dependency. Skip it and Leave Management cannot work.</p>
+
+      <h3>The dependency, plainly</h3>
+      <p>The leave form asks for five identity fields: Name, Cadre/Designation, Department, SAP No., Shift. The app currently stores none of them.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🔗</span>
+        <div class="bd">
+          <div class="ct">So there are only two honest options</div>
+          <p><strong>Option A:</strong> HR retypes every employee's details onto every leave form. The app then does nothing useful — it is a prettier clipboard.</p>
+          <p><strong>Option B:</strong> The app holds the employee details once, and every leave form fills itself in.</p>
+          <p>We are building Option B. That single decision is what turns this from a form into a system.</p>
+        </div>
+      </div>
+
+      <h3>What each employee record holds</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Field</th><th>Why we store it</th></tr></thead>
+          <tbody>
+            <tr><td>SAP number</td><td>The staff number the company already uses. Must be unique — it is how HR thinks about people</td></tr>
+            <tr><td>First and last name</td><td>Appears on the leave form and every approval</td></tr>
+            <tr><td>Cadre / Designation</td><td>Job title, straight from the paper form</td></tr>
+            <tr><td>Department</td><td>Drives the approval routing and the coverage warnings</td></tr>
+            <tr><td>Shift</td><td>DAY or NIGHT — used when checking who is away from a given shift</td></tr>
+            <tr><td>Phone, email, address</td><td>Pre-fills the "contact while on leave" boxes</td></tr>
+            <tr><td>Date joined</td><td>Needed to work out pro-rated leave for new joiners (A10)</td></tr>
+            <tr><td>Employment status</td><td>Active, inactive or suspended. Inactive people keep their history — we never destroy it</td></tr>
+            <tr><td>Linked login <em>(optional)</em></td><td>Set only if this person has an app login. Left empty for staff who never log in</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Why the login is optional, and what "linked" means</h3>
+      <p>When someone logs in, the app matches their email against the employee list and links the two. If no match exists, they simply have no employee record — and they see a clear message asking them to contact HR. Not an error, not a crash, not a blank balance of zero.</p>
+
+      <div class="callout co-warn">
+        <span class="ic">🔐</span>
+        <div class="bd">
+          <div class="ct">One thing we must not break while doing this</div>
+          <p>The app has a heartbeat that records who is online, and a comment in the code explaining that the "goodbye" signal must be sent <strong>before</strong> the logout clears the session — reversing those two lines causes a permissions error and leaves a ghost user online.</p>
+          <p>We are adding a whole new identity lookup into the same file. <strong>That comment is load-bearing and stays exactly where it is.</strong> It is written in the build task precisely so a future developer does not tidy it away.</p>
+        </div>
+      </div>
+
+      <h3>A small but real find</h3>
+      <div class="callout co-good">
+        <span class="ic">🔎</span>
+        <div class="bd">
+          <div class="ct">There is already a broken link in the app</div>
+          <p>The sidebar menu already offers <strong>"Employee Roster"</strong> and <strong>"Payroll"</strong> under Human Resources. Neither has a page behind it. An HR user can click them today and get nothing.</p>
+          <p>We are building Employee Roster properly. We are <strong>removing the Payroll link</strong> rather than shipping a menu that lies — a menu that promises a page and delivers nothing is worse than an incomplete one.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="d2">
+      <h2><span class="num">08</span> Decision 2 — The computer does the arithmetic</h2>
+      <p class="lede">This is where the biggest quality gain is. Four boxes on the paper form stop being questions and become answers.</p>
+
+      <h3>The four boxes that change</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>On paper</th><th>On screen</th><th>What changes</th></tr></thead>
+          <tbody>
+            <tr><td>Annual Leave Days entitled — staff write it</td><td>Read-only, from the employee record</td><td>Never mistyped</td></tr>
+            <tr><td>No. of days already taken — staff adds it up</td><td>Read-only, summed from approved requests</td><td>Always current, including leave approved while this one is pending</td></tr>
+            <tr><td>Total Days this vacation — staff counts the boxes</td><td>Read-only, updates live as dates change</td><td>Sundays and public holidays handled correctly</td></tr>
+            <tr><td>Outstanding after this vacation — staff subtracts</td><td>Read-only, updates live</td><td>The 21 − 8 − 4 ≠ 11 class of error disappears entirely</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The rule the system follows</h3>
+      <div class="callout co-good">
+        <span class="ic">🧮</span>
+        <div class="bd">
+          <div class="ct">Plain English</div>
+          <p>Count only the days someone would actually be at work. Skip Sundays. Skip public holidays. If leave starts on a Wednesday and ends the following Monday, that is 4 days — not 6.</p>
+          <p>Then work out what is left: <strong>entitlement + carry-over − already taken − this request.</strong> If the answer is below zero, say so and stop.</p>
+        </div>
+      </div>
+
+      <h3>Why the numbers are copied onto the request, not looked up later</h3>
+      <p>Suppose HR changes an employee's entitlement from 21 days to 24 next quarter. There is a leave request from February sitting in a folder, already approved, already printed and filed.</p>
+      <p>If the app looked the balance up live, that old request would suddenly display different numbers. <strong>The printed form in the cabinet and the app on the screen would disagree.</strong> That is how you lose trust in a system permanently.</p>
+
+      <div class="callout co-stop">
+        <span class="ic">📸</span>
+        <div class="bd">
+          <div class="ct">The rule</div>
+          <p>When a request is created, the numbers are <strong>photographed onto it</strong> — entitled, already taken, requested, outstanding. They are frozen for that request forever.</p>
+          <p>Approved records never change their arithmetic. Ever.</p>
+        </div>
+      </div>
+
+      <h3>And why we do not store a balance that gets adjusted</h3>
+      <p>The lazy way to build this is a running total: every time leave is approved, subtract from a number stored on the employee record. It looks efficient. It is a trap.</p>
+      <p>That number will eventually disagree with the list of leave requests. Then somebody has to write a repair script, and nobody can say which figure is right. It always happens — usually at year end, when payroll needs the figure and nobody can produce it.</p>
+
+      <div class="callout co-good">
+        <span class="ic">📚</span>
+        <div class="bd">
+          <div class="ct">What we do instead</div>
+          <p>We <strong>add up the approved requests every time we need a balance.</strong></p>
+          <p>The request history <em>is</em> the ledger. There is nothing to reconcile, so there is nothing that can go wrong. The number is always explainable, because you can click through and see exactly which requests made it up.</p>
+        </div>
+      </div>
+
+      <h3>Three traps we are guarding against from day one</h3>
+      <div class="grid3">
+        <div class="card">
+          <div class="card-t"><span>🌍</span> The timezone trap</div>
+          <p class="card-body">JavaScript reads <span class="mono">'2026-10-05'</span> as midnight in London. In Lagos that is already the 5th at 1am — but the same string read the other way round becomes the <strong>4th</strong>. Every single day count would be off by one and nobody would notice for weeks.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🗓️</span> Leave year ≠ calendar year</div>
+          <p class="card-body">If Starium's leave year ever starts in July, a request dated March 2026 belongs to leave year <strong>2025</strong>, not 2026. Getting this wrong resets everyone's balance in the wrong month.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>➖</span> Backwards dates</div>
+          <p class="card-body">If someone picks an end date before the start date, a naive subtraction returns <strong>−4 days</strong>. The result is stored, and every future balance for that person is corrupted.</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">All three get an automated test</div>
+          <p>The app already has a pattern for testing date logic in isolation, with no database and no network. We follow it exactly, and all three of these traps become tests that fail loudly if anyone breaks them later.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="d3">
+      <h2><span class="num">09</span> Decision 3 — Three signatures, in order</h2>
+      <p class="lede">The paper form's Section 3 has three signature blocks side by side. Copying that arrangement into an app would be a mistake. Here is why.</p>
+
+      <h3>The app already has an approval system. It is the wrong shape.</h3>
+      <p>The factory app already signs off shift reports. Two people approve them, and either can sign in any order. That is correct there — a shift report is a <strong>snapshot of a team</strong>. Everyone signs the same thing, and nobody's signature depends on anyone else's.</p>
+      <p>Leave is different. The Head of HR signing <em>means</em> the supervisor signed first, and the HOD confirmed the handover was settled. It is a <strong>chain of authority</strong>, not a group signature.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>❌</span> How the shift report works</div>
+          <p class="card-body">Supervisor signs <em>or</em> QC Manager signs. Whoever gets there first. Both end up signed.</p>
+          <p class="card-body">Correct for a shared snapshot. <strong>Wrong for leave.</strong></p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> How leave must work</div>
+          <p class="card-body">Supervisor signs → HOD is now allowed to act → HOD signs → Head of HR is now allowed to act → Head of HR signs → leave is unlocked.</p>
+          <p class="card-body">Each stage is locked until the one before it is done. <strong>Always.</strong></p>
+        </div>
+      </div>
+
+      <h3>How it looks to the employee</h3>
+      <p>Not a technical table — a progress strip. The employee can always see exactly where their request is sitting, and who holds it now.</p>
+
+      <div class="flow">
+        <div class="fnode hi"><span class="fi">📱</span><div><span class="ft">Submitted</span><div class="fs">The employee sees: "Waiting for your supervisor."</div></div></div>
+        <div class="farrow">↓ supervisor approves</div>
+        <div class="fnode"><span class="fi">🧑‍💼</span><div><span class="ft">HOD / Subsidiary</span><div class="fs">Now unlocked. Nobody else can move it.</div></div></div>
+        <div class="farrow">↓ HOD approves</div>
+        <div class="fnode"><span class="fi">👑</span><div><span class="ft">Head of HR</span><div class="fs">The final gate. This is the signature the form says unlocks the leave.</div></div></div>
+        <div class="farrow">↓ HR approves</div>
+        <div class="fnode hi"><span class="fi">🎉</span><div><span class="ft">Approved — the leave is now real</span><div class="fs">Appears on the dashboard and the printable form.</div></div></div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">👀</span>
+        <div class="bd">
+          <div class="ct">The test that matters most</div>
+          <p>Find the one way this can go wrong: a supervisor who is <em>also</em> the HOD. If that person can approve both stages in one sitting, the chain is broken.</p>
+          <p>There is an explicit test in the build plan for exactly this case. It is the single most likely thing to get wrong in the whole module.</p>
+        </div>
+      </div>
+
+      <h3>The permissions behind the buttons</h3>
+      <p>Three new approval powers are added to the app's existing role system, so a manager sees only the buttons that belong to them:</p>
+      <ul>
+        <li><strong>Leave Supervisor</strong> — can sign at stage one only</li>
+        <li><strong>HOD / Subsidiary</strong> — can sign at stage two only</li>
+        <li><strong>Head of HR</strong> — can sign at stage three, the final gate</li>
+      </ul>
+      <p>These are assigned in the existing <strong>User Roles</strong> screen. No new screen is needed, and no one accidentally gets a power they should not have.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🧾</span>
+        <div class="bd">
+          <div class="ct">Every decision is recorded, permanently</div>
+          <p>Each stage stores who signed, what their role was, when, and any note they left. Nothing is ever overwritten.</p>
+          <p>This is the audit trail for a decision that affects someone's <strong>pay</strong>. If it is ever questioned, there is a complete record rather than a conversation about what was agreed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="d4">
+      <h2><span class="num">10</span> Decision 4 — Works offline, with one deliberate exception</h2>
+      <p class="lede">The whole app is built offline-first, because factory Wi-Fi fails. We follow that rule everywhere except one place, and we want to explain exactly why.</p>
+
+      <h3>The rule the app already follows</h3>
+      <div class="callout co-info">
+        <span class="ic">📡</span>
+        <div class="bd">
+          <div class="ct">Offline-first, everywhere</div>
+          <p>Every existing module — carton waste, laminate, pallet transfer, QC checks — tries to save to the database. If there is no signal, it saves to a waiting list on the device and sends it automatically the moment the connection returns. Staff on the factory floor keep working.</p>
+          <p>Leave submissions will behave exactly the same way. A staff member with no signal can still lodge a request.</p>
+        </div>
+      </div>
+
+      <h3>The one place we break the rule</h3>
+      <div class="callout co-stop">
+        <span class="ic">🛑</span>
+        <div class="bd">
+          <div class="ct">Approvals will NOT work offline</div>
+          <p>A request may be written offline. <strong>An approval may not.</strong></p>
+          <p>Consider what "approve" means. It authorises someone's paid leave. If that decision sits in one browser's memory until Wi-Fi returns, then for a while the official record of who approved paid leave does not exist. On a document with legal weight, that is not acceptable.</p>
+        </div>
+      </div>
+
+      <p>So when an approver opens the app with no signal, the buttons are disabled and the screen says so plainly: <em>"Approval needs a connection. Nothing has been saved — reconnect and try again."</em></p>
+
+      <div class="callout co-info">
+        <span class="ic">💡</span>
+        <div class="bd">
+          <div class="ct">Why we are writing this down</div>
+          <p>Every other module in this app queues offline. A future developer will see approval buttons sitting next to offline-capable code and assume it is a bug. <strong>We write it into the code comments and into this document</strong> so nobody "fixes" it by adding offline queuing to approvals.</p>
+          <p>Exceptions are dangerous in code unless they are written down where the next person will actually find them.</p>
+        </div>
+      </div>
+
+      <h3>One more thing that must not break</h3>
+      <p>The app registers each module in a single list, and that list drives both the "waiting to send" counter and the automatic retry. Adding leave means adding <strong>one entry</strong> to that list — not editing the sync engine in five places.</p>
+      <p>There is also a stability warning written into the app about those counters: if the functions that report them change identity on every render, the page enters an endless update loop and crashes. Our addition must not disturb that. It is called out again in the build plan and the regression task.</p>
+    </section>
+
+    <!-- 11 -->
+    <section id="data">
+      <h2><span class="num">11</span> What we store</h2>
+      <p class="lede">Two new sets of records. Nothing else. We are not adding a payroll database, a recruitment system or a performance module.</p>
+
+      <h3>Employee records</h3>
+      <div class="codewrap">
+        <span class="fname">employee record — one per person</span>
+        <button class="copy" type="button">Copy</button>
+<pre><span class="c">// Identity and job details</span>
+employeeId        <span class="s">'EMP-001'</span>       <span class="c">// stable key, not a login ID</span>
+sapNumber        <span class="s">'ST-0421'</span>       <span class="c">// unique — the company's own staff number</span>
+firstName        <span class="s">'Robert'</span>
+lastName         <span class="s">'Eneh'</span>
+fullName         <span class="s">'Robert Eneh'</span>
+cadreDesignation <span class="s">'Maintenance Officer'</span>
+department       <span class="s">'production'</span>
+departmentLabel  <span class="s">'Production'</span>
+shift            <span class="s">'DAY'</span>           <span class="c">// or NIGHT</span>
+
+<span class="c">// Contact details — used to pre-fill the leave form</span>
+phone            <span class="s">'0803…'</span>
+email            <span class="s">'robert@example.com'</span>
+address          <span class="s">'…'</span>
+
+<span class="c">// Employment</span>
+dateJoined       <span class="n">Timestamp</span>      <span class="c">// drives pro-rated leave (A10)</span>
+employmentStatus <span class="s">'active'</span>      <span class="c">// active | inactive | suspended</span>
+
+<span class="c">// Optional link to a login. Empty for staff who never log in.</span>
+linkedUserUid    <span class="k">null</span>
+linkedUserEmail  <span class="k">null</span></pre>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🔒</span>
+        <div class="bd">
+          <div class="ct">The most important line</div>
+          <p><code>employeeId</code> is a key we generate. It is <strong>not</strong> the person's login ID.</p>
+          <p>If it were the login ID, a person with no login could not have a record at all. They would be invisible to the system, and their leave could never be tracked.</p>
+        </div>
+      </div>
+
+      <h3>Leave requests</h3>
+      <p>Field names deliberately match the labels on the paper form, so anyone comparing the two can line them up.</p>
+
+      <div class="codewrap">
+        <span class="fname">leave request — one per request</span>
+        <button class="copy" type="button">Copy</button>
+<pre><span class="c">// Who, and what they asked for</span>
+requestId       employeeId      employeeName    sapNumber
+department      cadreDesignation               shift
+leaveType       <span class="s">'annual'</span>            <span class="c">// the ticked box</span>
+leaveTypeLabel  <span class="s">'Annual Leave'</span>
+purpose         <span class="s">''</span>                 <span class="c">// casual leave only</span>
+leaveYear       <span class="n">2026</span>
+
+<span class="c">// Section 1 dates</span>
+leaveCommences   <span class="n">Date</span>
+leaveEnds        <span class="n">Date</span>
+resumptionDate   <span class="n">Date</span>              <span class="c">// calculated, not typed</span>
+publicHolidaysInRange <span class="k">[…]</span>         <span class="c">// listed, not hand-written</span>
+
+<span class="c">// The frozen numbers (Decision 2). Never recomputed later.</span>
+entitledAtRequest        <span class="n">21</span>
+carryOverAtRequest       <span class="n">0</span>
+takenBeforeThisRequest   <span class="n">8</span>
+requestedDays            <span class="n">4</span>
+outstandingAfter         <span class="n">13</span>
+
+<span class="c">// Section 2 — the promise</span>
+handoverNote  handoverTo
+
+<span class="c">// Contact while away — pre-filled, editable</span>
+contactAddress  contactPhone  contactEmail
+
+<span class="c">// Section 3 — the chain. Each stage records who, when, why.</span>
+status   <span class="s">'pending_supervisor'</span>
+         <span class="c">// → pending_hod → pending_hr → approved</span>
+         <span class="c">// → rejected | cancelled</span>
+workflow: {
+  supervisor: { status, byName, byUid, byRole, at, note },
+  hod:        { status, byName, byUid, byRole, at, note },
+  hr:         { status, byName, byUid, byRole, at, note }
+}
+
+<span class="c">// Audit</span>
+requestedAt  requestedBy  rejectedReason  cancelledAt
+createdAt    updatedAt
+
+<span class="c">// Section B — completed on the day they come back</span>
+resumedOn        <span class="k">null</span>
+resumptionNote   <span class="k">null</span>
+closedAt         <span class="k">null</span></pre>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">📦</span>
+        <div class="bd">
+          <div class="ct">And the settings — where all 24 assumptions live</div>
+          <p>Leave types, entitlements, notice rules, non-working days, public holidays, carry-over, the coverage threshold, whether a handover note is required, and the approval stages.</p>
+          <p>All of it editable from the app's own <strong>System Config</strong> screen by an administrator. <strong>No developer needed to change any policy decision in this document.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="screens">
+      <h2><span class="num">12</span> The screens we build</h2>
+      <p class="lede">Five screens and one dashboard card. Each one is designed to look and behave exactly like the app that is already live.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Screen</th><th>Who uses it</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Employee Roster</strong></td>
+              <td>HR</td>
+              <td>Register and edit every employee. Search by name, SAP number or department. See at a glance who is away today.</td>
+            </tr>
+            <tr>
+              <td><strong>My Leave</strong></td>
+              <td>Every employee</td>
+              <td>The staff member's own balance and requests. Submit a new request. Cancel one that has not yet reached the Head of HR.</td>
+            </tr>
+            <tr>
+              <td><strong>Leave Request form</strong></td>
+              <td>Every employee</td>
+              <td>Section 1 and Section 2 of the paper form, digital. Details filled in automatically, days counted live.</td>
+            </tr>
+            <tr>
+              <td><strong>Leave Approvals</strong></td>
+              <td>Supervisor, HOD, Head of HR</td>
+              <td>One queue showing only what this person can act on right now. Approve, or reject with a reason.</td>
+            </tr>
+            <tr>
+              <td><strong>Leave Report</strong></td>
+              <td>HR, management</td>
+              <td>Balances per person for the year. Full history with approval trails. Charts. Export to a spreadsheet.</td>
+            </tr>
+            <tr>
+              <td><strong>Printable form</strong></td>
+              <td>HR</td>
+              <td>The official Leave Request Form, black on white, with all three signature blocks filled in. Ready for the file.</td>
+            </tr>
+            <tr>
+              <td><strong>Dashboard card</strong></td>
+              <td>HR, management</td>
+              <td>"Who is on leave today" — added to the Command Center beside the existing live cards.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The printable form is not optional</h3>
+      <div class="callout co-stop">
+        <span class="ic">🖨️</span>
+        <div class="bd">
+          <div class="ct">This is the screen that decides whether HR says yes</div>
+          <p>HR keeps the physical file. If our system cannot produce that exact artefact, we have not saved anyone anything — we have moved the problem back to a clipboard.</p>
+          <p>So the printable form reproduces Section 1, Section 2 and Section 3 exactly as they appear on the paper, populated with real names and real dates on the signature lines, with a space left for a wet signature.</p>
+          <p>It must be <strong>black ink on white paper</strong>. The app runs dark by design, which is excellent on a screen and completely unreadable in black and white. Getting this wrong is the easiest way to fail the demo.</p>
+        </div>
+      </div>
+
+      <h3>The screen managers will actually open</h3>
+      <p>HR's real question is not "show me the leave records". It is <strong>"who is not on the floor right now?"</strong></p>
+      <p>So the Command Center gets a card showing how many people are away today, who they are, which department, and when they are back. That is the single highest-value screen in the module, and it is a small piece of work.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🔒</span>
+        <div class="bd">
+          <div class="ct">Who sees what</div>
+          <p>The dashboard card shows <strong>names and dates only</strong> — not reasons. A compassionate leave reason is deeply personal and can involve family bereavement or illness. It stays with the employee and the approvers who need it.</p>
+          <p>Approving someone is different from being entitled to know why they are ill. The system draws that line deliberately.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="order">
+      <h2><span class="num">13</span> The build order</h2>
+      <p class="lede">Eight phases, twenty-two tasks, tracked in Todoist so each one can be tested before the next starts. The order is not arbitrary — each phase is impossible to do properly without the one before it.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Phase</th><th>What it delivers</th><th>Tasks</th></tr></thead>
+          <tbody>
+            <tr><td><strong>0</strong> · Assumptions</td><td>This document — every open decision recorded with a default, so nothing blocks the build</td><td>done</td></tr>
+            <tr><td><strong>1</strong> · Employee records</td><td>The employee database, its service layer, the Roster screen, and the login link</td><td>4</td></tr>
+            <tr><td><strong>2</strong> · Configuration</td><td>Leave policy as editable settings, plus the three new approval roles</td><td>2</td></tr>
+            <tr><td><strong>3</strong> · Balance engine</td><td>All the date and arithmetic logic, written as pure functions with automated tests</td><td>2</td></tr>
+            <tr><td><strong>4</strong> · The request form</td><td>Sections 1 and 2 of the paper form, plus the employee's own leave screen</td><td>4</td></tr>
+            <tr><td><strong>5</strong> · Approvals</td><td>The three-stage chain, the approver's queue, and offline handling for submissions</td><td>3</td></tr>
+            <tr><td><strong>6</strong> · Output</td><td>The printable form, the dashboard card, and the reports</td><td>3</td></tr>
+            <tr><td><strong>7</strong> · Hardening</td><td>Permissions, tests, regression checks, demo and documentation</td><td>4</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Why this order</h3>
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>People before paperwork</h4>
+          <p>Nothing in Leave Management can be built before the app knows who the employees are. Phase 1 has no alternative position.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>Settings before anything reads them</h4>
+          <p>Putting the policy in configuration means the engine is built against values HR can change, rather than values baked into the code.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="step-b">
+          <h4>The maths before the form</h4>
+          <p>Day counting is the part that must be provably correct. Build and test it with no user interface in the way, then build the form on top of something already proven.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="step-b">
+          <h4>Request, then approve</h4>
+          <p>There is nothing to approve until something can be requested. And once approvals exist, they need the offline handling decided deliberately rather than discovered.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">5</div>
+        <div class="step-b">
+          <h4>Output, then proof</h4>
+          <p>The printable form is part of the feature, not a bonus. Then permissions, tests and regression checks before anyone outside sees it.</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🔁</span>
+        <div class="bd">
+          <div class="ct">Every phase is testable on its own</div>
+          <p>Each task is moved to <strong>IN PROGRESS</strong>, built, and checked before the next one starts. Nothing is built in a batch and tested at the end. That is how the app has been built so far, and it is why it has no broken modules.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="risks">
+      <h2><span class="num">14</span> What could go wrong</h2>
+      <p class="lede">Five things that would genuinely damage this work, and what we are doing about each. Stating them up front is more useful than discovering them later.</p>
+
+      <h3>Risk 1 — A new collection is added without a matching rule</h3>
+      <div class="callout co-stop">
+        <span class="ic">🔴</span>
+        <div class="bd">
+          <div class="ct">This has already happened once in this app</div>
+          <p>Several record types were added without a matching permission rule. Writes were refused, the app quietly saved them to a waiting list instead, and <strong>everything looked like it was working while nothing reached the database.</strong></p>
+          <p><strong>What we do:</strong> an automated test checks that every record type has a matching rule, and the new types are added to that test <strong>the same day they are created</strong> — not at the end of the project.</p>
+        </div>
+      </div>
+
+      <h3>Risk 2 — Someone's leave is visible to the wrong people</h3>
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">A hidden menu item is not a locked door</div>
+          <p>The app hides menu entries a user should not see. But anyone can type a page address directly. <strong>Every new screen needs its own check inside the page</strong>, not just a hidden menu item.</p>
+          <p><strong>What we do:</strong> a phase-7 task tests the whole permission matrix role by role, including the case where a supervisor tries to approve out of turn.</p>
+        </div>
+      </div>
+
+      <h3>Risk 3 — Breaking what already works</h3>
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">This is the risk I take most seriously</div>
+          <p>Leave touches shared settings: the menu, the routes, the configuration, the offline registry and the permission rules. Those five files are load-bearing for the 21 modules already running. A careless edit to any of them can break live production data capture.</p>
+          <p><strong>What we do:</strong> a dedicated regression task runs the full test, lint and build suite and then exercises the existing modules by hand — pallet transfer especially, because it exercises the offline counters we are touching.</p>
+        </div>
+      </div>
+
+      <h3>Risk 4 — A day count is off by one</h3>
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">The failure that damages trust fastest</div>
+          <p>An off-by-one error does not crash anything. It just quietly gives everyone the wrong balance, and nobody notices until year end.</p>
+          <p><strong>What we do:</strong> all the date logic is written as plain functions with no database attached, then tested against real scenarios — a full week, a request across a Sunday, a request across a public holiday, and the year turning over. The timezone trap gets its own test.</p>
+        </div>
+      </div>
+
+      <h3>Risk 5 — HR approves the demo and then changes the policy</h3>
+      <div class="callout co-good">
+        <span class="ic">🟢</span>
+        <div class="bd">
+          <div class="ct">This one is designed out</div>
+          <p>This is the whole reason for section 04. Because every policy decision lives in configuration rather than in code, a change of mind from HR is a settings edit — not a rebuild, not a delay, not a billable change.</p>
+          <p><strong>See <a href="#change">section 15</a> for exactly how long each change takes.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section id="change">
+      <h2><span class="num">15</span> Changing an assumption</h2>
+      <p class="lede">The promise this document makes: <strong>when HR answers, changing anything takes minutes, and a developer is not required.</strong> Here is the proof.</p>
+
+      <h3>How long each change takes</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>If HR says…</th><th>Where it changes</th><th>Time</th></tr></thead>
+          <tbody>
+            <tr><td>"Saturday is a working day" / "Saturdays are off too"</td><td>System Config → Leave Policy → Non-working days</td><td>10 seconds</td></tr>
+            <tr><td>"Annual leave is 24 days, not 21"</td><td>System Config → Leave Policy → Entitlement</td><td>15 seconds</td></tr>
+            <tr><td>"No casual leave allowance"</td><td>System Config → Leave Types → toggle balance tracking</td><td>20 seconds</td></tr>
+            <tr><td>"Staff carry up to 10 days, not 5"</td><td>System Config → Carry-over cap</td><td>10 seconds</td></tr>
+            <tr><td>"Leave year runs July to June"</td><td>System Config → Leave year start month</td><td>15 seconds</td></tr>
+            <tr><td>"Add sick leave as a sixth type"</td><td>System Config → Leave Types → Add</td><td>2 minutes</td></tr>
+            <tr><td>"Hand-over note required after 5 days, not 3"</td><td>System Config → Handover threshold</td><td>15 seconds</td></tr>
+            <tr><td>"Update next year's public holidays"</td><td>System Config → Public holidays → add rows</td><td>5 minutes</td></tr>
+            <tr><td>"Overlap should be blocked, not warned"</td><td>System Config → Conflict handling</td><td>20 seconds</td></tr>
+            <tr><td>"Short leave should auto-approve"</td><td>System Config → Auto-approve</td><td>20 seconds</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The one change that is bigger than it looks</h3>
+      <div class="callout co-warn">
+        <span class="ic">⚖️</span>
+        <div class="bd">
+          <div class="ct">If entitlement varies by grade</div>
+          <p>Assumption A3 is a flat 21 days for everyone. If HR says it depends on seniority, we add a per-grade table: grade, then days.</p>
+          <p>The engine already reads entitlement from a single place, so this is a small addition rather than a rewrite — but it is the one assumption most likely to turn out this way, so it is worth raising early rather than discovering in March.</p>
+        </div>
+      </div>
+
+      <h3>What happens to requests already approved</h3>
+      <p>Nothing. This is decision 2 from <a href="#d2">section 08</a>, and it matters for a practical reason.</p>
+      <p>Approved requests keep the exact numbers they were approved with. If HR changes the entitlement tomorrow, historical requests do not rewrite themselves, and the printed forms in the cabinet still match what the app shows.</p>
+
+      <div class="callout co-good">
+        <span class="ic">📁</span>
+        <div class="bd">
+          <div class="ct">What that means in a handover</div>
+          <p>Changing a policy is safe to do at any time. Existing balances <strong>will</strong> update, because balances are recalculated from live request data. Existing <em>approved requests</em> will not, and are not supposed to.</p>
+          <p>That is the correct behaviour, and it is worth saying out loud to HR so it does not look like a bug.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 -->
+    <section id="demo">
+      <h2><span class="num">16</span> How to demo it</h2>
+      <p class="lede">Five minutes, on a phone if possible, because that is how staff will actually use it.</p>
+
+      <h3>Sample data to seed first</h3>
+      <p>Twelve or so fictional employees across the departments, realistic SAP numbers, and leave requests in every possible state — waiting at each approval stage, approved, rejected and cancelled. Use obviously invented names.</p>
+
+      <div class="callout co-good">
+        <span class="ic">🌟</span>
+        <div class="bd">
+          <div class="ct">Include one request that spans a public holiday</div>
+          <p>That single case is the most convincing thing in the whole demo. Choose a request that crosses a declared holiday and show that the app correctly refuses to count the holiday as a leave day — while the paper form would have needed a human to notice.</p>
+          <p>It demonstrates the day-counting engine doing real work in about two seconds.</p>
+        </div>
+      </div>
+
+      <h3>The running order</h3>
+      <ol>
+        <li><strong>Open the roster.</strong> Every employee, with details filled in once. "This is the part HR retypes onto every single leave form."</li>
+        <li><strong>Log in as a staff member.</strong> Open My Leave. The balance is already there — name, title, department, SAP number. Nothing to type.</li>
+        <li><strong>Pick dates.</strong> Watch the day count and the remaining balance update <em>as you drag</em>. Try a range across a Sunday and a holiday.</li>
+        <li><strong>Submit.</strong> Name who is covering the work. Hand it over.</li>
+        <li><strong>Log in as the supervisor.</strong> Approve. Log in as the HOD — the button was greyed out until a second ago, now it works. Approve. Then Head of HR.</li>
+        <li><strong>Print the form.</strong> This is the moment. Watch their face.</li>
+        <li><strong>Open the Command Center.</strong> "Who is on leave today", live.</li>
+        <li><strong>Export the report.</strong> Year-end balances in a spreadsheet.</li>
+      </ol>
+
+      <div class="callout co-info">
+        <span class="ic">🎬</span>
+        <div class="bd">
+          <div class="ct">Record it</div>
+          <p>Screen-record steps 3 to 6. It lets HR show management without you in the room, and it is a genuine demo asset for the live system.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">📌</span>
+        <div class="bd">
+          <div class="ct">What to say when asked about the assumptions</div>
+          <p>"I built it with sensible defaults based on your paper form, the Labour Act and standard practice. Every one of them is a setting — none of it is hardcoded. Here is the list, and here is where to change each one."</p>
+          <p>Then hand over this document. <strong>A working system plus an honest list of its defaults is a far stronger position than a system built on answers you had to go and ask for.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 -->
+    <section id="glossary">
+      <h2><span class="num">17</span> Words explained</h2>
+      <p class="lede">No jargon left undefined. If a word appears in this document, it is explained here.</p>
+
+      <div class="gloss">
+        <div class="gitem"><div class="gterm">Pro-rated</div><div class="gdef">Giving someone a share of the full allowance, based on how long they have worked. Someone who joined halfway through the year gets roughly half the annual entitlement.</div></div>
+        <div class="gitem"><div class="gterm">Entitlement</div><div class="gdef">How many days someone is <em>owed</em> for the year. A policy number, not something anyone decides per request.</div></div>
+        <div class="gitem"><div class="gterm">Working day</div><div class="gdef">A day the person would actually be at work. Sundays and public holidays do not count. A leave request is measured in working days, not calendar days.</div></div>
+        <div class="gitem"><div class="gterm">Carry-over</div><div class="gdef">Leave left unused at the end of a year, kept for next year. Usually capped — at Starium's assumed 5 days — so a large unused balance cannot build up and block future requests.</div></div>
+        <div class="gitem"><div class="gterm">Leave year</div><div class="gdef">The 12-month period the allowance is measured against. Assumed to be the calendar year, but changeable.</div></div>
+        <div class="gitem"><div class="gterm">Balance</div><div class="gdef">Entitlement plus carry-over, minus everything already taken. The number an employee is allowed to request against.</div></div>
+        <div class="gitem"><div class="gterm">Overlap</div><div class="gdef">A colleague is also away at the same time. Informational only — often perfectly fine.</div></div>
+        <div class="gitem"><div class="gterm">Conflict</div><div class="gdef">Enough people from one department are away that coverage is genuinely at risk. Warned about, and worth a conversation.</div></div>
+        <div class="gitem"><div class="gterm">Handover note</div><div class="gdef">A short record of what work someone is passing to a colleague before they leave. Without it, a line can stop during an absence and nobody knows why.</div></div>
+        <div class="gitem"><div class="gterm">HOD</div><div class="gdef">Head of Department. The second signature on the leave form.</div></div>
+        <div class="gitem"><div class="gterm">SAP number</div><div class="gdef">The staff identification number the company already uses. It identifies a person across payroll, leave and any other system.</div></div>
+        <div class="gitem"><div class="gterm">Offline queue</div><div class="gdef">A waiting list saved on the device. If the network is down, records are held there and sent automatically when the connection returns.</div></div>
+        <div class="gitem"><div class="gterm">Audit trail</div><div class="gdef">The permanent record of who decided what, and when. It cannot be edited by the person it concerns.</div></div>
+        <div class="gitem"><div class="gterm">Resumption date</div><div class="gdef">The day someone comes back to work — the next working day after their leave ends, calculated automatically.</div></div>
+        <div class="gitem"><div class="gterm">Snapshot</div><div class="gdef">Copying a value onto a record so it is frozen there. We snapshot leave balances so an approved request's numbers never change afterwards.</div></div>
+        <div class="gitem"><div class="gterm">Sequence</div><div class="gdef">One step after another. Leave approvals are sequential: each signature unlocks the next.</div></div>
+      </div>
+
+      <h3>Ready to build</h3>
+      <div class="callout co-good">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">Where this stands</div>
+          <p>Twenty-two tasks across eight phases, tracked in Todoist so each one can be moved to <strong>IN PROGRESS</strong>, built, and checked before the next begins.</p>
+          <p>Every open question is answered with a sensible default and written down in <a href="#assumptions">section 04</a>. When HR tells us differently, it is a settings change — and this document says exactly where, and how long it takes.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="fgrid">
+        <div class="fnote">
+          <strong>Leave Management &amp; Employee Onboarding Blueprint</strong><br />
+          Starium Rafa Enterprise ERP · prepared for the Chief Software Architect conversation<br />
+          Every policy decision is configuration, not code.
+        </div>
+        <div class="fnote">
+          Engr. Damilare Paul Ayodele<br />
+          ayodele.damilare@gmail.com · 08028975816<br />
+          <span class="mono">starium-app.dammieoptimus.workers.dev</span>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT BEHAVIOUR
+   Theme toggle, reading progress, scroll-spy contents,
+   copy-to-clipboard, toast, print.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------- Theme ---------- */
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  var stored = null;
+  try { stored = localStorage.getItem('dos-guide-theme'); } catch (e) {}
+  apply(stored || 'dark');
+
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    if (icon) icon.textContent = t === 'dark' ? '◐' : '◑';
+    if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try { localStorage.setItem('dos-guide-theme', next); } catch (e) {}
+    });
+  }
+
+  /* ---------- Print / save as PDF ---------- */
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
+  /* ---------- Reading progress ---------- */
+  var bar = document.getElementById('progress');
+  function onScroll() {
+    if (!bar) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Scroll-spy for the contents list ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var sections = Object.keys(map)
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-88px 0px -70% 0px', threshold: 0 });
+    sections.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- Copy to clipboard ---------- */
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1900);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (b) {
+    b.addEventListener('click', function () {
+      var pre = b.parentNode.querySelector('pre');
+      if (!pre) return;
+      var text = pre.innerText;
+      var done = function () {
+        b.textContent = 'Copied';
+        b.classList.add('done');
+        showToast('Copied to clipboard');
+        setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () { fallback(text, done); });
+      } else {
+        fallback(text, done);
+      }
+    });
+  });
+  function fallback(text, cb) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { showToast('Press Ctrl+C to copy'); }
+    document.body.removeChild(ta);
+  }
+})();
+</script>
+</body>
+</html>
