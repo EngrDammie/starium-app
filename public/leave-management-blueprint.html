@@ -865,6 +865,52 @@ footer { border-top: 1.5px solid var(--border); margin-top: 56px; padding-top: 3
         </div>
       </div>
 
+      <h3>"But how does someone request leave if they have no login?"</h3>
+      <p>This is the fairest objection to the whole design, so it deserves a proper answer. There are <strong>two routes</strong>, and both are built.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>📱</span> Route 1 — They get a login</div>
+          <p class="card-body">A <strong>login</strong> and <strong>permission to see factory data</strong> are two different things. A cleaner does not need to see quality records, production data or reports. They need exactly one thing: their own leave screen.</p>
+          <p class="card-body">So the Employee Roster screen gets a <strong>"Create login"</strong> button. One click, and that person has an account that can see <em>only</em> My Leave — a single page, no factory module of any kind.</p>
+          <p class="card-body">Giving the whole plant a login is therefore no longer a project. It is a list HR works down.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🧑‍💼</span> Route 2 — HR lodges it for them</div>
+          <p class="card-body">An operator tells HR they are away next week. HR types it into the app on their behalf, in about fifteen seconds. The form arrives at the supervisor exactly as if it came from the employee.</p>
+          <p class="card-body">Mature leave products treat this as a normal admin capability, not an emergency workaround.</p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🔑</span>
+        <div class="bd">
+          <div class="ct">Why Route 2 works beautifully — the payoff for one early decision</div>
+          <p>Every leave request is filed against the <strong>employee record's own ID</strong>, never against a login ID. Identity lives on the person; the login is only a convenience.</p>
+          <p>So when HR lodges a request for Robert Eneh, it is still <strong>Robert's</strong> request. It draws on <strong>Robert's</strong> balance. It appears in <strong>Robert's</strong> history. It is counted when HR asks who is away.</p>
+          <p>Nothing is orphaned, nothing is anonymous, and HR never has to keep a separate paper note "this one was spoken, not written".</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🏷️</span>
+        <div class="bd">
+          <div class="ct">Both routes leave a clear trace</div>
+          <p>A request lodged by HR carries a <strong>"Lodged by HR"</strong> badge everywhere it appears, so an approver is never misled into thinking the employee filled it in themselves.</p>
+          <p>HR can also amend or cancel a lodged request — with a recorded reason. Both are normal admin actions, not workarounds.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">A trap in the existing code that this feature walks straight into</div>
+          <p>In the app today, a menu entry with <strong>no allowed roles listed means "super admin only"</strong>, not "everybody". That is why System Config and User Roles are hidden from normal staff.</p>
+          <p>My Leave must be visible to <em>everyone</em>, including a person holding no department role at all. So it cannot simply reuse that empty list — and it certainly cannot list all eight departments, because that quietly breaks the day HR adds a ninth.</p>
+          <p><strong>We add an explicit "open to everyone" flag</strong> instead, checked before the existing rule. Small change, and it stops a silent failure of exactly the kind this app has been bitten by before.</p>
+        </div>
+      </div>
+
       <h3>A small but real find</h3>
       <div class="callout co-good">
         <span class="ic">🔎</span>
