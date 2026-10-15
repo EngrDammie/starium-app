@@ -25,6 +25,7 @@ const EXPECTED_COLLECTIONS = [
   'stopped_machines',
   'machine_issues',
   'shift_approvals',
+  'employees',
 ];
 
 function loadRules() {

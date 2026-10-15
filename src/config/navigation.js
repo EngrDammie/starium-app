@@ -57,8 +57,12 @@ export const MENU_CONFIG = [
     title: 'Human Resources',
     icon: '👥',
     children: [
-      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] },
-      { path: '/payroll', label: 'Payroll', icon: '💰', allowedRoles: ['hr_manager'] }
+      // /employees now has a real route and page behind it (EmployeeRoster.jsx).
+      // The former /payroll entry was removed on purpose: it advertised a page
+      // that has never existed, so HR could click it and get nothing. A menu
+      // that lies is worse than a menu that is incomplete. Payroll remains out
+      // of scope until it is actually built.
+      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] }
     ]
   },
   {

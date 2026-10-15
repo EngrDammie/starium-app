@@ -62,6 +62,28 @@ service cloud.firestore {
       allow write: if !isAuthEnabled() || isAdmin();
     }
 
+    // ─── employees (HR master records) ─────────────────────
+    // The HR record for a person, keyed by a generated employeeId —
+    // deliberately NOT the Firebase UID, so staff who never log in
+    // still have a record and can still request leave.
+    //
+    // SECURITY NOTE (deliberate, temporary): `read: if true` matches every
+    // other collection in this file, because the client performs its own
+    // role checks and several modules read before the auth listener
+    // resolves. Tightening only `employees` would be inconsistent and could
+    // break the Command Center load.
+    //
+    // The trade-off is real: this exposes SAP numbers and leave balances to
+    // anyone who can reach the Firestore API unauthenticated. Acceptable for
+    // an internal factory tool behind the auth toggle; NOT acceptable for any
+    // external or public-facing deployment. Revisit before that happens.
+    match /employees/{employeeId} {
+      allow read: if true;
+      allow create: if canWriteRecord();
+      allow update: if canWriteRecord();
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
     // ─── ALERTS ─────────────────────────────────────────────
     // System activity/notification feed — any authenticated user posts/reads
     match /alerts/{alertId} {

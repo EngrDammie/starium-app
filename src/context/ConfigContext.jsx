@@ -86,6 +86,23 @@ const DEFAULT_CONFIG = {
     { id: 'hr_staff', label: 'HR Staff', category: 'Human Resources' },
     { id: 'hr_manager', label: 'HR Manager', category: 'Human Resources' }
   ],
+  // HR master data. `hrDepartments` is the list an employee record can be
+  // filed under. It is deliberately separate from `departmentRoles`, which
+  // are APP PERMISSIONS grouped by category — not the same list, and HR must
+  // be able to add or rename a department without touching permissions.
+  // Note: the packaging roles sit under the 'Production' category above, so
+  // 'Packaging' would not appear if this list were derived from that one.
+  hrDepartments: [
+    { id: 'quality_control', label: 'Quality Control' },
+    { id: 'production', label: 'Production' },
+    { id: 'packaging', label: 'Packaging' },
+    { id: 'human_resources', label: 'Human Resources' },
+    { id: 'administration', label: 'Administration' }
+  ],
+  hrShifts: [
+    { id: 'DAY', label: 'Day Shift' },
+    { id: 'NIGHT', label: 'Night Shift' }
+  ],
   actionRoles: [
     { id: 'buggy_supervisor', label: '🔧 Buggy Supervisor' },
     { id: 'plc_operator', label: '⚡ PLC Operator' },
@@ -125,6 +142,8 @@ export function ConfigProvider({ children }) {
             ),
             fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
             departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
+            hrDepartments: data.hrDepartments || DEFAULT_CONFIG.hrDepartments,
+            hrShifts: data.hrShifts || DEFAULT_CONFIG.hrShifts,
             actionRoles: data.actionRoles
               ? (() => {
                   const existingIds = new Set((data.actionRoles || []).map(r => r.id));
@@ -166,6 +185,8 @@ export function ConfigProvider({ children }) {
             ),
             fillHeadWeightRanges: { ...DEFAULT_CONFIG.fillHeadWeightRanges, ...(data.fillHeadWeightRanges || {}) },
             departmentRoles: data.departmentRoles || DEFAULT_CONFIG.departmentRoles,
+            hrDepartments: data.hrDepartments || DEFAULT_CONFIG.hrDepartments,
+            hrShifts: data.hrShifts || DEFAULT_CONFIG.hrShifts,
             actionRoles: data.actionRoles
               ? (() => {
                   const existingIds = new Set((data.actionRoles || []).map(r => r.id));
