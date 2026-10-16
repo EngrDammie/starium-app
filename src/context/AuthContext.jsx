@@ -4,6 +4,10 @@ import { auth, db } from "../config/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { setOnlineStatus, setOfflineStatus } from "../services/presenceOperations"; // 🎯 NEW IMPORT
+import {
+  getEmployeeByLinkedIdentity,
+  linkEmployeeToUser,
+} from "../services/employeeOperations";
 
 const AuthContext = createContext();
 
@@ -25,6 +29,59 @@ export function AuthProvider({ children }) {
 
   const [loading, setLoading] = useState(true);
   const [authEnabled, setAuthEnabled] = useState(true);
+
+  // ─── HR employee record link ──────────────────────────────────────────────
+  // `user_roles` is a door-key list: who can log in and what they may do. It
+  // has no SAP number, job title, department or shift, and it cannot describe
+  // someone who never logs in. Leave Management needs those fields, so they
+  // live in the `employees` collection instead.
+  //
+  // `employee` is the signed-in user's HR record, or null when they have none.
+  // Null is a NORMAL state, not an error: super admins and developers often
+  // have no employee record, and staff without logins are not signed in here.
+  const [employee, setEmployee] = useState(null);
+
+  // Resolve the signed-in user to an HR record and back-fill the link.
+  // Runs AFTER the role data is set so a failure here can never prevent login.
+  const attachEmployeeRecord = async (authUser) => {
+    try {
+      // The dev-mode ghost ('local-dev-id') is not a person. Looking it up
+      // would just log a confusing permission error on every boot.
+      if (!authUser || authUser.uid === 'local-dev-id') {
+        setEmployee(null);
+        return;
+      }
+
+      const record = await getEmployeeByLinkedIdentity({
+        email: authUser.email,
+        uid: authUser.uid,
+      });
+
+      if (!record) {
+        // No HR record. This is expected for admins and for anyone who has not
+        // been added to the roster yet — callers must handle null.
+        setEmployee(null);
+        return;
+      }
+
+      // Back-fill the link if HR matched on the employee's contact email but
+      // nobody has recorded the login yet. Only writes when something is
+      // actually missing, so this is quiet for the normal case.
+      if (record.linkedUserUid !== authUser.uid) {
+        await linkEmployeeToUser(record.id, { uid: authUser.uid, email: authUser.email });
+        setEmployee({ ...record, linkedUserUid: authUser.uid, linkedUserEmail: authUser.email });
+      } else {
+        setEmployee(record);
+      }
+    } catch (error) {
+      // Deliberately non-fatal. Someone must still be able to log in and run
+      // the factory even if the employee roster is unreachable.
+      if (error?.code !== 'permission-denied') {
+        console.error('Error linking employee record:', error);
+      }
+      setEmployee(null);
+    }
+  };
 
   // --- 1. CORE AUTHENTICATION ENGINE ---
   useEffect(() => {
@@ -76,10 +133,17 @@ export function AuthProvider({ children }) {
         setUserFullName(full);
 
         setCurrentUser(user);
+
+        // Fire-and-forget: roles are already set, so the UI is usable whether
+        // or not this resolves. Never awaited inside the try/catch above —
+        // an employee-lookup failure must not roll the user back to
+        // 'standard' with no department roles.
+        attachEmployeeRecord(user);
       } catch (error) {
         console.error("Error fetching role:", error);
         setSystemRole('standard'); setDepartmentRoles(['qc_staff']); setActionRoles([]);
         setFirstName(''); setLastName(''); setUserFullName('');
+        setEmployee(null);
         setCurrentUser(user);
       }
       setLoading(false);
@@ -108,6 +172,9 @@ export function AuthProvider({ children }) {
           setFirstName('Developer');
           setLastName('Admin');
           setUserFullName('Developer Admin');
+          // The dev-mode ghost is not a person; never look up an employee
+          // record for it, or every boot logs a permission error.
+          setEmployee(null);
           setCurrentUser({ email: 'development@local', uid: 'local-dev-id' });
           setLoading(false);
           return;
@@ -133,6 +200,7 @@ export function AuthProvider({ children }) {
               setFirstName('Developer');
               setLastName('Admin');
               setUserFullName('Developer Admin');
+              setEmployee(null);
               setCurrentUser({ email: 'development@local', uid: 'local-dev-id' });
               setLoading(false);
               return;
@@ -148,6 +216,7 @@ export function AuthProvider({ children }) {
           setCurrentUser(null);
           setSystemRole('standard'); setDepartmentRoles([]); setActionRoles([]);
           setFirstName(''); setLastName(''); setUserFullName('');
+          setEmployee(null);
           setLoading(false);
         }
       });
@@ -195,6 +264,9 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     const uid = currentUser?.uid;
     if (uid) await setOfflineStatus(uid);
+    // Clear the HR record before signOut. Do not move this below signOut —
+    // the note above explains why the token must still be valid at write time.
+    setEmployee(null);
     await signOut(auth);
   };
 
@@ -203,6 +275,10 @@ export function AuthProvider({ children }) {
       currentUser, 
       systemRole, departmentRoles, actionRoles, 
       firstName, lastName, userFullName, 
+      // The signed-in user's HR record, or null when they have none. Null is a
+      // NORMAL state — super admins and developers usually have no employee
+      // record — so every consumer must handle it rather than assume an object.
+      employee, isEmployee: !!employee,
       loading, authEnabled, logout
     }}>
       {!loading && children}
