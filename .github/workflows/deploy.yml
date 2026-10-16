@@ -84,3 +84,27 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
           projectId: starium-rafa-app
           channelId: live
+
+      # Deploy Firestore SECURITY RULES
+      #
+      # WHY THIS STEP EXISTS (added 16 Oct 2026):
+      # `action-hosting-deploy` deploys the HOSTING bundle ONLY. It does not
+      # publish firestore.rules, so rule changes in this repo had been sitting
+      # on the local machine and never reaching production. The employees
+      # collection is the proof: the rule was committed and passed its local
+      # test, yet the Firebase console showed no `match /employees/` block and
+      # an unauthenticated read was refused with PERMISSION_DENIED.
+      #
+      # WHY THIS MATTERS BEYOND COMPLAINT-TICKING:
+      # A collection whose rules block is missing falls through to the
+      # catch-all at the bottom of firestore.rules, which is admin-only. Staff
+      # writes then fail SILENTLY — the app queues them offline and looks like
+      # it is working while nothing reaches the database. That is a real
+      # outage mode in this codebase; see the comment at the top of
+      # src/test/firestoreRules.test.js for the incident that motivated it.
+      - name: Deploy Firestore Rules
+        uses: FirebaseExtended/action-firestore-rules-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }
+          projectId: starium-rafa-app

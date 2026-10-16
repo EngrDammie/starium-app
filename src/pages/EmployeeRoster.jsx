@@ -25,6 +25,7 @@ import {
   createEmployee, updateEmployee, deleteEmployee,
   deactivateEmployee, reactivateEmployee,
 } from '../services/employeeOperations';
+import { seedSampleEmployees, SAMPLE_EMPLOYEES } from '../services/employeeSeed';
 
 const inputCls = 'w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary';
 const labelCls = 'text-xs text-gray-400 uppercase font-bold block mb-1';
@@ -77,6 +78,8 @@ export default function EmployeeRoster() {
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmSeed, setConfirmSeed] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const canView = systemRole === 'super_admin'
     || departmentRoles.some(r => ['hr_staff', 'hr_manager'].includes(r));
@@ -120,7 +123,8 @@ export default function EmployeeRoster() {
     const active = employees.filter(e => e.employmentStatus === EMPLOYMENT_STATUS.ACTIVE);
     const withLogin = employees.filter(e => e.linkedUserUid).length;
     const depts = new Set(active.map(e => e.department).filter(Boolean)).size;
-    return { total: employees.length, active: active.length, withLogin, depts };
+    const samples = employees.filter(e => e.isSampleData).length;
+    return { total: employees.length, active: active.length, withLogin, depts, samples };
   }, [employees]);
 
   // ─── Form handling ────────────────────────────────────────────────────────
@@ -176,6 +180,21 @@ export default function EmployeeRoster() {
     if (!result.ok) { setFormError(result.error || 'Could not save this employee.'); return; }
     showMessage(editing ? 'Employee updated.' : 'Employee added to the roster.');
     setFormOpen(false);
+  };
+
+  // Idempotent: keyed on SAP number, so a second run updates rather than
+  // duplicating. Seeded records are flagged isSampleData so it is always
+  // obvious which rows are fictional.
+  const handleSeed = async () => {
+    setSeeding(true);
+    const result = await seedSampleEmployees(currentUser?.email || null);
+    setSeeding(false);
+    setConfirmSeed(false);
+    if (result.failed === 0) {
+      showMessage(`${SAMPLE_EMPLOYEES.length} sample employees saved.`);
+    } else {
+      showMessage(`Seeded with ${result.failed} failure(s): ${result.errors[0]}`, 'error');
+    }
   };
 
   const handleToggleActive = async (employee) => {
@@ -238,14 +257,14 @@ export default function EmployeeRoster() {
         <StatCard icon="🏢" label="Departments" value={stats.depts} sub="in use" />
         <StatCard
           icon="🔑" label="With app login" value={stats.withLogin}
-          sub={`${stats.total - stats.withLogin} without`}
+          sub={stats.samples > 0 ? `${stats.total - stats.withLogin} without · ${stats.samples} sample` : `${stats.total - stats.withLogin} without`}
           tone={stats.total - stats.withLogin > 0 ? 'text-status-warning' : 'text-status-success'}
         />
         <StatCard icon="🗂️" label="Showing" value={filtered.length} sub={`of ${stats.total} records`} />
       </div>
 
       {/* Toolbar */}
-      <div className="bg-dark-card p-4 rounded-xl border border-[#333] shadow-lg mb-6">
+      <div className="bg-dark-card p-4 rounded-xl border border-[#333] shadow-lg mb-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)}
@@ -269,12 +288,26 @@ export default function EmployeeRoster() {
             Staff without an app login still appear here — they simply cannot sign in.
             HR lodges their leave requests on their behalf.
           </p>
-          <button onClick={openAdd}
-            className="bg-primary text-black font-bold py-3 px-6 rounded-lg hover:bg-primary-dark transition-colors self-start shadow-[0_0_15px_rgba(0,188,212,0.3)]">
-            ➕ Add Employee
-          </button>
+          <div className="flex gap-3 flex-wrap self-start">
+            <button onClick={() => setConfirmSeed(true)}
+              className="bg-[#333] text-white font-bold py-3 px-5 rounded-lg hover:bg-[#444] transition-colors">
+              🧪 Load sample data
+            </button>
+            <button onClick={openAdd}
+              className="bg-primary text-black font-bold py-3 px-6 rounded-lg hover:bg-primary-dark transition-colors shadow-[0_0_15px_rgba(0,188,212,0.3)]">
+              ➕ Add Employee
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Sample-data disclosure: fictional rows must never be mistaken for staff. */}
+      {stats.samples > 0 && (
+        <div className="bg-status-warning/10 border border-status-warning/50 text-status-warning rounded-xl px-4 py-3 mb-4 text-sm">
+          🧪 <strong>{stats.samples}</strong> of these records are{' '}
+          <strong>sample data</strong> — invented names and test phone numbers, safe to delete.
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-16 overflow-x-auto">
@@ -330,6 +363,9 @@ export default function EmployeeRoster() {
                       {e.linkedUserUid
                         ? <span className="text-status-success text-xs font-bold">🔑 Linked</span>
                         : <span className="text-gray-600 text-xs">None</span>}
+                      {e.isSampleData && (
+                        <span className="block mt-1 text-status-warning text-[10px] uppercase font-bold">🧪 Sample</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="flex gap-2 justify-end">
@@ -446,6 +482,34 @@ export default function EmployeeRoster() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Seed confirmation */}
+      {confirmSeed && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] animate-[fadeIn_0.2s_ease]"
+          onClick={() => !seeding && setConfirmSeed(false)}>
+          <div className="bg-dark-card p-8 rounded-2xl border-2 border-status-warning w-[90%] max-w-md shadow-[0_0_30px_rgba(255,152,0,0.3)]"
+            onClick={e => e.stopPropagation()}>
+            <h2 className="text-status-warning text-xl font-bold mb-2 text-center uppercase tracking-wider">🧪 Load Sample Data?</h2>
+            <p className="text-center text-gray-400 mb-3 text-sm">
+              Adds <strong className="text-white">{SAMPLE_EMPLOYEES.length} fictional employees</strong> across
+              every department, for demos and testing.
+            </p>
+            <p className="text-center text-gray-500 text-xs mb-6">
+              Names are invented and phone numbers use Nigeria's reserved 0700 test range.
+              Rows are tagged <span className="mono">isSampleData</span> and can be deleted freely.
+              Safe to run more than once — records are matched on SAP number, not duplicated.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmSeed(false)} disabled={seeding}
+                className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors disabled:opacity-50">✖️ Cancel</button>
+              <button onClick={handleSeed} disabled={seeding}
+                className="flex-1 py-3 bg-status-warning text-black rounded-lg font-bold hover:bg-yellow-400 transition-colors disabled:opacity-50">
+                {seeding ? 'Seeding…' : '🧪 Load'}
+              </button>
+            </div>
           </div>
         </div>
       )}
