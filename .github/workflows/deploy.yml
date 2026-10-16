@@ -102,9 +102,24 @@ jobs:
       # it is working while nothing reaches the database. That is a real
       # outage mode in this codebase; see the comment at the top of
       # src/test/firestoreRules.test.js for the incident that motivated it.
+      # There is no maintained standalone action for Firestore rules deploys —
+      # `FirebaseExtended/action-firestore-rules-deploy` does not exist (GitHub
+      # fails to resolve it and the whole workflow errors out). The supported
+      # route is the Firebase CLI, authenticated with the same service account
+      # that action-hosting-deploy already uses.
+      #
+      # The secret holds the raw JSON service-account key, which is exactly the
+      # shape action-hosting-deploy writes to a credentials file, so writing it
+      # ourselves is consistent rather than a workaround.
       - name: Deploy Firestore Rules
-        uses: FirebaseExtended/action-firestore-rules-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
-          projectId: starium-rafa-app
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/gac.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gac.json" \
+            npx --yes firebase-tools@latest deploy \
+              --only firestore:rules \
+              --project starium-rafa-app \
+              --non-interactive
+          # The key must not survive the job, and the workflow log is public.
+          shred -u "$RUNNER_TEMP/gac.json" || rm -f "$RUNNER_TEMP/gac.json"
