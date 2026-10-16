@@ -6,6 +6,7 @@ import { auth } from '../config/firebase';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import rafaLogo from '../assets/rafa-logo.svg';
+import { getFirstAccessiblePath } from '../config/navigation';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,14 +19,19 @@ export default function Login() {
   const [modalMessage, setModalMessage] = useState({ type: '', text: '' });
   
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // 🎯 Connect to the Brain
+  const { currentUser, systemRole, departmentRoles } = useAuth();
 
   // 🎯 FIX: Wait here patiently until the Brain says the user has their keycards!
+  //
+  // Land on the first page this user can ACTUALLY open, not a hardcoded '/'.
+  // A restricted employee (task 1.5) has an empty departmentRoles array and
+  // cannot open the Command Center; sending them there produced a redirect
+  // loop between here and '/'.
   useEffect(() => {
-    if (currentUser) {
-      navigate('/');
-    }
-  }, [currentUser, navigate]);
+    if (!currentUser) return;
+    const home = getFirstAccessiblePath(systemRole, departmentRoles);
+    navigate(home ?? '/no-access', { replace: true });
+  }, [currentUser, systemRole, departmentRoles, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

@@ -50,8 +50,11 @@ export default function UserManagement() {
 
   useEffect(() => {
     if (!mayManageAccounts) {
-      alert("⛔ Access Denied! Only administrators can access this page.");
-      navigate('/');
+      // Inline message, not window.alert. The alert was a blocking modal that
+      // cannot be styled and cannot be read at a glance on a tablet — and in
+      // the redirect-loop incident it fired repeatedly, which is how the
+      // problem surfaced as "messages keep popping up".
+      navigate('/no-access', { replace: true });
     }
     // No data fetch here on purpose: the joined subscription below owns that,
     // and it must be declared before this effect runs.

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MENU_CONFIG } from '../config/navigation';
+import { MENU_CONFIG, canAccessRoute } from '../config/navigation';
 import rafaLogo from '../assets/rafa-logo.svg';
 
 export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
@@ -13,16 +13,12 @@ export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
   if (!isOpen) return null;
 
   // 🧠 The Smart Visibility Engine
-  const canViewRoute = (route) => {
-    // 1. Super Admins see everything
-    if (systemRole === 'super_admin') return true;
-    
-    // 2. If it requires no specific role, but you aren't a super admin, hide it.
-    if (!route.allowedRoles || route.allowedRoles.length === 0) return false;
-    
-    // 3. Do you have at least ONE of the required department roles?
-    return route.allowedRoles.some(role => departmentRoles.includes(role));
-  };
+  //
+  // Delegates to the shared rule in config/navigation.js rather than repeating
+  // it. This logic used to exist here AND separately (and differently) in
+  // ProtectedRoute — the copies drifted, which is how a page could be offered
+  // in the menu and then refused on arrival.
+  const canViewRoute = (route) => canAccessRoute(route, systemRole, departmentRoles);
 
   // Pre-filter the menu to remove empty categories
   const visibleMenu = MENU_CONFIG.map(category => {

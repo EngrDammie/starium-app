@@ -87,3 +87,51 @@ export const getAllowedRolesForPath = (path) => {
   }
   return null; 
 };
+
+// ─── Single source of truth for "can this user see this page?" ─────────────
+//
+// WHY THIS LIVES HERE AND NOT IN Sidebar.jsx:
+// the visibility check existed in Sidebar AND was duplicated (differently) in
+// ProtectedRoute, and the two copies drifted. The redirect fallback used a
+// different rule than the sidebar filter, so a page could be offered in the
+// menu and then refused. Any future change had to be made twice, and one copy
+// would be missed.
+//
+// `openToAll` marks a route every signed-in user may see, whatever their
+// department roles are. Needed for My Leave (task 4.6): a restricted employee
+// has an EMPTY departmentRoles array, so without this they can see no page at
+// all. An empty `allowedRoles` array means SUPER ADMIN ONLY — do not confuse
+// the two.
+export function canAccessRoute(route, systemRole, departmentRoles) {
+  if (systemRole === 'super_admin') return true;
+  if (route?.openToAll) return true;
+  if (!route?.allowedRoles || route.allowedRoles.length === 0) return false;
+  return route.allowedRoles.some(role => (departmentRoles || []).includes(role));
+}
+
+// The first page this user may see, or null if there is none.
+//
+// Used as the redirect target when someone lands on a page they cannot open,
+// so the app never has to guess. A null return is meaningful: the account
+// exists but has no access yet, which deserves a different message from
+// "you tried to open something you cannot".
+export function getFirstAccessiblePath(systemRole, departmentRoles) {
+  for (const category of MENU_CONFIG) {
+    for (const route of category.children) {
+      if (canAccessRoute(route, systemRole, departmentRoles)) return route.path;
+    }
+  }
+  return null;
+}
+
+// Everything this user can see — lets the no-access screen list what they DO
+// have, so it never claims they have nothing while showing them a sidebar.
+export function getAccessiblePaths(systemRole, departmentRoles) {
+  const paths = [];
+  for (const category of MENU_CONFIG) {
+    for (const route of category.children) {
+      if (canAccessRoute(route, systemRole, departmentRoles)) paths.push(route);
+    }
+  }
+  return paths;
+}

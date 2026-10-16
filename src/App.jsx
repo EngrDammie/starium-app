@@ -14,6 +14,7 @@ import SystemConfig from './pages/SystemConfig';
 import UserManagement from './pages/UserManagement';
 import ActiveUsers from './pages/ActiveUsers';
 import EmployeeRoster from './pages/EmployeeRoster';
+import NoAccess from './pages/NoAccess';
 import EmptySilos from './pages/EmptySilos';
 import EmptySilosReport from './pages/EmptySilosReport';
 import StopMachine from './pages/StopMachine';
@@ -46,6 +47,11 @@ function App() {
       <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/active-users" element={<ProtectedRoute><ActiveUsers /></ProtectedRoute>} />
       <Route path="/employees" element={<ProtectedRoute><EmployeeRoster /></ProtectedRoute>} />
+      {/* Deliberately NOT in MENU_CONFIG, so getAllowedRolesForPath returns
+          null and ProtectedRoute lets any signed-in user through. This is the
+          landing page for an account with no permissions yet, so it must be
+          reachable by exactly the people who can open nothing else. */}
+      <Route path="/no-access" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
       <Route path="/empty-silos" element={<ProtectedRoute><EmptySilos /></ProtectedRoute>} />
       <Route path="/empty-silos-report" element={<ProtectedRoute><EmptySilosReport /></ProtectedRoute>} />
       <Route path="/stop-machine" element={<ProtectedRoute><StopMachine /></ProtectedRoute>} />
