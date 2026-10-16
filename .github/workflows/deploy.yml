@@ -102,24 +102,37 @@ jobs:
       # it is working while nothing reaches the database. That is a real
       # outage mode in this codebase; see the comment at the top of
       # src/test/firestoreRules.test.js for the incident that motivated it.
-      # There is no maintained standalone action for Firestore rules deploys —
-      # `FirebaseExtended/action-firestore-rules-deploy` does not exist (GitHub
-      # fails to resolve it and the whole workflow errors out). The supported
-      # route is the Firebase CLI, authenticated with the same service account
-      # that action-hosting-deploy already uses.
+      # DISABLED 16 Oct 2026 — deployment works locally, not from CI.
       #
-      # The secret holds the raw JSON service-account key, which is exactly the
-      # shape action-hosting-deploy writes to a credentials file, so writing it
-      # ourselves is consistent rather than a workaround.
-      - name: Deploy Firestore Rules
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
-        run: |
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/gac.json"
-          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gac.json" \
-            npx --yes firebase-tools@latest deploy \
-              --only firestore:rules \
-              --project starium-rafa-app \
-              --non-interactive
-          # The key must not survive the job, and the workflow log is public.
-          shred -u "$RUNNER_TEMP/gac.json" || rm -f "$RUNNER_TEMP/gac.json"
+      # WHY: there is no maintained GitHub action for Firestore rules deploys
+      # (`FirebaseExtended/action-firestore-rules-deploy` does not exist — GitHub
+      # cannot resolve it). Using the firebase CLI here fails differently: the
+      # service account secret holds HOSTING Admin permissions only, and the
+      # CLI fails at
+      #   serviceusage.googleapis.com … 403 Permission denied to get service
+      # before it ever reaches the rules upload.
+      #
+      # Granting `Service Usage Consumer` and `Firebase Rules Admin` on
+      # project starium-rafa-app to that service account would let CI do it.
+      # Until then, rules are deployed manually from a machine already logged
+      # into the Firebase CLI:
+      #
+      #   firebase deploy --only firestore:rules --project starium-rafa-app
+      #
+      # TO RE-ENABLE: restore the step below AND grant those two IAM roles.
+      #
+      #   - name: Deploy Firestore Rules
+      #     env:
+      #       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
+      #     run: |
+      #       printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/gac.json"
+      #       GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gac.json" \
+      #         npx --yes firebase-tools@latest deploy \
+      #           --only firestore:rules \
+      #           --project starium-rafa-app \
+      #           --non-interactive
+      #       shred -u "$RUNNER_TEMP/gac.json" || rm -f "$RUNNER_TEMP/gac.json"
+      #
+      # Until this is re-enabled, firestore.rules changes are NOT live. Verify
+      # after any rule edit:
+      #   firebase deploy --only firestore:rules --project starium-rafa-app
