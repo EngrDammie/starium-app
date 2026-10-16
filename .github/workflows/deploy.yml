@@ -106,5 +106,5 @@ jobs:
         uses: FirebaseExtended/action-firestore-rules-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
           projectId: starium-rafa-app
