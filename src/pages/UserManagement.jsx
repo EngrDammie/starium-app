@@ -1,19 +1,21 @@
 // src/pages/UserManagement.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
+import EmployeeAccessTab from '../components/userAccess/EmployeeAccessTab';
+import {
+  subscribeToAccessView, syncEmailToEmployee, syncNameToEmployee,
+} from '../services/userAccessOperations';
 
 export default function UserManagement() {
   const { systemRole, currentUser, departmentRoles } = useAuth();
   const { config, loadingConfig } = useConfig();
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   // 🎯 NEW: Name states
@@ -27,6 +29,10 @@ export default function UserManagement() {
 
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('people');
+  // Joined view so the Logins tab can show which employee each account
+  // belongs to. Without this the page lists bare email addresses.
+  const [accessView, setAccessView] = useState({ people: [], ready: false });
 
   // ─── Who may manage access ───────────────────────────────────────────────
   // DECISION (16 Oct 2026): hr_manager can manage access. HR is precisely the
@@ -46,33 +52,27 @@ export default function UserManagement() {
     if (!mayManageAccounts) {
       alert("⛔ Access Denied! Only administrators can access this page.");
       navigate('/');
-    } else {
-      loadData();
     }
+    // No data fetch here on purpose: the joined subscription below owns that,
+    // and it must be declared before this effect runs.
   }, [mayManageAccounts, navigate]);
+
+  // Joined employee↔account view. This is now the single live source for the
+  // page: it feeds both the Employees tab and the Logins table cross-reference,
+  // so a second getDocs call that could disagree with it is gone.
+  useEffect(() => {
+    if (!mayManageAccounts) return;
+    return subscribeToAccessView(setAccessView);
+  }, [mayManageAccounts]);
+
+  // The Logins table reads from accessView.roles (the joined subscription),
+// which keeps employees and accounts in step without a second getDocs round
+// trip that could disagree with it.
+  const users = accessView.roles;
 
   const showMessage = (text, type = 'success') => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const usersSnap = await getDocs(collection(db, 'user_roles'));
-      const usersList = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      usersList.sort((a, b) => {
-        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-        return dateB - dateA;
-      });
-      setUsers(usersList);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      showMessage("Failed to load users data", "error");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleToggleRole = (roleId, currentArray, setArrayFn) => {
@@ -116,7 +116,6 @@ export default function UserManagement() {
       setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword(''); 
       setNewSystemRole('standard'); setNewDeptRoles(['qc_staff']); setNewActionRoles([]);
       showMessage('User created successfully!', 'success');
-      loadData();
     } catch (error) {
       showMessage(`Error: ${error.message}`, 'error');
     }
@@ -144,9 +143,29 @@ export default function UserManagement() {
         updatedAt: serverTimestamp(),
         updatedBy: currentUser.email
       });
+
+      // Keep the employee's own record in step (task 1.6).
+      // Nothing else writes email or name back onto `employees`, so without
+      // this the roster shows a stale address forever after a rename here.
+      const linkedPerson = accessView.people.find(p => p.linkedUserUid === editUser.id);
+      if (linkedPerson) {
+        const nameChanged =
+          linkedPerson.firstName !== editUser.firstName.toLowerCase().trim() ||
+          linkedPerson.lastName !== editUser.lastName.toLowerCase().trim();
+        if (nameChanged) {
+          await syncNameToEmployee(
+            linkedPerson.id,
+            { firstName: editUser.firstName, lastName: editUser.lastName },
+            currentUser.email,
+          ).catch(() => {});
+        }
+        if (linkedPerson.email !== editUser.email) {
+          await syncEmailToEmployee(linkedPerson.id, editUser.email, currentUser.email).catch(() => {});
+        }
+      }
+
       showMessage('User updated!', 'success');
       setEditUser(null);
-      loadData();
     } catch (error) {
       showMessage('Error updating user', 'error');
     }
@@ -158,7 +177,6 @@ export default function UserManagement() {
       await deleteDoc(doc(db, 'user_roles', deleteUser.id));
       showMessage('User removed from database!', 'success');
       setDeleteUser(null);
-      loadData();
     } catch (error) {
       showMessage('Error deleting user', 'error');
     }
@@ -179,7 +197,7 @@ export default function UserManagement() {
     return acc;
   }, {});
 
-  if (loading || loadingConfig) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading User Data...</div></Layout>;
+  if (loadingConfig || (mayManageAccounts && !accessView.ready)) return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading User Data...</div></Layout>;
 
   return (
     <Layout title="🔐 User Management" subtitle="Manage accounts, roles, and security" maxWidth="max-w-7xl">
@@ -190,9 +208,42 @@ export default function UserManagement() {
         </div>
       )}
 
+      {/* Tabs: grant access BY PERSON, or edit accounts directly. */}
+      <div className="flex gap-2 mb-6">
+        <button onClick={() => setActiveTab('people')}
+          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-colors border ${activeTab === 'people' ? 'bg-primary text-black border-primary' : 'bg-dark-card text-gray-400 border-[#333] hover:text-white'}`}>
+          👥 Employees
+        </button>
+        <button onClick={() => setActiveTab('accounts')}
+          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-colors border ${activeTab === 'accounts' ? 'bg-primary text-black border-primary' : 'bg-dark-card text-gray-400 border-[#333] hover:text-white'}`}>
+          🔑 Logins
+        </button>
+      </div>
+
+      {activeTab === 'people' && (
+        <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-16">
+          <h2 className="text-xl font-bold text-primary mb-2">👥 Grant Access By Employee</h2>
+          <p className="text-sm text-gray-400 mb-6">
+            Pick a person by name and staff number. Their details come from the roster — no email addresses to guess from.
+          </p>
+          <EmployeeAccessTab />
+        </div>
+      )}
+
+      {activeTab === 'accounts' && (<>
+      {!mayGrantSuperAdmin && (
+        <div className="bg-status-warning/10 border border-status-warning/50 text-status-warning rounded-xl px-4 py-3 mb-6 text-sm">
+          🔒 You can manage department and approval roles. <strong>Super Admin</strong> is reserved for the system owner.
+        </div>
+      )}
+
       {/* Add User Section */}
       <div className="bg-dark-card p-6 rounded-xl border border-[#333] shadow-lg mb-6">
-        <h2 className="text-xl font-bold text-primary mb-6">➕ Add New User</h2>
+        <h2 className="text-xl font-bold text-primary mb-2">➕ Add New User</h2>
+        <p className="text-sm text-gray-400 mb-6">
+          For accounts with no employee record — an IT contractor, for example. Factory staff should be
+          granted access from the <strong>Employees</strong> tab so their leave works too.
+        </p>
         <form onSubmit={handleAddUser} className="flex flex-col gap-6">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,6 +319,7 @@ export default function UserManagement() {
           <thead>
             <tr>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">👤 Name</th>
+                <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">Employee</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">📧 Email</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">🔐 System Role</th>
               <th className="p-3 border-b-2 border-primary text-primary text-xs uppercase tracking-wider">🏢 Departments</th>
@@ -294,6 +346,20 @@ export default function UserManagement() {
                 <tr key={user.id} className="hover:bg-white/5 transition-colors">
                   <td className="p-3 text-white font-bold">{displayName}</td>
                   <td className="p-3 text-gray-400">{user.email}</td>
+                    {/* Cross-reference: which person is this account? Without
+                        this the table is a list of addresses with no people. */}
+                    <td className="p-3">
+                      {(() => {
+                        const person = accessView.people.find(p => p.linkedUserUid === user.id);
+                        if (!person) return <span className="text-status-warning text-xs italic">No employee record</span>;
+                        return (
+                          <div>
+                            <span className="text-white font-bold text-sm">{person.fullName}</span>
+                            <div className="mono text-cyan-300 text-xs">{person.sapNumber}</div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                   
                   <td className="p-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
@@ -428,6 +494,8 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+      </>)}
+
     </Layout>
   );
 }

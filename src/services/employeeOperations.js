@@ -291,7 +291,7 @@ function friendlyAuthError(message) {
 // reports, so this account must not be able to reach any of them.
 //
 // Returns { ok, uid, email, error }.
-export async function createLoginForEmployee(employee, { password, createdBy }) {
+export async function createLoginForEmployee(employee, { password, departmentRoles = [], actionRoles = [], createdBy }) {
   const email = normaliseEmail(employee?.email);
   if (!email) {
     return { ok: false, error: 'This employee has no email address. Add one on their record first.' };
@@ -324,19 +324,21 @@ export async function createLoginForEmployee(employee, { password, createdBy }) 
     return { ok: false, error: friendlyAuthError(error.message) };
   }
 
-  // Write the role document. Empty departmentRoles is deliberate: the sidebar
-  // requires at least one matching role, so an empty array means this person
-  // sees nothing except routes explicitly marked openToAll (My Leave, once it
-  // exists). They cannot reach a single factory module.
+  // Write the role document. departmentRoles defaults to empty: the sidebar
+  // requires at least one matching role, so an empty array means no factory
+  // module is reachable. restrictedToOwnLeave records the intent — and is set
+  // false immediately when real roles are granted at creation, so the flag
+  // can never assert "leave-only" for a fully-elevated account.
+  const hasRealRoles = (departmentRoles || []).length > 0;
   try {
     await setDoc(doc(db, 'user_roles', uid), {
       firstName: String(employee.firstName || '').toLowerCase(),
       lastName: String(employee.lastName || '').toLowerCase(),
       email,
       systemRole: 'standard',
-      departmentRoles: [],
-      actionRoles: [],
-      restrictedToOwnLeave: true,
+      departmentRoles: departmentRoles || [],
+      actionRoles: actionRoles || [],
+      restrictedToOwnLeave: !hasRealRoles,
       createdAt: serverTimestamp(),
       createdBy: createdBy || null,
     });
