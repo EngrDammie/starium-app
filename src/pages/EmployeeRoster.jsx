@@ -24,6 +24,7 @@ import {
   EMPLOYMENT_STATUS, subscribeToEmployees,
   createEmployee, updateEmployee, deleteEmployee,
   deactivateEmployee, reactivateEmployee,
+  createLoginForEmployee, removeLoginFromEmployee,
 } from '../services/employeeOperations';
 import { seedSampleEmployees, SAMPLE_EMPLOYEES } from '../services/employeeSeed';
 
@@ -80,6 +81,11 @@ export default function EmployeeRoster() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmSeed, setConfirmSeed] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [loginFor, setLoginFor] = useState(null);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [confirmRemoveLogin, setConfirmRemoveLogin] = useState(null);
 
   const canView = systemRole === 'super_admin'
     || departmentRoles.some(r => ['hr_staff', 'hr_manager'].includes(r));
@@ -194,6 +200,42 @@ export default function EmployeeRoster() {
       showMessage(`${SAMPLE_EMPLOYEES.length} sample employees saved.`);
     } else {
       showMessage(`Seeded with ${result.failed} failure(s): ${result.errors[0]}`, 'error');
+    }
+  };
+
+  // Restricted login: the account can reach My Leave and nothing else. Empty
+  // departmentRoles is the whole point — the sidebar requires at least one
+  // matching role, so a cleaner cannot open a single factory module.
+  const openCreateLogin = (employee) => {
+    setLoginFor(employee);
+    setLoginPassword('');
+    setLoginError('');
+  };
+
+  const handleCreateLogin = async (e) => {
+    e.preventDefault();
+    if (!loginFor) return;
+    setLoginBusy(true);
+    setLoginError('');
+    const result = await createLoginForEmployee(loginFor, {
+      password: loginPassword,
+      createdBy: currentUser?.email || null,
+    });
+    setLoginBusy(false);
+    if (!result.ok) { setLoginError(result.error); return; }
+    showMessage(`Login created for ${loginFor.fullName}. Share ${loginFor.email} and the password directly.`);
+    setLoginFor(null);
+  };
+
+  const handleRemoveLogin = async () => {
+    const employee = confirmRemoveLogin;
+    if (!employee) return;
+    const result = await removeLoginFromEmployee(employee);
+    setConfirmRemoveLogin(null);
+    if (result.ok) {
+      showMessage(`Login removed. ${employee.fullName} stays on the roster with their leave history intact.`);
+    } else {
+      showMessage(result.error || 'Could not remove the login.', 'error');
     }
   };
 
@@ -360,9 +402,26 @@ export default function EmployeeRoster() {
                     </td>
                     <td className="p-3"><StatusBadge status={e.employmentStatus} /></td>
                     <td className="p-3">
-                      {e.linkedUserUid
-                        ? <span className="text-status-success text-xs font-bold">🔑 Linked</span>
-                        : <span className="text-gray-600 text-xs">None</span>}
+                      {e.linkedUserUid ? (
+                        <>
+                          <span className="text-status-success text-xs font-bold">🔑 Linked</span>
+                          <button
+                            onClick={() => setConfirmRemoveLogin(e)}
+                            className="block mt-1 text-[10px] uppercase font-bold text-gray-500 hover:text-status-danger transition-colors"
+                          >
+                            Remove login
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => openCreateLogin(e)}
+                          disabled={!e.email}
+                          title={e.email ? 'Give this person an app login' : 'Add an email address to this record first'}
+                          className="text-primary text-xs font-bold hover:underline disabled:text-gray-600 disabled:no-underline disabled:cursor-not-allowed transition-colors text-left"
+                        >
+                          + Create login
+                        </button>
+                      )}
                       {e.isSampleData && (
                         <span className="block mt-1 text-status-warning text-[10px] uppercase font-bold">🧪 Sample</span>
                       )}
@@ -482,6 +541,81 @@ export default function EmployeeRoster() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create restricted login */}
+      {loginFor && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 animate-[fadeIn_0.2s_ease]"
+          onClick={() => !loginBusy && setLoginFor(null)}>
+          <div className="bg-dark-card p-8 rounded-2xl border-2 border-primary w-[95%] max-w-md shadow-[0_0_30px_rgba(0,188,212,0.3)]"
+            onClick={e => e.stopPropagation()}>
+            <h2 className="text-primary text-lg font-bold mb-1 text-center uppercase tracking-wider">🔑 Create App Login</h2>
+            <p className="text-center text-gray-500 mb-5 text-sm">
+              {loginFor.fullName} <span className="text-gray-600">({loginFor.sapNumber})</span>
+            </p>
+
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 mb-4 text-xs text-gray-400">
+              <p className="font-bold text-gray-200 mb-1">What this login can do</p>
+              <p>Only see and manage their own leave. It cannot open QC records, production data or reports.</p>
+            </div>
+
+            <form onSubmit={handleCreateLogin} className="flex flex-col gap-4">
+              <div>
+                <label className={labelCls}>Login email</label>
+                <input value={loginFor.email} disabled
+                  className="w-full bg-[#121212] text-gray-500 border border-[#333] p-3 rounded-lg cursor-not-allowed" />
+              </div>
+              <div>
+                <label className={labelCls}>Temporary password *</label>
+                <input type="text" required minLength={6} value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className={inputCls} autoFocus />
+                <p className="text-gray-500 text-xs mt-1">
+                  Write it down and hand it over directly. They can change it after signing in.
+                </p>
+              </div>
+
+              {loginError && (
+                <div className="bg-status-danger/15 border border-status-danger text-status-danger rounded-lg px-4 py-3 text-sm font-bold">
+                  ⚠️ {loginError}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-1">
+                <button type="button" onClick={() => setLoginFor(null)} disabled={loginBusy}
+                  className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors disabled:opacity-50">✖️ Cancel</button>
+                <button type="submit" disabled={loginBusy}
+                  className="flex-1 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50">
+                  {loginBusy ? 'Creating…' : '🔑 Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Remove login confirmation */}
+      {confirmRemoveLogin && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] animate-[fadeIn_0.2s_ease]"
+          onClick={() => setConfirmRemoveLogin(null)}>
+          <div className="bg-dark-card p-8 rounded-2xl border-2 border-status-warning w-[90%] max-w-md shadow-[0_0_30px_rgba(255,152,0,0.3)]"
+            onClick={e => e.stopPropagation()}>
+            <h2 className="text-status-warning text-lg font-bold mb-2 text-center uppercase tracking-wider">🔑 Remove App Login?</h2>
+            <p className="text-center text-gray-400 mb-2 text-sm">
+              <strong className="text-white">{confirmRemoveLogin.fullName}</strong> will no longer be able to sign in.
+            </p>
+            <p className="text-center text-status-success text-xs mb-6">
+              ✅ They stay on the roster. Their leave history, balances and requests are untouched.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmRemoveLogin(null)}
+                className="flex-1 py-3 bg-[#333] text-white rounded-lg font-bold hover:bg-[#444] transition-colors">✖️ Cancel</button>
+              <button onClick={handleRemoveLogin}
+                className="flex-1 py-3 bg-status-warning text-black rounded-lg font-bold hover:bg-yellow-400 transition-colors">🔑 Remove</button>
+            </div>
           </div>
         </div>
       )}
