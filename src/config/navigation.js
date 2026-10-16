@@ -70,7 +70,10 @@ export const MENU_CONFIG = [
     icon: '🛡️',
     children: [
       { path: '/system-config', label: 'System Config', icon: '🔧', allowedRoles: [] }, 
-      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: [] },
+      // hr_manager may manage accounts (decision 16 Oct 2026). The page itself
+      // gates Super Admin to the founder — see UserManagement.jsx
+      // `mayGrantSuperAdmin`.
+      { path: '/user-management', label: 'User Roles', icon: '👤', allowedRoles: ['hr_manager'] },
       { path: '/active-users', label: 'Active Users', icon: '🟢', allowedRoles: [] }
     ]
   }

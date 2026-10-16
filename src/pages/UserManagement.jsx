@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 
 export default function UserManagement() {
-  const { systemRole, currentUser } = useAuth();
+  const { systemRole, currentUser, departmentRoles } = useAuth();
   const { config, loadingConfig } = useConfig();
   const navigate = useNavigate();
 
@@ -28,14 +28,28 @@ export default function UserManagement() {
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
 
+  // ─── Who may manage access ───────────────────────────────────────────────
+  // DECISION (16 Oct 2026): hr_manager can manage access. HR is precisely the
+  // role that grants and revokes it, and the previous hardcoded email gate
+  // meant only the founder could elevate anyone.
+  //
+  // BUT the Add form and the Edit modal both offer 'Super Admin (God Mode)'.
+  // Opening the page to hr_manager as-is would therefore let that role hand
+  // out god-mode — a privilege-escalation path. So access is split in two:
+  //   manageAccounts — may open the page and grant department/approval roles
+  //   mayGrantSuperAdmin — may create or grant super_admin. Founder only.
+  const isSuperAdmin = systemRole === 'super_admin' || currentUser?.email === 'dammieoptimus@gmail.com';
+  const mayManageAccounts = isSuperAdmin || departmentRoles.includes('hr_manager');
+  const mayGrantSuperAdmin = isSuperAdmin;
+
   useEffect(() => {
-    if (systemRole !== 'super_admin' && currentUser?.email !== 'dammieoptimus@gmail.com') {
+    if (!mayManageAccounts) {
       alert("⛔ Access Denied! Only administrators can access this page.");
       navigate('/');
     } else {
       loadData();
     }
-  }, [systemRole, currentUser, navigate]);
+  }, [mayManageAccounts, navigate]);
 
   const showMessage = (text, type = 'success') => {
     setMessage({ type, text });
@@ -70,6 +84,11 @@ export default function UserManagement() {
     e.preventDefault();
     if (!newFirstName || !newLastName || !newEmail || !newPassword) return showMessage('Please fill all required fields', 'error');
     if (newPassword.length < 6) return showMessage('Password must be at least 6 characters', 'error');
+    // Same defence-in-depth check as handleSaveEdit: hr_manager may manage
+      // accounts but must never be able to create one with god-mode.
+      if (newSystemRole === 'super_admin' && !mayGrantSuperAdmin) {
+        return showMessage('Only the system owner can create a Super Admin.', 'error');
+      }
 
     try {
       showMessage('Creating user...', 'success');
@@ -105,13 +124,23 @@ export default function UserManagement() {
 
   const handleSaveEdit = async () => {
     if (!editUser) return;
-    try {
-      await updateDoc(doc(db, 'user_roles', editUser.id), {
+    // Defence in depth: the <select> already hides Super Admin from
+      // hr_manager, but a hidden option is not a control. Re-check here so the
+      // write path cannot mint a god-mode account from a crafted request.
+      if (editUser.systemRole === 'super_admin' && !mayGrantSuperAdmin) {
+        showMessage('Only the system owner can grant Super Admin.', 'error');
+        return;
+      }
+      try {
+        await updateDoc(doc(db, 'user_roles', editUser.id), {
         firstName: editUser.firstName.toLowerCase().trim(),
         lastName: editUser.lastName.toLowerCase().trim(),
         systemRole: editUser.systemRole,
         departmentRoles: editUser.departmentRoles,
         actionRoles: editUser.actionRoles,
+        // Task 1.6 clears this on elevation; doing it here stops a promoted
+        // user from keeping a flag that claims they are still leave-only.
+        ...(editUser.departmentRoles?.length > 0 ? { restrictedToOwnLeave: false } : {}),
         updatedAt: serverTimestamp(),
         updatedBy: currentUser.email
       });
@@ -177,11 +206,18 @@ export default function UserManagement() {
             
             <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-2 flex items-center gap-2">
               <label className="text-gray-400 text-sm font-bold pl-2">🔐 System Role:</label>
-              <select value={newSystemRole} onChange={e => setNewSystemRole(e.target.value)} className="bg-transparent text-white font-bold outline-none flex-1">
+              <select value={newSystemRole} onChange={e => setNewSystemRole(e.target.value)} className="bg-transparent text-white font-bold outline-none flex-1" disabled={!mayGrantSuperAdmin}>
                 <option value="standard">Standard User</option>
-                <option value="super_admin">Super Admin (God Mode)</option>
+                {/* God mode is founder-only — see mayGrantSuperAdmin. Without
+                    this, hr_manager could mint a super admin from this page. */}
+                {mayGrantSuperAdmin && <option value="super_admin">Super Admin (God Mode)</option>}
               </select>
             </div>
+            {!mayGrantSuperAdmin && (
+              <p className="text-gray-500 text-xs mt-2">
+                Super Admin is reserved for the system owner and cannot be granted here.
+              </p>
+            )}
           </div>
 
           {newSystemRole !== 'super_admin' && (
@@ -324,10 +360,16 @@ export default function UserManagement() {
 
             <div className="bg-[#1a1a1a] border border-[#444] rounded-lg p-4 flex items-center justify-between mb-6">
               <label className="text-gray-400 text-sm font-bold uppercase">🔐 System Role:</label>
-              <select value={editUser.systemRole} onChange={e => setEditUser({...editUser, systemRole: e.target.value})} className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary">
+              <select value={editUser.systemRole} onChange={e => setEditUser({...editUser, systemRole: e.target.value})} className="bg-dark-card text-white font-bold outline-none border border-[#444] rounded p-2 focus:border-primary" disabled={!mayGrantSuperAdmin}>
                 <option value="standard">Standard User</option>
-                <option value="super_admin">Super Admin (God Mode)</option>
+                {/* Founder-only, for the same reason as the Add form. */}
+                {mayGrantSuperAdmin && <option value="super_admin">Super Admin (God Mode)</option>}
               </select>
+              {!mayGrantSuperAdmin && editUser.systemRole === 'super_admin' && (
+                <p className="text-gray-500 text-xs mt-2">
+                  This account is a Super Admin and cannot be changed here.
+                </p>
+              )}
             </div>
 
             {editUser.systemRole !== 'super_admin' && (
