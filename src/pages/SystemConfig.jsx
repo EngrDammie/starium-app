@@ -4,7 +4,7 @@
 // presentational component under src/pages/SystemConfig/. To add a tab:
 // add it to SYSTEM_TABS, create the component, branch it in the render below.
 import { useState, useEffect, useRef } from 'react';
-import { doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp, collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
@@ -20,6 +20,7 @@ import CartonWasteTab from './SystemConfig/CartonWasteTab';
 import LaminateWasteTab from './SystemConfig/LaminateWasteTab';
 import PalletTransferTab from './SystemConfig/PalletTransferTab';
 import ImportExportTab from './SystemConfig/ImportExportTab';
+import LeavePolicyTab from './SystemConfig/LeavePolicyTab';
 import { MachineModal, LineModal, GramModal } from './SystemConfig/ConfigModals';
 
 export default function SystemConfig() {
@@ -98,6 +99,14 @@ export default function SystemConfig() {
     palletSizes: { "22": 100, "45": 100, "85": 80, "125": 60, "850": 20 }
   });
 
+  // Leave Policy State (task 2.2). Seeded from config so the tab opens on the
+  // live values, not on a blank form that would clobber them on save.
+  const [leavePolicy, setLeavePolicy] = useState(null);
+
+  // Users, for the per-stage deputy pickers. Read directly rather than passed
+  // in, because SystemConfig has no access to the roster subscription.
+  const [roleUsers, setRoleUsers] = useState([]);
+
   // Filters
   const [machineSearch, setMachineSearch] = useState('');
   const [machineLineFilter, setMachineLineFilter] = useState('');
@@ -108,6 +117,14 @@ export default function SystemConfig() {
       if (authDoc.exists()) setAuthEnabled(authDoc.data().authEnabled !== false);
     };
     fetchAuthSettings();
+  }, []);
+
+  // Deputy pickers need a list of people who could hold an approval power.
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'user_roles'), (snap) => {
+      setRoleUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => setRoleUsers([]));
+    return unsub;
   }, []);
 
   useEffect(() => {
@@ -156,6 +173,9 @@ export default function SystemConfig() {
         updates[`rollWeight${gram}`] = lw.rollWeights?.[gram] ?? 0;
       }
       setLaminateWasteSettings(updates);
+    }
+    if (config?.leavePolicy) {
+      setLeavePolicy({ ...config.leavePolicy });
     }
     if (config?.palletTransfer) {
       const pt = config.palletTransfer;
@@ -367,6 +387,20 @@ export default function SystemConfig() {
     await updateDatabase({ actionRoles: newRoles }, 'Role deleted');
   };
 
+  // --- LEAVE POLICY LOGIC ---
+  const saveLeavePolicy = async () => {
+    if (!leavePolicy) return;
+    // Guard the settings that silently corrupt every balance if wrong.
+    if (leavePolicy.annualEntitlementDays < 0 || leavePolicy.casualEntitlementDays < 0) {
+      return showToast('Entitlements cannot be negative', true);
+    }
+    if (leavePolicy.noticeRequiredDays < 0) return showToast('Notice period cannot be negative', true);
+    if (leavePolicy.overlapBehaviour !== 'warn' && leavePolicy.overlapBehaviour !== 'block') {
+      return showToast('Overlap handling must be "warn" or "block"', true);
+    }
+    await updateDatabase({ leavePolicy }, 'Leave policy saved!');
+  };
+
   // --- GLOBAL SETTINGS LOGIC ---
   const handleGlobalSettingsChange = (e) => {
     const { name, value } = e.target;
@@ -405,6 +439,9 @@ export default function SystemConfig() {
       qcCheckIntervals: config.qcCheckIntervals,
       cartonWaste: config.cartonWaste,
       laminateWaste: config.laminateWaste,
+      leavePolicy: config.leavePolicy,
+      hrDepartments: config.hrDepartments,
+      hrShifts: config.hrShifts,
       exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -436,6 +473,9 @@ export default function SystemConfig() {
       if (data.qcCheckIntervals) updates.qcCheckIntervals = data.qcCheckIntervals;
       if (data.cartonWaste) updates.cartonWaste = data.cartonWaste;
       if (data.laminateWaste) updates.laminateWaste = data.laminateWaste;
+      if (data.leavePolicy) updates.leavePolicy = data.leavePolicy;
+      if (data.hrDepartments) updates.hrDepartments = data.hrDepartments;
+      if (data.hrShifts) updates.hrShifts = data.hrShifts;
 
       await updateDatabase(updates, 'Configuration imported successfully!');
     } catch (error) {
@@ -566,6 +606,15 @@ export default function SystemConfig() {
           palletTransferSettings={palletTransferSettings}
           setPalletTransferSettings={setPalletTransferSettings}
           updateDatabase={updateDatabase}
+        />
+      )}
+
+      {activeTab === 'leave' && (
+        <LeavePolicyTab
+          leavePolicy={leavePolicy}
+          setLeavePolicy={setLeavePolicy}
+          saveLeavePolicy={saveLeavePolicy}
+          users={roleUsers}
         />
       )}
 

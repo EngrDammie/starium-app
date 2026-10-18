@@ -13,5 +13,6 @@ export const SYSTEM_TABS = [
   { id: 'cartonwaste', label: '📦 Carton Waste' },
   { id: 'laminatewaste', label: '🗑️ Laminate Waste' },
   { id: 'palletransfer', label: '📦 Pallet Transfer' },
+  { id: 'leave', label: '📅 Leave Policy' },
   { id: 'importexport', label: '💾 Import / Export' },
 ];
