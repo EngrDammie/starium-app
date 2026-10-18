@@ -27,6 +27,10 @@ import {
   createLoginForEmployee, removeLoginFromEmployee,
 } from '../services/employeeOperations';
 import { seedSampleEmployees, SAMPLE_EMPLOYEES } from '../services/employeeSeed';
+// Pure helpers, deliberately from leaveCalculations: dateJoined drives leave
+// pro-rating, and the same yyyy-mm-dd format the Leave Policy tab uses keeps
+// the two screens agreeing on what a date looks like.
+import { toDateKey, toLocalDate } from '../services/leaveCalculations';
 
 const inputCls = 'w-full bg-[#1a1a1a] text-white border border-[#444] p-3 rounded-lg outline-none focus:border-primary';
 const labelCls = 'text-xs text-gray-400 uppercase font-bold block mb-1';
@@ -154,7 +158,10 @@ export default function EmployeeRoster() {
       phone: employee.phone || '',
       email: employee.email || '',
       address: employee.address || '',
-      dateJoined: employee.dateJoined || '',
+      // An <input type="date"> needs a yyyy-mm-dd string. toDateKey unwraps a
+      // Firestore Timestamp, a Date or an existing string, so the field shows
+      // what was actually saved instead of rendering blank.
+      dateJoined: toDateKey(employee.dateJoined),
       employmentStatus: employee.employmentStatus || EMPLOYMENT_STATUS.ACTIVE,
     });
     setFormError('');
@@ -172,9 +179,12 @@ export default function EmployeeRoster() {
     setFormError('');
     const by = currentUser?.email || null;
     // Firestore Timestamp, not a string — the roster displays the joined date.
+    // toLocalDate rather than `new Date(...)`: it accepts the yyyy-mm-dd the
+    // input produces AND unwraps a Timestamp or Date, and it reads local time
+    // parts, so 17 Aug never drifts to 16 Aug in a timezone behind UTC.
     const payload = {
       ...form,
-      dateJoined: form.dateJoined ? new Date(form.dateJoined) : null,
+      dateJoined: toLocalDate(form.dateJoined),
     };
 
     const result = editing

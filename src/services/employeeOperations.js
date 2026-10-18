@@ -54,7 +54,22 @@ export function buildFullName(firstName, lastName) {
 }
 
 function toEmployee(docSnap) {
-  return { id: docSnap.id, ...docSnap.data() };
+  const data = docSnap.data();
+  // Convert dateJoined from a Firestore Timestamp to a plain Date.
+  //
+  // WHY THIS IS NOT COSMETIC: a Timestamp is an object, and an <input
+  // type="date"> silently renders blank for anything that is not a string. So
+  // a joined date that had saved perfectly would look unsaved every time the
+  // record was reopened — and re-saving then ran `new Date(Timestamp)`, which
+  // is an Invalid Date and fails the Firestore serialiser outright.
+  //
+  // toLocalDate already unwraps Timestamps, and callers that want a yyyy-mm-dd
+  // string should use toDateKey rather than re-implementing this.
+  return {
+    id: docSnap.id,
+    ...data,
+    dateJoined: data.dateJoined?.toDate ? data.dateJoined.toDate() : (data.dateJoined ?? null),
+  };
 }
 
 // ─── Reads ──────────────────────────────────────────────────────────────────

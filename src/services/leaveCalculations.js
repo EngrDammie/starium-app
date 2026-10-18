@@ -112,7 +112,14 @@ export function daysBetween(a, b) {
 
 function nonWorkingSet(policy) {
   const days = policy?.nonWorkingDays;
-  return new Set(Array.isArray(days) && days.length ? days : [0]);
+  // An EMPTY array is a deliberate answer, not a missing one: HR clearing the
+  // box means every day is a working day. Falling back to Sunday whenever the
+  // list is empty made that impossible to express, and the Leave Request Form
+  // then kept subtracting Sundays the factory had said it works.
+  //
+  // Only a missing or malformed field takes the default (Sunday, assumption A7
+  // in the blueprint — the setting most likely to be wrong).
+  return new Set(Array.isArray(days) ? days : [0]);
 }
 
 function holidaySet(policy) {

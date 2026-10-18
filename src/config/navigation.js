@@ -102,6 +102,23 @@ export const getAllowedRolesForPath = (path) => {
   return null; 
 };
 
+// The route object for a path, or null if the path is not in the menu config.
+//
+// PREFER THIS OVER getAllowedRolesForPath. Reading allowedRoles on its own
+// loses the rest of the route's meaning — most importantly `openToAll`, which
+// is spelled allowedRoles: [] because there are no roles to list. Any caller
+// that infers permissions from allowedRoles alone will read that as
+// "super-admin only" and lock out the very people the flag exists for.
+// That is exactly how ProtectedRoute broke /my-leave.
+export const findRoute = (path) => {
+  for (const category of MENU_CONFIG) {
+    for (const route of category.children) {
+      if (route.path === path) return route;
+    }
+  }
+  return null;
+};
+
 // ─── Single source of truth for "can this user see this page?" ─────────────
 //
 // WHY THIS LIVES HERE AND NOT IN Sidebar.jsx:

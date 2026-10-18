@@ -264,6 +264,30 @@ describe('isNonWorkingDay and listNonWorkingDaysInRange', () => {
   it('returns an empty list for a reversed range instead of looping forever', () => {
     expect(listNonWorkingDaysInRange('2026-10-09', '2026-10-05', POLICY)).toEqual([]);
   });
+
+  // REGRESSION (found 18 Oct 2026, live): an EMPTY nonWorkingDays array is a
+  // deliberate answer — "every day is a working day" — and the factory had
+  // configured exactly that. The guard `Array.isArray(days) && days.length`
+  // read the empty list as "unset" and substituted Sundays, so the Leave
+  // Request Form kept showing excluded non-working days after a week HR had
+  // said everybody works. Only a missing or malformed field takes the default.
+  it('treats an empty nonWorkingDays array as all days working, not as unset', () => {
+    const allWorking = { ...POLICY, nonWorkingDays: [] };
+    expect(isNonWorkingDay('2026-10-04', allWorking)).toBe(false); // Sunday, but working
+    expect(listNonWorkingDaysInRange('2026-09-30', '2026-10-04', allWorking))
+      .toEqual([{ date: '2026-10-01', label: 'Independence Day' }]); // holiday still excluded
+    expect(countWorkingDays('2026-10-03', '2026-10-04', allWorking)).toBe(2); // Sat + Sun count
+  });
+
+  it('still defaults to Sunday when nonWorkingDays is absent entirely', () => {
+    const unset = { ...POLICY, nonWorkingDays: undefined };
+    expect(isNonWorkingDay('2026-10-04', unset)).toBe(true); // Sunday
+  });
+
+  it('still defaults to Sunday when nonWorkingDays is malformed', () => {
+    const malformed = { ...POLICY, nonWorkingDays: 'every day' };
+    expect(isNonWorkingDay('2026-10-04', malformed)).toBe(true); // Sunday
+  });
 });
 
 // ─── Balance arithmetic ────────────────────────────────────────────────────
