@@ -1,0 +1,38 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "leave_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "employeeId", "order": "ASCENDING" },
+        { "fieldPath": "requestedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leave_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requestedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leave_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "leaveCommences", "order": "ASCENDING" },
+        { "fieldPath": "leaveEnds", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "pallet_transfers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "shiftApprovalDocId", "order": "ASCENDING" },
+        { "fieldPath": "stoppedAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

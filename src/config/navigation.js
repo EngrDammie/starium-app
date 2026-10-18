@@ -57,12 +57,26 @@ export const MENU_CONFIG = [
     title: 'Human Resources',
     icon: '👥',
     children: [
+      // openToAll: visible to EVERY signed-in user, whatever their department roles.
+      // Needed for My Leave — a restricted employee has an EMPTY
+      // departmentRoles array (task 1.5), so without this flag they can see no
+      // page in the entire app and land on /no-access forever.
+      // Deliberately NOT achieved by listing all eight department roles: that
+      // would silently break the day HR adds a ninth, because the new role
+      // would be missing from the list and nobody could see My Leave.
+      { path: '/my-leave', label: 'My Leave', icon: '🗓️', openToAll: true, allowedRoles: [] },
+
       // /employees now has a real route and page behind it (EmployeeRoster.jsx).
       // The former /payroll entry was removed on purpose: it advertised a page
       // that has never existed, so HR could click it and get nothing. A menu
       // that lies is worse than a menu that is incomplete. Payroll remains out
       // of scope until it is actually built.
-      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] }
+      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] },
+      // Placeholder routes for tasks 5.2 and 6.3. Listed now so the menu is
+      // complete once those pages land; both resolve to /no-access until then
+      // rather than 404ing.
+      { path: '/leave-approvals', label: 'Leave Approvals', icon: '✅', allowedRoles: ['hr_staff', 'hr_manager'] },
+      { path: '/leave-report', label: 'Leave Report', icon: '📊', allowedRoles: ['hr_staff', 'hr_manager'] }
     ]
   },
   {

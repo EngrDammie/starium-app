@@ -15,6 +15,7 @@ import UserManagement from './pages/UserManagement';
 import ActiveUsers from './pages/ActiveUsers';
 import EmployeeRoster from './pages/EmployeeRoster';
 import NoAccess from './pages/NoAccess';
+import MyLeave from './pages/MyLeave';
 import EmptySilos from './pages/EmptySilos';
 import EmptySilosReport from './pages/EmptySilosReport';
 import StopMachine from './pages/StopMachine';
@@ -47,6 +48,11 @@ function App() {
       <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/active-users" element={<ProtectedRoute><ActiveUsers /></ProtectedRoute>} />
       <Route path="/employees" element={<ProtectedRoute><EmployeeRoster /></ProtectedRoute>} />
+      <Route path="/my-leave" element={<ProtectedRoute><MyLeave /></ProtectedRoute>} />
+      {/* Placeholders for tasks 5.2 and 6.3. They resolve to /no-access for
+          now rather than 404ing, so the HR menu never advertises a dead link. */}
+      <Route path="/leave-approvals" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
+      <Route path="/leave-report" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
       {/* Deliberately NOT in MENU_CONFIG, so getAllowedRolesForPath returns
           null and ProtectedRoute lets any signed-in user through. This is the
           landing page for an account with no permissions yet, so it must be

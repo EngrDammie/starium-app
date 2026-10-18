@@ -26,6 +26,7 @@ const EXPECTED_COLLECTIONS = [
   'machine_issues',
   'shift_approvals',
   'employees',
+  'leave_requests',
 ];
 
 function loadRules() {

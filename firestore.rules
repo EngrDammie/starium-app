@@ -84,6 +84,26 @@ service cloud.firestore {
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
+    // ─── leave_requests ────────────────────────────────────────────
+    // One document per leave request, mirroring the paper Leave Request Form
+    // field for field.
+    //
+    // KNOWN LIMITATION (deliberate, tracked on task 7.1):
+    // canWriteRecord() grants create/update to any authenticated user, so a
+    // determined user could updateDoc someone else's request in principle. The
+    // sequential approval engine enforces the chain in the UI, but the UI is
+    // not a security boundary. Tightening this needs a rule reading
+    // departmentRoles/actionRoles out of user_roles, and the existing isAdmin()
+    // helper does not match what the app writes (it checks `role` while
+    // UserManagement writes `systemRole`), so it must be fixed first or every
+    // rule built on it is wrong.
+    match /leave_requests/{requestId} {
+      allow read: if true;
+      allow create: if canWriteRecord();
+      allow update: if canWriteRecord();
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
     // ─── ALERTS ─────────────────────────────────────────────
     // System activity/notification feed — any authenticated user posts/reads
     match /alerts/{alertId} {

@@ -136,3 +136,31 @@ jobs:
       # Until this is re-enabled, firestore.rules changes are NOT live. Verify
       # after any rule edit:
       #   firebase deploy --only firestore:rules --project starium-rafa-app
+      #
+      # ─── COMPOSITE INDEXES: A SECOND MANUAL STEP ────────────────────────
+      # Added 18 Oct 2026, after the leave_requests collection went live.
+      #
+      # The same reasoning applies to firestore.indexes.json, which this repo
+      # did not have until now. Firestore serves a query that combines a
+      # where-filter with an orderBy on a different field ONLY if a composite
+      # index covers both. Without one the read fails with FAILED_PRECONDITION
+      # — which this app's error handlers swallow, so the page just renders
+      # empty and nobody is told why.
+      #
+      # That is not hypothetical. Shipping leave_requests surfaced the
+      # pre-existing breakage in pallet_transfers, where
+      # where(shiftApprovalDocId) + orderBy(stoppedAt) had never had an index
+      # and the pallet transfer subscription had been returning nothing.
+      #
+      # After editing firestore.indexes.json:
+      #   firebase deploy --only firestore:indexes --project starium-rafa-app
+      #
+      # New indexes take time to build. Until they report READY, Firestore
+      # answers FAILED_PRECONDITION with "that index is currently building" —
+      # a different message from "requires an index", and easy to misread as
+      # "the deploy did not work". Wait for READY, then check with:
+      #   bash scripts/probe-firestore-indexes.sh
+      #
+      # Do NOT deploy with --force: it deletes every index in the project that
+      # is absent from firestore.indexes.json, and this file only catalogues
+      # the query shapes checked so far.
