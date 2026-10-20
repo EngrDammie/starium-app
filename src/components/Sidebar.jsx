@@ -6,7 +6,7 @@ import { MENU_CONFIG, canAccessRoute } from '../config/navigation';
 import rafaLogo from '../assets/rafa-logo.svg';
 
 export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
-  const { systemRole, departmentRoles } = useAuth();
+  const { systemRole, departmentRoles, actionRoles } = useAuth();
   const location = useLocation();
   const [openCategory, setOpenCategory] = useState('Quality Control'); // Default open tab
 
@@ -18,7 +18,7 @@ export default function Sidebar({ isOpen, onClose, onOpenBroadcast }) {
   // it. This logic used to exist here AND separately (and differently) in
   // ProtectedRoute — the copies drifted, which is how a page could be offered
   // in the menu and then refused on arrival.
-  const canViewRoute = (route) => canAccessRoute(route, systemRole, departmentRoles);
+  const canViewRoute = (route) => canAccessRoute(route, systemRole, departmentRoles, actionRoles);
 
   // Pre-filter the menu to remove empty categories
   const visibleMenu = MENU_CONFIG.map(category => {

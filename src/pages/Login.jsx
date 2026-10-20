@@ -19,7 +19,7 @@ export default function Login() {
   const [modalMessage, setModalMessage] = useState({ type: '', text: '' });
   
   const navigate = useNavigate();
-  const { currentUser, systemRole, departmentRoles } = useAuth();
+  const { currentUser, systemRole, departmentRoles, actionRoles } = useAuth();
 
   // 🎯 FIX: Wait here patiently until the Brain says the user has their keycards!
   //
@@ -29,9 +29,9 @@ export default function Login() {
   // loop between here and '/'.
   useEffect(() => {
     if (!currentUser) return;
-    const home = getFirstAccessiblePath(systemRole, departmentRoles);
+    const home = getFirstAccessiblePath(systemRole, departmentRoles, actionRoles);
     navigate(home ?? '/no-access', { replace: true });
-  }, [currentUser, systemRole, departmentRoles, navigate]);
+  }, [currentUser, systemRole, departmentRoles, actionRoles, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

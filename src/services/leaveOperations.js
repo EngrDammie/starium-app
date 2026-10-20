@@ -20,14 +20,15 @@
 // kept in a mutable counter. The history is the ledger, so there is nothing to
 // reconcile at year end and nothing that can drift out of step.
 //
-// Approval writes are NOT implemented here — they belong to task 5.1, and the
-// sequential chain is a separate concern from submission.
+// Approval writes live in decideLeaveRequest below (task 5.1). The chain
+// itself is decided by leaveWorkflow.js — pure, tested, Firebase-free — and
+// this module is the ONLY place allowed to apply what it sanctions.
 // ─────────────────────────────────────────────────────────────────────────
 
 import { db } from '../config/firebase';
 import {
   collection, doc, addDoc, updateDoc, getDoc, getDocs, deleteDoc,
-  query, where, onSnapshot, serverTimestamp, orderBy, Timestamp,
+  query, where, onSnapshot, serverTimestamp, orderBy, Timestamp, runTransaction,
 } from 'firebase/firestore';
 
 import {
@@ -37,6 +38,9 @@ import {
 } from './leaveCalculations';
 
 import { pushToQueue, readQueue, writeQueue, clearQueue } from './queueStore';
+import {
+  currentStageIndex, buildDecisionPatch,
+} from './leaveWorkflow';
 
 const COLLECTION = 'leave_requests';
 export const LEAVE_QUEUE_KEY = 'starium_leave_request_queue';
@@ -250,7 +254,7 @@ export function getQueuedLeaveRequests() {
 
 // Flushes queued requests. Returns { synced, failed } to match the other
 // module sync functions, so the offline registry treats it like any other.
-export async function syncLeaveRequestOfflineQueue() {
+export async function syncLeaveRequestQueue() {
   const queue = getQueuedLeaveRequests();
   if (queue.length === 0) return { synced: 0, failed: 0 };
 
@@ -348,6 +352,87 @@ export async function confirmResumption(requestId, { employeeId, user, note = ''
   } catch (error) {
     return { ok: false, error: error.message };
   }
+}
+
+// ─── Decisions (task 5.1) ───────────────────────────────────────────────────
+
+// Applies an approve/reject decision to the CURRENT stage of a request.
+//
+// WHY THIS IS A TRANSACTION AND NOT read-then-write:
+// two approvers — say the supervisor and the Head of HR stepping in early —
+// can both see "awaiting supervisor" and both press Approve within the same
+// second. A plain updateDoc would apply both patches; the second would
+// silently overwrite the first's audit record and the chain would show the
+// wrong person as having signed. runTransaction re-reads the request inside
+// the transaction and refuses to apply a patch built against stale state,
+// so the loser gets a clear "already decided" instead of corrupting the
+// record of who authorised paid leave.
+//
+// WHY THERE IS NO OFFLINE PATH:
+// an approval authorises someone's PAID LEAVE. If it sat in localStorage
+// until Wi-Fi returned, then for a while the official record of who approved
+// paid leave would not exist. That is the one deliberate exception to this
+// app's offline-first rule (blueprint section 10) — the UI disables the
+// buttons when offline, and this function double-checks, so nobody can
+// "fix" the gap from a console.
+export async function decideLeaveRequest(requestId, { decision, note = '', user, policy, isOnline = true }) {
+  if (!requestId) return { ok: false, error: 'No request selected.' };
+  if (!isOnline) {
+    return { ok: false, offline: true, error: 'Approval needs a connection. Nothing has been saved — reconnect and try again.' };
+  }
+
+  const ref = doc(db, COLLECTION, requestId);
+
+  try {
+    const actedAsDeputyFor = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error('That request no longer exists.');
+
+      const request = toRequest(snap);
+      const stageIndex = currentStageIndex(request, policy);
+
+      // Refuse rather than recompute: a patch built for a different stage is
+      // a patch built against a request that has already moved on.
+      const built = buildDecisionPatch({ request, policy, decision, note, user, stageIndex });
+      if (!built.ok) throw new DecisionError(built.error);
+
+      // Firestore's transaction requires every write to be a serverTimestamp,
+      // not the caller-supplied Date the pure engine produced.
+      const workflow = {};
+      for (const [stageId, entry] of Object.entries(built.patch.workflow)) {
+        workflow[stageId] = {
+          ...entry,
+          actedAt: entry.actedAt ? serverTimestamp() : null,
+        };
+      }
+
+      tx.update(ref, {
+        workflow,
+        status: built.patch.status,
+        rejectedReason: built.patch.rejectedReason ?? null,
+        rejectedBy: built.patch.rejectedBy ?? null,
+        rejectedAt: built.patch.rejectedAt ? serverTimestamp() : null,
+        fullyApprovedAt: built.patch.fullyApprovedAt ? serverTimestamp() : null,
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email || null,
+      });
+
+      return { stage: built.stage.label, actedAsDeputyFor: built.actedAsDeputyFor, status: built.patch.status };
+    });
+
+    return { ok: true, ...actedAsDeputyFor };
+  } catch (error) {
+    if (error instanceof DecisionError) return { ok: false, error: error.message };
+    console.error('[leave] decision failed:', error);
+    return { ok: false, error: error.message || 'Could not save that decision.' };
+  }
+}
+
+// Distinguishes "the chain refused this" (a message worth showing verbatim)
+// from a transport failure (worth logging). Both travel as exceptions inside
+// the transaction; only the refusal should reach the user word-for-word.
+class DecisionError extends Error {
+  constructor(message) { super(message); this.name = 'DecisionError'; }
 }
 
 // ─── Reads ──────────────────────────────────────────────────────────────────

@@ -23,11 +23,11 @@ import { useAuth } from '../context/AuthContext';
 import { getAccessiblePaths } from '../config/navigation';
 
 export default function NoAccess() {
-  const { systemRole, departmentRoles, userFullName, firstName, employee, logout } = useAuth();
+  const { systemRole, departmentRoles, actionRoles, userFullName, firstName, employee, logout } = useAuth();
   const location = useLocation();
   const state = location.state || {};
 
-  const accessible = getAccessiblePaths(systemRole, departmentRoles);
+  const accessible = getAccessiblePaths(systemRole, departmentRoles, actionRoles);
   const isAdminOnlyPage = !!state.adminOnly;
 
   // The account was created on a specific day by someone else. Showing the

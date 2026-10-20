@@ -1291,18 +1291,27 @@ closedAt         <span class="k">null</span></pre>
 
       <div class="tw">
         <table>
-          <thead><tr><th>Phase</th><th>What it delivers</th><th>Tasks</th></tr></thead>
+          <thead><tr><th>Phase</th><th>What it delivers</th><th>Tasks</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td><strong>0</strong> · Assumptions</td><td>This document — every open decision recorded with a default, so nothing blocks the build</td><td>done</td></tr>
-            <tr><td><strong>1</strong> · Employee records</td><td>The employee database, its service layer, the Roster screen, and the login link</td><td>4</td></tr>
-            <tr><td><strong>2</strong> · Configuration</td><td>Leave policy as editable settings, plus the three new approval roles</td><td>2</td></tr>
-            <tr><td><strong>3</strong> · Balance engine</td><td>All the date and arithmetic logic, written as pure functions with automated tests</td><td>2</td></tr>
-            <tr><td><strong>4</strong> · The request form</td><td>Sections 1 and 2 of the paper form, plus the employee's own leave screen</td><td>4</td></tr>
-            <tr><td><strong>5</strong> · Approvals</td><td>The three-stage chain, the approver's queue, and offline handling for submissions</td><td>3</td></tr>
-            <tr><td><strong>6</strong> · Output</td><td>The printable form, the dashboard card, and the reports</td><td>3</td></tr>
-            <tr><td><strong>7</strong> · Hardening</td><td>Permissions, tests, regression checks, demo and documentation</td><td>4</td></tr>
+            <tr><td><strong>0</strong> · Assumptions</td><td>This document — every open decision recorded with a default, so nothing blocks the build</td><td>done</td><td><strong>Shipped</strong></td></tr>
+            <tr><td><strong>1</strong> · Employee records</td><td>The employee database, its service layer, the Roster screen, and the login link</td><td>4</td><td><strong>Shipped</strong> 17 Oct</td></tr>
+            <tr><td><strong>2</strong> · Configuration</td><td>Leave policy as editable settings, plus the three new approval roles</td><td>2</td><td><strong>Shipped</strong> 17 Oct</td></tr>
+            <tr><td><strong>3</strong> · Balance engine</td><td>All the date and arithmetic logic, written as pure functions with automated tests</td><td>2</td><td><strong>Shipped</strong> 18 Oct · 70 tests</td></tr>
+            <tr><td><strong>4</strong> · The request form</td><td>Sections 1 and 2 of the paper form, plus the employee's own leave screen</td><td>4</td><td><strong>Shipped</strong> 19 Oct · fixes 19 Oct</td></tr>
+            <tr><td><strong>5</strong> · Approvals</td><td>The three-stage chain, the approver's queue, and offline handling for submissions</td><td>3</td><td><strong>Shipped</strong> 20 Oct</td></tr>
+            <tr><td><strong>6</strong> · Output</td><td>The printable form, the dashboard card, and the reports</td><td>3</td><td><strong>Shipped</strong> 20 Oct</td></tr>
+            <tr><td><strong>7</strong> · Hardening</td><td>Permissions, tests, regression checks, demo and documentation</td><td>4</td><td><strong>Shipped</strong> 20 Oct · 205 tests, personal data now requires a signed-in reader</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">What shipped on 20 October, beyond the plan</div>
+          <p>Shipping Phase 5 surfaced a gap nobody had noticed: the project had <strong>no Firestore index file at all</strong>. Any query combining a filter with a sort on a different field was failing silently — the app's error handlers swallow that error, so the affected screens just looked empty. One pre-existing break (the pallet transfer history) had been returning nothing for who knows how long. Both are fixed, and a probe script now checks every query shape the app issues against the live database.</p>
+          <p>The same day closed the security finding from section 04: employee records, leave requests and role documents stopped being readable by anyone on the internet holding the API key. Reads now require a signed-in user, and the rules enforce client-side permission decisions server-side — the UI is no longer the only thing standing between a staff member and the CEO's leave history.</p>
+        </div>
       </div>
 
       <h3>Why this order</h3>

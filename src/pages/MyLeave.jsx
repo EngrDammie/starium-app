@@ -21,6 +21,9 @@ import {
   subscribeToLeaveRequests, cancelLeaveRequest, confirmResumption, prepareLeaveRequest,
 } from '../services/leaveOperations';
 import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
+// Print: HR's cabinet still runs on paper, and the printed copy must match
+// the app or the two become systems to reconcile. See LeavePrint.jsx.
+import { Link } from 'react-router-dom';
 
 const statusStyle = {
   pending_supervisor: 'bg-status-warning/20 text-status-warning border-status-warning/40',
@@ -253,6 +256,10 @@ export default function MyLeave() {
                           Cancel
                         </button>
                       )}
+                      <Link to={`/print/leave/${r.id}`} title="Print this form"
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-primary hover:text-black transition-colors">
+                        🖨️
+                      </Link>
                     </div>
                     <Stepper request={r} policy={policy} />
                   </div>

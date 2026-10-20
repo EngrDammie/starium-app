@@ -117,3 +117,50 @@ describe('getAccessiblePaths', () => {
     }
   });
 });
+
+// ─── The action-role axis (task 5.2) ─────────────────────────────────────────
+//
+// The three approval powers are ACTION roles, not department roles: a
+// production manager who signs at the HOD stage is not in HR and should not
+// be. Before this axis existed, an approver could hold the power to sign and
+// still have no way to reach the screen where the signature happens — the
+// /leave-approvals route was gated to the HR department, so a supervisor in
+// Production was locked out of their own queue.
+describe('canAccessRoute with action roles', () => {
+  const supervisorInProduction = ['prod_staff'];
+  const supervisorAction = ['leave_supervisor'];
+
+  it('lets an approver reach Leave Approvals through their ACTION role alone', () => {
+    const route = byPath('/leave-approvals');
+    expect(route.allowedActionRoles).toContain('leave_supervisor');
+    expect(canAccessRoute(route, 'standard', supervisorInProduction, supervisorAction)).toBe(true);
+  });
+
+  it('does not grant Leave Approvals to a Production login with no approval power', () => {
+    const route = byPath('/leave-approvals');
+    expect(canAccessRoute(route, 'standard', supervisorInProduction, [])).toBe(false);
+  });
+
+  it('does not grant the approver the rest of the HR department menu', () => {
+    // The power to SIGN leave is not the power to see the roster or the
+    // report. Those stay department-gated.
+    const roster = byPath('/employees');
+    const report = byPath('/leave-report');
+    expect(canAccessRoute(roster, 'standard', supervisorInProduction, supervisorAction)).toBe(false);
+    expect(canAccessRoute(report, 'standard', supervisorInProduction, supervisorAction)).toBe(false);
+  });
+
+  it('keeps the HR department path working alongside the action-role path', () => {
+    const route = byPath('/leave-approvals');
+    expect(canAccessRoute(route, 'standard', ['hr_manager'], [])).toBe(true);
+    expect(canAccessRoute(route, 'standard', ['hr_staff'], [])).toBe(true);
+  });
+
+  it('lands a pure approver on Leave Approvals after login, not on My Leave by accident', () => {
+    // getFirstAccessiblePath must know about action roles too, or an
+    // approver who is not in any department gets sent to their fallback page
+    // instead of the queue with their work in it.
+    const first = getFirstAccessiblePath('standard', [], ['leave_supervisor']);
+    expect(first).toBe('/leave-approvals');
+  });
+});

@@ -16,6 +16,9 @@ import ActiveUsers from './pages/ActiveUsers';
 import EmployeeRoster from './pages/EmployeeRoster';
 import NoAccess from './pages/NoAccess';
 import MyLeave from './pages/MyLeave';
+import LeaveApprovals from './pages/LeaveApprovals';
+import LeavePrint from './pages/LeavePrint';
+import LeaveReport from './pages/LeaveReport';
 import EmptySilos from './pages/EmptySilos';
 import EmptySilosReport from './pages/EmptySilosReport';
 import StopMachine from './pages/StopMachine';
@@ -51,8 +54,13 @@ function App() {
       <Route path="/my-leave" element={<ProtectedRoute><MyLeave /></ProtectedRoute>} />
       {/* Placeholders for tasks 5.2 and 6.3. They resolve to /no-access for
           now rather than 404ing, so the HR menu never advertises a dead link. */}
-      <Route path="/leave-approvals" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
-      <Route path="/leave-report" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
+      <Route path="/leave-approvals" element={<ProtectedRoute><LeaveApprovals /></ProtectedRoute>} />
+      {/* The printable form. Deliberately NOT in MENU_CONFIG — it is reached
+          from a Print button on a specific request, not from the sidebar. */}
+      <Route path="/print/leave/:id" element={<ProtectedRoute><LeavePrint /></ProtectedRoute>} />
+      {/* Placeholder for task 6.3. It resolves to /no-access until the report
+          lands rather than 404ing, so the HR menu never advertises a dead link. */}
+      <Route path="/leave-report" element={<ProtectedRoute><LeaveReport /></ProtectedRoute>} />
       {/* Deliberately NOT in MENU_CONFIG, so getAllowedRolesForPath returns
           null and ProtectedRoute lets any signed-in user through. This is the
           landing page for an account with no permissions yet, so it must be

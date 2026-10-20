@@ -37,7 +37,17 @@ probe() {
   elif echo "$out" | grep -q "requires an index"; then
     printf 'MISSING INDEX    %s\n' "$label"
   elif echo "$out" | grep -q "PERMISSION_DENIED\|insufficient permissions"; then
-    printf 'PERMISSION       %s  (rules not deployed — index status unknown)\n' "$label"
+    # Since task 7.1 the personal-data collections DENY unauthenticated reads
+    # on purpose — that is the fix, not a failure. This script has no login,
+    # so for employees, leave_requests and user_roles a 403 is the EXPECTED
+    # answer and means nothing about indexes. Only factory collections can be
+    # index-checked this way; the others need an authenticated probe.
+    case "$coll" in
+      employees|leave_requests|user_roles)
+        printf 'DENIED (correct) %s  — read requires a signed-in user since task 7.1\n' "$label" ;;
+      *)
+        printf 'PERMISSION       %s  (unexpected — check deployed rules)\n' "$label" ;;
+    esac
   elif echo "$out" | grep -q '"code": 400'; then
     printf 'BAD REQUEST      %s -> %s\n' "$label" "$(echo "$out" | tr -d '\n' | head -c 200)"
   else

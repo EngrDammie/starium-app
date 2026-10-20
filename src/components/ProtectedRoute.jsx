@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { canAccessRoute, findRoute, getFirstAccessiblePath } from '../config/navigation';
 
 export default function ProtectedRoute({ children }) {
-  const { currentUser, systemRole, departmentRoles, loading } = useAuth();
+  const { currentUser, systemRole, departmentRoles, actionRoles, loading } = useAuth();
   const location = useLocation();
 
   if (loading) return null; // Wait for Firebase to check who is logged in
@@ -34,7 +34,7 @@ export default function ProtectedRoute({ children }) {
   // again.
   const route = findRoute(location.pathname);
 
-  if (route && !canAccessRoute(route, systemRole, departmentRoles)) {
+  if (route && !canAccessRoute(route, systemRole, departmentRoles, actionRoles)) {
     // WHY THE ADMIN-ONLY CASE IS SEPARATE: /system-config and /active-users
     // list no roles because they are reserved for the system owner, not
     // because nobody was ever meant to click them. Someone who types the URL
@@ -57,7 +57,7 @@ export default function ProtectedRoute({ children }) {
     // The fix is to ask the navigation config which page this person CAN
     // open, and go there. If they can open nothing, they land on /no-access,
     // which explains the situation instead of trapping them.
-    const fallback = getFirstAccessiblePath(systemRole, departmentRoles);
+    const fallback = getFirstAccessiblePath(systemRole, departmentRoles, actionRoles);
 
     return (
       <Navigate

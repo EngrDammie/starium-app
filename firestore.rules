@@ -17,22 +17,102 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Get the current user's email
-    function currentEmail() {
-      return request.auth.token.email;
-    }
-
-    // Check if the current user has the 'admin' role in user_roles
+    // Check if the current user is an admin (the system owner).
+    //
+    // FIXED (task 7.1): this used to read `data.role == 'admin'` — a field
+    // the app stopped writing years ago. It only kept working by accident,
+    // because the two oldest super_admin accounts carry a legacy `role`
+    // field from that era. Newer ones do not, so whether an owner could
+    // delete a record or change a setting depended on which write path
+    // created their account. The field the app actually writes is
+    // `systemRole`; the legacy check is kept as a fallback so the old
+    // accounts do not lose access the moment this deploys.
+    //
+    // Every field access is guarded by `in`: reading a field a document
+    // does not have is an ERROR in rules (not a false), and an error denies
+    // the request — which would have locked out every account created since
+    // the field was renamed.
+    //
+    // The two-step shape (isAdmin → isAdminDoc) keeps `let` from evaluating
+    // get() before the authentication check has passed. isAdmin() itself may
+    // be called from rules (like the delete lines) that an unauthenticated
+    // request can reach; the inner function may only be called once
+    // isAuthenticated() has short-circuited to true.
     function isAdmin() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && isAdminDoc();
     }
 
-    // Fallback: also check by email (handles case where doc ID ≠ UID)
-    function isAdminByEmail() {
-      return isAuthenticated() &&
-        exists(/databases/$(database)/documents/user_roles/$(currentEmail())) ||
-        (resource.data.email == currentEmail() && resource.data.role == 'admin');
+    function isAdminDoc() {
+      let d = get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data;
+      return (('systemRole' in d) && d.systemRole == 'super_admin')
+        || (('role' in d) && d.role == 'admin');
+    }
+
+    // ─── Leave / HR permission helpers (task 7.1) ─────────────
+    //
+    // WHY THESE LIVE IN RULES AND NOT ONLY IN THE APP:
+    // the client-side chain (leaveWorkflow.js) decides which buttons to
+    // show, but the UI is not a security boundary — anyone with the Firestore
+    // API key can write a document directly. These helpers make the same
+    // decisions server-side: only the owner, HR, an approver, or the system
+    // owner may move a leave request or an employee record.
+    //
+    // Two load-bearing conventions, followed by every helper here:
+    //   1. `in` guards every optional field — a missing field must mean
+    //      "does not hold the role", never an error.
+    //   2. The eager `let` binding lives in an inner *Doc function that is
+    //      only reachable after isAuthenticated() has passed, so get() is
+    //      never evaluated with a null uid.
+
+    function isHrDept() {
+      return isAuthenticated() && hrDeptDoc();
+    }
+
+    function hrDeptDoc() {
+      let d = get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data;
+      return ('departmentRoles' in d) && d.departmentRoles.hasAny(['hr_staff', 'hr_manager']);
+    }
+
+    function hasLeaveApprovalRole() {
+      return isAuthenticated() && leaveApproverDoc();
+    }
+
+    function leaveApproverDoc() {
+      let d = get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data;
+      return (('actionRoles' in d) && d.actionRoles.hasAny(['leave_supervisor', 'leave_hod', 'leave_hr_head']))
+        || (('approvalRoles' in d) && d.approvalRoles.hasAny(['leave_supervisor', 'leave_hod', 'leave_hr_head']));
+    }
+
+    // The person whose employee record this is. Both link fields are
+    // checked because the self-service link-back on login writes
+    // linkedUserUid onto a record that only has linkedUserEmail at that
+    // moment — the app's own onboarding path must not be denied by its own
+    // guard.
+    function ownsEmployeeRecord(employeeId) {
+      return isAuthenticated() && ownsEmployeeDoc(employeeId);
+    }
+
+    function ownsEmployeeDoc(employeeId) {
+      let e = get(/databases/$(database)/documents/employees/$(employeeId)).data;
+      return (('linkedUserUid' in e) && e.linkedUserUid == request.auth.uid)
+        || (('linkedUserEmail' in e) && e.linkedUserEmail == request.auth.token.email.lower());
+    }
+
+    // Reads of PERSONAL DATA (employees, leave_requests, user_roles) require
+    // a signed-in user. Factory collections stay open-read until the wider
+    // hardening pass — see the note on the employees block below.
+    function canReadRecord() {
+      return !isAuthEnabled() || isAuthenticated();
+    }
+
+    // WHO may create or change a leave request: the employee it belongs to,
+    // HR, a leave approver, or the system owner. Auth-disabled dev mode
+    // short-circuits open, exactly like every other write in this file —
+    // tightening reads and writes must never quietly break local development.
+    function mayWriteLeaveRequestFor(employeeId) {
+      return !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin() || isHrDept() || hasLeaveApprovalRole() || ownsEmployeeRecord(employeeId)));
     }
 
     // Allow a normal (non-admin) signed-in user to write a record
@@ -55,11 +135,23 @@ service cloud.firestore {
     }
 
     // ─── user_roles collection ─────────────────────────────
+    // WHO CAN READ: any signed-in user. This used to be world-readable,
+    // which put every staff member's email and roles on the open internet
+    // for anyone holding the API key. The client-side role checks the old
+    // comment cited all happen AFTER login, so requiring a signed-in user
+    // breaks nothing.
     match /user_roles/{userId} {
-      // Anyone can read roles (needed for client-side role checks)
-      allow read: if true;
-      // Only admins can manage roles (or anyone if auth is disabled)
-      allow write: if !isAuthEnabled() || isAdmin();
+      allow read: if canReadRecord();
+      // WHO CAN WRITE: the system owner, or HR (hr_staff / hr_manager) —
+      // but HR may never create or promote a super_admin. That escalation
+      // path was open in the UI until task 1.6 closed it client-side; this
+      // is the same decision enforced server-side, so the UI and the
+      // database can no longer disagree about who hands out god-mode.
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && (isAdmin() || (isHrDept() && request.resource.data.systemRole != 'super_admin')));
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated() && (isAdmin() || (isHrDept() && request.resource.data.systemRole != 'super_admin')));
+      allow delete: if !isAuthEnabled() || isAdmin();
     }
 
     // ─── employees (HR master records) ─────────────────────
@@ -67,20 +159,23 @@ service cloud.firestore {
     // deliberately NOT the Firebase UID, so staff who never log in
     // still have a record and can still request leave.
     //
-    // SECURITY NOTE (deliberate, temporary): `read: if true` matches every
-    // other collection in this file, because the client performs its own
-    // role checks and several modules read before the auth listener
-    // resolves. Tightening only `employees` would be inconsistent and could
-    // break the Command Center load.
+    // SECURITY (fixed, task 7.1): these records hold names, SAP numbers,
+    // phone numbers, addresses and joining dates — genuine personal data.
+    // They used to be readable by anyone on the internet with the API key
+    // (verified live: an unauthenticated REST read returned HTTP 200). Reads
+    // now require a signed-in user.
     //
-    // The trade-off is real: this exposes SAP numbers and leave balances to
-    // anyone who can reach the Firestore API unauthenticated. Acceptable for
-    // an internal factory tool behind the auth toggle; NOT acceptable for any
-    // external or public-facing deployment. Revisit before that happens.
+    // WRITES: HR manages the roster; the system owner may too; and the
+    // employee themselves may write their OWN record for one purpose — the
+    // self-service link-back that pins linkedUserUid on first login
+    // (AuthContext). A random qc_staff writing someone else's HR record is
+    // now refused by the database, not just hidden by the UI.
     match /employees/{employeeId} {
-      allow read: if true;
-      allow create: if canWriteRecord();
-      allow update: if canWriteRecord();
+      allow read: if canReadRecord();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && (isAdmin() || isHrDept()));
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated() && (isAdmin() || isHrDept() || ownsEmployeeRecord(employeeId)));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
@@ -88,19 +183,17 @@ service cloud.firestore {
     // One document per leave request, mirroring the paper Leave Request Form
     // field for field.
     //
-    // KNOWN LIMITATION (deliberate, tracked on task 7.1):
-    // canWriteRecord() grants create/update to any authenticated user, so a
-    // determined user could updateDoc someone else's request in principle. The
-    // sequential approval engine enforces the chain in the UI, but the UI is
-    // not a security boundary. Tightening this needs a rule reading
-    // departmentRoles/actionRoles out of user_roles, and the existing isAdmin()
-    // helper does not match what the app writes (it checks `role` while
-    // UserManagement writes `systemRole`), so it must be fixed first or every
-    // rule built on it is wrong.
+    // SECURITY (fixed, task 7.1): the KNOWN LIMITATION that used to sit here
+    // — any authenticated user could updateDoc anyone's request — is closed.
+    // The sequential chain in leaveWorkflow.js still decides which buttons
+    // the UI shows, but the rules now enforce the same decision server-side:
+    // a request may only be created or changed by its owner, HR, a leave
+    // approver, or the system owner. The UI is no longer the only thing
+    // standing between a staff member and the CEO's leave history.
     match /leave_requests/{requestId} {
-      allow read: if true;
-      allow create: if canWriteRecord();
-      allow update: if canWriteRecord();
+      allow read: if canReadRecord();
+      allow create: if mayWriteLeaveRequestFor(request.resource.data.employeeId);
+      allow update: if mayWriteLeaveRequestFor(resource.data.employeeId);
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 

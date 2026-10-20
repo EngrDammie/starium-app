@@ -4,8 +4,8 @@ import { OFFLINE_MODULES, normalizeSyncResult, getModuleById } from '../../confi
 // Guards the contract NetworkContext depends on: every module descriptor
 // must carry the queue key, sync fn, and legacy flat names.
 describe('offlineModules registry', () => {
-  it('covers all 9 offline queues', () => {
-    expect(OFFLINE_MODULES).toHaveLength(9);
+  it('covers all 10 offline queues', () => {
+    expect(OFFLINE_MODULES).toHaveLength(10);
   });
 
   it('has unique ids, queue keys, and legacy prop names', () => {
@@ -38,9 +38,22 @@ describe('offlineModules registry', () => {
       'palletQueueCount',
       'emptySiloQueueCount',
       'stoppedMachineQueueCount',
+      'leaveRequestQueueCount',
     ]) {
       expect(countProps).toContain(expected);
     }
+  });
+
+  it('leaves are registered for SUBMISSIONS only — approvals must never queue', () => {
+    // The deliberate exception to offline-first (blueprint section 10):
+    // a leave request may wait on the device, an approval may not, because
+    // an approval authorises paid leave and must exist in the database the
+    // moment it is made. If someone adds an approval queue to this registry,
+    // they are reopening a gap in a legal record. This test is the tripwire.
+    const leave = getModuleById('leaveRequest');
+    expect(leave).toBeTruthy();
+    expect(leave.label).toMatch(/request/i);
+    expect(OFFLINE_MODULES.some((m) => /approval/i.test(m.id) || /approval/i.test(m.label))).toBe(false);
   });
 });
 

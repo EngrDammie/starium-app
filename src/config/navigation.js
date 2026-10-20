@@ -57,26 +57,24 @@ export const MENU_CONFIG = [
     title: 'Human Resources',
     icon: '👥',
     children: [
-      // openToAll: visible to EVERY signed-in user, whatever their department roles.
-      // Needed for My Leave — a restricted employee has an EMPTY
-      // departmentRoles array (task 1.5), so without this flag they can see no
+      // Order is load-bearing, not cosmetic: getFirstAccessiblePath lands a
+      // user on the FIRST page in this list they can open. With the work
+      // queue first, an approver who is also an employee lands on their
+      // queue — their managerial duty — and reaches their own leave via the
+      // menu. A restricted employee cannot open any of the three role-gated
+      // pages, so they still land on My Leave wherever it sits.
+      { path: '/leave-approvals', label: 'Leave Approvals', icon: '✅', allowedRoles: ['hr_staff', 'hr_manager'], allowedActionRoles: ['leave_supervisor', 'leave_hod', 'leave_hr_head'] },
+      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] },
+      { path: '/leave-report', label: 'Leave Report', icon: '📊', allowedRoles: ['hr_staff', 'hr_manager'] },
+
+      // openToAll: visible to EVERY signed-in user, whatever their department
+      // roles. Needed for My Leave (task 4.6): a restricted employee has an
+      // EMPTY departmentRoles array, so without this flag they can see no
       // page in the entire app and land on /no-access forever.
       // Deliberately NOT achieved by listing all eight department roles: that
       // would silently break the day HR adds a ninth, because the new role
       // would be missing from the list and nobody could see My Leave.
       { path: '/my-leave', label: 'My Leave', icon: '🗓️', openToAll: true, allowedRoles: [] },
-
-      // /employees now has a real route and page behind it (EmployeeRoster.jsx).
-      // The former /payroll entry was removed on purpose: it advertised a page
-      // that has never existed, so HR could click it and get nothing. A menu
-      // that lies is worse than a menu that is incomplete. Payroll remains out
-      // of scope until it is actually built.
-      { path: '/employees', label: 'Employee Roster', icon: '📋', allowedRoles: ['hr_staff', 'hr_manager'] },
-      // Placeholder routes for tasks 5.2 and 6.3. Listed now so the menu is
-      // complete once those pages land; both resolve to /no-access until then
-      // rather than 404ing.
-      { path: '/leave-approvals', label: 'Leave Approvals', icon: '✅', allowedRoles: ['hr_staff', 'hr_manager'] },
-      { path: '/leave-report', label: 'Leave Report', icon: '📊', allowedRoles: ['hr_staff', 'hr_manager'] }
     ]
   },
   {
@@ -133,9 +131,19 @@ export const findRoute = (path) => {
 // has an EMPTY departmentRoles array, so without this they can see no page at
 // all. An empty `allowedRoles` array means SUPER ADMIN ONLY — do not confuse
 // the two.
-export function canAccessRoute(route, systemRole, departmentRoles) {
+//
+// `allowedActionRoles` is the third axis, added for Leave Approvals (5.2).
+// The three approval powers (leave_supervisor, leave_hod, leave_hr_head) are
+// ACTION roles, not department roles — a production manager who signs at the
+// HOD stage is not in the HR department and should not be. Listing those
+// powers under allowedRoles would have granted the whole HR department the
+// approvals page, which is a different (and wrong) permission. Without this
+// axis, an approver could hold the power to sign and still have no way to
+// reach the screen where the signature happens.
+export function canAccessRoute(route, systemRole, departmentRoles, actionRoles = []) {
   if (systemRole === 'super_admin') return true;
   if (route?.openToAll) return true;
+  if (route?.allowedActionRoles?.length && route.allowedActionRoles.some(r => actionRoles.includes(r))) return true;
   if (!route?.allowedRoles || route.allowedRoles.length === 0) return false;
   return route.allowedRoles.some(role => (departmentRoles || []).includes(role));
 }
@@ -146,10 +154,10 @@ export function canAccessRoute(route, systemRole, departmentRoles) {
 // so the app never has to guess. A null return is meaningful: the account
 // exists but has no access yet, which deserves a different message from
 // "you tried to open something you cannot".
-export function getFirstAccessiblePath(systemRole, departmentRoles) {
+export function getFirstAccessiblePath(systemRole, departmentRoles, actionRoles = []) {
   for (const category of MENU_CONFIG) {
     for (const route of category.children) {
-      if (canAccessRoute(route, systemRole, departmentRoles)) return route.path;
+      if (canAccessRoute(route, systemRole, departmentRoles, actionRoles)) return route.path;
     }
   }
   return null;
@@ -157,11 +165,11 @@ export function getFirstAccessiblePath(systemRole, departmentRoles) {
 
 // Everything this user can see — lets the no-access screen list what they DO
 // have, so it never claims they have nothing while showing them a sidebar.
-export function getAccessiblePaths(systemRole, departmentRoles) {
+export function getAccessiblePaths(systemRole, departmentRoles, actionRoles = []) {
   const paths = [];
   for (const category of MENU_CONFIG) {
     for (const route of category.children) {
-      if (canAccessRoute(route, systemRole, departmentRoles)) paths.push(route);
+      if (canAccessRoute(route, systemRole, departmentRoles, actionRoles)) paths.push(route);
     }
   }
   return paths;

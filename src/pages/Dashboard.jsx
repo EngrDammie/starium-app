@@ -1,5 +1,5 @@
 // src/pages/Dashboard.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
@@ -14,12 +14,14 @@ import { Link } from 'react-router-dom';
 import { subscribeToAllStringWeights, getShiftDateInfo } from '../services/qcStringWeightOperations';
 import { subscribeToAllBagInspections } from '../services/qcBagInspectionOperations';
 import { subscribeToAllCartonInspections } from '../services/qcCartonInspectionOperations';
+import { subscribeToLeaveRequests } from '../services/leaveOperations';
+import { currentStageIndex, userCanActAtStage } from '../services/leaveWorkflow';
 import { pluralize } from '../services/formatUtils';
 
 export default function Dashboard() {
   const { config, loadingConfig } = useConfig();
-  const { currentUser, systemRole, departmentRoles, firstName } = useAuth();
-  
+  const { currentUser, systemRole, departmentRoles, actionRoles, firstName } = useAuth();
+
   const [level9Count, setLevel9Count] = useState(0);
   const [botCount, setBotCount] = useState(0);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
@@ -32,6 +34,9 @@ export default function Dashboard() {
   const [biCount, setBiCount] = useState(0);
   const [ciCount, setCiCount] = useState(0);
   const [palletTransfer, setPalletTransfer] = useState({ totalPallets: 0, totalCartons: 0, perGram: {} });
+  // Leave, for the card below. One subscription serves both facts the card
+  // shows; filtering per-purpose would subscribe twice to the same list.
+  const [leaveRequests, setLeaveRequests] = useState([]);
 
   const sachetTotal = swCount + biCount + ciCount;
 
@@ -120,6 +125,13 @@ export default function Dashboard() {
     };
   }, [config, loadingConfig]);
 
+  // Leave data for the card below. Needs no config and no shift, so it
+  // subscribes unconditionally rather than waiting on the factory setup.
+  useEffect(() => {
+    const unsubLeave = subscribeToLeaveRequests(setLeaveRequests);
+    return () => { unsubLeave(); };
+  }, []);
+
   // QC Sachet subscriptions
   useEffect(() => {
     if (loadingConfig) return;
@@ -132,6 +144,37 @@ export default function Dashboard() {
   }, [config, loadingConfig]);
 
   const isAdminOrQcManager = systemRole === 'super_admin' || (departmentRoles || []).includes('qc_manager');
+
+  // ─── The leave card's two facts (blueprint section 12) ────────────────────
+  //
+  // FACT 1: who is away today. NAMES AND DATES ONLY — never the reason. A
+  // compassionate leave reason can involve family bereavement or illness, and
+  // the whole factory floor can see this dashboard. Approving someone is a
+  // different thing from being entitled to know why they are ill.
+  const policy = config?.leavePolicy;
+  const awayToday = useMemo(() => {
+    const now = new Date();
+    return leaveRequests.filter(r => {
+      if (r.status !== 'approved') return false;
+      const start = r.leaveCommences instanceof Date ? r.leaveCommences : new Date(r.leaveCommences);
+      const end = r.leaveEnds instanceof Date ? r.leaveEnds : new Date(r.leaveEnds);
+      return !isNaN(start) && !isNaN(end) && now >= start && now <= end;
+    }).sort((a, b) => (a.employeeName || '').localeCompare(b.employeeName || ''));
+  }, [leaveRequests]);
+
+  // FACT 2: requests waiting on THIS viewer's signature — only shown to the
+  // people who can actually act, so a machine operator's dashboard never
+  // advertises a queue that is none of their business.
+  const waitingOnMe = useMemo(() => {
+    if (!policy) return [];
+    const user = { uid: currentUser?.uid, systemRole, actionRoles: actionRoles || [] };
+    return leaveRequests.filter(r => {
+      const at = currentStageIndex(r, policy);
+      if (at === -1) return false;
+      return userCanActAtStage({ request: r, policy, stageIndex: at, user }).can;
+    });
+  }, [leaveRequests, policy, currentUser?.uid, systemRole, actionRoles]);
+
 
   // 🎯 TRUE ENTERPRISE FIX: 100% Dynamic! No hardcoded maps allowed.
   const userCategories = [...new Set(
@@ -176,7 +219,34 @@ export default function Dashboard() {
 
       {/* Main Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-        
+
+        {/* Leave: away today + (for approvers) waiting on your signature.
+            Names and dates ONLY — a compassionate leave reason is deeply
+            personal, and everyone in the factory can see this card. */}
+        <Link to="/my-leave" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_0.5s_ease-out] block cursor-pointer">
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">🗓️</div>
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-status-warning animate-pulse shadow-[0_0_8px_rgba(255,152,0,0.8)]"></span>
+            On Leave Today
+          </h3>
+          <div className="text-5xl font-black text-white mb-1">
+            {awayToday.length} <span className="text-xl font-bold text-gray-400">{pluralize(awayToday.length, 'person')}</span>
+          </div>
+          {awayToday.length > 0 ? (
+            <div className="text-gray-400 text-xs font-bold uppercase tracking-wider truncate">
+              {awayToday.slice(0, 2).map(r => r.employeeName).join(', ')}
+              {awayToday.length > 2 ? ` +${awayToday.length - 2} more` : ''}
+            </div>
+          ) : (
+            <div className="text-status-success text-xs font-bold uppercase tracking-wider">Full attendance</div>
+          )}
+          {waitingOnMe.length > 0 && (
+            <div className="mt-3 px-2 py-1 rounded-md bg-status-warning/20 text-status-warning text-[10px] font-bold uppercase tracking-wider text-center">
+              ⏳ {waitingOnMe.length} waiting on your signature
+            </div>
+          )}
+        </Link>
+
         {/* Metric 1: Live Users */}
         {systemRole === 'super_admin' ? (
           <Link to="/active-users" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,230,118,0.1)] relative overflow-hidden group hover:border-status-success/50 transition-colors animate-[fadeIn_0.5s_ease-out] block cursor-pointer">

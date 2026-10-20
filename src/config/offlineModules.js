@@ -24,6 +24,7 @@ import { syncStringWeightQueue } from '../services/qcStringWeightOperations';
 import { syncPalletTransferOfflineQueue } from '../services/palletTransferOperations';
 import { syncEmptySiloQueue } from '../services/emptySiloOperations';
 import { syncStoppedMachineQueue } from '../services/stoppedMachineOperations';
+import { syncLeaveRequestQueue, LEAVE_QUEUE_KEY } from '../services/leaveOperations';
 
 // Descriptor shape:
 // {
@@ -125,6 +126,23 @@ export const OFFLINE_MODULES = [
     setCountProp: 'setStoppedMachineQueueCount',
     syncingProp: 'isStoppedMachineSyncing',
     setSyncingProp: 'setIsStoppedMachineSyncing',
+  },
+  {
+    // Leave REQUESTS queue offline; leave APPROVALS deliberately do not.
+    // A request is the employee's own record of intent — saving it on the
+    // device until signal returns is exactly what every factory module does.
+    // An approval authorises PAID LEAVE, so it is written straight to the
+    // database or not at all (blueprint section 10). If a future refactor
+    // adds an approval queue here, it is reintroducing a legal-record gap,
+    // not fixing an omission.
+    id: 'leaveRequest',
+    label: 'Leave requests',
+    queueKey: LEAVE_QUEUE_KEY,
+    syncFn: syncLeaveRequestQueue,
+    countProp: 'leaveRequestQueueCount',
+    setCountProp: 'setLeaveRequestQueueCount',
+    syncingProp: 'isLeaveRequestSyncing',
+    setSyncingProp: 'setIsLeaveRequestSyncing',
   },
 ];
 
