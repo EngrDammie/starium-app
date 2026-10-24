@@ -38,7 +38,7 @@ function StatBox({ label, value, sub, tone = '' }) {
   );
 }
 
-export default function LeaveRequestForm({ lodgedFor = null }) {
+export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
   const { currentUser, userFullName } = useAuth();
   const { config, loadingConfig } = useConfig();
   const { isOnline } = useNetwork();
@@ -154,10 +154,23 @@ export default function LeaveRequestForm({ lodgedFor = null }) {
               ? 'You appear to be offline, so this is saved on your device and will send automatically when the connection returns.'
               : `Waiting for ${policy?.stages?.[0]?.label || 'your supervisor'} to approve.`}
           </p>
-          <button onClick={() => { setResult(null); setLeaveCommences(''); setLeaveEnds(''); setAgreed(false); setConfirmedName(''); setPurpose(''); setHandoverNote(''); setShowErrors(false); }}
-            className="bg-primary text-black font-bold py-3 px-6 rounded-lg hover:bg-primary-dark transition-colors">
-            📝 Request more leave
-          </button>
+          {/* Two ways forward, because one is a trap: without this button the
+              only exit from the success screen is another request, and
+              clicking "My Leave" in the sidebar does nothing — the route
+              never changes, so the component never remounts. Found by the
+              browser test suite on its first real click-through. */}
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => { setResult(null); setLeaveCommences(''); setLeaveEnds(''); setAgreed(false); setConfirmedName(''); setPurpose(''); setHandoverNote(''); setShowErrors(false); }}
+              className="bg-primary text-black font-bold py-3 px-6 rounded-lg hover:bg-primary-dark transition-colors">
+              📝 Request more leave
+            </button>
+            {onExit && (
+              <button onClick={onExit}
+                className="bg-[#333] text-gray-200 font-bold py-3 px-6 rounded-lg hover:bg-[#444] transition-colors">
+                ← Back to My Leave
+              </button>
+            )}
+          </div>
         </div>
       </Layout>
     );

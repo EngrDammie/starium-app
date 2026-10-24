@@ -142,7 +142,11 @@ export default function MyLeave() {
   }
 
   if (showForm) {
-    return <LeaveRequestForm />;
+    // onExit exists because the success screen otherwise has no way back to
+    // this list: the sidebar link to /my-leave does not remount the page, so
+    // the employee was stuck on "Leave request submitted" until they
+    // navigated somewhere else entirely.
+    return <LeaveRequestForm onExit={() => setShowForm(false)} />;
   }
 
   if (!employee) {
