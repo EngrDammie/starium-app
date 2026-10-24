@@ -105,14 +105,58 @@ service cloud.firestore {
       return !isAuthEnabled() || isAuthenticated();
     }
 
-    // WHO may create or change a leave request: the employee it belongs to,
-    // HR, a leave approver, or the system owner. Auth-disabled dev mode
-    // short-circuits open, exactly like every other write in this file —
-    // tightening reads and writes must never quietly break local development.
+    // ─── leave_requests write guards ─────────────────────────────────────
+    //
+    // CREATE and UPDATE are guarded separately because they have different
+    // holes. The live suite found both (24 Oct 2026):
+    //
+    //   - CREATE: an owner could write a document that was already
+    //     status: approved, with any day count they liked — a fully-signed
+    //     leave request authored by its own beneficiary. So a created request
+    //     must start life PENDING, whoever creates it. The service always
+    //     writes pending_<first stage>; the rule checks the prefix so HR
+    //     renaming the stages does not silently lock everyone out.
+    //
+    //   - UPDATE: the owner could set status: approved directly on their own
+    //     pending request, forging the three-signature chain. So the owner's
+    //     update branch is deliberately narrow: status may move to cancelled
+    //     and nothing else, and the identity, dates and day-counts must never
+    //     move at all. HR, approvers and the owner bypass the narrow branch —
+    //     they are the people the app already trusts to act on requests.
+    //
+    // `resource` does not exist during CREATE, so the two functions must
+    // never be swapped or merged: ownerEditsOwnRequest reads resource.data,
+    // and evaluating it in a create rule is an error — which DENIES, and
+    // would have locked every employee out of submitting leave.
+
+    function mayCreateLeaveRequestFor(employeeId) {
+      return !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin()
+                || isHrDept()
+                || (ownsEmployeeRecord(employeeId)
+                    && request.resource.data.status.matches('^pending_.*$'))));
+    }
+
+    function ownerEditsOwnRequest(employeeId) {
+      return ownsEmployeeRecord(employeeId)
+        && (request.resource.data.status == resource.data.status
+            || request.resource.data.status == 'cancelled')
+        && request.resource.data.requestedDays == resource.data.requestedDays
+        && request.resource.data.employeeId == resource.data.employeeId
+        && request.resource.data.leaveCommences == resource.data.leaveCommences
+        && request.resource.data.leaveEnds == resource.data.leaveEnds
+        && request.resource.data.entitledAtRequest == resource.data.entitledAtRequest
+        && request.resource.data.outstandingAfter == resource.data.outstandingAfter;
+    }
+
     function mayWriteLeaveRequestFor(employeeId) {
       return !isAuthEnabled()
         || (isAuthenticated()
-            && (isAdmin() || isHrDept() || hasLeaveApprovalRole() || ownsEmployeeRecord(employeeId)));
+            && (isAdmin()
+                || isHrDept()
+                || hasLeaveApprovalRole()
+                || ownerEditsOwnRequest(employeeId)));
     }
 
     // Allow a normal (non-admin) signed-in user to write a record
@@ -192,7 +236,7 @@ service cloud.firestore {
     // standing between a staff member and the CEO's leave history.
     match /leave_requests/{requestId} {
       allow read: if canReadRecord();
-      allow create: if mayWriteLeaveRequestFor(request.resource.data.employeeId);
+      allow create: if mayCreateLeaveRequestFor(request.resource.data.employeeId);
       allow update: if mayWriteLeaveRequestFor(resource.data.employeeId);
       allow delete: if !isAuthEnabled() || isAdmin();
     }

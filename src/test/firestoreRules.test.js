@@ -121,8 +121,57 @@ describe('firestore.rules personal data (task 7.1)', () => {
   it('routes leave request writes through the server-side permission guard', () => {
     const rules = loadRules();
     const block = blockFor(rules, 'leave_requests');
-    expect(block.includes('allow create: if mayWriteLeaveRequestFor(request.resource.data.employeeId)')).toBe(true);
+    expect(block.includes('allow create: if mayCreateLeaveRequestFor(request.resource.data.employeeId)')).toBe(true);
     expect(block.includes('allow update: if mayWriteLeaveRequestFor(resource.data.employeeId)')).toBe(true);
+  });
+
+  it('forbids a request being BORN approved — every created request starts pending', () => {
+    // Found live 24 Oct 2026: nothing stopped an owner createDoc-ing a
+    // request with status approved and any day count they liked — a fully
+    // signed leave request authored by its own beneficiary. The rule checks
+    // the pending_ prefix rather than a hard-coded stage name, so HR
+    // renaming the approval stages cannot lock every employee out.
+    const rules = loadRules();
+    const guards = rules.slice(
+      rules.indexOf('function mayCreateLeaveRequestFor'),
+      rules.indexOf('function ownerEditsOwnRequest'),
+    );
+    expect(guards).toContain("matches('^pending_.*$')");
+    expect(guards).toContain('ownsEmployeeRecord(employeeId)');
+  });
+
+  it('lets the owner cancel but never forge — status may only move to cancelled', () => {
+    // The other hole found live: the owner could updateDoc status: approved
+    // on their own pending request, bypassing the three-signature chain.
+    // The narrow branch pins the identity, dates and day-counts, and allows
+    // only an unchanged status or a move to cancelled — which is exactly
+    // what cancel and resumption-confirmation write.
+    const rules = loadRules();
+    const guards = rules.slice(
+      rules.indexOf('function ownerEditsOwnRequest'),
+      rules.indexOf('function mayWriteLeaveRequestFor'),
+    );
+    expect(guards).toContain("== 'cancelled'");
+    expect(guards).toContain('request.resource.data.status == resource.data.status');
+    expect(guards).toContain('request.resource.data.requestedDays == resource.data.requestedDays');
+    expect(guards).toContain('request.resource.data.employeeId == resource.data.employeeId');
+  });
+
+  it('keeps the create and update guards SEPARATE — resource does not exist during create', () => {
+    // ownerEditsOwnRequest reads resource.data, which is an error inside a
+    // create rule — and an error DENIES. If anyone merges the two guards,
+    // every employee loses the ability to submit leave at all, silently.
+    // This is the tripwire for exactly that refactor.
+    const rules = loadRules();
+    const createGuard = rules.slice(
+      rules.indexOf('function mayCreateLeaveRequestFor'),
+      rules.indexOf('function ownerEditsOwnRequest'),
+    );
+    // Bare resource.data (not preceded by "request.") is the marker: it reads
+    // the document as it exists BEFORE the write, which is an error during
+    // create, and an error denies.
+    expect(createGuard).not.toMatch(/(?<!request\.)resource\.data/);
+    expect(createGuard).not.toContain('ownerEditsOwnRequest');
   });
 
   it('lets HR manage employee records but only lets the owner touch their own', () => {
