@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Leave Management &amp; Employees — Test Evidence | Dammie Optimus Solutions</title>
+<meta name="description" content="The evidence for the comprehensive test pass of the Employees and Leave module: four layers of testing, what they proved, and the three genuine defects they found — all fixed and pinned by tests." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT DESIGN SYSTEM
+   Self-contained. Mirrors public/assets/docs.css in the
+   portfolio repo, inlined so this file stands alone.
+   ============================================================ */
+
+:root {
+  --emerald: #10b981;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --grad: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+
+  --bg: #020617;
+  --bg-2: #0f172a;
+  --bg-3: #1e293b;
+  --border: #1e293b;
+  --border-soft: #334155;
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --text-3: #94a3b8;
+  --code-bg: #020617;
+  --shadow: 0 18px 40px -12px rgba(0, 0, 0, .6);
+  --radius: 16px;
+
+  --emerald-ink: #34d399;
+  --cyan-ink: #22d3ee;
+  --amber-ink: #fbbf24;
+  --rose-ink: #fb7185;
+  --syn-key: #c084fc;
+  --syn-str: #86efac;
+  --syn-num: #fbbf24;
+}
+html[data-theme="light"] {
+  --bg: #eaeff5;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --border: #cbd5e1;
+  --border-soft: #94a3b8;
+  --text: #020617;
+  --text-2: #1e293b;
+  --text-3: #334155;
+  --code-bg: #f1f5f9;
+  --shadow: 0 12px 28px -10px rgba(15, 23, 42, .22);
+
+  --emerald-ink: #047857;
+  --cyan-ink: #0e7490;
+  --amber-ink: #b45309;
+  --rose-ink: #be123c;
+  --syn-key: #7e22ce;
+  --syn-str: #15803d;
+  --syn-num: #b45309;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(760px 420px at 12% -8%, rgba(16, 185, 129, .14), transparent 62%),
+    radial-gradient(700px 400px at 92% 4%, rgba(6, 182, 212, .12), transparent 60%);
+}
+.wrap { position: relative; z-index: 1; }
+
+a { color: var(--cyan-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: var(--grad); z-index: 60; transition: width .1s linear;
+}
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1.5px solid var(--border);
+}
+.hdr { max-width: 1240px; margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+.brandbox {
+  display: flex; align-items: center; justify-content: center;
+  padding: 7px; border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 35%, transparent);
+  box-shadow: 0 6px 18px -8px rgba(16, 185, 129, .4);
+  flex-shrink: 0;
+}
+.brandbox svg { width: 40px; height: 30px; display: block; }
+.brandtext { line-height: 1.25; min-width: 0; }
+.brandname { font-weight: 800; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; }
+.brandsub { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+.hdr-spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1.5px solid var(--border-soft); background: var(--bg-2); color: var(--text-2);
+  padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; transition: all .15s ease; white-space: nowrap;
+}
+.btn:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+.btn.ghost { background: transparent; }
+
+@media (max-width: 780px) {
+  .hdr { flex-wrap: wrap; row-gap: 10px; padding: 12px 16px; }
+  .hdr-spacer { display: none; }
+  .brandtext { flex: 1 1 auto; }
+  .btn { font-size: 12.5px; padding: 7px 11px; }
+}
+
+.layout { max-width: 1240px; margin: 0 auto; padding: 34px 22px 90px; display: grid; grid-template-columns: 252px 1fr; gap: 44px; align-items: start; }
+.layout > * { min-width: 0; }
+@media (max-width: 940px) { .layout { grid-template-columns: 1fr; gap: 26px; } .toc { display: none; } }
+
+.toc {
+  position: sticky; top: 92px;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-soft) transparent;
+}
+.toc::-webkit-scrollbar { width: 7px; }
+.toc::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 99px; }
+.toc::-webkit-scrollbar-thumb:hover { background: var(--emerald); }
+@supports (max-height: 100dvh) { .toc { max-height: calc(100dvh - 116px); } }
+.toc-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 12px; padding-bottom: 8px;
+  position: sticky; top: 0; z-index: 1;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.toc a {
+  display: block; padding: 7px 12px; margin-bottom: 2px; border-radius: 9px;
+  font-size: 13.5px; color: var(--text-3); border-left: 2.5px solid transparent; transition: all .15s ease;
+}
+.toc a:hover { background: var(--bg-2); color: var(--text); text-decoration: none; }
+.toc a.active { color: var(--emerald-ink); border-left-color: var(--emerald); background: color-mix(in srgb, var(--emerald) 8%, transparent); font-weight: 600; }
+.toc .back { border-left-color: var(--cyan); color: var(--cyan-ink); font-weight: 600; margin-bottom: 14px; }
+
+.hero {
+  border: 1.5px solid var(--border); border-radius: 22px; padding: 38px 34px;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg));
+  box-shadow: var(--shadow); margin-bottom: 38px; position: relative; overflow: hidden;
+}
+.hero::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad); }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--emerald) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 32%, transparent); color: var(--emerald-ink);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 9px var(--emerald); }
+h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.028em; line-height: 1.14; margin-bottom: 15px; }
+.grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { color: var(--text-2); font-size: 16.5px; max-width: 66ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+  background: var(--bg-3); border: 1.5px solid var(--border); color: var(--text-3);
+}
+
+section { margin-bottom: 46px; scroll-margin-top: 92px; }
+h2 { font-size: clamp(21px, 3vw, 26px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; display: flex; align-items: baseline; gap: 13px; }
+h2 .num {
+  font-size: 13px; font-weight: 700; color: var(--emerald-ink);
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 30%, transparent);
+  padding: 3px 10px; border-radius: 8px; flex-shrink: 0; align-self: center;
+}
+.lede { color: var(--text-2); font-size: 15.5px; margin-bottom: 22px; max-width: 70ch; }
+h3 { font-size: 17px; font-weight: 700; margin: 26px 0 11px; letter-spacing: -.01em; }
+h4 { font-size: 14.5px; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+p { margin-bottom: 13px; color: var(--text-2); }
+ul, ol { margin: 0 0 15px 22px; color: var(--text-2); }
+li { margin-bottom: 8px; }
+strong { color: var(--text); font-weight: 650; }
+
+.card { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg-2); padding: 24px; margin: 20px 0; box-shadow: var(--shadow); }
+.grid2 > *, .grid3 > * { min-width: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card-t { font-size: 15px; font-weight: 700; margin-bottom: 11px; display: flex; align-items: center; gap: 9px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+.callout { border-radius: 13px; padding: 17px 19px; margin: 19px 0; border: 1.5px solid; font-size: 14.5px; display: flex; gap: 13px; align-items: flex-start; }
+.callout .ic { flex-shrink: 0; font-size: 17px; line-height: 1.45; }
+.callout .bd { min-width: 0; }
+.callout .ct { font-weight: 700; margin-bottom: 5px; font-size: 13.5px; letter-spacing: .01em; }
+.callout p { margin: 0; font-size: 14.5px; }
+.callout p + p { margin-top: 8px; }
+.callout ul { margin: 8px 0 0 20px; }
+.callout li { font-size: 14px; }
+.co-info { background: rgba(6, 182, 212, .08); border-color: rgba(6, 182, 212, .32); }
+.co-info .ct { color: var(--cyan-ink); }
+.co-good { background: rgba(16, 185, 129, .08); border-color: rgba(16, 185, 129, .32); }
+.co-good .ct { color: var(--emerald-ink); }
+.co-warn { background: rgba(245, 158, 11, .08); border-color: rgba(245, 158, 11, .34); }
+.co-warn .ct { color: var(--amber-ink); }
+.co-stop { background: rgba(244, 63, 94, .08); border-color: rgba(244, 63, 94, .32); }
+.co-stop .ct { color: var(--rose-ink); }
+
+.tw { overflow-x: auto; margin: 20px 0; border: 1.5px solid var(--border); border-radius: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+th { text-align: left; padding: 13px 16px; background: var(--bg-3); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); border-bottom: 1.5px solid var(--border); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--emerald) 4%, transparent); }
+td code, p code, li code, .codechip {
+  font-family: 'Geist Mono', monospace; font-size: .89em;
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 1.5px 6px; border-radius: 6px; color: var(--cyan-ink);
+}
+
+.codewrap { position: relative; margin: 19px 0; }
+pre {
+  background: var(--code-bg); border: 1.5px solid var(--border); border-radius: 13px;
+  padding: 17px 19px; overflow-x: auto; font-family: 'Geist Mono', monospace;
+  font-size: 13px; line-height: 1.68; color: var(--text-2);
+}
+pre .c { color: var(--text-3); font-style: italic; }
+pre .k { color: var(--syn-key); }
+pre .s { color: var(--syn-str); }
+pre .n { color: var(--syn-num); }
+.copy {
+  position: absolute; top: 9px; right: 9px; z-index: 2;
+  font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 8px;
+  background: var(--bg-2); border: 1.5px solid var(--border-soft); color: var(--text-3);
+  cursor: pointer; font-family: inherit; transition: all .15s ease;
+}
+.copy:hover { border-color: var(--emerald); color: var(--emerald-ink); }
+.copy.done { border-color: var(--emerald); color: var(--emerald-ink); }
+.fname { font-size: 11.5px; color: var(--text-3); font-weight: 600; margin-bottom: -8px; padding-left: 3px; font-family: 'Geist Mono', monospace; }
+
+.step { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+.badge {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #020617;
+  background: var(--grad); box-shadow: 0 6px 16px -6px rgba(16, 185, 129, .55);
+}
+.step-b { min-width: 0; flex: 1; padding-top: 2px; }
+.step-b h4 { margin-top: 0; font-size: 15.5px; }
+.step-b > :last-child { margin-bottom: 0; }
+.do { display: flex; gap: 11px; align-items: flex-start; margin: 11px 0; font-size: 14px; }
+.do .mk { flex-shrink: 0; width: 19px; height: 19px; border-radius: 5px; background: color-mix(in srgb, var(--emerald) 18%, transparent); border: 1.5px solid color-mix(in srgb, var(--emerald) 40%, transparent); color: var(--emerald-ink); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-top: 2px; }
+
+.flow { display: flex; flex-direction: column; gap: 9px; margin: 20px 0; }
+.fnode { display: flex; align-items: center; gap: 13px; padding: 13px 17px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg-2); font-size: 14px; }
+.fnode .fi { font-size: 17px; flex-shrink: 0; }
+.fnode .ft { font-weight: 600; color: var(--text); }
+.fnode .fs { color: var(--text-3); font-size: 12.5px; }
+.fnode.hi { border-color: color-mix(in srgb, var(--emerald) 45%, transparent); background: color-mix(in srgb, var(--emerald) 8%, var(--bg-2)); }
+.farrow { text-align: center; color: var(--emerald); font-size: 17px; line-height: 1; margin: -3px 0; }
+
+.gloss { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .gloss { grid-template-columns: 1fr; } }
+.gitem { border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 17px; background: var(--bg-2); }
+.gterm { font-weight: 700; color: var(--emerald-ink); font-size: 14px; margin-bottom: 5px; font-family: 'Geist Mono', monospace; }
+.gdef { font-size: 13.5px; color: var(--text-2); line-height: 1.62; }
+
+.check { list-style: none; margin-left: 0; }
+.check li { padding-left: 29px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 0; top: -1px; font-size: 17px; color: var(--emerald-ink); line-height: 1.45; }
+
+.links-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .links-strip { grid-template-columns: 1fr; } }
+.linkbox { border: 1.5px solid var(--border); border-radius: 13px; padding: 16px 18px; background: var(--bg-2); text-decoration: none; display: block; transition: all .15s ease; }
+.linkbox:hover { border-color: var(--emerald); text-decoration: none; transform: translateY(-2px); }
+.linkbox .lb-t { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.linkbox .lb-d { font-size: 12.5px; color: var(--text-3); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 18px; border-radius: 11px; font-size: 13.5px; font-weight: 700;
+  background: var(--grad); color: #020617; border: none; font-family: inherit;
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, .6); transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 12px 26px -8px rgba(16, 185, 129, .7); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 17px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  background: transparent; border: 1.5px solid var(--border-soft); color: var(--text-2); transition: all .15s ease;
+}
+.btn-secondary:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+
+footer { border-top: 1.5px solid var(--border); margin-top: 56px; padding-top: 30px; }
+.fgrid { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; justify-content: space-between; }
+.fnote { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+.fnote strong { color: var(--text-2); }
+
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(90px);
+  background: var(--bg-2); border: 1.5px solid var(--emerald); color: var(--text);
+  padding: 11px 21px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  box-shadow: var(--shadow); z-index: 80; transition: transform .28s cubic-bezier(.2, .9, .3, 1.2);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media print {
+  header, .toc, #progress, .copy, .toast { display: none !important; }
+  body { background: #fff; color: #000; }
+  .layout { grid-template-columns: 1fr; }
+  .card, .tw, pre, .callout { break-inside: avoid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="dosGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="progress"></div>
+
+<header>
+  <div class="hdr">
+    <div class="brandbox">
+      <svg viewBox="0 0 160 120" fill="none" aria-label="Dammie Optimus Monogram">
+        <g stroke="url(#dosGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 30 25 L 30 95" />
+          <path d="M 30 25 L 60 25 A 35 35 0 0 1 60 95 L 30 95" />
+          <circle cx="100" cy="60" r="35" />
+        </g>
+        <circle cx="100" cy="60" r="10" fill="url(#dosGrad)" />
+      </svg>
+    </div>
+    <div class="brandtext">
+      <div class="brandname">Dammie Optimus Solutions</div>
+      <div class="brandsub">Starium Rafa ERP · Test Evidence</div>
+    </div>
+    <div class="hdr-spacer"></div>
+    <button class="btn ghost" id="themeBtn" type="button" aria-label="Toggle colour theme">
+      <span id="themeIcon">◐</span> <span id="themeLabel">Light</span>
+    </button>
+    <a class="btn" href="documents.html">← Document Hub</a>
+    <button class="btn" id="printBtn" type="button">⎙ Save / Print</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a class="back" href="documents.html">← Document Hub</a>
+    <a href="#why">01 · Why evidence, not a tick</a>
+    <a href="#layers">02 · The four layers</a>
+    <a href="#proven">03 · What was proven</a>
+    <a href="#found">04 · What the testing found</a>
+    <a href="#numbers">05 · The numbers, and re-running</a>
+    <a href="#limits">06 · What testing cannot tell you</a>
+    <a href="#cleanup">07 · Cleaning up the test data</a>
+    <a href="#verdict">08 · The verdict</a>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main>
+
+    <div class="hero">
+      <div class="pill"><span class="dot"></span> Tested against reality</div>
+      <h1>Leave Management<br /><span class="grad-text">Test Evidence</span></h1>
+      <p>
+        "We tested it" is a claim. This document is the evidence: what was tested, in four
+        layers, against the real database and the real deployed app — what it proved,
+        and the three genuine defects it found on the way. All three are fixed, and the
+        tests that found them now stand guard.
+      </p>
+      <div class="meta">
+        <span class="chip">205 automated unit tests</span>
+        <span class="chip">20 live-database tests</span>
+        <span class="chip">10 browser steps on the deployed app</span>
+        <span class="chip">3 findings, all fixed</span>
+        <span class="chip">Date: 24 October 2026</span>
+      </div>
+    </div>
+
+    <!-- 01 -->
+    <section id="why">
+      <h2><span class="num">01</span> Why evidence, not a tick</h2>
+      <p class="lede">The pipeline was already green when this pass began — 202 tests, clean build. The purpose of testing was not to turn the pipeline green. It was to find what the pipeline could not see.</p>
+
+      <p>A unit test proves a function behaves in the world the test constructs. It cannot prove the world matches. The only way to know whether the three-signature chain actually holds in production — where the database, the rules, the network and five real accounts all meet — is to walk it there, as real users, and to try to break it on purpose.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🎯</span>
+        <div class="bd">
+          <div class="ct">The measure of a test pass is what it found</div>
+          <p>This one found two security holes no existing test could see, and one place where a user gets stuck. If a test suite finds nothing, it usually is not looking hard enough — the findings below are the point, not an embarrassment.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="layers">
+      <h2><span class="num">02</span> The four layers</h2>
+      <p class="lede">Each layer proves a different kind of thing. Together they cover the logic, the contracts, the database and the screens.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Layer</th><th>What it proves</th><th>Count</th><th>Where it runs</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>1 · The logic</strong></td>
+              <td>Day-counting, leave years, pro-rating, balances, the approval chain — pure functions with no database, asserted value by value.</td>
+              <td>132 tests</td>
+              <td>Every push (CI)</td>
+            </tr>
+            <tr>
+              <td><strong>2 · The contracts</strong></td>
+              <td>The security rules, the permission matrix, the offline registry, and that every menu item has a real page behind it.</td>
+              <td>38 tests</td>
+              <td>Every push (CI)</td>
+            </tr>
+            <tr>
+              <td><strong>3 · The live database</strong></td>
+              <td>The real services, the real Firestore, five real accounts: requests created, the chain walked, refusals enforced, rules biting.</td>
+              <td>20 tests</td>
+              <td>Deliberately manual — it writes to production</td>
+            </tr>
+            <tr>
+              <td><strong>4 · The real UI</strong></td>
+              <td>Playwright driving the deployed app as a person would: sign in, read the balance, pick dates, submit, sign in the supervisor's queue, print the form.</td>
+              <td>10 steps</td>
+              <td>Deliberately manual — it signs in as real users</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">🔒</span>
+        <div class="bd">
+          <div class="ct">Why layers 3 and 4 never run in CI</div>
+          <p>The live suite lodges real leave requests and signs real approvals in the production database. It is excluded from every automatic run — a deliberate split, so no push can ever write test data into production by accident. It runs only when someone types the command on purpose.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="proven">
+      <h2><span class="num">03</span> What was proven</h2>
+      <p class="lede">The claims the module makes, and the evidence for each.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>The claim</th><th>The proof</th></tr></thead>
+          <tbody>
+            <tr><td>The app counts days correctly — Sundays, public holidays and the company's own rest-day setting are never deducted.</td><td>73 tests on the pure engine, including the sample form's own arithmetic and every trap the blueprint documents: timezone off-by-one, non-calendar leave years, reversed ranges.</td></tr>
+            <tr><td>Each stage unlocks only the one before it — always, for everyone.</td><td>30 tests on the chain, including the named worst case: a person who is both Supervisor and HOD still signs one stage per decision. Even the system owner cannot skip ahead.</td></tr>
+            <tr><td>The numbers on a request are frozen at the moment it is created.</td><td>Live: a created request carries entitled / taken / requested / outstanding on its document, and they reconcile exactly. A later entitlement change cannot rewrite approved history.</td></tr>
+            <tr><td>A rejection always carries a written reason the employee can read.</td><td>Live: a rejected request stores the approver's words; the later stages stay empty rather than being filled in.</td></tr>
+            <tr><td>An employee cannot approve their own leave — not through the app, and not through the database.</td><td>Live: refused through the service, and the raw database write that once worked is now denied by the rules themselves.</td></tr>
+            <tr><td>Approvals never queue offline — a signature authorising paid leave goes straight into the record.</td><td>The registry carries a tripwire test; submissions queue (correctly) and approvals do not, and any attempt to add them fails the build.</td></tr>
+            <tr><td>Personal data is not readable by strangers on the internet.</td><td>Verified against production with unauthenticated reads: employees, leave requests and role documents all refuse. The one assertion in the rules suite that must never be relaxed pins this.</td></tr>
+            <tr><td>The screens a person actually uses, work.</td><td>Browser: sign-in, balance cards, the form's live day-count, submit, the supervisor's queue, signing in the browser, returning to the list, and the printable form with all three signature blocks.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="found">
+      <h2><span class="num">04</span> What the testing found</h2>
+      <p class="lede">Three defects, none visible to the existing suite. All fixed the day they were found, all now pinned by a test.</p>
+
+      <div class="callout co-stop">
+        <span class="ic">🔓</span>
+        <div class="bd">
+          <div class="ct">Finding 1 — the self-approval hole (security)</div>
+          <p>A live test wrote <em>status: approved</em> straight to a pending request — as the employee who owned it — and the database allowed it. The three signatures could be forged with one write from a determined employee's console. The rules were tightened the same hour: the owner may now move status only to <em>cancelled</em>, and the identity, dates and day-counts on their request may never move at all. Re-tested against production: denied. The rules suite pins the exact wording so it cannot quietly return.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">📝</span>
+        <div class="bd">
+          <div class="ct">Finding 2 — a request could be born approved (security)</div>
+          <p>The create rule accepted any document, including one that arrived fully approved with whatever day count its author liked. Created requests must now start life pending — whoever creates them — checked by prefix so renaming the approval stages cannot lock employees out. The two guards are deliberately separate functions (reading the old document is an error during a create), and a tripwire test guards that separation.</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🚪</span>
+        <div class="bd">
+          <div class="ct">Finding 3 — the success screen was a dead end (usability)</div>
+          <p>The browser run submitted a request, then looked for the way back to the list. There was none: the screen offered "Request more leave" only, and clicking My Leave in the menu changed nothing because the route never changed. An exit button now returns to the list. A small thing — and exactly the kind a person hits in the first thirty seconds of using the app.</p>
+        </div>
+      </div>
+
+      <p>Worth recording too: the live harness itself produced two instructive failures on the way — passing the raw login where the app-shaped user belongs (every approver silently role-less), and signing out inside the very session being tested (a perfectly working rule denied an unauthenticated write). Both are documented in the harness, because the next person to test this module will make one of those mistakes again.</p>
+    </section>
+
+    <!-- 05 -->
+    <section id="numbers">
+      <h2><span class="num">05</span> The numbers, and re-running</h2>
+      <p class="lede">What exists, where it lives, and how to run each layer again.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Suite</th><th>Tests</th><th>Command</th><th>Touching production?</th></tr></thead>
+          <tbody>
+            <tr><td>Leave balance engine</td><td>73</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Approval chain</td><td>30</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Permission matrix</td><td>16</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Security rules (static)</td><td>13</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Offline registry</td><td>9</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Everything else (factory modules, employees, queue store)</td><td>64</td><td><code>npm test</code></td><td>No</td></tr>
+            <tr><td>Live smoke + full chain + cleanup list</td><td>20</td><td><code>npm run test:live</code></td><td><strong>Yes</strong> — creates tagged requests, signs real approvals</td></tr>
+            <tr><td>Browser click-through on the deployed app</td><td>10</td><td><code>node scripts/live/browser/browser-check.mjs</code></td><td><strong>Yes</strong> — signs in as the test accounts</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🧰</span>
+        <div class="bd">
+          <div class="ct">The live credentials</div>
+          <p>Layers 3 and 4 use the five test accounts supplied for this pass. Their passwords are never written into the repository — they arrive via environment variables, once per command. The manual recommends changing or deleting these accounts once testing is done.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="limits">
+      <h2><span class="num">06</span> What testing cannot tell you</h2>
+      <p class="lede">An honest list, because an evidence document that claims everything proves nothing.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>🎨</span> Whether it impresses a human</div>
+          <p class="card-body">The browser steps prove the screens work; they cannot prove the screens feel good. That judgement belongs to the first real user — which is the point of the demo.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📱</span> A physical phone in a hand</div>
+          <p class="card-body">Testing used a desktop-class browser window. The layouts are responsive by construction, but a thumb on a factory floor is the only true test of a thumb on a factory floor.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📋</span> Whether the assumptions suit HR</div>
+          <p class="card-body">The day-counting is proven correct against the settings that exist. Whether those settings are the right ones for this company — 21 days, Sundays, the leave year — is HR's question, and every one of them is a setting, not a rebuild.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📈</span> Scale beyond today's data</div>
+          <p class="card-body">Every query shape the app issues was verified against the live database with the indexes that serve it. Two hundred simultaneous staff is a forecast, not a measurement.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="cleanup">
+      <h2><span class="num">07</span> Cleaning up the test data</h2>
+      <p class="lede">Layers 3 and 4 did their job against the real database, which means the test data is real too.</p>
+
+      <p>Seventeen leave requests, each tagged <strong>LIVE-TEST</strong> in its handover note, were created across the runs: the approved chain, the rejection, the cancellations, the HR-lodged request, and the browser submissions. Deleting documents is owner-only by design — a test suite that could delete production data would be a test suite worth worrying about — so the list is handed over instead: run <code>npm run test:live</code> and the final test prints every document ID with its status.</p>
+
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">Two of them are currently approved</div>
+          <p>Until they are deleted, those two count towards the test employee's used days, exactly as real approved leave would. Deleting the full LIVE-TEST list restores her balance to what it should be. Until then, treat the test account's "Already taken" figure as inflated by the tests, not by holidays she never took.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="verdict">
+      <h2><span class="num">08</span> The verdict</h2>
+      <p class="lede">What all of this adds up to.</p>
+
+      <p>Every rule the Leave module claims to enforce — the arithmetic, the chain, the refusals, the privacy, the offline exception — is now either proven against the production database or pinned by an automated test that fails the moment someone breaks it. The two security holes that were found were of a kind no mock or unit test could ever see: they only existed in the gap between what the app promised and what the database enforced. They are closed, and the tests that found them now stand permanent guard.</p>
+
+      <p>What remains open is exactly what should remain open: the questions only HR can answer, waiting as settings; the demo, waiting for its audience; and the live test accounts, waiting to be retired.</p>
+
+      <div class="callout co-good">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">The one-line summary for management</div>
+          <p>The leave system does what it says, refuses what it should refuse, keeps private data private, and can prove all three. Test it by all means — but the tests are already here, and they run.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT BEHAVIOUR
+   Theme toggle, reading progress, scroll-spy contents,
+   copy-to-clipboard, toast, print.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------- Theme ---------- */
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  var stored = null;
+  try { stored = localStorage.getItem('dos-guide-theme'); } catch (e) {}
+  apply(stored || 'dark');
+
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    if (icon) icon.textContent = t === 'dark' ? '◐' : '◑';
+    if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try { localStorage.setItem('dos-guide-theme', next); } catch (e) {}
+    });
+  }
+
+  /* ---------- Print / save as PDF ---------- */
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
+  /* ---------- Reading progress ---------- */
+  var bar = document.getElementById('progress');
+  function onScroll() {
+    if (!bar) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Scroll-spy for the contents list ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var sections = Object.keys(map)
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-88px 0px -70% 0px', threshold: 0 });
+    sections.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- Copy to clipboard ---------- */
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1900);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (b) {
+    b.addEventListener('click', function () {
+      var pre = b.parentNode.querySelector('pre');
+      if (!pre) return;
+      var text = pre.innerText;
+      var done = function () {
+        b.textContent = 'Copied';
+        b.classList.add('done');
+        showToast('Copied to clipboard');
+        setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () { fallback(text, done); });
+      } else {
+        fallback(text, done);
+      }
+    });
+  });
+  function fallback(text, cb) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { showToast('Press Ctrl+C to copy'); }
+    document.body.removeChild(ta);
+  }
+})();
+</script>
+</body>
+</html>
