@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Employees &amp; Leave — The Plain-English Guide | Dammie Optimus Solutions</title>
+<meta name="description" content="How to ask for leave, how it gets approved, and how to add people — the complete plain-English user guide for Employees &amp; Leave Management in the Starium Rafa ERP." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT DESIGN SYSTEM
+   Self-contained. Mirrors public/assets/docs.css in the
+   portfolio repo, inlined so this file stands alone.
+   ============================================================ */
+
+:root {
+  --emerald: #10b981;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --grad: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+
+  --bg: #020617;
+  --bg-2: #0f172a;
+  --bg-3: #1e293b;
+  --border: #1e293b;
+  --border-soft: #334155;
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --text-3: #94a3b8;
+  --code-bg: #020617;
+  --shadow: 0 18px 40px -12px rgba(0, 0, 0, .6);
+  --radius: 16px;
+
+  --emerald-ink: #34d399;
+  --cyan-ink: #22d3ee;
+  --amber-ink: #fbbf24;
+  --rose-ink: #fb7185;
+  --syn-key: #c084fc;
+  --syn-str: #86efac;
+  --syn-num: #fbbf24;
+}
+html[data-theme="light"] {
+  --bg: #eaeff5;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --border: #cbd5e1;
+  --border-soft: #94a3b8;
+  --text: #020617;
+  --text-2: #1e293b;
+  --text-3: #334155;
+  --code-bg: #f1f5f9;
+  --shadow: 0 12px 28px -10px rgba(15, 23, 42, .22);
+
+  --emerald-ink: #047857;
+  --cyan-ink: #0e7490;
+  --amber-ink: #b45309;
+  --rose-ink: #be123c;
+  --syn-key: #7e22ce;
+  --syn-str: #15803d;
+  --syn-num: #b45309;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(760px 420px at 12% -8%, rgba(16, 185, 129, .14), transparent 62%),
+    radial-gradient(700px 400px at 92% 4%, rgba(6, 182, 212, .12), transparent 60%);
+}
+.wrap { position: relative; z-index: 1; }
+
+a { color: var(--cyan-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: var(--grad); z-index: 60; transition: width .1s linear;
+}
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1.5px solid var(--border);
+}
+.hdr { max-width: 1240px; margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+.brandbox {
+  display: flex; align-items: center; justify-content: center;
+  padding: 7px; border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 35%, transparent);
+  box-shadow: 0 6px 18px -8px rgba(16, 185, 129, .4);
+  flex-shrink: 0;
+}
+.brandbox svg { width: 40px; height: 30px; display: block; }
+.brandtext { line-height: 1.25; min-width: 0; }
+.brandname { font-weight: 800; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; }
+.brandsub { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+.hdr-spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1.5px solid var(--border-soft); background: var(--bg-2); color: var(--text-2);
+  padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; transition: all .15s ease; white-space: nowrap;
+}
+.btn:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+.btn.ghost { background: transparent; }
+
+@media (max-width: 780px) {
+  .hdr { flex-wrap: wrap; row-gap: 10px; padding: 12px 16px; }
+  .hdr-spacer { display: none; }
+  .brandtext { flex: 1 1 auto; }
+  .btn { font-size: 12.5px; padding: 7px 11px; }
+}
+
+.layout { max-width: 1240px; margin: 0 auto; padding: 34px 22px 90px; display: grid; grid-template-columns: 252px 1fr; gap: 44px; align-items: start; }
+.layout > * { min-width: 0; }
+@media (max-width: 940px) { .layout { grid-template-columns: 1fr; gap: 26px; } .toc { display: none; } }
+
+.toc {
+  position: sticky; top: 92px;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-soft) transparent;
+}
+.toc::-webkit-scrollbar { width: 7px; }
+.toc::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 99px; }
+.toc::-webkit-scrollbar-thumb:hover { background: var(--emerald); }
+@supports (max-height: 100dvh) { .toc { max-height: calc(100dvh - 116px); } }
+.toc-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 12px; padding-bottom: 8px;
+  position: sticky; top: 0; z-index: 1;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.toc a {
+  display: block; padding: 7px 12px; margin-bottom: 2px; border-radius: 9px;
+  font-size: 13.5px; color: var(--text-3); border-left: 2.5px solid transparent; transition: all .15s ease;
+}
+.toc a:hover { background: var(--bg-2); color: var(--text); text-decoration: none; }
+.toc a.active { color: var(--emerald-ink); border-left-color: var(--emerald); background: color-mix(in srgb, var(--emerald) 8%, transparent); font-weight: 600; }
+.toc .back { border-left-color: var(--cyan); color: var(--cyan-ink); font-weight: 600; margin-bottom: 14px; }
+
+.hero {
+  border: 1.5px solid var(--border); border-radius: 22px; padding: 38px 34px;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg));
+  box-shadow: var(--shadow); margin-bottom: 38px; position: relative; overflow: hidden;
+}
+.hero::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad); }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--emerald) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 32%, transparent); color: var(--emerald-ink);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 9px var(--emerald); }
+h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.028em; line-height: 1.14; margin-bottom: 15px; }
+.grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { color: var(--text-2); font-size: 16.5px; max-width: 66ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+  background: var(--bg-3); border: 1.5px solid var(--border); color: var(--text-3);
+}
+
+section { margin-bottom: 46px; scroll-margin-top: 92px; }
+h2 { font-size: clamp(21px, 3vw, 26px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; display: flex; align-items: baseline; gap: 13px; }
+h2 .num {
+  font-size: 13px; font-weight: 700; color: var(--emerald-ink);
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 30%, transparent);
+  padding: 3px 10px; border-radius: 8px; flex-shrink: 0; align-self: center;
+}
+.lede { color: var(--text-2); font-size: 15.5px; margin-bottom: 22px; max-width: 70ch; }
+h3 { font-size: 17px; font-weight: 700; margin: 26px 0 11px; letter-spacing: -.01em; }
+h4 { font-size: 14.5px; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+p { margin-bottom: 13px; color: var(--text-2); }
+ul, ol { margin: 0 0 15px 22px; color: var(--text-2); }
+li { margin-bottom: 8px; }
+strong { color: var(--text); font-weight: 650; }
+
+.card { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg-2); padding: 24px; margin: 20px 0; box-shadow: var(--shadow); }
+.grid2 > *, .grid3 > * { min-width: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card-t { font-size: 15px; font-weight: 700; margin-bottom: 11px; display: flex; align-items: center; gap: 9px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+.callout { border-radius: 13px; padding: 17px 19px; margin: 19px 0; border: 1.5px solid; font-size: 14.5px; display: flex; gap: 13px; align-items: flex-start; }
+.callout .ic { flex-shrink: 0; font-size: 17px; line-height: 1.45; }
+.callout .bd { min-width: 0; }
+.callout .ct { font-weight: 700; margin-bottom: 5px; font-size: 13.5px; letter-spacing: .01em; }
+.callout p { margin: 0; font-size: 14.5px; }
+.callout p + p { margin-top: 8px; }
+.callout ul { margin: 8px 0 0 20px; }
+.callout li { font-size: 14px; }
+.co-info { background: rgba(6, 182, 212, .08); border-color: rgba(6, 182, 212, .32); }
+.co-info .ct { color: var(--cyan-ink); }
+.co-good { background: rgba(16, 185, 129, .08); border-color: rgba(16, 185, 129, .32); }
+.co-good .ct { color: var(--emerald-ink); }
+.co-warn { background: rgba(245, 158, 11, .08); border-color: rgba(245, 158, 11, .34); }
+.co-warn .ct { color: var(--amber-ink); }
+.co-stop { background: rgba(244, 63, 94, .08); border-color: rgba(244, 63, 94, .32); }
+.co-stop .ct { color: var(--rose-ink); }
+
+.tw { overflow-x: auto; margin: 20px 0; border: 1.5px solid var(--border); border-radius: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+th { text-align: left; padding: 13px 16px; background: var(--bg-3); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); border-bottom: 1.5px solid var(--border); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--emerald) 4%, transparent); }
+td code, p code, li code, .codechip {
+  font-family: 'Geist Mono', monospace; font-size: .89em;
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 1.5px 6px; border-radius: 6px; color: var(--cyan-ink);
+}
+
+.codewrap { position: relative; margin: 19px 0; }
+pre {
+  background: var(--code-bg); border: 1.5px solid var(--border); border-radius: 13px;
+  padding: 17px 19px; overflow-x: auto; font-family: 'Geist Mono', monospace;
+  font-size: 13px; line-height: 1.68; color: var(--text-2);
+}
+pre .c { color: var(--text-3); font-style: italic; }
+pre .k { color: var(--syn-key); }
+pre .s { color: var(--syn-str); }
+pre .n { color: var(--syn-num); }
+.copy {
+  position: absolute; top: 9px; right: 9px; z-index: 2;
+  font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 8px;
+  background: var(--bg-2); border: 1.5px solid var(--border-soft); color: var(--text-3);
+  cursor: pointer; font-family: inherit; transition: all .15s ease;
+}
+.copy:hover { border-color: var(--emerald); color: var(--emerald-ink); }
+.copy.done { border-color: var(--emerald); color: var(--emerald-ink); }
+.fname { font-size: 11.5px; color: var(--text-3); font-weight: 600; margin-bottom: -8px; padding-left: 3px; font-family: 'Geist Mono', monospace; }
+
+.step { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+.badge {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #020617;
+  background: var(--grad); box-shadow: 0 6px 16px -6px rgba(16, 185, 129, .55);
+}
+.step-b { min-width: 0; flex: 1; padding-top: 2px; }
+.step-b h4 { margin-top: 0; font-size: 15.5px; }
+.step-b > :last-child { margin-bottom: 0; }
+.do { display: flex; gap: 11px; align-items: flex-start; margin: 11px 0; font-size: 14px; }
+.do .mk { flex-shrink: 0; width: 19px; height: 19px; border-radius: 5px; background: color-mix(in srgb, var(--emerald) 18%, transparent); border: 1.5px solid color-mix(in srgb, var(--emerald) 40%, transparent); color: var(--emerald-ink); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-top: 2px; }
+
+.flow { display: flex; flex-direction: column; gap: 9px; margin: 20px 0; }
+.fnode { display: flex; align-items: center; gap: 13px; padding: 13px 17px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg-2); font-size: 14px; }
+.fnode .fi { font-size: 17px; flex-shrink: 0; }
+.fnode .ft { font-weight: 600; color: var(--text); }
+.fnode .fs { color: var(--text-3); font-size: 12.5px; }
+.fnode.hi { border-color: color-mix(in srgb, var(--emerald) 45%, transparent); background: color-mix(in srgb, var(--emerald) 8%, var(--bg-2)); }
+.farrow { text-align: center; color: var(--emerald); font-size: 17px; line-height: 1; margin: -3px 0; }
+
+.gloss { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .gloss { grid-template-columns: 1fr; } }
+.gitem { border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 17px; background: var(--bg-2); }
+.gterm { font-weight: 700; color: var(--emerald-ink); font-size: 14px; margin-bottom: 5px; font-family: 'Geist Mono', monospace; }
+.gdef { font-size: 13.5px; color: var(--text-2); line-height: 1.62; }
+
+.check { list-style: none; margin-left: 0; }
+.check li { padding-left: 29px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 0; top: -1px; font-size: 17px; color: var(--emerald-ink); line-height: 1.45; }
+
+.links-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .links-strip { grid-template-columns: 1fr; } }
+.linkbox { border: 1.5px solid var(--border); border-radius: 13px; padding: 16px 18px; background: var(--bg-2); text-decoration: none; display: block; transition: all .15s ease; }
+.linkbox:hover { border-color: var(--emerald); text-decoration: none; transform: translateY(-2px); }
+.linkbox .lb-t { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.linkbox .lb-d { font-size: 12.5px; color: var(--text-3); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 18px; border-radius: 11px; font-size: 13.5px; font-weight: 700;
+  background: var(--grad); color: #020617; border: none; font-family: inherit;
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, .6); transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 12px 26px -8px rgba(16, 185, 129, .7); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 17px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  background: transparent; border: 1.5px solid var(--border-soft); color: var(--text-2); transition: all .15s ease;
+}
+.btn-secondary:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+
+footer { border-top: 1.5px solid var(--border); margin-top: 56px; padding-top: 30px; }
+.fgrid { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; justify-content: space-between; }
+.fnote { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+.fnote strong { color: var(--text-2); }
+
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(90px);
+  background: var(--bg-2); border: 1.5px solid var(--emerald); color: var(--text);
+  padding: 11px 21px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  box-shadow: var(--shadow); z-index: 80; transition: transform .28s cubic-bezier(.2, .9, .3, 1.2);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media print {
+  header, .toc, #progress, .copy, .toast { display: none !important; }
+  body { background: #fff; color: #000; }
+  .layout { grid-template-columns: 1fr; }
+  .card, .tw, pre, .callout { break-inside: avoid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="dosGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="progress"></div>
+
+<header>
+  <div class="hdr">
+    <div class="brandbox">
+      <svg viewBox="0 0 160 120" fill="none" aria-label="Dammie Optimus Monogram">
+        <g stroke="url(#dosGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 30 25 L 30 95" />
+          <path d="M 30 25 L 60 25 A 35 35 0 0 1 60 95 L 30 95" />
+          <circle cx="100" cy="60" r="35" />
+        </g>
+        <circle cx="100" cy="60" r="10" fill="url(#dosGrad)" />
+      </svg>
+    </div>
+    <div class="brandtext">
+      <div class="brandname">Dammie Optimus Solutions</div>
+      <div class="brandsub">Starium Rafa ERP · User Guide</div>
+    </div>
+    <div class="hdr-spacer"></div>
+    <button class="btn ghost" id="themeBtn" type="button" aria-label="Toggle colour theme">
+      <span id="themeIcon">◐</span> <span id="themeLabel">Light</span>
+    </button>
+    <button class="btn" id="printBtn" type="button">⎙ Save / Print</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#one">01 · The one-minute version</a>
+    <a href="#before">02 · What you need before you start</a>
+    <a href="#my">03 · My Leave — your one screen</a>
+    <a href="#ask">04 · How to ask for leave</a>
+    <a href="#boxes">05 · What the boxes mean</a>
+    <a href="#after">06 · The three signatures</a>
+    <a href="#cancel">07 · Changing your mind</a>
+    <a href="#back">08 · Coming back to work</a>
+    <a href="#offline">09 · No internet? Read this</a>
+    <a href="#faq">10 · Questions people ask most</a>
+    <a href="#roster">11 · For HR — adding a person</a>
+    <a href="#access">12 · For HR — giving access</a>
+    <a href="#queue">13 · For approvers — your queue</a>
+    <a href="#reports">14 · For HR — reports &amp; printing</a>
+    <a href="#settings">15 · Settings HR can change</a>
+    <a href="#rules">16 · Who does what — the golden rules</a>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main>
+
+    <div class="hero">
+      <div class="pill"><span class="dot"></span> Read once. Then you'll know.</div>
+      <h1>Employees &amp; Leave<br /><span class="grad-text">The Plain-English Guide</span></h1>
+      <p>
+        How to ask for leave. How it gets approved. How to add a new person.
+        Everything is written here in everyday words, so nobody needs to ask anybody
+        anything. If you can send a message on a phone, you can do all of this.
+      </p>
+      <div class="meta">
+        <span class="chip">For: everyone at the factory</span>
+        <span class="chip">Plain English</span>
+        <span class="chip">Works on your phone</span>
+        <span class="chip">Read time: ~8 minutes</span>
+      </div>
+    </div>
+
+    <!-- 01 -->
+    <section id="one">
+      <h2><span class="num">01</span> The one-minute version</h2>
+      <p class="lede">The paper leave form is now an app. You ask on your phone. The app counts your days. Three people sign. You watch it happen.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>🚫</span> The old way</div>
+          <p class="card-body">Find a form. Work out your own days with a pen. Walk it to three offices and hope. Come back later and ask: <em>"has it been signed?"</em> Nobody knows.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> The new way</div>
+          <p class="card-body">Open <strong>My Leave</strong>. Pick your dates. The app does the counting — it knows the holidays. Press submit. Watch the three signatures happen, live, on your phone.</p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">💡</span>
+        <div class="bd">
+          <div class="ct">The best part</div>
+          <p>The app and the printed form always agree — because the app makes both. No more hand-maths. No more "which copy is the real one?"</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="before">
+      <h2><span class="num">02</span> What you need before you start</h2>
+      <p class="lede">Two things, and only two.</p>
+
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>A login</h4>
+          <p>HR gives you an email address and a password for the app. If you can sign in, you are ready. If you have no login yet, ask HR — it takes them one click to make you one.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>Nothing else</h4>
+          <p>No forms. No photocopies. Your days, your name, your department and your staff number are already in the system, filled in for you.</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">👤</span>
+        <div class="bd">
+          <div class="ct">If the app says "No employee record linked to this login"</div>
+          <p>Nothing is broken. It just means HR has not connected your login to your staff record yet. Ask HR. They will connect it, and your leave will appear.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="my">
+      <h2><span class="num">03</span> My Leave — your one screen</h2>
+      <p class="lede">Everything about your leave lives on one screen. Find it in the menu under <strong>Human Resources → My Leave</strong>.</p>
+
+      <h3>The four numbers at the top</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>The word on screen</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Entitled</strong></td><td>The days you may take this year. Joined halfway through the year? You get a fair share — not zero, and not the full year.</td></tr>
+            <tr><td><strong>Already taken</strong></td><td>Days you have used this year. Only approved leave counts here.</td></tr>
+            <tr><td><strong>Carried over</strong></td><td>Days you did not use last year, kept for you (up to 5 days).</td></tr>
+            <tr><td><strong>Available</strong></td><td>What you have left, right now. <strong>This is the number you care about.</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Below the four numbers is a list of every request you have ever made, each with a coloured tag showing where it is. You will learn the tags in section 06.</p>
+
+      <div class="callout co-info">
+        <span class="ic">🔍</span>
+        <div class="bd">
+          <div class="ct">These numbers are the same everywhere</div>
+          <p>The numbers on your screen, the ones HR sees, and the ones on the printed form all come from the same place. Nobody can see one number and somebody else see a different one.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="ask">
+      <h2><span class="num">04</span> How to ask for leave, step by step</h2>
+      <p class="lede">Seven steps. About two minutes. On your phone, from anywhere.</p>
+
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>Press "Request Leave"</h4>
+          <p>The big button on your My Leave screen.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>Pick your type of leave</h4>
+          <p>Annual. Maternity. Casual. Compassionate. Examination. The form will ask you for a short reason on every type except annual — write one line.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="step-b">
+          <h4>Pick your first day and your last day</h4>
+          <p>Two date boxes. That is the whole question.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="step-b">
+          <h4>Look at the boxes — the app has already counted</h4>
+          <p>As soon as you pick dates, the app works out your days. You never count on your fingers. You never subtract a Sunday by mistake. Section 05 explains every box.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">5</div>
+        <div class="step-b">
+          <h4>Say who is covering you</h4>
+          <p>Type their name in <strong>"Handing over to"</strong>. For leave of 3 working days or more, the app also asks for a short handover note: what should the next person watch out for?</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">6</div>
+        <div class="step-b">
+          <h4>Sign</h4>
+          <p>Tick the box, then type your full name. That typing is your signature, with the date and time kept by the app.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">7</div>
+        <div class="step-b">
+          <h4>Press "Submit Leave Request"</h4>
+          <p>Done. The app tells you who has it now. You can go back to work.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">⏰</span>
+        <div class="bd">
+          <div class="ct">One thing to plan: notice</div>
+          <p>Annual leave needs <strong>a week's notice</strong>. Emergencies — compassionate, sudden illness — do not. The app checks this for you and will tell you plainly if a request is too soon.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="boxes">
+      <h2><span class="num">05</span> What the boxes mean</h2>
+      <p class="lede">Every box on the form, in everyday words.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Box</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Leave commences</strong></td><td>Your first day off.</td></tr>
+            <tr><td><strong>Leave ends</strong></td><td>Your last day off.</td></tr>
+            <tr><td><strong>Resumption date</strong></td><td>The day you come back to work. The app works it out for you — it is always the next working day after your leave ends.</td></tr>
+            <tr><td><strong>This request</strong></td><td>How many working days this leave will take.</td></tr>
+            <tr><td><strong>Entitled</strong></td><td>Days you may take this year.</td></tr>
+            <tr><td><strong>Already taken</strong></td><td>Approved days you have used this year.</td></tr>
+            <tr><td><strong>Outstanding after</strong></td><td>What you will have left <em>if</em> this request is approved.</td></tr>
+            <tr><td><strong>Non-working days in this range</strong></td><td>Holidays and rest days that fall inside your dates. <strong>These are not taken from you.</strong> The app lists them so you can see why the count is what it is.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🎁</span>
+        <div class="bd">
+          <div class="ct">A holiday inside your dates is a free day</div>
+          <p>If Independence Day falls in the middle of your leave, it is not deducted. On paper you once had to notice this yourself. The app always notices.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="after">
+      <h2><span class="num">06</span> The three signatures</h2>
+      <p class="lede">Leave is approved the same way it always was on paper — three people, one after the other. The app just makes it fast and honest.</p>
+
+      <div class="flow">
+        <div class="fnode hi"><span class="fi">🧑‍💼</span><div><span class="ft">1. Your Supervisor</span><div class="fs">Signs first. Everyone else waits.</div></div></div>
+        <div class="farrow">↓ signs</div>
+        <div class="fnode"><span class="fi">🏢</span><div><span class="ft">2. HOD / Subsidiary</span><div class="fs">Now unlocked. Only now.</div></div></div>
+        <div class="farrow">↓ signs</div>
+        <div class="fnode"><span class="fi">👑</span><div><span class="ft">3. Head of HR</span><div class="fs">The final yes. This one makes the leave real.</div></div></div>
+        <div class="farrow">↓ signs</div>
+        <div class="fnode hi"><span class="fi">🎉</span><div><span class="ft">Approved</span><div class="fs">It shows on the dashboard and can be printed for the file.</div></div></div>
+      </div>
+
+      <h3>The coloured tags on your requests</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Tag</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Awaiting supervisor</strong></td><td>Sitting with your supervisor. Nothing for you to do.</td></tr>
+            <tr><td><strong>Awaiting HOD</strong></td><td>Your supervisor said yes. Now the HOD looks at it.</td></tr>
+            <tr><td><strong>Awaiting Head of HR</strong></td><td>Two yeses are in. Waiting for the last one.</td></tr>
+            <tr><td><strong>Approved</strong></td><td>All three signed. Your leave is real. Print the form if you want a copy.</td></tr>
+            <tr><td><strong>Rejected</strong></td><td>Someone said no — and <strong>had to write why</strong>. You will see the reason written on the request.</td></tr>
+            <tr><td><strong>Cancelled</strong></td><td>Taken back, by you or by HR.</td></tr>
+            <tr><td><strong>Lodged by HR</strong></td><td>HR typed this request for someone who could not do it themselves. Marked so nobody is confused about who filled it in.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-stop">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">The one rule worth remembering</div>
+          <p>You are on leave when the tag says <strong>Approved</strong>. Not before. Until the last signature is in, plan as if you are still working.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="cancel">
+      <h2><span class="num">07</span> Changing your mind</h2>
+      <p class="lede">Plans change. Here is what you can undo, and when.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>✅</span> While it still says "Awaiting…"</div>
+          <p class="card-body">Press <strong>Cancel</strong> on the request. It is yours, it is not approved yet, and taking it back is one press. Nothing is lost — it stays on your list marked Cancelled, so the story stays honest.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🔒</span> After it says "Approved"</div>
+          <p class="card-body">The leave has been signed for and the days are committed. Ask HR to change it — they are the only ones who can, and the change is recorded.</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">💬</span>
+        <div class="bd">
+          <div class="ct">If your leave was rejected</div>
+          <p>Open the request and read the reason — the approver had to write one. Speak to them, or to HR. If the dates were the problem, simply request again with different dates. Being rejected is not a black mark; it is usually about cover.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="back">
+      <h2><span class="num">08</span> Coming back to work</h2>
+      <p class="lede">One press on your first day back. That is the whole job.</p>
+
+      <p>When your leave is over, the app shows a friendly reminder: <strong>"You are due back."</strong> Press <strong>"Confirm my return"</strong> and your leave record closes itself.</p>
+
+      <div class="callout co-info">
+        <span class="ic">📖</span>
+        <div class="bd">
+          <div class="ct">Why the app asks</div>
+          <p>The paper form had a box for "resumption of duty" that people forgot to fill. When you confirm, the record is complete — your counts are right, and HR does not have to chase you.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="offline">
+      <h2><span class="num">09</span> No internet? Read this</h2>
+      <p class="lede">The factory Wi-Fi fails. The app was built knowing that.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>✅</span> Asking for leave works offline</div>
+          <p class="card-body">No signal? Ask anyway. The app saves your request safely on your phone and sends it the moment you have signal again. You will see: <em>"Saved — waiting to send."</em></p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🛑</span> Signing does not work offline</div>
+          <p class="card-body">On purpose. A signature says <em>"this person's leave is approved and paid"</em> — a decision like that must go straight into the real record, not sit on one phone. Approvers see a plain message and the buttons switch off until signal returns.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="faq">
+      <h2><span class="num">10</span> Questions people ask most</h2>
+      <p class="lede">The eight questions that come up, answered once and for all.</p>
+
+      <div class="grid2">
+        <div class="gitem"><div class="gterm">Why doesn't Sunday count against me?</div><div class="gdef">Rest days and public holidays are never deducted. HR decides which days are rest days, and if the factory works on Saturdays too, HR ticks that in the settings. Whatever they choose, the counting follows.</div></div>
+        <div class="gitem"><div class="gterm">Why isn't my "Available" 21 days?</div><div class="gdef">Three honest reasons, all shown on your screen: you may have joined mid-year (fair share, not the whole year), you may already have taken days, and last year's leftovers are capped at 5 days. Nothing is hidden.</div></div>
+        <div class="gitem"><div class="gterm">My leave was rejected. What now?</div><div class="gdef">Read the reason on the request — the approver had to write one. Talk to them or to HR. If the dates were the problem, ask again with different dates.</div></div>
+        <div class="gitem"><div class="gterm">The app says I have no employee record.</div><div class="gdef">Ask HR to add you to the roster and connect your login. Nothing is broken; you just are not linked yet. It takes HR a minute.</div></div>
+        <div class="gitem"><div class="gterm">When exactly do I come back?</div><div class="gdef">The "Resumption date" shown on your request — always the next working day after your leave ends. If your leave ends on a Friday, you are back the next working day, not the Saturday.</div></div>
+        <div class="gitem"><div class="gterm">Can two of us be off at the same time?</div><div class="gdef">Yes. When you pick dates, the app tells you who else is away then. If your department gets thin on cover it warns you — but people decide, not the app.</div></div>
+        <div class="gitem"><div class="gterm">Who can see why I am on leave?</div><div class="gdef">You, the people who sign your request, and HR. The dashboard everyone sees shows only names and dates — never reasons. A private matter stays private.</div></div>
+        <div class="gitem"><div class="gterm">What if a public holiday falls inside my dates?</div><div class="gdef">The app lists it under your dates and does not deduct it. You are not charged for a day the whole factory had off anyway.</div></div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="roster">
+      <h2><span class="num">11</span> For HR — adding a person</h2>
+      <p class="lede">One record per human. Find it under <strong>Human Resources → Employee Roster</strong>.</p>
+
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>Press "Add" and fill in the person</h4>
+          <p>Name, department, shift, phone, address — one line each. Two boxes deserve extra care, and both are on this screen:</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>🆔</span> SAP number — one number, one person</div>
+          <p class="card-body">The app refuses two people with the same SAP number. That is on purpose: a duplicate would quietly split one person's leave history in two, and nothing would look broken while it happened.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>📅</span> Date joined — drives the fair share</div>
+          <p class="card-body">Somebody who joins in July should not get a whole year's leave. The app works out their fair share from this date. Get it wrong and their first balance is wrong. It is fixable later — but get it right now.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>Give them a login — one click, if they need one</h4>
+          <p>Press <strong>"Create login"</strong> on their row. Not everybody needs one. A record without a login is still a full member of staff with full leave — HR can always request leave on their behalf. Removing a login later never removes the person or their history.</p>
+        </div>
+      </div>
+
+      <div class="callout co-stop">
+        <span class="ic">🗑️</span>
+        <div class="bd">
+          <div class="ct">Never delete a person</div>
+          <p>When someone leaves the company, mark them <strong>inactive</strong> on the roster instead of deleting them. Their leave history must survive — it is the company's record, and payroll may need it. The app guards against this, but the habit matters more.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="access">
+      <h2><span class="num">12</span> For HR — giving access</h2>
+      <p class="lede">Who can see what. Find it under <strong>Administration → User Roles</strong>, on the <strong>Employees</strong> tab.</p>
+
+      <p>Pick the person by name. Tick what they need:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>What you give</th><th>What they can then do</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Department roles</strong> (Production, QC, HR…)</td><td>See that department's screens in the app.</td></tr>
+            <tr><td><strong>Approval powers</strong> (Leave Supervisor, HOD, Head of HR)</td><td>Sign leave requests at their stage of the chain — and see the approvals queue.</td></tr>
+            <tr><td><strong>Nothing at all</strong></td><td>They see exactly one screen: My Leave. This is right for most of the factory floor.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">👑</span>
+        <div class="bd">
+          <div class="ct">About Super Admin</div>
+          <p>Only the system owner can make a Super Admin. HR cannot see that option, cannot grant it, and the system itself refuses it. That is deliberate — no matter what, "god mode" stays with the owner.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="queue">
+      <h2><span class="num">13</span> For approvers — your queue</h2>
+      <p class="lede">If you can sign leave requests, the menu shows <strong>Leave Approvals</strong>. Open it and the app has already sorted your work.</p>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="card-t"><span>🎯</span> Waiting for you</div>
+          <p class="card-body">Requests sitting at <strong>your</strong> stage right now. These are the ones with buttons.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>👀</span> Waiting on others</div>
+          <p class="card-body">In the pipeline, but not at your stage yet. You can look. The chain has not reached you, so there is nothing to press.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🗄️</span> Decided</div>
+          <p class="card-body">Signed or rejected. For reference, with every signature and date kept.</p>
+        </div>
+      </div>
+
+      <h3>Two buttons, two honest rules</h3>
+      <div class="step">
+        <div class="badge">✓</div>
+        <div class="step-b">
+          <h4>Approving</h4>
+          <p>Press <strong>"Sign as …"</strong>. Your signature moves the request to the next stage — and only ever the next stage. Nobody, not even the system owner, can skip ahead or sign two stages with one press.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">✕</div>
+        <div class="step-b">
+          <h4>Rejecting</h4>
+          <p>Write a reason first — the app insists, because the employee is going to read your words. Write something clear and kind: <em>"cover is too thin that week; try the following week"</em> helps far more than "rejected".</p>
+        </div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🤝</span>
+        <div class="bd">
+          <div class="ct">Stepping in, honestly recorded</div>
+          <p>If an approver is away, the Head of HR can sign at their stage instead — or a named deputy can. The record always says who really signed and for whom. Nothing is faked.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="reports">
+      <h2><span class="num">14</span> For HR — reports &amp; the printed form</h2>
+      <p class="lede">Two tools for the questions management actually asks.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>📊</span> The Leave Report</div>
+          <p class="card-body"><strong>Human Resources → Leave Report.</strong> Every person, their days — entitled, taken, left. Who is off today. And when a department has too many people away at once, it warns you before cover becomes a problem.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🖨️</span> The printed form</div>
+          <p class="card-body">Press the printer button on any request. Out comes the official form — black on white, all three signatures, dates and reasons filled in — ready for the cabinet. It always matches the app, because the app wrote it.</p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🧾</span>
+        <div class="bd">
+          <div class="ct">Year-end, without the headache</div>
+          <p>Every balance in the report is worked out from the request history itself — there is no separate tally that can drift out of step. When HR wants the year-end picture, it is already on this screen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section id="settings">
+      <h2><span class="num">15</span> Settings HR can change</h2>
+      <p class="lede">Every rule in this guide is a setting, not a law of nature. Find them under <strong>Administration → System Config → 📅 Leave Policy</strong>.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Setting</th><th>What it decides</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Rest days</strong></td><td>Which days of the week are never deducted. Sunday only, or Saturday too — tick what the factory really does.</td></tr>
+            <tr><td><strong>Public holidays</strong></td><td>The days the whole country has off. Update them each January when the government announces them.</td></tr>
+            <tr><td><strong>Leave days</strong></td><td>How many annual and casual days a year. 21 is the current setting; the app holds whatever HR sets.</td></tr>
+            <tr><td><strong>Handover notes</strong></td><td>From how many days a handover note becomes required. Currently 3 working days.</td></tr>
+            <tr><td><strong>Leave year</strong></td><td>When the leave year starts. January now; a July-to-June cycle is one setting away.</td></tr>
+            <tr><td><strong>Approval stages &amp; deputies</strong></td><td>Who signs, in which order, and who steps in when an approver is away.</td></tr>
+            <tr><td><strong>Rejection reasons</strong></td><td>Keep this on. Employees deserve to know why.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">⚡</span>
+        <div class="bd">
+          <div class="ct">Change a setting, not the software</div>
+          <p>None of these need a developer or a rebuild. Change it, press save, and it applies from that moment. Old requests keep the numbers they were approved with — history stays honest.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 -->
+    <section id="rules">
+      <h2><span class="num">16</span> Who does what — the golden rules</h2>
+      <p class="lede">The whole system on one screen. If you remember nothing else, remember this.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Person</th><th>What they do</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Employee</strong></td><td>Asks for leave on My Leave. Cancels if plans change. Confirms they are back.</td></tr>
+            <tr><td><strong>Supervisor</strong></td><td>Signs first.</td></tr>
+            <tr><td><strong>HOD / Subsidiary</strong></td><td>Signs second.</td></tr>
+            <tr><td><strong>Head of HR</strong></td><td>Signs last — the yes that makes leave real. Steps in when an approver is away.</td></tr>
+            <tr><td><strong>HR</strong></td><td>Keeps the roster, gives access, lodges requests for people without phones, answers questions.</td></tr>
+            <tr><td><strong>System owner</strong></td><td>Guards the settings and the owner access.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>1 · 2 · 3</span> Three rules about asking</div>
+          <p class="card-body">
+            Ask on <strong>My Leave</strong> — nowhere else.<br />
+            The app counts your days. Trust the boxes.<br />
+            Annual leave needs a week's notice.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✍️</span> Three rules about approving</div>
+          <p class="card-body">
+            Three signatures, always in order.<br />
+            A rejection always comes with a reason.<br />
+            Nobody is on leave until the tag says <strong>Approved</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🌟</span>
+        <div class="bd">
+          <div class="ct">And the last word</div>
+          <p>Stuck? Ask HR — that is what they are there for. But try the app first. Most questions answer themselves the moment you open your own leave screen and look.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT BEHAVIOUR
+   Theme toggle, reading progress, scroll-spy contents,
+   copy-to-clipboard, toast, print.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------- Theme ---------- */
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  var stored = null;
+  try { stored = localStorage.getItem('dos-guide-theme'); } catch (e) {}
+  apply(stored || 'dark');
+
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    if (icon) icon.textContent = t === 'dark' ? '◐' : '◑';
+    if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try { localStorage.setItem('dos-guide-theme', next); } catch (e) {}
+    });
+  }
+
+  /* ---------- Print / save as PDF ---------- */
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
+  /* ---------- Reading progress ---------- */
+  var bar = document.getElementById('progress');
+  function onScroll() {
+    if (!bar) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Scroll-spy for the contents list ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var sections = Object.keys(map)
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-88px 0px -70% 0px', threshold: 0 });
+    sections.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- Copy to clipboard ---------- */
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1900);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (b) {
+    b.addEventListener('click', function () {
+      var pre = b.parentNode.querySelector('pre');
+      if (!pre) return;
+      var text = pre.innerText;
+      var done = function () {
+        b.textContent = 'Copied';
+        b.classList.add('done');
+        showToast('Copied to clipboard');
+        setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () { fallback(text, done); });
+      } else {
+        fallback(text, done);
+      }
+    });
+  });
+  function fallback(text, cb) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { showToast('Press Ctrl+C to copy'); }
+    document.body.removeChild(ta);
+  }
+})();
+</script>
+</body>
+</html>
