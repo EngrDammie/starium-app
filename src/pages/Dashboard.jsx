@@ -220,6 +220,29 @@ export default function Dashboard() {
       {/* Main Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
 
+        {/* Metric 1: Live Users */}
+        {systemRole === 'super_admin' ? (
+          <Link to="/active-users" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,230,118,0.1)] relative overflow-hidden group hover:border-status-success/50 transition-colors animate-[fadeIn_0.5s_ease-out] block cursor-pointer">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">👥</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
+              Live Users
+            </h3>
+            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
+            <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
+          </Link>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,230,118,0.1)] relative overflow-hidden group hover:border-status-success/50 transition-colors animate-[fadeIn_0.5s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">👥</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
+              Live Users
+            </h3>
+            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
+            <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
+          </div>
+        )}
+
         {/* Leave: away today + (for approvers) waiting on your signature.
             Names and dates ONLY — a compassionate leave reason is deeply
             personal, and everyone in the factory can see this card. */}
@@ -246,29 +269,6 @@ export default function Dashboard() {
             </div>
           )}
         </Link>
-
-        {/* Metric 1: Live Users */}
-        {systemRole === 'super_admin' ? (
-          <Link to="/active-users" className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,230,118,0.1)] relative overflow-hidden group hover:border-status-success/50 transition-colors animate-[fadeIn_0.5s_ease-out] block cursor-pointer">
-            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">👥</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
-              Live Users
-            </h3>
-            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
-            <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
-          </Link>
-        ) : (
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,230,118,0.1)] relative overflow-hidden group hover:border-status-success/50 transition-colors animate-[fadeIn_0.5s_ease-out]">
-            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">👥</div>
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(0,230,118,0.8)]"></span>
-              Live Users
-            </h3>
-            <div className="text-5xl font-black text-white mb-1">{activeUsersCount} <span className="text-xl font-bold text-gray-400">{pluralize(activeUsersCount, 'user')}</span></div>
-            <div className="text-status-success text-xs font-bold uppercase tracking-wider">Active Now</div>
-          </div>
-        )}
 
         {/* Metric 2: Level 9 Tests */}
         {systemRole === 'super_admin' || departmentRoles.some(r => ['qc_manager', 'prod_manager'].includes(r)) ? (

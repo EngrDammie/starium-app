@@ -75,6 +75,26 @@ try {
   await shot(page, '02-request-form');
 
   // Pick dates and watch the arithmetic move — the core promise of the form.
+  // First: dates TOO SOON for annual leave's notice rule, which must be
+  // explained in plain words while the Submit button stays disabled. A grey
+  // button with no stated reason is a dead end, and this is the check that it
+  // never returns.
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  await page.locator('input[type="date"]').nth(0).fill(iso(tomorrow));
+  await page.locator('input[type="date"]').nth(1).fill(iso(new Date(new Date(tomorrow).setDate(tomorrow.getDate() + 2))));
+  await page.waitForTimeout(1_200);
+
+  const blockedNotice = await page.getByText(/notice/i).count();
+  const submitBtn = page.getByRole('button', { name: /Submit Leave Request/ });
+  const submitDisabledWhileShort = await submitBtn.isDisabled();
+  record('a too-soon request explains itself: notice shortfall listed, button disabled',
+    blockedNotice > 0 && submitDisabledWhileShort,
+    `notice mentions: ${blockedNotice}, disabled: ${submitDisabledWhileShort}`);
+  await shot(page, '03a-short-notice-explained');
+
+  // Now legitimate dates.
   const { start, end } = pickableDates();
   await page.locator('input[type="date"]').nth(0).fill(start);
   await page.locator('input[type="date"]').nth(1).fill(end);
@@ -98,6 +118,14 @@ try {
   // the label it directly follows.
   await page.locator('label:has-text("type your full name") + input').first().fill('Halima Danjuma');
   await page.locator('input[type="checkbox"]').check();
+
+  // The positive counterpart to the blocker list: once everything is done,
+  // the form says the way is clear — the button's change of state is
+  // explained rather than merely noticed.
+  await page.waitForTimeout(600);
+  const readyLine = await page.getByText('Everything needed is filled in').count();
+  record('the form states when it is ready to submit', readyLine > 0);
+
   await page.getByText('Submit Leave Request').click();
   await page.waitForSelector('text=Leave request submitted', { timeout: 20_000 });
   record('the form submits and confirms', true);
@@ -124,6 +152,29 @@ try {
     await shot(page2, '06-signed');
   } else {
     record('the supervisor signs in the browser and the chain advances', false, 'no sign button found');
+  }
+
+  // ─── The Decided tray: state tags and the rejection reason ────────────────
+  // A decided request must state its own conclusion — a green APPROVED, a
+  // red REJECTED with the reason the employee reads, a grey CANCELLED — not
+  // just the stage tags showing who signed what.
+  await page2.getByRole('button', { name: /Decided/ }).click();
+  await page2.waitForTimeout(1_500);
+
+  const approvedTags = await page2.locator('span:has-text("Approved")').count();
+  const rejectedTags = await page2.locator('span:has-text("Rejected")').count();
+  const cancelledTags = await page2.locator('span:has-text("Cancelled")').count();
+  const reasonShown = await page2.getByText(/Reason for rejection/i).count();
+  record('the Decided tray shows state tags for concluded requests',
+    approvedTags > 0 && rejectedTags > 0 && cancelledTags > 0,
+    `approved:${approvedTags} rejected:${rejectedTags} cancelled:${cancelledTags} reasons:${reasonShown}`);
+  await shot(page2, '08-decided-tags');
+
+  if (rejectedTags > 0) {
+    record('a rejected request shows the written reason in the card body', reasonShown > 0,
+      `${reasonShown} reason block(s) visible`);
+  } else {
+    record('a rejected request shows the written reason in the card body', false, 'no rejected card in the tray');
   }
 
   // ─── Flow 3: the printable form, as the employee ────────────────────────

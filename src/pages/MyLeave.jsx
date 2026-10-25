@@ -24,24 +24,10 @@ import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 // Print: HR's cabinet still runs on paper, and the printed copy must match
 // the app or the two become systems to reconcile. See LeavePrint.jsx.
 import { Link } from 'react-router-dom';
-
-const statusStyle = {
-  pending_supervisor: 'bg-status-warning/20 text-status-warning border-status-warning/40',
-  pending_hod: 'bg-status-warning/20 text-status-warning border-status-warning/40',
-  pending_hr: 'bg-status-warning/20 text-status-warning border-status-warning/40',
-  approved: 'bg-status-success/20 text-status-success border-status-success/40',
-  rejected: 'bg-status-danger/20 text-status-danger border-status-danger/40',
-  cancelled: 'bg-gray-500/20 text-gray-400 border-gray-600',
-};
-
-const statusLabel = {
-  pending_supervisor: 'Awaiting supervisor',
-  pending_hod: 'Awaiting HOD',
-  pending_hr: 'Awaiting Head of HR',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  cancelled: 'Cancelled',
-};
+// ONE vocabulary for status labels and colours, shared with the approvers'
+// screen — the employee and the signers must never see the same request
+// described two different ways.
+import { leaveStatusLabel, leaveStatusStyle } from '../components/leave/leaveStatus';
 
 function fmt(d) {
   if (!d) return '—';
@@ -236,8 +222,8 @@ export default function MyLeave() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white font-bold">{r.leaveTypeLabel || r.leaveType}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${statusStyle[r.status] || ''}`}>
-                            {statusLabel[r.status] || r.status}
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${leaveStatusStyle(r.status)}`}>
+                            {leaveStatusLabel(r.status, policy)}
                           </span>
                           {r.lodgedBy && (
                             <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-status-warning/50 text-status-warning">

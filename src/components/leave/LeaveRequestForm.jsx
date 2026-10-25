@@ -87,7 +87,37 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
     );
   }, [policy, employee, prepared, existingRequests, leaveType, leaveCommences, leaveEnds, purpose, handoverNote]);
 
-  const canSubmit = errors.length === 0 && agreed && confirmedName.trim().length > 1 && !!prepared?.requestedDays;
+  // EVERY reason the Submit button is disabled, in plain words, computed live.
+  //
+  // WHY THIS EXISTS (added 25 Oct 2026): the button disables itself the moment
+  // anything is missing, so the old "fix these before submitting" list — which
+  // only rendered AFTER a submit attempt — could never actually be seen. A
+  // person who picked dates inside the notice window got a dead grey button
+  // and no explanation anywhere. The founder hit it testing the form, and the
+  // browser test suite had to read the source to discover its first blocker.
+  //
+  // A disabled button with no stated reason is a dead end. This is the fix:
+  // the reasons are always visible while they apply.
+  const blockers = useMemo(() => {
+    const list = [...errors];
+
+    if (confirmedName.trim().length < 2) {
+      list.push('Type your full name in the Declaration box — that typing is your signature.');
+    }
+    if (!agreed) {
+      list.push('Tick "I confirm these details are correct and I have handed over my work."');
+    }
+    return list;
+  }, [errors, confirmedName, agreed]);
+
+  const canSubmit = blockers.length === 0 && !!prepared?.requestedDays;
+
+  // Stay quiet on a fresh form — a checklist before you have done anything
+  // reads as nagging. Speak up as soon as the person has started choosing
+  // dates, or once they have tried to submit.
+  const hasStarted = Boolean(leaveType && (leaveCommences || leaveEnds));
+  const showChecklist = blockers.length > 0 && (hasStarted || showErrors);
+  const readyToSubmit = canSubmit && hasStarted && blockers.length === 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -354,13 +384,30 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
           </label>
         </div>
 
-        {/* All failures at once, not just the first. */}
-        {showErrors && errors.length > 0 && (
-          <div className="bg-status-danger/10 border border-status-danger rounded-xl px-5 py-4">
-            <h3 className="text-status-danger font-bold text-sm mb-2">Fix these before submitting</h3>
+        {/* WHY THE BUTTON IS DISABLED — live, not after a failed attempt.
+            All blockers at once, not just the first. Each line is already
+            written in plain words by the engine (the notice shortfall spells
+            out how many days short you are), so this list is the whole
+            explanation the person needs. */}
+        {showChecklist && (
+          <div className={`rounded-xl border px-5 py-4 ${showErrors ? 'bg-status-danger/10 border-status-danger' : 'bg-[#1a1a1a] border-[#444]'}`}>
+            <h3 className={`font-bold text-sm mb-2 ${showErrors ? 'text-status-danger' : 'text-gray-200'}`}>
+              {showErrors ? 'This request cannot be submitted yet' : 'Before this can be submitted'}
+            </h3>
             <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">
-              {errors.map((err, i) => <li key={i}>{err}</li>)}
+              {blockers.map((err, i) => <li key={i}>{err}</li>)}
             </ul>
+            <p className="text-gray-500 text-xs mt-2">
+              The Submit button switches on the moment everything above is done.
+            </p>
+          </div>
+        )}
+
+        {/* The positive counterpart: say so when the way is clear, so the
+            state change is explained rather than merely noticed. */}
+        {readyToSubmit && (
+          <div className="rounded-xl border border-status-success/40 bg-status-success/10 px-5 py-3 text-sm text-status-success font-bold">
+            ✓ Everything needed is filled in — you can submit.
           </div>
         )}
 

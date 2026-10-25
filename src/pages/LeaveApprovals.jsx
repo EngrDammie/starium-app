@@ -34,6 +34,7 @@ import {
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
+import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote } from '../components/leave/leaveStatus';
 import { subscribeToAccessView } from '../services/userAccessOperations';
 
 const fmt = (d) => {
@@ -72,6 +73,27 @@ function Stepper({ request, policy, highlight }) {
   );
 }
 
+// The outcome block for a decided request: the reason a rejection was given,
+// the note that a cancellation released the days, or the confirmation that
+// all three signatures landed. Same reason text the employee reads on their
+// own screen — the approvers are not given a different version of events.
+const OUTCOME_TONES = {
+  danger: 'bg-status-danger/10 border-status-danger/40 text-status-danger',
+  muted: 'bg-[#1a1a1a] border-[#333] text-gray-400',
+  good: 'bg-status-success/10 border-status-success/40 text-status-success',
+};
+
+function OutcomeBlock({ request }) {
+  const note = outcomeNote(request);
+  if (!note) return null;
+  return (
+    <div className={`mt-3 rounded-lg border px-3 py-2 ${OUTCOME_TONES[note.tone] || OUTCOME_TONES.muted}`}>
+      <div className="text-[10px] uppercase tracking-wider font-bold mb-1">{note.title}</div>
+      <p className={`text-sm ${note.tone === 'muted' ? 'text-gray-300' : 'text-gray-200'}`}>{note.body}</p>
+    </div>
+  );
+}
+
 function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning }) {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -81,6 +103,13 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
   const stage = policy?.stages?.[at];
   const verdict = userCanActAtStage({ request, policy, stageIndex: at, user });
   const canAct = verdict.can && isOnline;
+
+  // The request's own conclusion, in the same words and colours the employee
+  // sees on My Leave. The stepper below shows WHO signed; this shows WHAT
+  // became of the request — the two answers the Decided tray needs.
+  const statusLabel = leaveStatusLabel(request.status, policy);
+  const statusStyle = leaveStatusStyle(request.status);
+  const decided = decidedAt(request);
 
   const act = async (decision) => {
     if (busy) return;
@@ -96,6 +125,20 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
 
   return (
     <div className="bg-dark-card border border-[#333] rounded-xl p-5">
+      {/* The request's state, stated before anything else. In the Decided
+          tray this is the headline: REJECTED, APPROVED or CANCELLED — with
+          when it was decided beside it. */}
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${statusStyle}`}>
+          {statusLabel}
+        </span>
+        {decided && (
+          <span className="text-[10px] uppercase tracking-wider text-gray-500">
+            Decided {fmt(decided)}
+          </span>
+        )}
+      </div>
+
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -132,6 +175,11 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
           </div>
         </div>
       </div>
+
+      {/* What became of the request. In the Decided tray this is the answer
+          the approver is looking for: REJECTED with the reason the employee
+          reads, or the note that the days were released on cancellation. */}
+      <OutcomeBlock request={request} />
 
       {awayWarning && (
         <div className="mt-3 bg-status-warning/10 border border-status-warning/40 rounded-lg px-3 py-2 text-xs text-status-warning">
@@ -225,6 +273,11 @@ export default function LeaveApprovals() {
       if (verdict.can) mine.push(r);
       else if (userInvolvement({ policy, user })) others.push(r);
     }
+    // Newest decision first. The requests arrive ordered by submission date,
+    // which is the right order while they are live — but in the Decided tray
+    // the useful question is "what happened most recently?", and a request
+    // lodged months ago and rejected this morning belongs at the top.
+    decided.sort((a, b) => (decidedAt(b)?.getTime() || 0) - (decidedAt(a)?.getTime() || 0));
     return { mine, others, decided };
   }, [requests, policy, user]);
 
@@ -269,7 +322,10 @@ export default function LeaveApprovals() {
     return <Layout title="Loading..."><div className="text-center text-white mt-10">Loading…</div></Layout>;
   }
 
-  const involved = requests.some(r => userInvolvement({ policy, user }));
+  // Involvement is a property of the person and the chain, not of any single
+  // request (userInvolvement takes no request on purpose), so this is "is
+  // there anything here AND are you part of the leave machinery at all".
+  const involved = requests.length > 0 && userInvolvement({ policy, user });
 
   // An approver who is nothing to do with leave at all should not see a wall
   // of other people's requests — but HR department users reach this page via
