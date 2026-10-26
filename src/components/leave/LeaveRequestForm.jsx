@@ -48,7 +48,14 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
   // signed-in user, because HR must never accidentally file a request against
   // themselves while entering someone else's details.
   const employee = useEmployeeRecord(lodgedFor);
+  // The proposer's OWN requests — balance, pending exposure, self-overlap.
   const [existingRequests, setExistingRequests] = useState([]);
+  // OTHER people's approved requests — the colleague-coverage warning. Until
+  // 26 Oct 2026 the form computed that warning against the proposer's own
+  // list, which the overlap scan then excluded: the "N colleagues already
+  // away" note could never appear. One list cannot answer two different
+  // questions; these are two questions.
+  const [deptApproved, setDeptApproved] = useState([]);
 
   const [leaveType, setLeaveType] = useState('annual');
   const [leaveCommences, setLeaveCommences] = useState('');
@@ -69,23 +76,36 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
     return subscribeToLeaveRequests(setExistingRequests, { employeeId: employee.id });
   }, [employee?.id]);
 
+  // The department's approved requests — a second subscription answering the
+  // coverage question, which the own-request list cannot.
+  useEffect(() => {
+    return subscribeToLeaveRequests(setDeptApproved, { status: 'approved' });
+  }, []);
+
   // Live figures. Recomputed on every change — the whole point of the form.
   const prepared = useMemo(() => {
     if (!policy || !employee) return null;
     return prepareLeaveRequest(
       { leaveType, leaveCommences, leaveEnds, purpose, handoverNote },
-      { policy, employee, existingRequests },
+      {
+        policy, employee, existingRequests,
+        departmentRequests: deptApproved.filter(r => r.department === employee.department),
+      },
     );
-  }, [policy, employee, existingRequests, leaveType, leaveCommences, leaveEnds, purpose, handoverNote]);
+  }, [policy, employee, existingRequests, deptApproved, leaveType, leaveCommences, leaveEnds, purpose, handoverNote]);
 
   const errors = useMemo(() => {
     if (!policy || !employee || !prepared) return [];
     return validateLeaveRequest(
       { leaveType, leaveCommences, leaveEnds, purpose, handoverNote, requestedDays: prepared.requestedDays },
       policy,
-      { balance: prepared.balance, existingRequests, employeeId: employee.id, department: employee.department },
+      {
+        balance: prepared.balance, existingRequests,
+        departmentRequests: deptApproved.filter(r => r.department === employee.department),
+        employeeId: employee.id, department: employee.department,
+      },
     );
-  }, [policy, employee, prepared, existingRequests, leaveType, leaveCommences, leaveEnds, purpose, handoverNote]);
+  }, [policy, employee, prepared, existingRequests, deptApproved, leaveType, leaveCommences, leaveEnds, purpose, handoverNote]);
 
   // EVERY reason the Submit button is disabled, in plain words, computed live.
   //
@@ -137,6 +157,7 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
       },
       {
         policy, employee, existingRequests,
+        departmentRequests: deptApproved.filter(r => r.department === employee.department),
         user: { email: currentUser?.email },
         isOnline,
       },
@@ -301,6 +322,24 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
                 tone={prepared?.balance?.exceedsBalance ? 'text-status-danger' : 'text-status-success'}
               />
             </div>
+
+            {/* Days committed to requests still in the chain. They count
+                against the balance just as surely as approved days — without
+                this line a refusal that mentions them would be a mystery. */}
+            {(prepared?.pendingDays ?? 0) > 0 && (
+              <div className="mt-2 text-xs text-status-warning">
+                ⏳ {prepared.pendingDays} working {prepared.pendingDays === 1 ? 'day is' : 'days are'} already
+                awaiting approval and count towards your remaining balance.
+              </div>
+            )}
+
+            {/* Charged wholly to the year of the first day (the convention),
+                but stated plainly for the person choosing the dates. */}
+            {prepared?.spansLeaveYear && (
+              <div className="mt-2 text-xs text-gray-400">
+                ℹ️ These dates span two leave years — the days are charged to {prepared.leaveYear}.
+              </div>
+            )}
           </div>
 
           {/* Replaces the paper form's hand-written "Public Holidays included

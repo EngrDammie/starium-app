@@ -129,12 +129,18 @@ const DEFAULT_CONFIG = {
   leavePolicy: {
     // The paper form lists exactly these five. Inventing types would be
     // presumptuous; HR can enable or disable each from the settings tab.
+    // maxDurationDays applies to the types that carry NO balance — until
+    // 26 Oct 2026 those types had no length guard at all, and the balance
+    // rule (wrongly applied to them) blocked every one of their requests
+    // outright. The caps: maternity 60 working days (the policy's 12
+    // weeks), compassionate 5, examination 10. HR can change all three from
+    // the Leave Policy tab.
     leaveTypes: [
       { id: 'annual',        label: 'Annual Leave',        requiresPurpose: false, balanceTracked: true  },
-      { id: 'maternity',     label: 'Maternity Leave',     requiresPurpose: true,  balanceTracked: false },
+      { id: 'maternity',     label: 'Maternity Leave',     requiresPurpose: true,  balanceTracked: false, maxDurationDays: 60 },
       { id: 'casual',        label: 'Casual Leave',        requiresPurpose: true,  balanceTracked: true  },
-      { id: 'compassionate', label: 'Compassionate Leave', requiresPurpose: true,  balanceTracked: false },
-      { id: 'examination',   label: 'Examination Leave',   requiresPurpose: true,  balanceTracked: false }
+      { id: 'compassionate', label: 'Compassionate Leave', requiresPurpose: true,  balanceTracked: false, maxDurationDays: 5 },
+      { id: 'examination',   label: 'Examination Leave',   requiresPurpose: true,  balanceTracked: false, maxDurationDays: 10 }
     ],
 
     // 21 matches the paper form's own figure. The Labour Act floor is only 6
@@ -224,6 +230,19 @@ const DEFAULT_CONFIG = {
   }
 };
 
+// Merges the stored leaveTypes with the defaults, ENTRY BY ENTRY.
+//
+// WHY: the live config document was saved before maxDurationDays existed,
+// so its leaveTypes array carries no such field. A flat spread of
+// data.leavePolicy keeps the stored array wholesale and the caps would never
+// reach the running app — the same class of gap as the leavePolicy merge
+// itself, in the same two places below. Per-entry merge means stored values
+// win for the fields HR has touched, and defaults fill the rest.
+function mergeLeaveTypes(defaultTypes, storedTypes) {
+  const byId = new Map((storedTypes || []).map(t => [t.id, t]));
+  return (defaultTypes || []).map(def => ({ ...def, ...(byId.get(def.id) || {}) }));
+}
+
 export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [loadingConfig, setLoadingConfig] = useState(true);
@@ -261,7 +280,11 @@ export function ConfigProvider({ children }) {
             // and the policy loads correctly on first paint and then silently
             // never hot-reloads again — the admin screen looks frozen with no
             // error anywhere. That is the whole reason this comment is here.
-            leavePolicy: { ...DEFAULT_CONFIG.leavePolicy, ...(data.leavePolicy || {}) },
+            leavePolicy: {
+              ...DEFAULT_CONFIG.leavePolicy,
+              ...(data.leavePolicy || {}),
+              leaveTypes: mergeLeaveTypes(DEFAULT_CONFIG.leavePolicy.leaveTypes, (data.leavePolicy || {}).leaveTypes),
+            },
             actionRoles: data.actionRoles
               ? (() => {
                   const existingIds = new Set((data.actionRoles || []).map(r => r.id));
@@ -311,7 +334,11 @@ export function ConfigProvider({ children }) {
             // and the policy loads correctly on first paint and then silently
             // never hot-reloads again — the admin screen looks frozen with no
             // error anywhere. That is the whole reason this comment is here.
-            leavePolicy: { ...DEFAULT_CONFIG.leavePolicy, ...(data.leavePolicy || {}) },
+            leavePolicy: {
+              ...DEFAULT_CONFIG.leavePolicy,
+              ...(data.leavePolicy || {}),
+              leaveTypes: mergeLeaveTypes(DEFAULT_CONFIG.leavePolicy.leaveTypes, (data.leavePolicy || {}).leaveTypes),
+            },
             actionRoles: data.actionRoles
               ? (() => {
                   const existingIds = new Set((data.actionRoles || []).map(r => r.id));

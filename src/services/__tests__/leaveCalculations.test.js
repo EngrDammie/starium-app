@@ -10,7 +10,7 @@ import {
   getLeaveYear, leaveYearStartDate, leaveYearEndDate, workingDaysRemainingInLeaveYear,
   proRateEntitlement, applyCarryOver,
   calculateBalance, sumApprovedDays,
-  dateRangesOverlap, describeOverlaps,
+  dateRangesOverlap, describeOverlaps, findOwnOverlaps, spansLeaveYear,
   validateLeaveRequest, workingDaysBetween, getLeaveType,
 } from '../leaveCalculations';
 
@@ -20,7 +20,9 @@ const POLICY = {
   leaveTypes: [
     { id: 'annual', label: 'Annual Leave', requiresPurpose: false, balanceTracked: true },
     { id: 'casual', label: 'Casual Leave', requiresPurpose: true, balanceTracked: true },
-    { id: 'compassionate', label: 'Compassionate Leave', requiresPurpose: true, balanceTracked: false },
+    { id: 'compassionate', label: 'Compassionate Leave', requiresPurpose: true, balanceTracked: false, maxDurationDays: 5 },
+    { id: 'maternity', label: 'Maternity Leave', requiresPurpose: true, balanceTracked: false, maxDurationDays: 60 },
+    { id: 'examination', label: 'Examination Leave', requiresPurpose: true, balanceTracked: false, maxDurationDays: 10 },
   ],
   annualEntitlementDays: 21,
   noticeRequiredDays: 7,
@@ -38,6 +40,7 @@ const POLICY = {
   handoverNoteRequiredDays: 3,
   allowNegativeBalance: false,
   overlapBehaviour: 'warn',
+  conflictThreshold: 2,
 };
 
 const SATURDAY_OFF = { ...POLICY, nonWorkingDays: [0, 6] };
@@ -532,13 +535,29 @@ describe('validateLeaveRequest', () => {
 
   it('blocks a conflicting overlap only when policy says block', () => {
     // TWO colleagues already away in production — that is the threshold.
+    // Since the own-calendar fix, colleague requests travel in
+    // departmentRequests; existingRequests is contractually the proposer's
+    // OWN list and would trip the self-overlap block instead.
     const clash = [
       { employeeId: 'E2', department: 'production', status: 'approved', leaveCommences: '2026-11-04', leaveEnds: '2026-11-06' },
       { employeeId: 'E3', department: 'production', status: 'approved', leaveCommences: '2026-11-05', leaveEnds: '2026-11-06' },
     ];
-    const withClash = { ...opts, existingRequests: clash, department: 'production', employeeId: 'E1' };
+    const withClash = { ...opts, departmentRequests: clash, department: 'production', employeeId: 'E1' };
     expect(validateLeaveRequest(valid, { ...POLICY, overlapBehaviour: 'warn' }, withClash)).toEqual([]);
     expect(validateLeaveRequest(valid, { ...POLICY, overlapBehaviour: 'block' }, withClash)
+      .some(e => e.includes('already away'))).toBe(true);
+  });
+
+  it('honours a configured conflict threshold, not a hardcoded 2', () => {
+    const colleagues = [
+      { employeeId: 'E2', department: 'production', status: 'approved', leaveCommences: '2026-11-04', leaveEnds: '2026-11-06' },
+      { employeeId: 'E3', department: 'production', status: 'approved', leaveCommences: '2026-11-05', leaveEnds: '2026-11-06' },
+    ];
+    const o = { ...opts, departmentRequests: colleagues, department: 'production', employeeId: 'E1' };
+    // Threshold 3: two colleagues away is NOT a conflict any more.
+    expect(validateLeaveRequest(valid, { ...POLICY, overlapBehaviour: 'block', conflictThreshold: 3 }, o)).toEqual([]);
+    // Threshold 1: a single colleague is already a conflict.
+    expect(validateLeaveRequest(valid, { ...POLICY, overlapBehaviour: 'block', conflictThreshold: 1 }, o)
       .some(e => e.includes('already away'))).toBe(true);
   });
 
@@ -550,6 +569,162 @@ describe('validateLeaveRequest', () => {
   it('tolerates being called with nothing at all', () => {
     expect(() => validateLeaveRequest(undefined, undefined, undefined)).not.toThrow();
     expect(validateLeaveRequest(undefined, undefined, undefined).length).toBeGreaterThan(0);
+  });
+});
+
+// ─── The aberration fixes, each pinned by the finding that motivated it ────
+
+describe('non-balance leave types are requestable again (found 26 Oct 2026)', () => {
+  // THE WORST FINDING OF THE PASS: every compassionate, maternity and
+  // examination request was refused as over-balance, because non-tracked
+  // types have entitlement 0 and the balance check treated that as "zero
+  // remaining". A member of staff could not file bereavement leave at all.
+  const opts = {
+    balance: calculateBalance({ entitlement: 0, carryOver: 0, alreadyTaken: 0, requestedDays: 3 }),
+    today: d(2026, 10, 20),
+  };
+  const compassionate = {
+    leaveType: 'compassionate', leaveCommences: '2026-12-07', leaveEnds: '2026-12-09',
+    requestedDays: 3, purpose: 'Bereavement in the family.', handoverNote: 'Cover arranged with Ade.',
+  };
+
+  it('accepts a compassionate request — the balance rule no longer applies to it', () => {
+    expect(validateLeaveRequest(compassionate, POLICY, opts)).toEqual([]);
+  });
+
+  it('accepts an examination request within its cap', () => {
+    const exam = {
+      leaveType: 'examination', leaveCommences: '2026-12-07', leaveEnds: '2026-12-16',
+      requestedDays: 8, purpose: 'Final year exams.', handoverNote: 'Cover arranged with Ade.',
+    };
+    expect(validateLeaveRequest(exam, POLICY, opts)).toEqual([]);
+  });
+
+  it('caps non-tracked durations instead — compassionate beyond 5 working days is refused', () => {
+    const long = { ...compassionate, leaveEnds: '2026-12-14', requestedDays: 6 };
+    const errors = validateLeaveRequest(long, POLICY, opts);
+    expect(errors.some(e => e.includes('capped at 5 working days'))).toBe(true);
+  });
+
+  it('caps examination at its own limit, and maternity at 60 working days', () => {
+    const overExam = {
+      leaveType: 'examination', leaveCommences: '2026-12-07', leaveEnds: '2026-12-22',
+      requestedDays: 12, purpose: 'Exams.', handoverNote: '',
+    };
+    expect(validateLeaveRequest(overExam, POLICY, opts).some(e => e.includes('capped at 10'))).toBe(true);
+
+    const longMaternity = {
+      leaveType: 'maternity', leaveCommences: '2026-12-07', leaveEnds: '2027-03-02',
+      requestedDays: 61, purpose: 'Maternity.', handoverNote: '',
+    };
+    expect(validateLeaveRequest(longMaternity, POLICY, opts).some(e => e.includes('capped at 60'))).toBe(true);
+  });
+
+  it('still enforces the balance for tracked types — annual is unchanged', () => {
+    const greedy = {
+      leaveType: 'annual', leaveCommences: '2026-12-07', leaveEnds: '2026-12-11',
+      requestedDays: 5, purpose: '', handoverNote: '',
+    };
+    const broke = { balance: calculateBalance({ entitlement: 3, alreadyTaken: 0 }), today: d(2026, 10, 20) };
+    expect(validateLeaveRequest(greedy, POLICY, broke).some(e => e.includes('remain'))).toBe(true);
+  });
+});
+
+describe('pending days commit the balance (found 26 Oct 2026)', () => {
+  // Two non-overlapping pending requests each showed a healthy snapshot;
+  // both were signed; the combined taken went negative and no screen ever
+  // added them up. Pending days now count as committed at creation.
+  const opts = { balance: calculateBalance({ entitlement: 21, alreadyTaken: 11 }), today: d(2026, 10, 20) };
+  // 10 remain. 6 are already awaiting approval.
+  const pendingSix = {
+    employeeId: 'E1', status: 'pending_hod', requestedDays: 6,
+    leaveCommences: '2027-02-01', leaveEnds: '2027-02-08',
+  };
+  const ask = (days) => ({
+    leaveType: 'annual', leaveCommences: '2027-03-01', leaveEnds: '2027-03-01',
+    requestedDays: days, purpose: '', handoverNote: 'Cover arranged',
+  });
+
+  it('refuses a request that would overdraw the balance INCLUDING pending days', () => {
+    const errors = validateLeaveRequest(ask(5), POLICY, { ...opts, existingRequests: [pendingSix] });
+    expect(errors.some(e => e.includes('awaiting approval'))).toBe(true);
+  });
+
+  it('allows a request that fits within what pending has left alone', () => {
+    expect(validateLeaveRequest(ask(4), POLICY, { ...opts, existingRequests: [pendingSix] })).toEqual([]);
+  });
+
+  it('ignores approved requests in the pending tally — they are already inside outstandingBefore', () => {
+    const approvedSix = { ...pendingSix, status: 'approved' };
+    expect(validateLeaveRequest(ask(5), POLICY, { ...opts, existingRequests: [approvedSix] })).toEqual([]);
+  });
+
+  it('ignores cancelled and rejected requests entirely', () => {
+    const cancelled = { ...pendingSix, status: 'cancelled' };
+    const rejected = { ...pendingSix, status: 'rejected' };
+    expect(validateLeaveRequest(ask(5), POLICY, { ...opts, existingRequests: [cancelled, rejected] })).toEqual([]);
+  });
+});
+
+describe('a person cannot double-book their own calendar (found 26 Oct 2026)', () => {
+  const opts = { balance: calculateBalance({ entitlement: 21, alreadyTaken: 0 }), today: d(2026, 10, 20) };
+  const ask = (start, end, days) => ({
+    leaveType: 'annual', leaveCommences: start, leaveEnds: end,
+    requestedDays: days, purpose: '', handoverNote: 'Cover arranged',
+  });
+  // The proposed range: Mon 2 Nov – Fri 6 Nov 2026.
+  const proposed = ask('2026-11-02', '2026-11-06', 5);
+
+  it('REFUSES a range overlapping the proposer\'s own PENDING request, and says to cancel it', () => {
+    const pending = { employeeId: 'E1', status: 'pending_supervisor', leaveCommences: '2026-11-05', leaveEnds: '2026-11-09' };
+    const errors = validateLeaveRequest(proposed, POLICY, { ...opts, existingRequests: [pending] });
+    expect(errors.some(e => e.includes('Cancel it from My Leave first'))).toBe(true);
+    expect(errors.some(e => e.includes('5 Nov'))).toBe(true);
+  });
+
+  it('REFUSES a range overlapping an APPROVED request, and points at HR', () => {
+    const approved = { employeeId: 'E1', status: 'approved', leaveCommences: '2026-11-04', leaveEnds: '2026-11-06' };
+    const errors = validateLeaveRequest(proposed, POLICY, { ...opts, existingRequests: [approved] });
+    expect(errors.some(e => e.includes('Ask HR to cancel it'))).toBe(true);
+  });
+
+  it('REFUSES the identical range — the extreme case of the same rule', () => {
+    const twin = { employeeId: 'E1', status: 'pending_hr', leaveCommences: '2026-11-02', leaveEnds: '2026-11-06' };
+    expect(validateLeaveRequest(proposed, POLICY, { ...opts, existingRequests: [twin] }).length).toBeGreaterThan(0);
+  });
+
+  it('ALLOWS adjacent, back-to-back ranges — Friday ending, Monday starting', () => {
+    const adjacent = { employeeId: 'E1', status: 'approved', leaveCommences: '2026-10-26', leaveEnds: '2026-10-30' };
+    expect(validateLeaveRequest(proposed, POLICY, { ...opts, existingRequests: [adjacent] })).toEqual([]);
+  });
+
+  it('allows re-booking dates from a cancelled or rejected request', () => {
+    const cancelled = { employeeId: 'E1', status: 'cancelled', leaveCommences: '2026-11-02', leaveEnds: '2026-11-06' };
+    const rejected = { employeeId: 'E1', status: 'rejected', leaveCommences: '2026-11-03', leaveEnds: '2026-11-04' };
+    expect(validateLeaveRequest(proposed, POLICY, { ...opts, existingRequests: [cancelled, rejected] })).toEqual([]);
+  });
+
+  it('findOwnOverlaps returns the live clashes and nothing else', () => {
+    const live = [
+      { employeeId: 'E1', status: 'pending_hod', leaveCommences: '2026-11-04', leaveEnds: '2026-11-05' },
+      { employeeId: 'E1', status: 'approved', leaveCommences: '2026-12-01', leaveEnds: '2026-12-03' },
+      { employeeId: 'E1', status: 'cancelled', leaveCommences: '2026-11-02', leaveEnds: '2026-11-06' },
+      { employeeId: 'E1', status: 'rejected', leaveCommences: '2026-11-02', leaveEnds: '2026-11-06' },
+    ];
+    const clashes = findOwnOverlaps(proposed, live);
+    expect(clashes).toHaveLength(1);
+    expect(clashes[0].status).toBe('pending_hod');
+  });
+});
+
+describe('spansLeaveYear — stated so approvers can see it', () => {
+  it('detects a range crossing the year boundary', () => {
+    expect(spansLeaveYear('2026-12-20', '2027-01-05', POLICY)).toBe(true);
+  });
+
+  it('passes ranges inside one year, and guards against missing dates', () => {
+    expect(spansLeaveYear('2026-11-02', '2026-11-06', POLICY)).toBe(false);
+    expect(spansLeaveYear(null, '2026-11-06', POLICY)).toBe(false);
   });
 });
 

@@ -93,6 +93,64 @@ describe('userCanActAtStage', () => {
     expect(v.actedAsDeputyFor).toBeNull();
   });
 
+  it('REFUSES a supervisor signing their OWN request — no hat makes that right', () => {
+    // Found 26 Oct 2026: the chain had no idea whose request it was acting
+    // on, so an approver could sign their own leave, and the Head of HR
+    // could self-sign the gate that unlocks paid leave.
+    const selfSigning = { ...supervisor, employeeId: 'e-sup' };
+    const ownRequest = freshRequest({ employeeId: 'e-sup' });
+    const v = userCanActAtStage({ request: ownRequest, policy: POLICY, stageIndex: 0, user: selfSigning });
+    expect(v.can).toBe(false);
+    expect(v.reason).toMatch(/your own leave request/i);
+    expect(v.reason).toMatch(/Head of HR/);
+  });
+
+  it('REFUSES the Head of HR self-signing the final gate, and names the owner instead', () => {
+    const selfHead = { ...hrHead, employeeId: 'e-hr' };
+    const ownFinal = freshRequest({ employeeId: 'e-hr', status: 'pending_hr' });
+    const v = userCanActAtStage({ request: ownFinal, policy: POLICY, stageIndex: 2, user: selfHead });
+    expect(v.can).toBe(false);
+    expect(v.reason).toMatch(/system owner/i);
+  });
+
+  it('REFUSES the system owner signing their own request too', () => {
+    const ownerAsEmployee = { ...owner, employeeId: 'e-owner' };
+    const ownRequest = freshRequest({ employeeId: 'e-owner' });
+    const v = userCanActAtStage({ request: ownRequest, policy: POLICY, stageIndex: 0, user: ownerAsEmployee });
+    expect(v.can).toBe(false);
+    expect(v.reason).toMatch(/your own leave request/i);
+  });
+
+  it('REFUSES even a NAMED DEPUTY who turns out to be the requester', () => {
+    // A deputy configuration naming the requester would otherwise be a
+    // self-approval back door. The self-check runs before every grant.
+    const policy = {
+      ...POLICY,
+      stages: [
+        { ...POLICY.stages[0], deputyUserUid: 'u-sup', deputyName: 'Themselves (misconfigured)' },
+        POLICY.stages[1],
+        POLICY.stages[2],
+      ],
+    };
+    const selfDeputy = { ...supervisor, employeeId: 'e-sup' };
+    const ownRequest = freshRequest({ employeeId: 'e-sup' });
+    const v = userCanActAtStage({ request: ownRequest, policy, stageIndex: 0, user: selfDeputy });
+    expect(v.can).toBe(false);
+  });
+
+  it('lets the same approver sign SOMEONE ELSE\'S request as normal', () => {
+    const supervisorWithRecord = { ...supervisor, employeeId: 'e-sup' };
+    const someoneElses = freshRequest({ employeeId: 'e-other' });
+    const v = userCanActAtStage({ request: someoneElses, policy: POLICY, stageIndex: 0, user: supervisorWithRecord });
+    expect(v.can).toBe(true);
+  });
+
+  it('skips the self-check when the actor has no employee record — they cannot own anything', () => {
+    const ownRequest = freshRequest({ employeeId: 'e-sup' });
+    const v = userCanActAtStage({ request: ownRequest, policy: POLICY, stageIndex: 0, user: supervisor });
+    expect(v.can).toBe(true);
+  });
+
   it('refuses the right role at the wrong stage — the chain has not reached them', () => {
     const v = userCanActAtStage({ request: freshRequest(), policy: POLICY, stageIndex: 1, user: hod });
     expect(v.can).toBe(false);

@@ -330,6 +330,15 @@ export function sumApprovedDays(requests, { employeeId, leaveYear }) {
   }, 0);
 }
 
+// A short human date for validation messages — "3 Nov 2026", not an ISO
+// string or a timestamp. The messages quote real ranges, so people can
+// recognise their own request at a glance.
+function shortDate(value) {
+  const d = toLocalDate(value);
+  if (!d) return 'those dates';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 // ─── Overlap ───────────────────────────────────────────────────────────────
 
 // Do two inclusive ranges share any day?
@@ -351,7 +360,17 @@ export function dateRangesOverlap(aStart, aEnd, bStart, bEnd) {
 //   overlaps — a colleague is also away. Informational.
 //   conflict — enough people from one department are away that coverage is at
 //              risk. Worth a conversation.
-export function describeOverlaps(proposedRange, existingRequests = [], { department, employeeId } = {}) {
+//
+// This function answers the COLLEAGUE question only. It counts approved
+// requests and deliberately excludes the proposer's own — the person's own
+// calendar is a different question with a different answer (see
+// findOwnOverlaps below: blocked, not warned).
+//
+// FIXED 26 Oct 2026: the conflict threshold used to be hardcoded as 2,
+// ignoring policy.conflictThreshold entirely — the setting existed, HR could
+// change it, and nothing anywhere would listen. It now reads the policy,
+// keeping 2 as the fallback for callers without one.
+export function describeOverlaps(proposedRange, existingRequests = [], { department, employeeId, policy } = {}) {
   const { leaveCommences, leaveEnds } = proposedRange || {};
   const overlapping = [];
 
@@ -366,7 +385,7 @@ export function describeOverlaps(proposedRange, existingRequests = [], { departm
     ? overlapping.filter(r => r.department === department)
     : overlapping;
 
-  const threshold = 2;
+  const threshold = Number(policy?.conflictThreshold) || 2;
   return {
     overlaps: overlapping,
     overlapCount: overlapping.length,
@@ -380,6 +399,47 @@ export function describeOverlaps(proposedRange, existingRequests = [], { departm
   };
 }
 
+// ─── The proposer's own calendar ────────────────────────────────────────────────────
+
+// Which of the employee's OWN live requests share days with a proposed range.
+//
+// WHY THIS IS SEPARATE from describeOverlaps and why it BLOCKS rather than
+// warns: a colleague being away the same week is a coverage judgement a
+// human should make. One person booked twice for the same day is not a
+// judgement at all — if both are approved, the ledger charges the shared
+// days twice and the person is "on leave twice" on the same date. There is
+// no legitimate case, so there is no warning, only a refusal whose message
+// states the way out.
+//
+// Live requests are pending (any stage) and approved. Cancelled and
+// rejected requests are history, not calendar, and are ignored — a person
+// may re-book dates they previously cancelled.
+export function findOwnOverlaps(request, ownRequests = []) {
+  const { leaveCommences, leaveEnds } = request || {};
+  const out = [];
+  for (const r of ownRequests || []) {
+    if (!r) continue;
+    const status = String(r.status || '');
+    const live = status.startsWith('pending_') || status === 'approved';
+    if (!live) continue;
+    if (!dateRangesOverlap(leaveCommences, leaveEnds, r.leaveCommences, r.leaveEnds)) continue;
+    out.push(r);
+  }
+  return out;
+}
+
+// Does a range cross the leave-year boundary?
+//
+// The convention (kept deliberately): a request is charged wholly to the
+// leave year of its FIRST day. Defensible — but an approver signing off a
+// range that spans two years deserves to see it stated, and the snapshot
+// says which year the days went to.
+export function spansLeaveYear(start, end, policy) {
+  const a = getLeaveYear(start, policy);
+  const b = getLeaveYear(end, policy);
+  return a !== null && b !== null && a !== b;
+}
+
 // ─── Validation ────────────────────────────────────────────────────────────
 
 // Every reason a request cannot be submitted, as a list — NOT just the first.
@@ -389,7 +449,11 @@ export function describeOverlaps(proposedRange, existingRequests = [], { departm
 export function validateLeaveRequest(request, policy, options = {}) {
   const {
     balance = null,
+    // The proposer's OWN requests, any status — they drive the taken-days,
+    // pending-exposure and self-overlap rules.
     existingRequests = [],
+    // OTHER people's approved requests — they drive the coverage question.
+    departmentRequests = [],
     employeeId = null,
     department = null,
     today = new Date(),
@@ -430,18 +494,70 @@ export function validateLeaveRequest(request, policy, options = {}) {
     }
   }
 
-  // ── Balance ──
+  // ── Balance — only for types that track one ──
   // Compared against `outstandingBefore`, NOT `balance.exceedsBalance`.
   // `exceedsBalance` is only true if the caller already folded this request's
   // days into the balance object — an easy mistake that fails SILENTLY, letting
   // an over-balance request through with no error anywhere.
-  // outstandingBefore is entitlement + carry-over − taken, correct either way.
-  if (balance && !policy?.allowNegativeBalance) {
-    const remaining = Number(balance.outstandingBefore) || 0;
+  //
+  // FIXED 26 Oct 2026: this check used to run for EVERY leave type, including
+  // the ones that deliberately carry no balance (maternity, compassionate,
+  // examination). Those types get entitlement 0, so "remaining" was always 0,
+  // and every bereavement or maternity request in the app was refused with
+  // "That is 3 days but only 0 remain". Nobody could file compassionate leave
+  // at all. The balance rule now applies only where a balance exists; the
+  // non-tracked types get a duration cap instead, just below.
+  if (balance && type?.balanceTracked && !policy?.allowNegativeBalance) {
+    // Days already awaiting approval COMMIT the balance just as surely as
+    // approved days do. Before this, two pending requests each showed a
+    // healthy snapshot, both were signed, and the combined taken quietly went
+    // negative — no single screen ever added them up.
+    const pending = (existingRequests || [])
+      .filter(r => String(r?.status || '').startsWith('pending_'))
+      .reduce((sum, r) => sum + (Number(r?.requestedDays) || 0), 0);
+    const remaining = (Number(balance.outstandingBefore) || 0) - pending;
     if (days > remaining) {
       errors.push(
-        `That is ${days} days but only ${Math.max(remaining, 0)} remain. Short by ${days - Math.max(remaining, 0)}.`,
+        pending > 0
+          ? `That is ${days} days but only ${Math.max(remaining, 0)} remain uncommitted — ${pending} ${pending === 1 ? 'day is' : 'days are'} already awaiting approval. Cancel those requests or choose fewer days.`
+          : `That is ${days} days but only ${Math.max(remaining, 0)} remain. Short by ${days - Math.max(remaining, 0)}.`,
       );
+    }
+  }
+
+  // ── Duration cap — for the types that carry no balance ──
+  // Without a balance to draw on, a "compassionate" request had no length
+  // limit at all. Each leave type now declares maxDurationDays; maternity
+  // defaults to 60 working days (the policy's 12 weeks), compassionate to 5,
+  // examination to 10. HR can change any of them in the Leave Policy tab.
+  if (!type?.balanceTracked) {
+    const cap = Number(type?.maxDurationDays) || 0;
+    if (cap > 0 && days > cap) {
+      errors.push(
+        `${type.label} is capped at ${cap} working days — this request is ${days}. Ask HR if you genuinely need longer.`,
+      );
+    }
+  }
+
+  // ── The proposer's own calendar — no double-booking, ever ──
+  // Blocking, not warning: two live requests for the same person sharing a
+  // day is arithmetic, not judgement. Approved history stays frozen either
+  // way; the message states the way out for each state.
+  if (starts && ends) {
+    const clashes = findOwnOverlaps(request, existingRequests);
+    if (clashes.length > 0) {
+      const clash = clashes[0];
+      if (clash.status === 'approved') {
+        errors.push(
+          `You already have approved leave for ${shortDate(clash.leaveCommences)} to ${shortDate(clash.leaveEnds)}. Ask HR to cancel it before booking these dates.`,
+        );
+      } else {
+        const stageId = String(clash.status || '').slice('pending_'.length);
+        const stage = (policy?.stages || []).find(st => st.id === stageId);
+        errors.push(
+          `You already have a request for ${shortDate(clash.leaveCommences)} to ${shortDate(clash.leaveEnds)} waiting on the ${stage?.label || stageId}. Cancel it from My Leave first, then book these dates.`,
+        );
+      }
     }
   }
 
@@ -458,9 +574,18 @@ export function validateLeaveRequest(request, policy, options = {}) {
     }
   }
 
-  // ── Overlap ──
+  // ── Colleague overlap — the human judgement, warn/block per policy ──
+  // NOTE the list: departmentRequests, NOT existingRequests. existingRequests
+  // are the proposer's OWN (they drive balance and the self-overlap check
+  // above); the coverage question needs other people's approved requests.
+  // This block only fires a hard error when the policy says block — the
+  // warning itself is computed for the form by prepareLeaveRequest.
   if (starts && ends) {
-    const clash = describeOverlaps({ leaveCommences: starts, leaveEnds: ends }, existingRequests, { department, employeeId });
+    const clash = describeOverlaps(
+      { leaveCommences: starts, leaveEnds: ends },
+      departmentRequests || existingRequests,
+      { department, employeeId, policy },
+    );
     if (clash.isConflict && policy?.overlapBehaviour === 'block') {
       errors.push(`${clash.sameDepartment.length} people in ${department || 'your department'} are already away then.`);
     }

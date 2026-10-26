@@ -35,6 +35,7 @@ import {
   toLocalDate, toDateKey, countWorkingDays, nextWorkingDay, getLeaveYear,
   calculateBalance, sumApprovedDays, proRateEntitlement, applyCarryOver,
   listNonWorkingDaysInRange, describeOverlaps, validateLeaveRequest, getLeaveType,
+  spansLeaveYear as spansLeaveYearFlag,
 } from './leaveCalculations';
 
 import { pushToQueue, readQueue, writeQueue, clearQueue } from './queueStore';
@@ -81,7 +82,17 @@ export function initialStatus(policy) {
 // Works out everything the request needs to freeze onto itself, WITHOUT
 // writing anything. The form calls this on every date change to show live
 // figures; createLeaveRequest calls it again at submit time.
-export function prepareLeaveRequest(input, { policy, employee, existingRequests = [] }) {
+//
+// TWO LISTS, two different questions (fixed 26 Oct 2026):
+//   existingRequests  — the proposer's OWN requests, any status. They drive
+//                      the taken-days count, the pending-days exposure and
+//                      the self-overlap refusal.
+//   departmentRequests — OTHER people's approved requests. They drive the
+//                      colleague-coverage warning.
+// The old signature had one list doing both jobs, which is why the coverage
+// warning never fired: the form fed it the proposer's own requests, and the
+// overlap scan then excluded exactly those.
+export function prepareLeaveRequest(input, { policy, employee, existingRequests = [], departmentRequests = [] }) {
   const leaveType = getLeaveType(input.leaveType, policy);
   const starts = toLocalDate(input.leaveCommences);
   const ends = toLocalDate(input.leaveEnds);
@@ -121,14 +132,22 @@ export function prepareLeaveRequest(input, { policy, employee, existingRequests 
   const excludedDays = (starts && ends) ? listNonWorkingDaysInRange(starts, ends, policy) : [];
 
   const overlap = (starts && ends)
-    ? describeOverlaps({ leaveCommences: starts, leaveEnds: ends }, existingRequests, {
-        department: employee?.department, employeeId: employee?.id,
+    ? describeOverlaps({ leaveCommences: starts, leaveEnds: ends }, departmentRequests, {
+        department: employee?.department, employeeId: employee?.id, policy,
       })
-    : { overlaps: [], overlapCount: 0, sameDepartment: [], isConflict: false };
+    : { overlaps: [], overlapCount: 0, sameDepartment: [], isConflict: false, threshold: 0 };
+
+  // Days already awaiting approval. They commit the balance as surely as
+  // approved days do, and the form shows them so the person understands
+  // why a seemingly-available request is refused.
+  const pendingDays = (existingRequests || [])
+    .filter(r => String(r?.status || '').startsWith('pending_'))
+    .reduce((sum, r) => sum + (Number(r?.requestedDays) || 0), 0);
 
   return {
     leaveType, requestedDays, leaveYear, entitlement: entitled, carryOver,
-    alreadyTaken, balance, resumptionDate, excludedDays, overlap,
+    alreadyTaken, pendingDays, balance, resumptionDate, excludedDays, overlap,
+    spansLeaveYear: (starts && ends) ? spansLeaveYearFlag(starts, ends, policy) : false,
   };
 }
 
@@ -141,11 +160,11 @@ export function prepareLeaveRequest(input, { policy, employee, existingRequests 
 // with no login, `lodgedFor` is that employee and the document carries a badge
 // so no approver is misled into thinking the employee filed it themselves.
 export async function createLeaveRequest(input, {
-  policy, employee, existingRequests = [], user, isOnline = true,
+  policy, employee, existingRequests = [], departmentRequests = [], user, isOnline = true,
 }) {
   if (!employee?.id) return { ok: false, error: 'No employee record linked to this login.' };
 
-  const prepared = prepareLeaveRequest(input, { policy, employee, existingRequests });
+  const prepared = prepareLeaveRequest(input, { policy, employee, existingRequests, departmentRequests });
 
   const errors = validateLeaveRequest(
     { ...input, requestedDays: prepared.requestedDays },
@@ -153,6 +172,7 @@ export async function createLeaveRequest(input, {
     {
       balance: prepared.balance,
       existingRequests,
+      departmentRequests,
       employeeId: employee.id,
       department: employee.department,
     },
@@ -190,8 +210,13 @@ export async function createLeaveRequest(input, {
     entitledAtRequest: prepared.entitlement,
     carryOverAtRequest: prepared.carryOver,
     takenBeforeThisRequest: prepared.alreadyTaken,
+    // Days already awaiting approval when this was submitted — the exposure
+    // the old snapshot could not see, which is how two healthy-looking
+    // requests could jointly overdraw the balance.
+    pendingAtRequest: prepared.pendingDays,
     requestedDays: prepared.requestedDays,
     outstandingAfter: prepared.balance.outstandingAfter,
+    spansLeaveYear: prepared.spansLeaveYear,
 
     // Section 2 of the paper form.
     handoverNote: String(input.handoverNote || '').trim(),
@@ -292,32 +317,59 @@ export async function syncLeaveRequestQueue() {
 
 // ─── Cancellation and resumption ───────────────────────────────────────────
 
-// The employee may withdraw their own request until it has been signed by the
-// final approver. After that the balance is committed and only HR can change it.
-export async function cancelLeaveRequest(requestId, { employeeId, user, policy, isAdmin = false }) {
+// Cancelling, and who may.
+//
+//   The employee   — their OWN request, any time before final approval. No
+//                    reason needed; plans change.
+//   HR (isHr)      — any pending request (including ones lodged for staff
+//                    with no login — until 26 Oct 2026 those were
+//                    un-cancellable by anyone but the system owner, because
+//                    the only person allowed to cancel could not log in),
+//                    and APPROVED requests too, as the authority that can
+//                    reverse committed leave — with a required written
+//                    reason, because reversing signed-off paid leave is a
+//                    decision that must be explainable later.
+//   The owner      — everything (isAdmin), as before.
+//
+// The employee's message for approved leave ("Ask HR to change it") is only
+// honest because HR genuinely can.
+export async function cancelLeaveRequest(requestId, {
+  employeeId, user, policy, isAdmin = false, isHr = false, reason = '',
+}) {
   const snap = await getDoc(doc(db, COLLECTION, requestId));
   if (!snap.exists()) return { ok: false, error: 'That request no longer exists.' };
   const data = snap.data();
 
-  if (!isAdmin && data.employeeId !== employeeId) {
-    return { ok: false, error: 'You can only cancel your own request.' };
+  const isOwner = employeeId && data.employeeId === employeeId;
+  if (!isAdmin && !isHr && !isOwner) {
+    return { ok: false, error: 'You can only cancel your own request. HR may cancel on request.' };
   }
   if (data.status === LEAVE_STATUS.CANCELLED) {
     return { ok: false, error: 'That request is already cancelled.' };
   }
 
   const finalStage = policy?.stages?.[policy.stages.length - 1]?.id;
-  if (data.workflow?.[finalStage]?.status === 'approved' && !isAdmin) {
+  const finalApproved = data.status === LEAVE_STATUS.APPROVED
+    || data.workflow?.[finalStage]?.status === 'approved';
+
+  if (finalApproved && !isAdmin && !isHr) {
     return { ok: false, error: 'This leave has already been approved. Ask HR to change it.' };
   }
+  if (finalApproved && isHr && !isAdmin && !String(reason || '').trim()) {
+    return { ok: false, error: 'Reversing approved leave needs a written reason — it will be recorded on the request.' };
+  }
 
+  const byLabel = isHr && !isOwner ? 'HR' : (isAdmin && !isOwner ? 'System owner' : null);
   try {
-    await updateDoc(doc(db, COLLECTION, requestId), {
+    const patch = {
       status: LEAVE_STATUS.CANCELLED,
       cancelledAt: serverTimestamp(),
       cancelledBy: user?.email || null,
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (byLabel) patch.cancelledByRole = byLabel;
+    if (String(reason || '').trim()) patch.cancelledReason = String(reason).trim();
+    await updateDoc(doc(db, COLLECTION, requestId), patch);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -327,18 +379,34 @@ export async function cancelLeaveRequest(requestId, { employeeId, user, policy, 
 // Section B of the paper form: the employee confirms on their return, which
 // closes the record. Without this, requests stay open forever and HR has
 // nothing to reconcile against.
-export async function confirmResumption(requestId, { employeeId, user, note = '' }) {
+//
+// The resumption DATE is enforced in the service, not just hidden in the UI
+// (found 26 Oct 2026): the My Leave screen only shows the button when the
+// return date has arrived, but the service itself would happily close a
+// record for leave that has not happened. HR (isHr) may still close early —
+// a genuine early return is an HR decision, recorded with who made it.
+export async function confirmResumption(requestId, { employeeId, user, note = '', isHr = false }) {
   const snap = await getDoc(doc(db, COLLECTION, requestId));
   if (!snap.exists()) return { ok: false, error: 'That request no longer exists.' };
   const data = snap.data();
 
-  if (data.employeeId !== employeeId) {
-    return { ok: false, error: 'You can only confirm your own leave.' };
+  if (!isHr && data.employeeId !== employeeId) {
+    return { ok: false, error: 'You can only confirm your own leave. HR may close a record early.' };
   }
   if (data.status !== LEAVE_STATUS.APPROVED) {
     return { ok: false, error: 'Only approved leave can be confirmed.' };
   }
   if (data.closedAt) return { ok: false, error: 'That leave is already closed.' };
+
+  if (!isHr) {
+    const back = data.resumptionDate?.toDate ? data.resumptionDate.toDate() : toLocalDate(data.resumptionDate);
+    if (back && new Date() < back) {
+      return {
+        ok: false,
+        error: 'This leave has not ended yet — confirm your return on or after the resumption date. If you returned early, ask HR to close the record.',
+      };
+    }
+  }
 
   try {
     await updateDoc(doc(db, COLLECTION, requestId), {

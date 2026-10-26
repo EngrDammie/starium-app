@@ -29,12 +29,14 @@ import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { useNetwork } from '../context/NetworkContext';
 import {
-  subscribeToLeaveRequests, decideLeaveRequest,
+  subscribeToLeaveRequests, decideLeaveRequest, cancelLeaveRequest,
 } from '../services/leaveOperations';
+import { spansLeaveYear } from '../services/leaveCalculations';
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
 import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote } from '../components/leave/leaveStatus';
+import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 import { subscribeToAccessView } from '../services/userAccessOperations';
 
 const fmt = (d) => {
@@ -94,10 +96,11 @@ function OutcomeBlock({ request }) {
   );
 }
 
-function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning }) {
+function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canManage, ownerStatus, awayWarning }) {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [showReject, setShowReject] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
   const at = currentStageIndex(request, policy);
   const stage = policy?.stages?.[at];
@@ -121,6 +124,18 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
     const res = await onDecide(request, decision, note);
     setBusy(false);
     if (res.ok) { setNote(''); setShowReject(false); }
+  };
+
+  // HR / the owner cancelling. Reversing APPROVED leave requires a written
+  // reason (the service enforces it); cancelling a pending one does not.
+  const doCancel = async () => {
+    if (busy) return;
+    const approved = request.status === 'approved';
+    if (approved && !note.trim()) { setShowCancel(true); return; }
+    setBusy(true);
+    const res = await onCancel(request, note);
+    setBusy(false);
+    if (res.ok) { setNote(''); setShowCancel(false); }
   };
 
   return (
@@ -156,6 +171,18 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
             {request.lodgedBy && (
               <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-status-warning/50 text-status-warning">
                 🧑‍💼 lodged by HR
+              </span>
+            )}
+            {ownerStatus === 'inactive' && (
+              <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-status-danger/50 text-status-danger"
+                title="This person has left the company — confirm with HR before signing anything for them.">
+                🚫 left the company
+              </span>
+            )}
+            {spansLeaveYear(request.leaveCommences, request.leaveEnds, policy) && (
+              <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#444] text-gray-400"
+                title={`Charged wholly to leave year ${request.leaveYear}, by the convention for ranges crossing the boundary.`}>
+                spans two leave years
               </span>
             )}
           </div>
@@ -224,6 +251,40 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
                   ? `You are standing in: ${verdict.actedAsDeputyFor}. This is recorded on the request.`
                   : 'Your signature moves this to the next stage — one stage at a time.'}
               </span>
+              {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && (
+                <button onClick={() => {
+                  if (request.status === 'approved') { setShowCancel(true); }
+                  else { doCancel(); }
+                }} disabled={busy}
+                  className="ml-auto px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
+                  title={request.status === 'approved'
+                    ? 'Reverse this approved leave — a written reason is recorded on the request.'
+                    : 'Cancel this pending request; the days return to the employee.'}>
+                  ✕ Cancel leave
+                </button>
+              )}
+            </div>
+          )}
+
+          {showCancel && (
+            <div className="mt-2 flex flex-col gap-2">
+              <input
+                autoFocus
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Reason for cancelling approved leave — recorded on the request"
+                className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
+              />
+              <div className="flex gap-2">
+                <button onClick={doCancel} disabled={busy}
+                  className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
+                  {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
+                </button>
+                <button onClick={() => { setShowCancel(false); setNote(''); }}
+                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
+                  Back
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -245,19 +306,40 @@ function RequestCard({ request, policy, user, isOnline, onDecide, awayWarning })
 }
 
 export default function LeaveApprovals() {
-  const { currentUser, systemRole, actionRoles, uid, userFullName } = useAuth();
+  const { currentUser, systemRole, actionRoles, departmentRoles, uid, userFullName } = useAuth();
   const { config, loadingConfig } = useConfig();
   const { isOnline } = useNetwork();
   const policy = config?.leavePolicy;
 
   const [requests, setRequests] = useState([]);
   const [access, setAccess] = useState({ people: [], ready: false });
+  // The approver's own record — for the "you cannot sign your own leave"
+  // rule and for cancelling as the owner of a request.
+  const employee = useEmployeeRecord();
   const [notice, setNotice] = useState(null);
   const [tab, setTab] = useState('mine');
 
+  // The actor's own employee record id, resolved from the joined access
+  // view. The chain needs it for one rule above all others: nobody signs
+  // their own leave, whatever hat they wear. While the access view loads
+  // the id is null and the self-check is skipped — an approver with no
+  // employee record cannot own a request in the first place.
+  const actorEmployeeId = useMemo(
+    () => (access.people || []).find(p => p.linkedUserUid === uid)?.id ?? null,
+    [access.people, uid],
+  );
+
   const user = useMemo(
-    () => ({ uid, email: currentUser?.email, userFullName, systemRole, actionRoles }),
-    [uid, currentUser?.email, userFullName, systemRole, actionRoles],
+    () => ({ uid, email: currentUser?.email, userFullName, systemRole, actionRoles, employeeId: actorEmployeeId }),
+    [uid, currentUser?.email, userFullName, systemRole, actionRoles, actorEmployeeId],
+  );
+
+  // Who may cancel: HR (department), the Head of HR, or the system owner.
+  const canManage = useMemo(
+    () => systemRole === 'super_admin'
+      || (actionRoles || []).includes('leave_hr_head')
+      || (departmentRoles || []).some(r => ['hr_staff', 'hr_manager'].includes(r)),
+    [systemRole, actionRoles, departmentRoles],
   );
 
   useEffect(() => subscribeToLeaveRequests(setRequests), []);
@@ -289,6 +371,13 @@ export default function LeaveApprovals() {
   // documents, so a "holder" is any person whose login carries the stage's
   // action role, plus the stage's named deputy. The employees collection
   // alone cannot answer this — action roles live on user_roles.
+  // employmentStatus by employee id, for the "left the company" badge.
+  const statusById = useMemo(() => {
+    const m = new Map();
+    for (const person of access.people || []) m.set(person.id, person.employmentStatus);
+    return m;
+  }, [access.people]);
+
   const awayByRole = useMemo(() => {
     if (!policy) return {};
     const approved = requests.filter(r => r.status === 'approved');
@@ -305,6 +394,21 @@ export default function LeaveApprovals() {
     }
     return byRole;
   }, [policy, requests, access]);
+
+  const handleCancel = async (request, reason) => {
+    const res = await cancelLeaveRequest(request.id, {
+      employeeId: employee?.id ?? null,
+      user: { email: currentUser?.email },
+      policy,
+      isAdmin: systemRole === 'super_admin',
+      isHr: canManage && systemRole !== 'super_admin',
+      reason,
+    });
+    setNotice(res.ok
+      ? { ok: true, text: 'Leave cancelled. The days returned to the employee’s balance.' }
+      : { ok: false, text: res.error });
+    return res;
+  };
 
   const handleDecide = async (request, decision, note) => {
     const res = await decideLeaveRequest(request.id, {
@@ -388,7 +492,8 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.mine.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide}
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    canManage={canManage} ownerStatus={statusById.get(r.employeeId)}
                     awayWarning={awayWarningFor(r, policy, awayByRole)} />
                 ))}
               </div>
@@ -400,7 +505,8 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.others.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide} />
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    canManage={canManage} ownerStatus={statusById.get(r.employeeId)} />
                 ))}
               </div>
         )}
@@ -411,7 +517,8 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.decided.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide} />
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    canManage={canManage} ownerStatus={statusById.get(r.employeeId)} />
                 ))}
               </div>
         )}

@@ -122,6 +122,7 @@ export default function LeavePolicyTab({
                 <th className="p-2 border-b border-[#333] text-gray-400 text-xs uppercase tracking-wider">Type</th>
                 <th className="p-2 border-b border-[#333] text-gray-400 text-xs uppercase tracking-wider">Balance tracked</th>
                 <th className="p-2 border-b border-[#333] text-gray-400 text-xs uppercase tracking-wider">Purpose required</th>
+                <th className="p-2 border-b border-[#333] text-gray-400 text-xs uppercase tracking-wider">Maximum working days</th>
               </tr>
             </thead>
             <tbody>
@@ -135,6 +136,16 @@ export default function LeavePolicyTab({
                   <td className="p-2">
                     <input type="checkbox" checked={t.requiresPurpose}
                       onChange={e => toggleType(t.id, { requiresPurpose: e.target.checked })} className="w-4 h-4 accent-primary" />
+                  </td>
+                  <td className="p-2">
+                    {t.balanceTracked ? (
+                      <span className="text-gray-500 text-xs">— the allowance itself limits this type</span>
+                    ) : (
+                      <input type="number" min="1" value={t.maxDurationDays ?? 0}
+                        onChange={e => toggleType(t.id, { maxDurationDays: Number(e.target.value) })}
+                        className="w-24 bg-[#1a1a1a] text-white border border-[#444] p-2 rounded-lg outline-none focus:border-primary"
+                        title="How many working days one request of this type may span" />
+                    )}
                   </td>
                 </tr>
               ))}
@@ -161,7 +172,15 @@ export default function LeavePolicyTab({
           </Field>
           <Field label="Maternity (weeks)" hint="Labour Act minimum is 12 weeks.">
             <input type="number" min="0" value={p.maternityDurationWeeks}
-              onChange={e => set({ maternityDurationWeeks: Number(e.target.value) })} className={inputCls} />
+              onChange={e => {
+                const weeks = Number(e.target.value);
+                set({
+                  maternityDurationWeeks: weeks,
+                  // The enforced cap is working days (weeks x 5), set from
+                  // the same keystroke so the two can never disagree.
+                  leaveTypes: p.leaveTypes.map(t => (t.id === 'maternity' ? { ...t, maxDurationDays: weeks * 5 } : t)),
+                });
+              }} />
           </Field>
         </div>
         <div className="mt-4">

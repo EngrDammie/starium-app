@@ -94,6 +94,27 @@ export function userCanActAtStage({ request, policy, stageIndex, user }) {
 
   const actionRoles = user.actionRoles || [];
 
+  // ── No signing your own leave, whatever hat you wear ──────────────────────
+  // Added 26 Oct 2026: the chain had no idea whose request it was acting on.
+  // A supervisor could sign stage 1 of their OWN leave, and the Head of HR
+  // could self-sign the final gate — the approval that unlocks paid leave.
+  // The check runs BEFORE every grant, so it binds the primary role, a named
+  // deputy, and the system owner alike; a deputy configuration that names
+  // the requester cannot become a self-approval back door either.
+  //
+  // `user.employeeId` is the ACTOR's own employee record, resolved by the
+  // caller. An approver with no employee record cannot be the owner of any
+  // request, so the check is skipped for them.
+  if (user.employeeId && request.employeeId && user.employeeId === request.employeeId) {
+    const last = stageIndex >= stages.length - 1;
+    return {
+      can: false,
+      reason: last
+        ? 'This is your own leave request — the system owner or this stage\'s named deputy must sign it, not you.'
+        : 'This is your own leave request — the Head of HR or this stage\'s named deputy must sign it, not you.',
+    };
+  }
+
   // The system owner can always step in. Recorded as acting for the stage's
   // primary so the audit trail never claims a role the person does not hold.
   if (user.systemRole === 'super_admin') {

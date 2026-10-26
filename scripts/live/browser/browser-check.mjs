@@ -68,6 +68,22 @@ try {
   record('My Leave shows the balance cards', hasBalance > 0, `${cardLabels} big numbers on screen`);
   await shot(page, '01-employee-my-leave');
 
+  // Cancel any pending requests first, through the real UI. The suite always
+  // requests the same date window, so a pending request from a previous run
+  // would trip the new self-overlap rule and block this run's submission —
+  // which is the rule working, but it is not what this step is testing.
+  page.on('dialog', (d) => d.accept());
+  let cancelled = 0;
+  for (let i = 0; i < 10; i += 1) {
+    const cancelBtn = page.getByRole('button', { name: 'Cancel', exact: true }).first();
+    if (!(await cancelBtn.count())) break;
+    await cancelBtn.click();
+    await page.waitForTimeout(1_200);
+    cancelled += 1;
+  }
+  record('the employee can cancel pending requests from the list', true, `${cancelled} cancelled`);
+  await shot(page, '01a-pending-cleared');
+
   // Open the request form.
   await page.getByText('Request Leave').first().click();
   await page.waitForSelector('text=Section 1', { timeout: 15_000 });

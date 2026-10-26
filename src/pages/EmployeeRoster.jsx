@@ -19,6 +19,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
+// The deactivate warning reads leave_requests directly — one query at the
+// moment of clicking, not a standing subscription on a page that never
+// shows leave data.
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { useConfig } from '../context/ConfigContext';
 import {
   EMPLOYMENT_STATUS, subscribeToEmployees,
@@ -252,6 +257,29 @@ export default function EmployeeRoster() {
   const handleToggleActive = async (employee) => {
     const by = currentUser?.email || null;
     const goingInactive = employee.employmentStatus === EMPLOYMENT_STATUS.ACTIVE;
+
+    // Deactivating does not touch their leave requests — those keep flowing
+    // through the approval queues unless somebody remembers to look. Say so
+    // BEFORE the button does it, and offer to leave the queue alone.
+    if (goingInactive) {
+      let pending = 0;
+      try {
+        const snap = await getDocs(query(
+          collection(db, 'leave_requests'),
+          where('employeeId', '==', employee.id),
+        ));
+        pending = snap.docs.filter(d => String(d.data()?.status || '').startsWith('pending_')).length;
+      } catch { /* a read failure must not block deactivation; 0 just means no warning */ }
+      if (pending > 0) {
+        const goOn = window.confirm(
+          `${employee.fullName} has ${pending} leave request${pending === 1 ? '' : 's'} still moving through the approval chain.\n\n` +
+          'Deactivating them does not stop those requests — approvers may still sign them.\n\n' +
+          'Continue? (Ask HR to cancel the pending requests afterwards, or cancel them first.)',
+        );
+        if (!goOn) return;
+      }
+    }
+
     const result = goingInactive
       ? await deactivateEmployee(employee.id, by)
       : await reactivateEmployee(employee.id, by);

@@ -196,6 +196,16 @@ export default function MyLeave() {
               <div className={`text-4xl font-black ${s.tone}`}>{s.value}</div>
             </div>
           ))}
+
+          {/* Days committed to requests still in the chain. They are already
+              spoken for — without this line, "Available" quietly overstates
+              what is actually free to book. */}
+          {(balance?.pendingDays ?? 0) > 0 && (
+            <div className="sm:col-span-2 lg:col-span-4 -mt-2 text-xs text-status-warning">
+              ⏳ {balance.pendingDays} working {balance.pendingDays === 1 ? 'day is' : 'days are'} awaiting
+              approval and are already spoken for — they count towards your Available figure.
+            </div>
+          )}
         </div>
 
         <button onClick={() => setShowForm(true)}
