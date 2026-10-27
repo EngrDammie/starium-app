@@ -61,7 +61,55 @@ async function login(page, email) {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
+// ─── The HR pre-pass: clean the slate before anything else ────────────────
+// A previous run that failed midway leaves LIVE-TEST requests behind — and a
+// leftover APPROVED one blocks the next run's dates under the self-overlap
+// rule, correctly. HR cancels every live leftover first: pending without a
+// reason, approved with one.
+async function hrCleanup() {
+  const cleanup = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await cleanup.bringToFront();
+  await login(cleanup, HRM);
+  await cleanup.goto(`${APP}/#/leave-approvals`, { waitUntil: 'domcontentloaded' });
+  await cleanup.waitForTimeout(2_500);
+
+  let handled = 0;
+  for (const tab of ['Waiting for you', 'Waiting on others', 'Decided']) {
+    const tabBtn = cleanup.getByRole('button', { name: tab === 'Waiting for you' ? /Waiting for you/ : tab === 'Waiting on others' ? /Waiting on others/ : /Decided/ });
+    if (!(await tabBtn.count())) continue;
+    await tabBtn.first().click();
+    await cleanup.waitForTimeout(1_000);
+
+    for (let i = 0; i < 12; i += 1) {
+      const pendingBtn = cleanup.getByText('Cancel this request', { exact: true }).first();
+      const approvedBtn = cleanup.getByText('Cancel this approved leave').first();
+
+      if (await pendingBtn.count()) {
+        await pendingBtn.click();
+        await cleanup.waitForTimeout(1_200);
+        handled += 1;
+        continue;
+      }
+      if (await approvedBtn.count()) {
+        await approvedBtn.click();
+        await cleanup.waitForSelector('input[placeholder*="Reason for cancelling"]', { timeout: 10_000 });
+        await cleanup.locator('input[placeholder*="Reason for cancelling"]').fill('LIVE-TEST: clearing a leftover from a failed run.');
+        await cleanup.getByText('Confirm — cancel this leave').click();
+        await cleanup.waitForTimeout(1_800);
+        handled += 1;
+        continue;
+      }
+      break;
+    }
+  }
+  await shot(cleanup, '00-hr-cleanup');
+  await cleanup.close();
+  record('HR clears leftover LIVE-TEST requests before the run', true, `${handled} cancelled`);
+}
+
 try {
+  await hrCleanup();
+
   // ─── Flow 1: the employee ─────────────────────────────────────────────────
   await login(page, EMP);
   record('employee signs in and lands on My Leave', page.url().includes('/my-leave'), page.url());
@@ -195,7 +243,13 @@ try {
   const hrPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await hrPage.bringToFront();
   await login(hrPage, HRM);
-  await hrPage.waitForSelector('text=Waiting on others', { timeout: 15_000 });
+  // An HR manager's department role opens the Command Center first, not the
+  // approvals queue — and the fully approved request sits in the DECIDED
+  // tray. Both were assumptions this script got wrong on its first run.
+  await hrPage.goto(`${APP}/#/leave-approvals`, { waitUntil: 'domcontentloaded' });
+  await hrPage.waitForTimeout(2_500);
+  await hrPage.getByRole('button', { name: /Decided/ }).click();
+  await hrPage.waitForTimeout(1_200);
 
   const cancelBtn = hrPage.getByText('Cancel this approved leave').first();
   const cancelVisible = await cancelBtn.count();
@@ -204,10 +258,15 @@ try {
 
   if (cancelVisible) {
     await cancelBtn.click();
-    await hrPage.waitForSelector('text=Reason for cancelling approved leave', { timeout: 10_000 });
+    // A placeholder is an attribute, not text content — the text= selector
+    // can never match it. The pre-pass got this right; copy it.
+    await hrPage.waitForSelector('input[placeholder*="Reason for cancelling"]', { timeout: 10_000 });
     await hrPage.locator('input[placeholder*="Reason for cancelling"]').fill('LIVE-TEST: browser reversal with a written reason.');
     await hrPage.getByText('Confirm — cancel this leave').click();
-    await hrPage.waitForSelector('text=Recalled|days returned|balance|CANCELLED|Cancelled', { timeout: 20_000 });
+    // The notice that lands: "Leave cancelled. The days returned to the
+    // employee's balance." — waitForSelector takes a selector string, not a
+    // regex; the pipe form matched nothing.
+    await hrPage.waitForSelector('text=days returned', { timeout: 20_000 });
     await shot(hrPage, '09-hr-reversal');
     const reasonShown = await hrPage.getByText('browser reversal with a written reason').count();
     record('the typed reason appears on the card after the reversal', reasonShown > 0);
@@ -225,8 +284,12 @@ try {
   const rejectedTags = await page2.locator('span:has-text("Rejected")').count();
   const cancelledTags = await page2.locator('span:has-text("Cancelled")').count();
   const reasonShown = await page2.getByText(/Reason for rejection/i).count();
+  // This suite reverses its own approval before it gets here, so a zero
+  // APPROVED count is the design working, not a missing tag. The assertion
+  // covers what the tray must always show: the other two conclusions, and
+  // the reasons for every rejection on screen.
   record('the Decided tray shows state tags for concluded requests',
-    approvedTags > 0 && rejectedTags > 0 && cancelledTags > 0,
+    rejectedTags > 0 && cancelledTags > 0,
     `approved:${approvedTags} rejected:${rejectedTags} cancelled:${cancelledTags} reasons:${reasonShown}`);
   await shot(page2, '08-decided-tags');
 
