@@ -42,6 +42,7 @@ import { pushToQueue, readQueue, writeQueue, clearQueue } from './queueStore';
 import {
   currentStageIndex, buildDecisionPatch,
 } from './leaveWorkflow';
+import { computeRecallDays } from './leaveCalculations';
 
 const COLLECTION = 'leave_requests';
 export const LEAVE_QUEUE_KEY = 'starium_leave_request_queue';
@@ -54,6 +55,7 @@ export const LEAVE_STATUS = {
   APPROVED: 'approved',
   REJECTED: 'rejected',
   CANCELLED: 'cancelled',
+  RECALLED: 'recalled',
 };
 
 // A fresh workflow block with every stage pending. Order is significant — see
@@ -355,6 +357,21 @@ export async function cancelLeaveRequest(requestId, {
   if (finalApproved && !isAdmin && !isHr) {
     return { ok: false, error: 'This leave has already been approved. Ask HR to change it.' };
   }
+
+  // Once leave has STARTED, cancelling the whole request would erase days
+  // that genuinely happened — the ledger would under-count leave actually
+  // taken. Recall is the honest tool for calling someone back, and this
+  // refusal says so in plain words. Applies to HR and the owner alike:
+  // nobody gets to quietly un-take days that were taken.
+  if (finalApproved) {
+    const start = toLocalDate(data.leaveCommences);
+    if (start && new Date() >= start) {
+      return {
+        ok: false,
+        error: 'This leave has already started — recall it instead (Leave Approvals, on the request), so the days already taken stay on the record.',
+      };
+    }
+  }
   if (finalApproved && isHr && !isAdmin && !String(reason || '').trim()) {
     return { ok: false, error: 'Reversing approved leave needs a written reason — it will be recorded on the request.' };
   }
@@ -417,6 +434,91 @@ export async function confirmResumption(requestId, { employeeId, user, note = ''
       updatedBy: user?.email || null,
     });
     return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+// ─── Recall from leave (27 Oct 2026) ────────────────────────────────────────
+//
+// The honest tool for "come back to work": leave that already started is cut
+// short, and only the days actually taken stay counted.
+//
+//   Cancelling an in-progress request would have erased them — the company
+//   would under-count leave that genuinely happened, and at year end the
+//   numbers would quietly lie. Recall closes the record at the point of
+//   return instead:
+//
+//     daysConsumed = working days from the start through the day before the
+//                    return (holidays inside the stretch uncharged, as booked)
+//     daysReturned = the rest, back in the balance immediately — there is no
+//                    counter to unwind, balances are derived from this history
+//
+// The service computes the arithmetic; HR records two things and two only —
+// the return date and a written reason. The request keeps its status as a
+// RECALLED record: the leave happened, then stopped, and must never be
+// mistaken for "never approved".
+export async function recallFromLeave(requestId, {
+  returnedOn, reason, user, policy, isHr = false, isAdmin = false,
+}) {
+  const snap = await getDoc(doc(db, COLLECTION, requestId));
+  if (!snap.exists()) return { ok: false, error: 'That request no longer exists.' };
+  const data = snap.data();
+
+  if (!isHr && !isAdmin) {
+    return { ok: false, error: 'Only HR or the system owner may recall someone from leave.' };
+  }
+  if (data.status !== LEAVE_STATUS.APPROVED) {
+    return { ok: false, error: 'Only approved leave in progress can be recalled. For a request that has not started, cancel it instead.' };
+  }
+  if (!String(reason || '').trim()) {
+    return { ok: false, error: 'A recall needs a written reason — it is recorded on the request.' };
+  }
+
+  const start = toLocalDate(data.leaveCommences);
+  const today = new Date();
+  if (!start || today < start) {
+    return { ok: false, error: 'This leave has not started yet — cancel it instead, and the full balance returns.' };
+  }
+
+  const computed = computeRecallDays({
+    leaveCommences: data.leaveCommences,
+    leaveEnds: data.leaveEnds,
+    returnedOn: returnedOn || today,
+    requestedDays: data.requestedDays,
+    policy,
+  });
+  if (!computed) return { ok: false, error: 'The request has no dates to recall from.' };
+
+  // The return date must fall inside the leave's own calendar, and cannot be
+  // in the future — nobody records a recall for a return that has not
+  // happened. The first day of leave is the earliest possible return.
+  const back = toLocalDate(returnedOn || today);
+  if (back < start) {
+    return { ok: false, error: 'The return date cannot be before the leave started.' };
+  }
+  if (back > today) {
+    return { ok: false, error: 'The return date cannot be in the future.' };
+  }
+
+  try {
+    await updateDoc(doc(db, COLLECTION, requestId), {
+      status: LEAVE_STATUS.RECALLED,
+      daysConsumed: computed.daysConsumed,
+      daysReturned: computed.daysReturned,
+      effectiveEnd: computed.effectiveEnd,
+      returnedOn: back,
+      recalledAt: serverTimestamp(),
+      recalledBy: user?.email || null,
+      recallReason: String(reason).trim(),
+      // The record closes at recall: the return has happened, so the
+      // employee must not be asked to confirm it again later.
+      resumedOn: back,
+      closedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      updatedBy: user?.email || null,
+    });
+    return { ok: true, daysConsumed: computed.daysConsumed, daysReturned: computed.daysReturned };
   } catch (error) {
     return { ok: false, error: error.message };
   }

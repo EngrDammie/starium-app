@@ -317,17 +317,60 @@ export function calculateBalance({
   };
 }
 
-// Sum of APPROVED leave days for one employee in one leave year. This is what
-// replaces the paper form's hand-written "No. of days already taken".
+// Sum of leave days actually TAKEN for one employee in one leave year. This
+// is what replaces the paper form's hand-written "No. of days already taken".
+//
+// A RECALLED request counts only the days consumed before the person came
+// back (27 Oct 2026). Before that distinction existed, cancelling an
+// in-progress request erased the days already taken from the ledger — the
+// company under-counted leave that genuinely happened. Rejected and
+// cancelled requests still count for nothing.
 export function sumApprovedDays(requests, { employeeId, leaveYear }) {
   if (!Array.isArray(requests)) return 0;
   return requests.reduce((sum, r) => {
-    if (r?.status !== 'approved') return sum;
+    const live = r?.status === 'approved' || r?.status === 'recalled';
+    if (!live) return sum;
     if (employeeId && r.employeeId !== employeeId) return sum;
     if (leaveYear != null && Number(r.leaveYear) !== Number(leaveYear)) return sum;
-    const days = Number(r.requestedDays);
-    return sum + (Number.isFinite(days) ? days : 0);
+    // A recalled request is charged what it consumed; everything else is
+    // charged what it asked for.
+    const raw = r.status === 'recalled' && Number.isFinite(Number(r.daysConsumed))
+      ? Number(r.daysConsumed)
+      : Number(r.requestedDays);
+    return sum + (Number.isFinite(raw) ? raw : 0);
   }, 0);
+}
+
+// ─── Recall arithmetic ─────────────────────────────────────────────────────
+
+// What was actually consumed when someone is called back from leave.
+//
+// The rule: the last day of leave is the day BEFORE they returned. Days
+// consumed are the working days from the start through that last day,
+// capped at the original end. Holidays inside the consumed stretch are not
+// charged, exactly as they were not charged when the leave was booked.
+//
+// Returns null for missing dates; the service refuses rather than guesses.
+export function computeRecallDays({ leaveCommences, leaveEnds, returnedOn, requestedDays, policy }) {
+  const start = toLocalDate(leaveCommences);
+  const end = toLocalDate(leaveEnds);
+  const back = toLocalDate(returnedOn);
+  if (!start || !end || !back) return null;
+
+  const last = new Date(back);
+  last.setDate(last.getDate() - 1); // the day before they returned
+
+  const effectiveEnd = last.getTime() > end.getTime() ? end : last;
+  const daysConsumed = effectiveEnd.getTime() < start.getTime()
+    ? 0
+    : countWorkingDays(start, effectiveEnd, policy);
+
+  const total = Number.isFinite(Number(requestedDays)) ? Number(requestedDays) : 0;
+  return {
+    daysConsumed,
+    daysReturned: Math.max(total - daysConsumed, 0),
+    effectiveEnd,
+  };
 }
 
 // A short human date for validation messages — "3 Nov 2026", not an ISO
@@ -420,6 +463,16 @@ export function findOwnOverlaps(request, ownRequests = []) {
   for (const r of ownRequests || []) {
     if (!r) continue;
     const status = String(r.status || '');
+    // A RECALLED request blocks re-booking only for the days actually
+    // consumed — the unused tail of its range is free to book again. The
+    // consumed head stays blocked forever: nobody may re-book days they
+    // already took.
+    if (status === 'recalled') {
+      const consumedThrough = r.effectiveEnd || r.leaveEnds;
+      if (!dateRangesOverlap(leaveCommences, leaveEnds, r.leaveCommences, consumedThrough)) continue;
+      out.push(r);
+      continue;
+    }
     const live = status.startsWith('pending_') || status === 'approved';
     if (!live) continue;
     if (!dateRangesOverlap(leaveCommences, leaveEnds, r.leaveCommences, r.leaveEnds)) continue;

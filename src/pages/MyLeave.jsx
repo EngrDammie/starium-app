@@ -249,6 +249,16 @@ export default function MyLeave() {
                         {r.rejectedReason && (
                           <div className="text-status-danger text-xs mt-1">Reason for rejection: {r.rejectedReason}</div>
                         )}
+                        {r.cancelledReason && (
+                          <div className="text-gray-500 text-xs mt-1">
+                            Cancellation recorded{r.cancelledBy ? ` by ${r.cancelledBy}` : ''}: {r.cancelledReason}
+                          </div>
+                        )}
+                        {r.status === 'recalled' && (
+                          <div className="text-status-warning text-xs mt-1">
+                            Recalled after {r.daysConsumed} of {r.requestedDays} days — {r.daysReturned} returned to your balance.
+                          </div>
+                        )}
                       </div>
                       {canCancel && (
                         <button onClick={() => handleCancel(r)} disabled={busyId === r.id}

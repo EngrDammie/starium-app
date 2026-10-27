@@ -1,0 +1,9 @@
+# Copy this file to .dev.vars for local development (`wrangler dev` reads it).
+# The REAL credentials never enter git — production secrets are set with:
+#
+#   npx wrangler secret put GMAIL_APP_PASSWORD
+#
+# The app password is created in the Google account's security settings
+# (2-Step Verification must be on). Treat it exactly like a password:
+# it can send mail as stariumrafadetergents@gmail.com.
+GMAIL_APP_PASSWORD=xxxxxxxxxxxxxxxx

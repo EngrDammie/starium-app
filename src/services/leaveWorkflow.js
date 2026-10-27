@@ -36,7 +36,7 @@
 export const UNIVERSAL_DEPUTY_ROLE = 'leave_hr_head';
 
 export function isTerminal(request) {
-  return ['approved', 'rejected', 'cancelled'].includes(request?.status);
+  return ['approved', 'rejected', 'cancelled', 'recalled'].includes(request?.status);
 }
 
 // Which policy stage is the request currently waiting on?

@@ -9,7 +9,7 @@ import {
   isNonWorkingDay, listNonWorkingDaysInRange, countWorkingDays, nextWorkingDay,
   getLeaveYear, leaveYearStartDate, leaveYearEndDate, workingDaysRemainingInLeaveYear,
   proRateEntitlement, applyCarryOver,
-  calculateBalance, sumApprovedDays,
+  calculateBalance, sumApprovedDays, computeRecallDays,
   dateRangesOverlap, describeOverlaps, findOwnOverlaps, spansLeaveYear,
   validateLeaveRequest, workingDaysBetween, getLeaveType,
 } from '../leaveCalculations';
@@ -736,5 +736,112 @@ describe('getLeaveType', () => {
   it('returns null for an unknown type rather than throwing', () => {
     expect(getLeaveType('nope', POLICY)).toBeNull();
     expect(getLeaveType('annual', undefined)).toBeNull();
+  });
+});
+
+// ─── Recall from leave (added 27 Oct 2026) ─────────────────────────────────
+//
+// The scenario that motivated it: someone takes 10 days, is called back on
+// day 4, and cancelling the whole request would have erased the days already
+// taken from the ledger. Recall keeps what was consumed, returns the rest,
+// and the overlap scan blocks re-booking the consumed dates but frees the
+// unused tail.
+
+describe('computeRecallDays — what was actually taken before the return', () => {
+  // Nov 2026: 2 Mon, 3 Tue, 4 Wed, 5 Thu, 6 Fri, 7 Sat, 8 Sun, 9 Mon...
+  // POLICY rests on Sundays only.
+  const base = { requestedDays: 5, policy: POLICY };
+
+  it('counts the working days from the start through the day BEFORE the return', () => {
+    const r = computeRecallDays({ ...base, leaveCommences: '2026-11-02', leaveEnds: '2026-11-06', returnedOn: '2026-11-04' });
+    // Left Mon 2nd; back Wed 4th → last leave day Tue 3rd → 2 working days.
+    expect(r.daysConsumed).toBe(2);
+    expect(r.daysReturned).toBe(3);
+  });
+
+  it('charges nothing when they return on the very first day', () => {
+    const r = computeRecallDays({ ...base, leaveCommences: '2026-11-02', leaveEnds: '2026-11-06', returnedOn: '2026-11-02' });
+    expect(r.daysConsumed).toBe(0);
+    expect(r.daysReturned).toBe(5);
+  });
+
+  it('caps at the original end — a return after the leave ended consumes it all', () => {
+    const r = computeRecallDays({ ...base, leaveCommences: '2026-11-02', leaveEnds: '2026-11-06', returnedOn: '2026-11-09' });
+    expect(r.daysConsumed).toBe(5);
+    expect(r.daysReturned).toBe(0);
+  });
+
+  it('does not charge the rest day inside the consumed stretch', () => {
+    // Mon 2 – Fri 13 Nov: 11 working days under the Sunday-only policy
+    // (Saturday the 7th is a working day in this factory).
+    // Returning Sat 14th means every working day was taken.
+    const r = computeRecallDays({ requestedDays: 11, policy: POLICY, leaveCommences: '2026-11-02', leaveEnds: '2026-11-13', returnedOn: '2026-11-14' });
+    expect(r.daysConsumed).toBe(11);
+    expect(r.daysReturned).toBe(0);
+
+    // Back on Sunday 8th instead: the last day of leave is Saturday the
+    // 7th — and the Sunday inside the original range is never charged.
+    const midRecall = computeRecallDays({ requestedDays: 11, policy: POLICY, leaveCommences: '2026-11-02', leaveEnds: '2026-11-13', returnedOn: '2026-11-08' });
+    expect(midRecall.daysConsumed).toBe(6); // Mon 2 – Sat 7
+    expect(midRecall.daysReturned).toBe(5);
+  });
+
+  it('returns null rather than guessing when dates are missing', () => {
+    expect(computeRecallDays({ ...base, leaveCommences: null, leaveEnds: '2026-11-06', returnedOn: '2026-11-04' })).toBeNull();
+  });
+});
+
+describe('sumApprovedDays — a recalled request counts what it consumed', () => {
+  const year = 2026;
+  const own = (status, over = {}) => ({
+    employeeId: 'E1', status, requestedDays: 5, leaveYear: 2026, ...over,
+  });
+
+  it('charges daysConsumed for a recalled request, not requestedDays', () => {
+    const list = [own('recalled', { daysConsumed: 2, leaveCommences: new Date(2026, 10, 2), leaveYear: 2026 })];
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(2);
+  });
+
+  it('still charges requestedDays for a fully approved request', () => {
+    const list = [own('approved', { leaveCommences: new Date(2026, 10, 2) })];
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(5);
+  });
+
+  it('still charges nothing for cancelled and rejected requests', () => {
+    const list = [
+      own('cancelled', { leaveCommences: new Date(2026, 10, 2) }),
+      own('rejected', { leaveCommences: new Date(2026, 10, 2) }),
+    ];
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(0);
+  });
+
+  it('falls back to requestedDays if the recall arithmetic is somehow absent', () => {
+    const list = [own('recalled', { leaveCommences: new Date(2026, 10, 2) })];
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(5);
+  });
+});
+
+describe('findOwnOverlaps — consumed dates stay blocked, the unused tail is free', () => {
+  // A recalled request: Mon 2 – Fri 13 Nov, returned Thu 5th → consumed 2–4 Nov.
+  const recalled = {
+    employeeId: 'E1', status: 'recalled',
+    leaveCommences: '2026-11-02', leaveEnds: '2026-11-13',
+    effectiveEnd: new Date(2026, 10, 4),
+  };
+  const ask = (start, end) => ({ leaveCommences: start, leaveEnds: end });
+
+  it('REFUSES re-booking the dates actually consumed', () => {
+    expect(findOwnOverlaps(ask('2026-11-03', '2026-11-05'), [recalled])).toHaveLength(1);
+  });
+
+  it('ALLOWS re-booking the unused tail of a recalled range', () => {
+    expect(findOwnOverlaps(ask('2026-11-09', '2026-11-13'), [recalled])).toHaveLength(0);
+  });
+
+  it('blocks nothing when the recall record has no effective end recorded', () => {
+    const unmarked = { ...recalled, effectiveEnd: null };
+    // Without the effective end the honest default is the full original
+    // range: never under-block on missing data.
+    expect(findOwnOverlaps(ask('2026-11-09', '2026-11-13'), [unmarked])).toHaveLength(1);
   });
 });

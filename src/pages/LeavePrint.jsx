@@ -226,6 +226,19 @@ export default function LeavePrint() {
               <strong>Reason for rejection:</strong> {request.rejectedReason}
             </p>
           )}
+          {request.cancelledReason && (
+            <p className="mt-2 text-[12px]">
+              <strong>Reason for cancellation{request.cancelledByRole ? ` (${request.cancelledByRole})` : ''}:</strong> {request.cancelledReason}
+            </p>
+          )}
+          {(request.status === 'recalled' || request.daysConsumed != null) && (
+            <p className="mt-2 text-[12px]">
+              <strong>Recalled from leave:</strong> {request.daysConsumed} of {request.requestedDays} working
+              days taken; {request.daysReturned} returned to the balance.
+              {request.recallReason ? ` Reason: ${request.recallReason}` : ''}
+              {request.recalledBy ? ` (by ${request.recalledBy})` : ''}
+            </p>
+          )}
         </div>
 
         {/* Footer: the paper form's resumption block */}

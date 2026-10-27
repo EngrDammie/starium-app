@@ -1,0 +1,17 @@
+{
+  "name": "starium-leave-mail",
+  "private": true,
+  "description": "The Leave module's email sender. Verifies the caller's Firebase session, resolves recipients from the live database, sends via the company Gmail. Stateless: the audit trail lives in Firestore, not here.",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

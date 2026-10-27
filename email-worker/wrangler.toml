@@ -1,0 +1,17 @@
+name = "starium-leave-mail"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# The Firebase project this Worker reads from (via the CALLER's own token —
+# the security rules decide what it may see, so the Worker needs no Google
+# credentials of its own).
+[vars]
+FIREBASE_PROJECT_ID = "starium-rafa-app"
+# The address mail is sent from. The app password for this account arrives as
+# a secret — see .dev.vars.example. It must be the same Gmail account.
+GMAIL_USER = "stariumrafadetergents@gmail.com"
+# Where emails link back into the app (the deployed SPA, hash-routed).
+APP_URL = "https://starium-app.dammieoptimus.workers.dev"
+
+# Secrets (set with:  npx wrangler secret put GMAIL_APP_PASSWORD  --name starium-leave-mail)
+#   GMAIL_APP_PASSWORD — the Gmail app password for GMAIL_USER.

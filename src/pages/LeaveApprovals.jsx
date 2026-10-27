@@ -29,9 +29,9 @@ import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { useNetwork } from '../context/NetworkContext';
 import {
-  subscribeToLeaveRequests, decideLeaveRequest, cancelLeaveRequest,
+  subscribeToLeaveRequests, decideLeaveRequest, cancelLeaveRequest, recallFromLeave,
 } from '../services/leaveOperations';
-import { spansLeaveYear } from '../services/leaveCalculations';
+import { spansLeaveYear, toLocalDate } from '../services/leaveCalculations';
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
@@ -43,6 +43,12 @@ const fmt = (d) => {
   if (!d) return '—';
   const date = d instanceof Date ? d : new Date(d);
   return isNaN(date) ? '—' : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+// The default date for the recall dialog: today, in the input's own format.
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 function Stepper({ request, policy, highlight }) {
@@ -83,6 +89,7 @@ const OUTCOME_TONES = {
   danger: 'bg-status-danger/10 border-status-danger/40 text-status-danger',
   muted: 'bg-[#1a1a1a] border-[#333] text-gray-400',
   good: 'bg-status-success/10 border-status-success/40 text-status-success',
+  warn: 'bg-status-warning/10 border-status-warning/40 text-status-warning',
 };
 
 function OutcomeBlock({ request }) {
@@ -96,11 +103,13 @@ function OutcomeBlock({ request }) {
   );
 }
 
-function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canManage, ownerStatus, awayWarning }) {
+function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRecall, canManage, ownerStatus, awayWarning }) {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [showReject, setShowReject] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
+  const [showRecall, setShowRecall] = useState(false);
+  const [returnDate, setReturnDate] = useState('');
 
   const at = currentStageIndex(request, policy);
   const stage = policy?.stages?.[at];
@@ -137,6 +146,22 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canM
     setBusy(false);
     if (res.ok) { setNote(''); setShowCancel(false); }
   };
+
+  // HR / the owner RECALLING someone from started leave — the only honest
+  // way to cut leave short, because the days already taken stay counted.
+  const doRecall = async () => {
+    if (busy) return;
+    if (!note.trim()) return; // reason required; the dialog enforces it visibly
+    setBusy(true);
+    const res = await onRecall(request, { returnedOn: returnDate || null, reason: note });
+    setBusy(false);
+    if (res.ok) { setNote(''); setShowRecall(false); setReturnDate(''); }
+  };
+
+  // Has this leave actually started? The calendar decides which tool the
+  // card offers — cancel before the start, recall after it.
+  const starts = toLocalDate(request.leaveCommences);
+  const started = !!starts && new Date() >= starts;
 
   return (
     <div className="bg-dark-card border border-[#333] rounded-xl p-5">
@@ -213,22 +238,32 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canM
           reverses an approval through this exact button. */}
       {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && (
         <div className="mt-4 pt-4 border-t border-[#333]">
-          {!showCancel ? (
+          {!showCancel && !showRecall ? (
             <div className="flex items-center gap-2 flex-wrap">
-              <button onClick={() => {
-                if (request.status === 'approved') { setShowCancel(true); }
-                else { doCancel(); }
-              }} disabled={busy}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
-                title={request.status === 'approved'
-                  ? 'Reverse this approved leave — a written reason is recorded on the request.'
-                  : 'Cancel this pending request; the days return to the employee.'}>
-                ✕ {request.status === 'approved' ? 'Cancel this approved leave' : 'Cancel this request'}
-              </button>
+              {request.status === 'approved' && started ? (
+                <button onClick={() => setShowRecall(true)} disabled={busy}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-warning hover:text-white transition-colors disabled:opacity-50"
+                  title="Cut this leave short at the point of return — the days already taken stay counted, the rest return to the balance.">
+                  ↩ Recall from leave
+                </button>
+              ) : (
+                <button onClick={() => {
+                  if (request.status === 'approved') { setShowCancel(true); }
+                  else { doCancel(); }
+                }} disabled={busy}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
+                  title={request.status === 'approved'
+                    ? 'Reverse this approved leave — a written reason is recorded on the request.'
+                    : 'Cancel this pending request; the days return to the employee.'}>
+                  ✕ {request.status === 'approved' ? 'Cancel this approved leave' : 'Cancel this request'}
+                </button>
+              )}
               <span className="text-gray-500 text-xs">
-                {request.status === 'approved'
-                  ? 'Reversing approved leave requires a written reason; it is recorded on the request.'
-                  : 'The days return to the employee' + '’' + 's balance.'}
+                {request.status === 'approved' && started
+                  ? 'Cutting leave short keeps the days already taken on the record; the unused days return.'
+                  : request.status === 'approved'
+                    ? 'Reversing approved leave requires a written reason; it is recorded on the request.'
+                    : 'The days return to the employee' + '’' + 's balance.'}
               </span>
             </div>
           ) : (
@@ -250,6 +285,41 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canM
                   Back
                 </button>
               </div>
+            </div>
+          )}
+
+          {showRecall && (
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Returned to work on</label>
+                  <input type="date"
+                    value={returnDate || todayKey()}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">Reason (required)</label>
+                  <input
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="e.g. Production emergency on Line 2"
+                    className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={doRecall} disabled={busy || !note.trim()}
+                  className="bg-status-warning text-black font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#e68900] transition-colors disabled:opacity-50">
+                  {busy ? 'Recalling…' : 'Confirm — cut this leave short'}
+                </button>
+                <button onClick={() => { setShowRecall(false); setNote(''); setReturnDate(''); }}
+                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
+                  Back
+                </button>
+              </div>
+              <span className="text-gray-500 text-xs">
+                The app works out the days already taken; the unused days return to the balance at once.
+              </span>
             </div>
           )}
         </div>
@@ -429,6 +499,20 @@ export default function LeaveApprovals() {
     return res;
   };
 
+  const handleRecall = async (request, { returnedOn, reason }) => {
+    const res = await recallFromLeave(request.id, {
+      returnedOn, reason,
+      user: { email: currentUser?.email },
+      policy,
+      isAdmin: systemRole === 'super_admin',
+      isHr: canManage && systemRole !== 'super_admin',
+    });
+    setNotice(res.ok
+      ? { ok: true, text: `Recalled from leave — ${res.daysConsumed} day(s) taken, ${res.daysReturned} returned to the balance.` }
+      : { ok: false, text: res.error });
+    return res;
+  };
+
   const handleDecide = async (request, decision, note) => {
     const res = await decideLeaveRequest(request.id, {
       decision, note, user, policy, isOnline,
@@ -511,7 +595,7 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.mine.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel} onRecall={handleRecall}
                     canManage={canManage} ownerStatus={statusById.get(r.employeeId)}
                     awayWarning={awayWarningFor(r, policy, awayByRole)} />
                 ))}
@@ -524,7 +608,7 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.others.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel} onRecall={handleRecall}
                     canManage={canManage} ownerStatus={statusById.get(r.employeeId)} />
                 ))}
               </div>
@@ -536,7 +620,7 @@ export default function LeaveApprovals() {
             : <div className="flex flex-col gap-4">
                 {buckets.decided.map(r => (
                   <RequestCard key={r.id} request={r} policy={policy} user={user}
-                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel}
+                    isOnline={isOnline} onDecide={handleDecide} onCancel={handleCancel} onRecall={handleRecall}
                     canManage={canManage} ownerStatus={statusById.get(r.employeeId)} />
                 ))}
               </div>

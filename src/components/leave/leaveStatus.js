@@ -22,6 +22,7 @@ const TERMINAL_LABELS = {
   approved: 'Approved',
   rejected: 'Rejected',
   cancelled: 'Cancelled',
+  recalled: 'Recalled',
 };
 
 const PENDING_STYLE = 'bg-status-warning/20 text-status-warning border-status-warning/40';
@@ -32,6 +33,9 @@ const TERMINAL_STYLES = {
   // Withdrawn is not a failure and not a success. Grey says "no longer
   // active" without implying anybody did anything wrong.
   cancelled: 'bg-gray-500/20 text-gray-400 border-gray-600',
+  // Cut short, not cancelled: the leave happened, then stopped. Amber —
+  // worth noticing, nothing to mourn.
+  recalled: 'bg-status-warning/20 text-status-warning border-status-warning/40',
 };
 
 export const isPending = (status) => String(status || '').startsWith('pending_');
@@ -65,7 +69,10 @@ export function leaveStatusStyle(status) {
 // an Invalid Date — which would silently blank the "Decided" line and make
 // the sort fall back to submission order, with nothing visibly broken.
 export function decidedAt(request) {
-  const raw = request?.fullyApprovedAt || request?.rejectedAt || request?.cancelledAt;
+  // The LATEST event decides, because a recalled or cancelled request also
+  // carries its approval date: "Decided" must mean when its story ended,
+  // not when it was first signed.
+  const raw = request?.recalledAt || request?.cancelledAt || request?.rejectedAt || request?.fullyApprovedAt;
   if (!raw) return null;
   const d = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : new Date(raw));
   return isNaN(d) ? null : d;
@@ -82,12 +89,33 @@ export function outcomeNote(request) {
       : { tone: 'danger', title: 'Rejected', body: 'No reason was recorded.' };
   }
   if (request.status === 'cancelled') {
+    // Two different events share one status, and the record must not blur
+    // them: an employee withdrawing a pending request, and HR REVERSING
+    // leave that had been approved (found live 27 Oct 2026: the reversal
+    // wrote its reason onto the document, and no screen displayed it —
+    // the founder reversed a real approval and the typed reason appeared
+    // nowhere at all). The reason is the audit trail; it belongs on the
+    // card, not only in the database.
+    const wasApproved = !!request.fullyApprovedAt;
+    const reason = request.cancelledReason ? String(request.cancelledReason).trim() : null;
+    const who = request.cancelledBy || null;
+    const role = request.cancelledByRole || null;
+
+    if (wasApproved) {
+      return {
+        tone: 'muted',
+        title: 'Approved leave reversed',
+        body: (who ? `Reversed by ${who}${role ? ` (${role})` : ''}. ` : '')
+          + (reason ? `"${reason}". ` : '')
+          + 'The days returned to the employee' + " + repr(APOS) + " + 's balance.',
+      };
+    }
     return {
       tone: 'muted',
       title: 'Cancelled',
-      body: request.cancelledBy
-        ? `Withdrawn by ${request.cancelledBy} before final approval. The days returned to the employee's balance.`
-        : 'Withdrawn before final approval. The days returned to the employee\'s balance.',
+      body: (who && !role ? `Withdrawn by ${who}. ` : '')
+        + (reason ? `"${reason}". ` : '')
+        + 'The days returned to the employee' + " + repr(APOS) + " + 's balance.',
     };
   }
   if (request.status === 'approved') {
@@ -95,6 +123,20 @@ export function outcomeNote(request) {
       tone: 'good',
       title: 'Approved — all signatures complete',
       body: 'The leave is unlocked. It appears on the dashboard and can be printed for the file.',
+    };
+  }
+  if (request.status === 'recalled') {
+    const consumed = Number(request.daysConsumed) || 0;
+    const total = Number(request.requestedDays) || 0;
+    const returned = Number(request.daysReturned);
+    const returnedText = Number.isFinite(returned)
+      ? `The remaining ${returned} returned to the balance.`
+      : 'The unused days returned to the balance.';
+    return {
+      tone: 'warn',
+      title: request.recalledBy ? `Recalled from leave — by ${request.recalledBy}` : 'Recalled from leave',
+      body: `${consumed} of ${total} working days were taken before the recall. ${returnedText}` +
+        (request.recallReason ? ` Reason: ${request.recallReason}` : ''),
     };
   }
   return null;

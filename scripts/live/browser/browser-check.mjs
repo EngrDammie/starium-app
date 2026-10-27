@@ -24,6 +24,9 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const EMP = process.env.LIVE_TEST_EMPLOYEE || 'halima.danjuma@example.test';
 const SUP = process.env.LIVE_TEST_SUPERVISOR || 'emeka.nwosu@example.test';
+const HOD = process.env.LIVE_TEST_HOD || 'blessing.adeyemi@example.test';
+const HRH = process.env.LIVE_TEST_HR_HEAD || 'ibrahim.yusuf@example.test';
+const HRM = process.env.LIVE_TEST_HR_MANAGER || 'segun.adeyinka@example.test';
 const PASSWORD = process.env.LIVE_TEST_PASSWORD || 'success123';
 
 const results = [];
@@ -169,6 +172,47 @@ try {
   } else {
     record('the supervisor signs in the browser and the chain advances', false, 'no sign button found');
   }
+
+  // ─── Stages 2 and 3: the HOD and the Head of HR, in the browser ──────────
+  for (const [email, label] of [[HOD, 'HOD'], [HRH, 'Head of HR']]) {
+    const stagePage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    await stagePage.bringToFront();
+    await login(stagePage, email);
+    record(`${label} signs in and lands on the approvals queue`, stagePage.url().includes('/leave-approvals'), stagePage.url());
+    await stagePage.waitForSelector('text=Waiting for you', { timeout: 15_000 });
+    const btn = stagePage.getByText(new RegExp(`Sign as ${label === 'HOD' ? 'HOD' : 'Head of HR'}`)).first();
+    if (await btn.count()) {
+      await btn.click();
+      await stagePage.waitForSelector('text=Signed', { timeout: 20_000 });
+      record(`${label} signs in the browser`, true);
+    } else {
+      record(`${label} signs in the browser`, false, 'no sign button');
+    }
+    await stagePage.close();
+  }
+
+  // ─── HR reverses the approved leave through the once-invisible button ───
+  const hrPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await hrPage.bringToFront();
+  await login(hrPage, HRM);
+  await hrPage.waitForSelector('text=Waiting on others', { timeout: 15_000 });
+
+  const cancelBtn = hrPage.getByText('Cancel this approved leave').first();
+  const cancelVisible = await cancelBtn.count();
+  record('HR sees the Cancel button on an approved request', cancelVisible > 0,
+    cancelVisible > 0 ? 'button present' : 'BUTTON MISSING — the 27 Oct bug is back');
+
+  if (cancelVisible) {
+    await cancelBtn.click();
+    await hrPage.waitForSelector('text=Reason for cancelling approved leave', { timeout: 10_000 });
+    await hrPage.locator('input[placeholder*="Reason for cancelling"]').fill('LIVE-TEST: browser reversal with a written reason.');
+    await hrPage.getByText('Confirm — cancel this leave').click();
+    await hrPage.waitForSelector('text=Recalled|days returned|balance|CANCELLED|Cancelled', { timeout: 20_000 });
+    await shot(hrPage, '09-hr-reversal');
+    const reasonShown = await hrPage.getByText('browser reversal with a written reason').count();
+    record('the typed reason appears on the card after the reversal', reasonShown > 0);
+  }
+  await hrPage.close();
 
   // ─── The Decided tray: state tags and the rejection reason ────────────────
   // A decided request must state its own conclusion — a green APPROVED, a

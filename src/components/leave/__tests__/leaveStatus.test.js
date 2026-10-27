@@ -75,13 +75,27 @@ describe('isPending', () => {
 });
 
 describe('decidedAt', () => {
-  it('prefers the approval moment, then rejection, then cancellation', () => {
-    const a = decidedAt({ fullyApprovedAt: new Date('2026-10-20'), rejectedAt: new Date('2026-10-21') });
-    expect(a.getDate()).toBe(20);
-    const r = decidedAt({ rejectedAt: new Date('2026-10-21') });
-    expect(r.getDate()).toBe(21);
-    const c = decidedAt({ cancelledAt: new Date('2026-10-22') });
-    expect(c.getDate()).toBe(22);
+  it('prefers the moment the request' + " + repr(chr(8217)) + " + 's story ENDED, not when it was first signed', () => {
+    // A recalled or cancelled request also carries its approval date, and
+    // "Decided 20 Oct" on a request reversed on the 27th would be a lie of
+    // sequence: the reader wants to know when its fate was settled.
+    const reversedAfterApproval = decidedAt({
+      fullyApprovedAt: new Date('2026-10-20'),
+      cancelledAt: new Date('2026-10-27'),
+    });
+    expect(reversedAfterApproval.getDate()).toBe(27);
+
+    const recalledAfterApproval = decidedAt({
+      fullyApprovedAt: new Date('2026-10-20'),
+      recalledAt: new Date('2026-10-26'),
+    });
+    expect(recalledAfterApproval.getDate()).toBe(26);
+
+    const merelyApproved = decidedAt({ fullyApprovedAt: new Date('2026-10-20') });
+    expect(merelyApproved.getDate()).toBe(20);
+
+    const rejected = decidedAt({ rejectedAt: new Date('2026-10-21') });
+    expect(rejected.getDate()).toBe(21);
   });
 
   it('UNWRAPS a Firestore Timestamp — new Date(timestamp) is Invalid and would blank the line', () => {
@@ -117,6 +131,35 @@ describe('outcomeNote', () => {
     const n = outcomeNote({ status: 'cancelled' });
     expect(n.tone).toBe('muted');
     expect(n.body).toMatch(/balance/i);
+  });
+
+  // REGRESSION (found live 27 Oct 2026): HR reversed an approved leave with a
+  // written reason, and the typed reason appeared on NO card — not the
+  // owner's, not the approvers'. The reason lived in the database and every
+  // screen stayed silent. These two tests are the tripwire: the reason is
+  // display data, not just storage.
+  it('QUOTES the written reason when approved leave is reversed by HR', () => {
+    const n = outcomeNote({
+      status: 'cancelled',
+      fullyApprovedAt: new Date('2026-10-27'),
+      cancelledBy: 'segun@example.test',
+      cancelledByRole: 'HR',
+      cancelledReason: 'Project deadline moved; recall required.',
+    });
+    expect(n.tone).toBe('muted');
+    expect(n.title).toMatch(/reversed/i);
+    expect(n.body).toContain('Project deadline moved; recall required.');
+    expect(n.body).toContain('segun@example.test');
+    expect(n.body).toMatch(/balance/i);
+  });
+
+  it('distinguishes a plain withdrawal from a reversal of approved leave', () => {
+    const withdrawn = outcomeNote({ status: 'cancelled', cancelledBy: 'halima@example.test' });
+    expect(withdrawn.title).toBe('Cancelled');
+    expect(withdrawn.body).toMatch(/Withdrawn by/);
+
+    const reversed = outcomeNote({ status: 'cancelled', fullyApprovedAt: new Date('2026-10-27') });
+    expect(reversed.title).toMatch(/reversed/i);
   });
 
   it('confirms an approval without inventing detail', () => {
