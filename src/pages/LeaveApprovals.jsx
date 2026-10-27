@@ -203,6 +203,58 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canM
         </div>
       </div>
 
+      {/* CANCEL — HR and the system owner, on pending AND approved cards.
+          RENDERED ON canManage ALONE, deliberately outside the signing block
+          above. The first version of this button lived inside `canAct`, which
+          only renders when the viewer can sign the CURRENT stage — and an
+          approved request has no current stage, so the people this button
+          was built for never saw it at all. Found live by the founder,
+          27 Oct 2026; the browser suite now walks the whole chain and
+          reverses an approval through this exact button. */}
+      {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && (
+        <div className="mt-4 pt-4 border-t border-[#333]">
+          {!showCancel ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => {
+                if (request.status === 'approved') { setShowCancel(true); }
+                else { doCancel(); }
+              }} disabled={busy}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
+                title={request.status === 'approved'
+                  ? 'Reverse this approved leave — a written reason is recorded on the request.'
+                  : 'Cancel this pending request; the days return to the employee.'}>
+                ✕ {request.status === 'approved' ? 'Cancel this approved leave' : 'Cancel this request'}
+              </button>
+              <span className="text-gray-500 text-xs">
+                {request.status === 'approved'
+                  ? 'Reversing approved leave requires a written reason; it is recorded on the request.'
+                  : 'The days return to the employee' + '’' + 's balance.'}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <input
+                autoFocus
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Reason for cancelling approved leave — recorded on the request"
+                className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
+              />
+              <div className="flex gap-2">
+                <button onClick={doCancel} disabled={busy}
+                  className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
+                  {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
+                </button>
+                <button onClick={() => { setShowCancel(false); setNote(''); }}
+                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* What became of the request. In the Decided tray this is the answer
           the approver is looking for: REJECTED with the reason the employee
           reads, or the note that the days were released on cancellation. */}
@@ -251,42 +303,9 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, canM
                   ? `You are standing in: ${verdict.actedAsDeputyFor}. This is recorded on the request.`
                   : 'Your signature moves this to the next stage — one stage at a time.'}
               </span>
-              {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && (
-                <button onClick={() => {
-                  if (request.status === 'approved') { setShowCancel(true); }
-                  else { doCancel(); }
-                }} disabled={busy}
-                  className="ml-auto px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
-                  title={request.status === 'approved'
-                    ? 'Reverse this approved leave — a written reason is recorded on the request.'
-                    : 'Cancel this pending request; the days return to the employee.'}>
-                  ✕ Cancel leave
-                </button>
-              )}
             </div>
           )}
 
-          {showCancel && (
-            <div className="mt-2 flex flex-col gap-2">
-              <input
-                autoFocus
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Reason for cancelling approved leave — recorded on the request"
-                className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
-              />
-              <div className="flex gap-2">
-                <button onClick={doCancel} disabled={busy}
-                  className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
-                  {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
-                </button>
-                <button onClick={() => { setShowCancel(false); setNote(''); }}
-                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
-                  Back
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
