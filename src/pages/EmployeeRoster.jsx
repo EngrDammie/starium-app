@@ -32,6 +32,7 @@ import {
   createLoginForEmployee, removeLoginFromEmployee,
 } from '../services/employeeOperations';
 import { seedSampleEmployees, SAMPLE_EMPLOYEES } from '../services/employeeSeed';
+import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 // Pure helpers, deliberately from leaveCalculations: dateJoined drives leave
 // pro-rating, and the same yyyy-mm-dd format the Leave Policy tab uses keeps
 // the two screens agreeing on what a date looks like.
@@ -95,6 +96,7 @@ export default function EmployeeRoster() {
   const [loginError, setLoginError] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
   const [confirmRemoveLogin, setConfirmRemoveLogin] = useState(null);
+  const [lodgingFor, setLodgingFor] = useState(null);
 
   const canView = systemRole === 'super_admin'
     || departmentRoles.some(r => ['hr_staff', 'hr_manager'].includes(r));
@@ -468,6 +470,10 @@ export default function EmployeeRoster() {
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => openEdit(e)}
                           className="bg-[#2196F3] text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-600 transition-colors">✏️ Edit</button>
+                        {isActive && (
+                          <button onClick={() => setLodgingFor(e)}
+                            className="bg-[#FF6B35] text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-[#E55A2B] transition-colors">📝 Lodge Leave</button>
+                        )}
                         <button onClick={() => handleToggleActive(e)}
                           className={`px-3 py-1.5 rounded font-bold text-xs text-white transition-colors ${isActive ? 'bg-status-warning hover:bg-yellow-500' : 'bg-status-success hover:bg-[#00C853]'}`}>
                           {isActive ? '⏸ Deactivate' : '▶️ Reactivate'}
@@ -682,6 +688,20 @@ export default function EmployeeRoster() {
                 {seeding ? 'Seeding…' : '🧪 Load'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lodge Leave modal */}
+      {lodgingFor && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] animate-[fadeIn_0.2s_ease]"
+          onClick={() => setLodgingFor(null)}>
+          <div className="bg-dark-card p-8 rounded-2xl border-2 border-[#FF6B35] w-[95%] max-w-4xl shadow-[0_0_30px_rgba(255,107,53,0.3)] overflow-y-auto max-h-[90vh]"
+            onClick={e => e.stopPropagation()}>
+            <LeaveRequestForm
+              lodgedFor={lodgingFor}
+              onExit={() => setLodgingFor(null)}
+            />
           </div>
         </div>
       )}
