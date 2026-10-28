@@ -41,7 +41,7 @@ import { doc, getDoc, updateDoc, collection, getDocs, query, where } from 'fireb
 import { auth, db } from '../../src/config/firebase';
 import {
   createLeaveRequest, getLeaveRequest, decideLeaveRequest,
-  cancelLeaveRequest, prepareLeaveRequest,
+  cancelLeaveRequest, prepareLeaveRequest, recallFromLeave,
 } from '../../src/services/leaveOperations';
 import { getEmployeeByLinkedIdentity, subscribeToEmployees } from '../../src/services/employeeOperations';
 
@@ -157,6 +157,14 @@ async function hrCancel(requestId, reason = '') {
   }));
 }
 
+// Recall as HR — for approved leave that has already started.
+async function hrRecall(requestId, reason = '') {
+  return asUser(HRM, () => recallFromLeave(requestId, {
+    user: { email: HRM }, policy: state.policy,
+    isHr: true, isAdmin: false, reason,
+  }));
+}
+
 describe('live chain — every guard, against production', () => {
 
   it('resolves the employee records behind the test accounts', async () => {
@@ -167,22 +175,33 @@ describe('live chain — every guard, against production', () => {
     console.log('[chain] employee:', state.employee.fullName, '| supervisor has a record:', !!state.supervisorEmployee);
   });
 
-  it('lets HR clear the LIVE-TEST backlog — pending without a reason, approved with one', async () => {
+  it('lets HR clear the LIVE-TEST backlog — pending without a reason, approved with one; started leave is recalled', async () => {
     const backlog = await asUser(HRM, async () => {
       const snap = await getDocs(collection(db, 'leave_requests'));
       return snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .filter(r => /LIVE-TEST/i.test(String(r.handoverNote || '')) && r.status !== 'cancelled' && r.status !== 'rejected');
+        .filter(r => /LIVE-TEST/i.test(String(r.handoverNote || '')) && r.status !== 'cancelled' && r.status !== 'rejected' && r.status !== 'recalled');
     });
     console.log('[chain] backlog to clear:', backlog.length);
 
-    let approvedCancelled = 0, pendingCancelled = 0;
+    let approvedCancelled = 0, pendingCancelled = 0, approvedRecalled = 0;
     for (const r of backlog) {
-      const res = await hrCancel(r.id, r.status === 'approved' ? 'LIVE-TEST cleanup: reversing test data.' : '');
-      expect(res.ok, `cancel failed for ${r.id}: ${res.error}`).toBe(true);
-      if (r.status === 'approved') approvedCancelled += 1; else pendingCancelled += 1;
+      const isApproved = r.status === 'approved';
+      const hasStarted = isApproved && r.leaveCommences && new Date(r.leaveCommences.toDate ? r.leaveCommences.toDate() : r.leaveCommences) <= new Date();
+
+      let res;
+      if (hasStarted) {
+        // Cannot cancel started leave — must recall
+        res = await hrRecall(r.id, 'LIVE-TEST cleanup: recalling started test leave.');
+        if (res.ok) approvedRecalled += 1;
+      } else {
+        res = await hrCancel(r.id, isApproved ? 'LIVE-TEST cleanup: reversing test data.' : '');
+        if (res.ok && isApproved) approvedCancelled += 1;
+        else if (res.ok) pendingCancelled += 1;
+      }
+      expect(res.ok, `cleanup failed for ${r.id} (started=${hasStarted}): ${res.error}`).toBe(true);
       if (!state.createdIds.includes(r.id)) state.createdIds.push(r.id);
     }
-    console.log(`[chain] HR cancelled ${pendingCancelled} pending and reversed ${approvedCancelled} approved LIVE-TEST requests`);
+    console.log(`[chain] HR cancelled ${pendingCancelled} pending, reversed ${approvedCancelled} approved, recalled ${approvedRecalled} started LIVE-TEST requests`);
     expect(true).toBe(true);
   });
 

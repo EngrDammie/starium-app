@@ -241,6 +241,37 @@ service cloud.firestore {
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
+    // ─── leave_notifications (email queue) ─────────────────────────
+    // One document per (leave request, event) pair — deterministic id:
+    // {requestId}_{event}. The app writes 'queued', the Worker reads via the
+    // caller's own token and either skips (status: 'sent') or sends and
+    // returns { ok: true, recipients: [...] }, which the app records as
+    // 'sent'. Failures become 'failed' with an error string.
+    //
+    // READ: any authenticated user — the Worker reads with the caller's
+    //       token, and the app needs to show the queue on the request card.
+    // WRITE: the owner (their own requests), HR, approvers, or the system
+    //        owner. The app only writes at the exact choke points (submit,
+    //        sign, approve, reject, lodge, cancel, recall).
+    // DELETE: system owner only — queue documents are an audit trail.
+    match /leave_notifications/{notificationId} {
+      allow read: if canReadRecord();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin()
+                || isHrDept()
+                || hasLeaveApprovalRole()
+                || (ownsEmployeeRecord(get(/databases/$(database)/documents/leave_requests/$(request.resource.data.requestId)).data.employeeId)
+                    && request.resource.data.status == 'queued')));
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin()
+                || isHrDept()
+                || hasLeaveApprovalRole()
+                || ownsEmployeeRecord(get(/databases/$(database)/documents/leave_requests/$(resource.data.requestId)).data.employeeId)));
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
     // ─── ALERTS ─────────────────────────────────────────────
     // System activity/notification feed — any authenticated user posts/reads
     match /alerts/{alertId} {

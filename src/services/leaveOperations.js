@@ -43,6 +43,7 @@ import {
   currentStageIndex, buildDecisionPatch,
 } from './leaveWorkflow';
 import { computeRecallDays } from './leaveCalculations';
+import { leaveNotifications } from './leaveNotifications';
 
 const COLLECTION = 'leave_requests';
 export const LEAVE_QUEUE_KEY = 'starium_leave_request_queue';
@@ -253,6 +254,11 @@ export async function createLeaveRequest(input, {
 
   try {
     const created = await addDoc(collection(db, COLLECTION), doc_);
+    // Fire-and-forget: the notification service handles its own errors
+    leaveNotifications.submitted(created.id);
+    if (input.lodgedOnBehalf) {
+      leaveNotifications.lodged(created.id);
+    }
     return { ok: true, id: created.id, status: doc_.status, offline: false };
   } catch (error) {
     console.error('[leave] submit failed, queueing:', error);
@@ -298,12 +304,17 @@ export async function syncLeaveRequestQueue() {
       delete rest.localCreatedAt;
       delete rest.employeeName;
 
-      await addDoc(collection(db, COLLECTION), {
+      const created = await addDoc(collection(db, COLLECTION), {
         ...rest,
         requestedAt: localCreatedAt ? new Date(localCreatedAt) : serverTimestamp(),
         syncedAt: serverTimestamp(),
         wasOfflineQueued: true,
       });
+      // Fire-and-forget: same notifications as an online submit
+      leaveNotifications.submitted(created.id);
+      if (payload.lodgedOnBehalf) {
+        leaveNotifications.lodged(created.id);
+      }
     } catch (error) {
       failed += 1;
       remaining.push(payload);
@@ -387,6 +398,9 @@ export async function cancelLeaveRequest(requestId, {
     if (byLabel) patch.cancelledByRole = byLabel;
     if (String(reason || '').trim()) patch.cancelledReason = String(reason).trim();
     await updateDoc(doc(db, COLLECTION, requestId), patch);
+    // Fire-and-forget: the stageId tells the Worker which stage's holders to notify
+    const stageId = data.status?.replace('pending_', '') || finalStage;
+    leaveNotifications.cancelled(requestId, stageId);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -518,6 +532,7 @@ export async function recallFromLeave(requestId, {
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || null,
     });
+    leaveNotifications.recalled(requestId);
     return { ok: true, daysConsumed: computed.daysConsumed, daysReturned: computed.daysReturned };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -589,6 +604,17 @@ export async function decideLeaveRequest(requestId, { decision, note = '', user,
 
       return { stage: built.stage.label, actedAsDeputyFor: built.actedAsDeputyFor, status: built.patch.status };
     });
+
+    // Fire-and-forget notifications based on the resulting status
+    if (actedAsDeputyFor.status === LEAVE_STATUS.APPROVED) {
+      leaveNotifications.approved(requestId);
+    } else if (actedAsDeputyFor.status === LEAVE_STATUS.REJECTED) {
+      leaveNotifications.rejected(requestId);
+    } else if (actedAsDeputyFor.status && actedAsDeputyFor.status.startsWith('pending_')) {
+      // Moved to next stage
+      const nextStageId = actedAsDeputyFor.status.replace('pending_', '');
+      leaveNotifications.stageSigned(requestId, nextStageId);
+    }
 
     return { ok: true, ...actedAsDeputyFor };
   } catch (error) {
