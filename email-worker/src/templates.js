@@ -105,21 +105,11 @@ export function buildMessage(event, { request, stageLabel, reason, actorEmail, a
       return {
         subject: `Your leave was cut short — days returned to your balance`,
         body:
-          `Your approved leave from ${range(request)} was cut short by ${actorEmail || 'the company'}.
-
-` +
+          `Your approved leave from ${range(request)} was cut short by ${actorEmail || 'the company'}.\n\n` +
           `${request.daysConsumed} of ${request.requestedDays} working days were taken before the recall; ` +
-          `the remaining ${request.daysReturned} have been returned to your balance.
-` +
-          `${reason ? `The reason recorded:
-
-    "${reason}"
-
-` : '
-'}` +
-          `The app has the full record, including the days taken and the reason.
-
-` +
+          `the remaining ${request.daysReturned} have been returned to your balance.\n` +
+          `${reason ? `The reason recorded:\n\n    "${reason}"\n\n` : '\n'}` +
+          `The app has the full record, including the days taken and the reason.\n\n` +
           footer(appUrl, `Your leave history: ${myUrl}`),
       };
 

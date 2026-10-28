@@ -34,3 +34,8 @@ docs/letter-to-ceo.md
 .firebase/
 # VS Code Counter extension output
 .VSCodeCounter/
+
+# The email worker's local environment file — holds the Gmail app password
+# for local dev. The real secret lives in Cloudflare via wrangler.
+email-worker/.dev.vars
+email-worker/node_modules/
