@@ -35,5 +35,5 @@ export function useEmployeeRecord(explicit = null) {
     return () => { cancelled = true; };
   }, [authEmployee, explicit, currentUser]);
 
-  return authEmployee || explicit || lookedUp;
+  return explicit || authEmployee || lookedUp;
 }
