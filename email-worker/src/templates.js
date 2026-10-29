@@ -14,7 +14,15 @@
 
 const fmt = (value) => {
   if (!value) return '—';
-  const d = new Date(value);
+  // The app stores dates as yyyy-mm-dd (local). Parse as local to avoid
+  // the UTC midnight shift that new Date('2026-11-02') causes.
+  let d;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, day] = value.split('-').map(Number);
+    d = new Date(y, m - 1, day);
+  } else {
+    d = value instanceof Date ? value : new Date(value);
+  }
   return isNaN(d) ? String(value)
     : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 };

@@ -249,7 +249,7 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
               ) : (
                 <button onClick={() => {
                   if (request.status === 'approved') { setShowCancel(true); }
-                  else { doCancel(); }
+                  else { setShowCancel(true); } // pending: still show confirm dialog, but reason optional
                 }} disabled={busy}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
                   title={request.status === 'approved'
@@ -272,11 +272,13 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
                 autoFocus
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Reason for cancelling approved leave — recorded on the request"
+                placeholder={request.status === 'approved'
+                  ? 'Reason for cancelling approved leave — recorded on the request (required)'
+                  : 'Reason for cancelling (optional) — recorded on the request'}
                 className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
               />
               <div className="flex gap-2">
-                <button onClick={doCancel} disabled={busy}
+                <button onClick={doCancel} disabled={busy || (request.status === 'approved' && !note.trim())}
                   className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
                   {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
                 </button>
@@ -285,6 +287,9 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
                   Back
                 </button>
               </div>
+              {request.status === 'approved' && (
+                <span className="text-gray-500 text-xs">Approved leave requires a written reason.</span>
+              )}
             </div>
           )}
 

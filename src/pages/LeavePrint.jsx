@@ -77,11 +77,16 @@ export default function LeavePrint() {
           body { background: #fff !important; }
           .no-print { display: none !important; }
           .sheet { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: 100% !important; }
-          .print-row td { border-bottom: 1px solid #000; padding: 6pt 4pt; }
-          .print-row td.label { width: 34%; font-weight: 600; color: #000; }
-          .print-row td.value { color: #000; }
+          .print-row td { border-bottom: 1px solid #000; padding: 3pt 3pt; }
+          .print-row td.label { width: 36%; font-weight: 600; color: #000; font-size: 10pt; }
+          .print-row td.value { color: #000; font-size: 10pt; }
           .sign-row { border: 1px solid #000; }
-          @page { size: A4; margin: 14mm; }
+          .sign-row td { padding: 3pt 3pt; font-size: 9.5pt; }
+          @page { size: A4; margin: 10mm; }
+          .section-title { font-size: 11pt; margin-bottom: 4pt; }
+          .sheet { padding: 8mm !important; }
+          table { border-collapse: collapse; }
+          p { margin: 2pt 0; }
         }
       `}</style>
 
@@ -97,18 +102,18 @@ export default function LeavePrint() {
 
       <div className="sheet bg-white text-black rounded-xl shadow-2xl max-w-[210mm] mx-auto p-8 md:p-12 print:rounded-none print:shadow-none">
         {/* Header */}
-        <div className="flex items-start justify-between border-b-2 border-black pb-3 mb-6">
+        <div className="flex items-start justify-between border-b-2 border-black pb-2 mb-4" style={{fontSize: '10pt'}}>
           <div>
-            <div className="text-xl font-black tracking-wide">STARium RAFA</div>
-            <div className="text-[11px] uppercase tracking-widest font-bold text-gray-700">
+            <div className="text-lg font-black tracking-wide">STARium RAFA</div>
+            <div className="text-[10px] uppercase tracking-widest font-bold text-gray-700">
               Leave Request Form
             </div>
           </div>
-          <div className="text-right text-[11px] text-gray-700">
+          <div className="text-right text-[10px] text-gray-700">
             <div>Leave year <strong>{request.leaveYear}</strong></div>
             <div className="mono">Ref: {request.id?.slice(0, 8)?.toUpperCase()}</div>
             {request.lodgedBy && (
-              <div className="mt-1 inline-block border border-gray-500 px-2 py-0.5 font-bold uppercase">
+              <div className="mt-1 inline-block border border-gray-500 px-2 py-0.5 font-bold uppercase text-[9px]">
                 Lodged by HR ({request.lodgedBy})
               </div>
             )}
@@ -116,11 +121,11 @@ export default function LeavePrint() {
         </div>
 
         {/* Section 1 */}
-        <div className="mb-6">
-          <div className="font-black text-[13px] uppercase tracking-wider border-b border-black pb-1 mb-2">
+        <div className="mb-4" style={{fontSize: '10pt'}}>
+          <div className="font-black uppercase tracking-wider border-b border-black pb-1 mb-2 section-title">
             Section 1 — Leave details
           </div>
-          <table className="w-full text-[12px]">
+          <table className="w-full" style={{fontSize: '10pt', borderCollapse: 'collapse'}}>
             <tbody>
               <Row label="Name" value={request.employeeName} />
               <Row label="Cadre / Designation" value={request.cadreDesignation} />
@@ -160,15 +165,15 @@ export default function LeavePrint() {
         </div>
 
         {/* Section 2 */}
-        <div className="mb-6">
-          <div className="font-black text-[13px] uppercase tracking-wider border-b border-black pb-1 mb-2">
+        <div className="mb-4" style={{fontSize: '10pt'}}>
+          <div className="font-black uppercase tracking-wider border-b border-black pb-1 mb-2 section-title">
             Section 2 — Declaration & handover
           </div>
-          <p className="text-[11px] text-gray-800 italic mb-3">
+          <p className="text-[9px] text-gray-800 italic mb-2" style={{lineHeight: '1.3'}}>
             &ldquo;I will do / I have already done my handover note to ___ and I accept to cover
             for the staff proceeding on leave.&rdquo;
           </p>
-          <table className="w-full text-[12px]">
+          <table className="w-full" style={{fontSize: '10pt', borderCollapse: 'collapse'}}>
             <tbody>
               <Row label="Handing over to" value={request.handoverTo} />
               <Row label="Handover note" value={request.handoverNote} />
@@ -183,13 +188,13 @@ export default function LeavePrint() {
         </div>
 
         {/* Section 3 */}
-        <div className="mb-6">
-          <div className="font-black text-[13px] uppercase tracking-wider border-b border-black pb-1 mb-2">
+        <div className="mb-4" style={{fontSize: '10pt'}}>
+          <div className="font-black uppercase tracking-wider border-b border-black pb-1 mb-2 section-title">
             Section 3 — Approvals (in order)
           </div>
-          <table className="w-full text-[12px]">
+          <table className="w-full" style={{fontSize: '9.5pt', borderCollapse: 'collapse'}}>
             <thead>
-              <tr className="text-left text-[11px] uppercase text-gray-700">
+              <tr className="text-left text-[9px] uppercase text-gray-700">
                 <th className="py-1">Stage</th>
                 <th className="py-1">Signature</th>
                 <th className="py-1">Date</th>
@@ -201,12 +206,12 @@ export default function LeavePrint() {
                 const e = request.workflow?.[stage.id] || {};
                 return (
                   <tr key={stage.id} className="sign-row">
-                    <td className="py-2 pr-2 font-bold">{stage.label}</td>
-                    <td className="py-2 pr-2">
+                    <td className="py-1 pr-2 font-bold">{stage.label}</td>
+                    <td className="py-1 pr-2">
                       {e.status === 'approved' || e.status === 'rejected' ? (
                         <>
                           {e.byName || '—'}
-                          <div className="text-[10px] text-gray-600">
+                          <div className="text-[8.5px] text-gray-600">
                             {e.status === 'rejected' ? 'REJECTED' : e.actedAsDeputyFor ? `standing in: ${e.actedAsDeputyFor}` : `as ${e.byRole || stage.actionRole}`}
                           </div>
                         </>
@@ -214,25 +219,25 @@ export default function LeavePrint() {
                         <span className="text-gray-500">pending</span>
                       )}
                     </td>
-                    <td className="py-2 pr-2">{e.actedAt ? fmt(e.actedAt) : '—'}</td>
-                    <td className="py-2 text-gray-700">{e.note || '—'}</td>
+                    <td className="py-1 pr-2">{e.actedAt ? fmt(e.actedAt) : '—'}</td>
+                    <td className="py-1 text-gray-700">{e.note || '—'}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
           {request.rejectedReason && (
-            <p className="mt-2 text-[12px]">
+            <p className="mt-1" style={{fontSize: '10pt'}}>
               <strong>Reason for rejection:</strong> {request.rejectedReason}
             </p>
           )}
           {request.cancelledReason && (
-            <p className="mt-2 text-[12px]">
+            <p className="mt-1" style={{fontSize: '10pt'}}>
               <strong>Reason for cancellation{request.cancelledByRole ? ` (${request.cancelledByRole})` : ''}:</strong> {request.cancelledReason}
             </p>
           )}
           {(request.status === 'recalled' || request.daysConsumed != null) && (
-            <p className="mt-2 text-[12px]">
+            <p className="mt-1" style={{fontSize: '10pt'}}>
               <strong>Recalled from leave:</strong> {request.daysConsumed} of {request.requestedDays} working
               days taken; {request.daysReturned} returned to the balance.
               {request.recallReason ? ` Reason: ${request.recallReason}` : ''}
@@ -242,7 +247,7 @@ export default function LeavePrint() {
         </div>
 
         {/* Footer: the paper form's resumption block */}
-        <div className="border-t border-black pt-3 text-[11px] text-gray-800">
+        <div className="border-t border-black pt-2 text-[9.5px] text-gray-800" style={{lineHeight: '1.4'}}>
           <div className="font-bold uppercase mb-1">Resumption of duty</div>
           <p>
             Staff should not proceed until they have received formal approval. On return, the
@@ -253,7 +258,7 @@ export default function LeavePrint() {
               <> Not yet confirmed.</>
             )}
           </p>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-1 text-gray-600">
             Printed {fmt(new Date())} from the Starium Rafa ERP · figures frozen on
             {' '}{fmt(request.requestedAt || request.createdAt)}.
           </p>

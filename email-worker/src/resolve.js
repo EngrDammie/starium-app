@@ -58,7 +58,7 @@ export function resolveEvent(event, { request, employee, holders, policy, queueD
       // meaningful while it is still pending somewhere.
       if (!stageId) return null;
       return {
-        recipients: (holders || []).map((h) => h.email).filter(Boolean),
+        recipients: [employeeEmail, ...(holders || []).map((h) => h.email)].filter(Boolean),
         stageLabel: stage?.label || null,
       };
     }

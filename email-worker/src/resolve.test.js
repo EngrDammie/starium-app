@@ -53,12 +53,12 @@ describe('resolveEvent — who hears about what', () => {
     expect(r).toBeNull();
   });
 
-  it('stage_signed goes to the CURRENT stage holders, named by the label', () => {
+  it('stage_signed goes to the CURRENT stage holders AND the employee, named by the label', () => {
     const r = resolveEvent('stage_signed', ctx({
       request: { status: 'pending_hod' },
       holders: [{ email: 'blessing@example.test' }],
     }));
-    expect(r.recipients).toEqual(['blessing@example.test']);
+    expect(r.recipients).toEqual(['halima@example.test', 'blessing@example.test']);
     expect(r.stageLabel).toBe('HOD / Subsidiary');
   });
 

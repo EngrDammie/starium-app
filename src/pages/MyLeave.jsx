@@ -246,6 +246,8 @@ export default function MyLeave() {
                           {r.resumptionDate ? ` · resumes ${fmt(r.resumptionDate)}` : ''}
                         </div>
                         {r.purpose && <div className="text-gray-500 text-xs mt-1">Reason: {r.purpose}</div>}
+                        {r.handoverTo && <div className="text-gray-500 text-xs mt-1">Handing over to: {r.handoverTo}</div>}
+                        {r.handoverNote && <div className="text-gray-500 text-xs mt-1">Handover note: {r.handoverNote}</div>}
                         {r.rejectedReason && (
                           <div className="text-status-danger text-xs mt-1">Reason for rejection: {r.rejectedReason}</div>
                         )}
