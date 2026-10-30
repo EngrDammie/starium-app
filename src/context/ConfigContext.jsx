@@ -240,7 +240,19 @@ const DEFAULT_CONFIG = {
 // win for the fields HR has touched, and defaults fill the rest.
 function mergeLeaveTypes(defaultTypes, storedTypes) {
   const byId = new Map((storedTypes || []).map(t => [t.id, t]));
-  return (defaultTypes || []).map(def => ({ ...def, ...(byId.get(def.id) || {}) }));
+  const nonBalanceIds = new Set(['maternity', 'compassionate', 'examination']);
+  return (defaultTypes || []).map(def => {
+    const stored = byId.get(def.id) || {};
+    const merged = { ...def, ...stored };
+    if (nonBalanceIds.has(def.id)) {
+      // These types never track a balance — caps are their only limit.
+      merged.balanceTracked = false;
+      if (!merged.maxDurationDays || merged.maxDurationDays <= 0) {
+        merged.maxDurationDays = def.maxDurationDays;
+      }
+    }
+    return merged;
+  });
 }
 
 export function ConfigProvider({ children }) {

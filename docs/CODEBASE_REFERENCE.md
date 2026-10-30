@@ -88,10 +88,22 @@ All routes use `ProtectedRoute` wrapper (except `/login`):
 | `/pallet-transfer-report` | PalletTransferReport | Production managers, Packaging managers, QC managers |
 | `/machine-downtime-log` | MachineDowntimeLog | QC managers, Production managers, Packaging managers |
 | `/qc-sachet-production-checks` | QCSachetProductionChecks | QC staff & managers, Production staff & managers |
+| `/employees` | EmployeeRoster | HR staff, HR manager, Super admin |
+| `/my-leave` | MyLeave | All authenticated users (openToAll) |
+| `/leave-approvals` | LeaveApprovals | leave_supervisor, leave_hod, leave_hr_head, hr_staff, hr_manager, super_admin |
+| `/leave-report` | LeaveReport | HR managers, HR staff, Super admin |
+| `/print/leave/:id` | LeavePrint | HR, approvers, employee (own) |
 
-Future routes exist in `MENU_CONFIG` but have no components yet: `/employees`, `/payroll`.
+Future routes exist in `MENU_CONFIG` but have no components yet: `/payroll`.
 
 **Note**: The original `/reports` route was renamed to `/qc-density-report` (old path 404s). Report pages were moved from their department categories into a centralized Reports menu category.
+
+**New HR/Leave Module Routes (added Oct 2026)**:
+- `/employees` — HR Employee Roster (HR staff, HR manager, super_admin)
+- `/my-leave` — Employee self-service leave screen (all authenticated, `openToAll`)
+- `/leave-approvals` — Sequential approval queue (leave_supervisor, leave_hod, leave_hr_head, hr_staff, hr_manager, super_admin)
+- `/leave-report` — Department/team leave balances and who's away (hr_manager, hr_staff, super_admin)
+- `/print/leave/:id` — A4 printable leave form with frozen arithmetic and three signature blocks
 
 ---
 
@@ -941,6 +953,61 @@ under `src/pages/SystemConfig/` (`MachinesTab`, `LinesTab`, `GramSpecsTab`,
 - CSV headers differ by mode (Level 9 includes Buggy + Machines; BOT includes Flow Property)
 - Print styles: hides UI chrome, white background, border adjustments, color-adjust exact
 
+### EmployeeRoster (`src/pages/EmployeeRoster.jsx`) — HR Employee Master Records
+- Guarded: hr_staff, hr_manager, super_admin
+- Real-time subscription to `employees` collection via `subscribeToEmployees()`
+- Search by name/SAP/department; filter by department and status (active/inactive/all)
+- Stats cards: Total, Active, With Login, Departments, Sample data count
+- Machine-grid style table: SAP No., Name, Designation, Department, Shift, Status badge, Login status (Linked / Create login / Remove login), Actions (Edit, Deactivate/Reactivate, Delete)
+- **Lodge Leave button** on active employees: opens `LeaveRequestForm` with `lodgedFor={employee}` — submits with `lodgedOnBehalf: true`, `lodgedBy: HR email`, carries "Lodged by HR" badge
+- Deactivate confirmation warns if employee has pending leave requests (reads `leave_requests` live)
+- "Load sample data" button seeds 30 fictional employees across all departments (safe to delete — matched on SAP)
+- Add/Edit modal with all fields; Create Login / Remove Login flows via `createLoginForEmployee` / `removeLoginFromEmployee`
+
+### MyLeave (`src/pages/MyLeave.jsx`) — Employee Self-Service Leave Screen
+- Guarded: all authenticated users (`openToAll` in navigation.js)
+- Live balance cards: Entitled, Already taken, Carried over, Available (green)
+- Balance derived from request history via `prepareLeaveRequest()` — same figures as form
+- Pending exposure line: days awaiting approval already count against Available
+- Request list with coloured state tags (awaiting supervisor/HOD/HR, Approved, Rejected, Cancelled, Recalled, Lodged by HR)
+- Each request shows: type, dates, days, resumption, purpose, handover note, handover to, rejection/cancellation/recall reasons
+- Cancel button on pending requests (employee's own only)
+- "Confirm my return" button appears on/after resumption date for approved leave
+- Print button → `/print/leave/{id}`
+- Offline: form works offline, queues to `starium_leave_request_queue`
+
+### LeaveApprovals (`src/pages/LeaveApprovals.jsx`) — Sequential Approval Queue
+- Guarded: leave_supervisor, leave_hod, leave_hr_head, hr_staff, hr_manager, super_admin
+- Three tabs: Waiting for you, Waiting on others, Decided (newest decision first)
+- RequestCard shows: employee details, dates, days, snapshot (entitled/taken/outstanding), purpose, handover note, "Lodged by HR" badge, "Left the company" badge, "Spans two leave years" tag
+- State tags: APPROVED (green), REJECTED (red), CANCELLED (grey), RECALLED (amber)
+- OutcomeBlock shows rejection reason / cancellation note on the card body
+- **Waiting for you**: Approve / Reject buttons (Reject requires reason), deputy fallback support
+- **Decided tray**: shows all concluded requests with state tags and reasons
+- HR Cancel button on approved cards (outside `canAct` block): opens confirm dialog, requires reason, records `cancelledByRole: 'HR'`
+- Recall dialog on started approved leave: return date + required reason, computes consumed/returned days
+- Stepper visualises 3-stage chain with current stage pulsing
+- Away warning: flags if current stage approver is on approved leave (with deputy/Head of HR fallback)
+- Print button → `/print/leave/{id}`
+
+### LeaveReport (`src/pages/LeaveReport.jsx`) — Department/Team Leave Balances
+- Guarded: hr_manager, hr_staff, super_admin
+- Filters: Department, Team, Status (all/active/pending/approved)
+- Summary cards: Total Employees, Total Entitled, Total Taken, Total Available
+- Table per employee: Name, SAP, Department, Entitled, Taken, Pending, Available, Last Leave, Status
+- "Who's away today" section with live subscriptions
+- Coverage conflict warnings when threshold exceeded in a department
+
+### LeavePrint (`src/pages/LeavePrint.jsx`) — A4 Printable Leave Form
+- Route: `/print/leave/{id}` (not in sidebar, opened from MyLeave/LeaveApprovals)
+- Frozen arithmetic from request document (entitledAtRequest, takenBeforeThisRequest, etc.)
+- Section 1: Employee details, leave type, dates, days, entitlement arithmetic, non-working days, contacts
+- Section 2: Handover note, handover to, applicant signature declaration
+- Section 3: Three signature blocks (Stage, Signature, Date, Note) with deputy/acting-as notation
+- Rejection/Cancellation/Recall reasons displayed below signatures
+- Resumption of duty footer with confirmation status
+- Print styles: 10mm margins, 9.5-10pt fonts, fits exactly one A4 page
+
 ---
 
 ## Components — Deep Dive
@@ -1293,6 +1360,113 @@ Doc ID: auto-generated via `addDoc`
   createdAt: Timestamp
 }
 ```
+
+**`employees`** (HR master records, keyed by auto-ID):
+```
+{
+  sapNumber: string,
+  firstName: string,
+  lastName: string,
+  fullName: string (computed),
+  cadreDesignation: string,
+  department: string,
+  departmentLabel: string,
+  shift: 'DAY' | 'NIGHT',
+  phone: string,
+  email: string,
+  address: string,
+  dateJoined: 'YYYY-MM-DD',
+  employmentStatus: 'active' | 'inactive' | 'suspended',
+  linkedUserUid: string | null,      // Firebase Auth UID if linked
+  linkedUserEmail: string | null,    // email at time of linking
+  isSampleData: boolean,
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}
+```
+Doc ID: auto-generated via `addDoc`
+
+**`leave_requests`** (Leave requests mirroring paper form):
+```
+{
+  employeeId: string,
+  employeeName: string,
+  sapNumber: string,
+  department: string,
+  departmentLabel: string,
+  cadreDesignation: string,
+  shift: 'DAY' | 'NIGHT',
+  leaveType: 'annual' | 'maternity' | 'casual' | 'compassionate' | 'examination',
+  leaveTypeLabel: string,
+  purpose: string,
+  leaveYear: number,
+  leaveCommences: Timestamp | string,
+  leaveEnds: Timestamp | string,
+  resumptionDate: Timestamp | string,
+  excludedNonWorkingDays: [{ date: string, label: string }],
+  contactAddress: string,
+  contactPhone: string,
+  contactEmail: string,
+  handoverNote: string,
+  handoverTo: string,
+  applicantConfirmed: boolean,
+  applicantConfirmedName: string,
+  status: 'pending_supervisor' | 'pending_hod' | 'pending_hr' | 'approved' | 'rejected' | 'cancelled' | 'recalled',
+  workflow: {
+    supervisor: { status: 'pending'|'approved'|'rejected', byName, byUid, byRole, actedAt, note, actedAsDeputyFor },
+    hod: { ... },
+    hr: { ... }
+  },
+  lodgedForEmployeeId: string | null,
+  lodgedBy: string | null,
+  rejectedReason: string | null,
+  rejectedBy: string | null,
+  rejectedAt: Timestamp | null,
+  cancelledAt: Timestamp | null,
+  cancelledBy: string | null,
+  cancelledReason: string | null,
+  cancelledByRole: string | null,
+  daysConsumed: number | null,
+  daysReturned: number | null,
+  effectiveEnd: Timestamp | null,
+  returnedOn: Timestamp | null,
+  recalledAt: Timestamp | null,
+  recalledBy: string | null,
+  recallReason: string | null,
+  requireResumptionConfirmation: boolean,
+  resumedOn: Timestamp | null,
+  resumptionNote: string | null,
+  closedAt: Timestamp | null,
+  requestedAt: Timestamp,
+  requestedBy: string,
+  createdAt: Timestamp,
+  updatedAt: Timestamp,
+  entitledAtRequest: number,
+  carryOverAtRequest: number,
+  takenBeforeThisRequest: number,
+  pendingAtRequest: number,
+  requestedDays: number,
+  outstandingAfter: number,
+  spansLeaveYear: boolean
+}
+```
+Doc ID: auto-generated via `addDoc`
+
+**`leave_notifications`** (Email queue — deterministic ID per event):
+```
+{
+  requestId: string,
+  event: 'submitted' | 'stage_signed' | 'approved' | 'rejected' | 'lodged' | 'cancelled' | 'recalled',
+  status: 'queued' | 'sent' | 'failed',
+  stageId: string | null,
+  createdAt: Timestamp,
+  updatedAt: Timestamp,
+  recipients: string[],
+  error: string | null,
+  skipped: boolean | null
+}
+```
+Doc ID: `${requestId}_${event}` (deterministic for idempotent dedupe)
 
 ---
 

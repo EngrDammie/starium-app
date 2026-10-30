@@ -135,7 +135,20 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 - Dedicated report page with 7-day data, filters, and Day vs Night chart
 - **Pallet Calculator** (`🧮 Calc` floating button): instant loading & waybill quantity breakdown tool. Two modes — `Cartons → Pallets` (compute full pallets + leftover cartons from a total carton count) and `Pallets → Cartons` (reverse). Pulls the per-gram cartons-per-pallet divisor from `config.palletTransfer.palletSizes`, with an editable override. Headline tiles for full pallets, leftover cartons, and total pallet slots, a step-by-step breakdown, a color-graded Truck Fill Efficiency bar, and the live `total ÷ size` equation
 
----
+### 10. Employee Onboarding & Leave Management
+- **Employee Roster** (`/employees`): HR master records with SAP number, name, department, shift, contacts, date joined — linked to login or not. Duplicate SAP guard. Inactive/reactivate instead of delete (history preserved).
+- **My Leave** (`/my-leave`): Employee self-service — live balance cards (Entitled, Taken, Carried over, Available), request form with live day count, notice validation, self-overlap block, pending exposure shown.
+- **Leave Approvals** (`/leave-approvals`): Sequential three-stage chain (Supervisor → HOD → Head of HR) with deputy fallback, self-sign refusal, state tags (Approved/Rejected/Cancelled/Recalled), decided tray sorted newest-first.
+- **Leave Report** (`/leave-report`): Department/team filters, per-person balances, who's away today, coverage conflict warnings.
+- **Printable Form** (`/print/leave/{id}`): A4 replica of paper form — frozen arithmetic, three signature blocks with names/dates/notes, recall/cancellation/rejection reasons, resumption confirmation.
+- **Leave Types**: Annual (balance 21 days), Casual (balance 12 days), Maternity (cap 60 days), Compassionate (cap 5 days), Examination (cap 10 days). Non-balance types show duration cap, not balance arithmetic.
+- **Email Notifications**: Cloudflare Worker + Gmail SMTP — submitted, stage signed, approved, rejected, lodged, cancelled, recalled. No leave purpose in emails. Deterministic queue deduplication.
+- **HR Lodge Leave**: "📝 Lodge Leave" button on Employee Roster — HR files on behalf of staff without login, carries "Lodged by HR" badge.
+- **Recall from Leave**: HR cuts short started leave — consumed days stay counted, remainder returns to balance immediately.
+- **Cancellation**: Employee cancels own pending; HR cancels pending (no reason) or reverses approved (reason required).
+- **All arithmetic frozen at submission** — balances derived from history, never counters.
+
+### 11. Firebase Collections
 
 ## Firebase Collections
 
@@ -157,6 +170,9 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 | `qc_bag_inspection_checks` | auto-ID | Bag inspection check records. Fields: machineId, approvalDocId, roundNumber, leakage, dirtPrintQuality, completenessSachets, freebiesPresence, perforation, perfumeOdour, overallResult, batchNumber |
 | `qc_carton_inspection_checks` | auto-ID | Carton inspection check records. Fields: machineId, approvalDocId, roundNumber, detergentDust, cartonPrintQuality, sealQuality, cartonDamage, cartonCodeReadability, overallResult, batchNumber |
 | `pallet_transfers` | auto-ID | Pallet transfer records. Fields: gram, palletSize, palletCount, totalCartons, team, recordedBy, recordedByUid, shiftApprovalDocId, shift, date, createdAt |
+| `employees` | auto-ID | HR master records. Fields: sapNumber, firstName, lastName, fullName, cadreDesignation, department, departmentLabel, shift, phone, email, address, dateJoined, employmentStatus, linkedUserUid, linkedUserEmail, isSampleData |
+| `leave_requests` | auto-ID | Leave requests mirroring paper form. Fields: employeeId, employeeName, sapNumber, department, leaveType, purpose, leaveCommences, leaveEnds, resumptionDate, requestedDays, status (pending_* / approved / rejected / cancelled / recalled), workflow (3 stages), lodgedForEmployeeId, lodgedBy, handoverNote, handoverTo, applicantConfirmed, daysConsumed, daysReturned, recallReason, cancelledReason, rejectedReason |
+| `leave_notifications` | `{requestId}_{event}` | Email queue. Events: submitted, stage_signed, approved, rejected, lodged, cancelled, recalled. Status: queued / sent / failed. Deterministic ID for deduplication. |
 
 ---
 
@@ -178,6 +194,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 | `starium_laminate_team` | Laminate Waste | Persisted team selection |
 | `starium_qc_sachet_team` | QC Sachet | Persisted team selection |
 | `qcTeam` | Powder Density | Persisted team selection (legacy) |
+| `starium_leave_request_queue` | Leave Requests | Leave request offline queue (submissions only — approvals do not queue) |
 
 ---
 
@@ -202,7 +219,7 @@ Users' online status tracked via `presence` collection. 3-minute heartbeat inter
 ```
 src/
 ├── main.jsx                         # Entry point, provider nesting
-├── App.jsx                          # Route definitions (21 routes)
+├── App.jsx                          # Route definitions (27 routes)
 ├── index.css                        # Tailwind directives + base styles
 ├── config/
 │   ├── firebase.js                  # Firebase init (env vars)
@@ -252,7 +269,12 @@ src/
 │   ├── PalletTransfer.jsx           # Pallet transfer data entry
 │   ├── PalletTransferReport.jsx     # Pallet transfer report with charts
 │   ├── QCSachetProductionChecks.jsx # QC monitoring shell (3 check types + approval flow); views in components/qcSachet/
-│   └── QCSachetReport.jsx           # QC Sachet printable report with Print/CSV export
+│   ├── QCSachetReport.jsx           # QC Sachet printable report with Print/CSV export
+│   ├── EmployeeRoster.jsx           # HR employee master records (SAP, name, dept, shift, contacts, dateJoined)
+│   ├── MyLeave.jsx                  # Employee self-service: balance, request form, history
+│   ├── LeaveApprovals.jsx           # Sequential 3-stage approval queue with state tags & decided tray
+│   ├── LeaveReport.jsx              # Department/team filters, per-person balances, away-today, coverage warnings
+│   └── LeavePrint.jsx               # A4 printable form — frozen arithmetic, 3 signatures, reasons
 └── services/
     ├── queueStore.js                # Central localStorage queue mechanics (read/write/push/clear) with injectable storage for tests
     ├── reportUtils.js               # Shared report helpers (buildShiftIdentifiers, calculateTrend)
@@ -267,7 +289,13 @@ src/
     ├── stoppedMachineOperations.js  # Stopped machine CRUD, issue management
     ├── palletTransferOperations.js  # Pallet transfer CRUD, offline queue, sync
     ├── machineDowntimeOperations.js # Machine downtime query by date/shift
-    └── presenceOperations.js        # User online/offline status, heartbeat, subscriptions
+    ├── presenceOperations.js        # User online/offline status, heartbeat, subscriptions
+    ├── employeeOperations.js        # Employee CRUD, subscriptions, login linking, seed
+    ├── leaveCalculations.js         # Pure engine: balance maths, working days, overlaps, caps, validation
+    ├── leaveOperations.js           # Leave CRUD, decide, cancel, recall, sync queue, status helpers
+    ├── leaveWorkflow.js             # Pure chain: stage index, decision patch, self-sign refusal
+    ├── leaveNotifications.js        # Email queue + Cloudflare Worker trigger (deterministic IDs)
+    └── userAccessOperations.js      # User-employee linking, access view for leave approver resolution
 ```
 
 ### Context Providers (Nesting Order)
@@ -352,13 +380,20 @@ Each service module follows consistent patterns:
 
 ---
 
-## Deployment (Triple-Redundant Hosting)
+## Deployment (Triple-Redundant Hosting + Email Worker)
 
 The app is deployed to **three hosting platforms simultaneously** for maximum availability:
 
 1. **Firebase Hosting** — primary deployment (root path)
 2. **GitHub Pages** — secondary deployment (subpath base), via GitHub Actions on every push to `main`
 3. **Cloudflare Workers Pages** — tertiary deployment, added because some Nigerian network carriers block access to Firebase/GitHub Pages IPs (requiring a VPN to bypass). Cloudflare's edge network uses IP ranges that carriers do not block, keeping the app reachable on ordinary local networks with no workarounds.
+
+**Cloudflare Email Worker** — separate Worker (`starium-leave-mail`) handles all Leave Management email notifications via Gmail SMTP:
+- Triggered by app via authenticated POST with user's Firebase ID token
+- Verifies token, reads Firestore via caller's token (rules are the gate)
+- Resolves recipients from live data (request, roster, role holders)
+- Sends plain-text emails (no leave purpose) for: submitted, stage_signed, approved, rejected, lodged, cancelled, recalled
+- Deterministic queue deduplication: one email per (request, event) pair
 
 If any single platform goes down or becomes unreachable on a given network, the others continue serving the factory.
 

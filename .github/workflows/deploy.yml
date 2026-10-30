@@ -1,29 +1,23 @@
 # .github/workflows/deploy.yml
-name: Deploy to GitHub Pages + Firebase Hosting
+name: Deploy to GitHub Pages + Firebase Hosting + Cloudflare Workers
 
 on:
-  # This triggers the workflow every time you push to the "main" branch
   push:
     branches: ["main"]
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Permissions for GitHub Pages and Firebase
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,18 +32,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Inject Secret Environment Variables
-        # This takes your secrets from GitHub Settings and creates the .env file on the fly!
-        run: |
-          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
-          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
-          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env
-          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env
-          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
-          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
+      - name: Run unit tests
+        run: npm test
 
-      # Build #1: GitHub Pages (base path = /starium-app/)
-      - name: Build for GitHub Pages
+      - name: Build for GitHub Pages (base path = /starium-app/)
         run: npm run build
         env:
           VITE_BASE_PATH: '/starium-app/'
@@ -57,26 +43,44 @@ jobs:
       - name: Rename dist for GitHub Pages
         run: mv dist dist-pages
 
-      # Build #2: Firebase Hosting (base path = /, root deployment)
-      - name: Build for Firebase Hosting
+      - name: Build for Firebase Hosting (base path = /)
         run: npm run build
         env:
           VITE_BASE_PATH: '/'
 
-      # Deploy to GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist-pages'
 
+      - name: Upload Firebase Hosting artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebase-dist
+          path: './dist'
+          retention-days: 1
+
+  deploy-github-pages:
+    needs: build-and-test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-      # Deploy to Firebase Hosting
+  deploy-firebase:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Firebase artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: firebase-dist
+          path: ./dist
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -85,82 +89,47 @@ jobs:
           projectId: starium-rafa-app
           channelId: live
 
-      # Deploy Firestore SECURITY RULES
-      #
-      # WHY THIS STEP EXISTS (added 16 Oct 2026):
-      # `action-hosting-deploy` deploys the HOSTING bundle ONLY. It does not
-      # publish firestore.rules, so rule changes in this repo had been sitting
-      # on the local machine and never reaching production. The employees
-      # collection is the proof: the rule was committed and passed its local
-      # test, yet the Firebase console showed no `match /employees/` block and
-      # an unauthenticated read was refused with PERMISSION_DENIED.
-      #
-      # WHY THIS MATTERS BEYOND COMPLAINT-TICKING:
-      # A collection whose rules block is missing falls through to the
-      # catch-all at the bottom of firestore.rules, which is admin-only. Staff
-      # writes then fail SILENTLY — the app queues them offline and looks like
-      # it is working while nothing reaches the database. That is a real
-      # outage mode in this codebase; see the comment at the top of
-      # src/test/firestoreRules.test.js for the incident that motivated it.
-      # DISABLED 16 Oct 2026 — deployment works locally, not from CI.
-      #
-      # WHY: there is no maintained GitHub action for Firestore rules deploys
-      # (`FirebaseExtended/action-firestore-rules-deploy` does not exist — GitHub
-      # cannot resolve it). Using the firebase CLI here fails differently: the
-      # service account secret holds HOSTING Admin permissions only, and the
-      # CLI fails at
-      #   serviceusage.googleapis.com … 403 Permission denied to get service
-      # before it ever reaches the rules upload.
-      #
-      # Granting `Service Usage Consumer` and `Firebase Rules Admin` on
-      # project starium-rafa-app to that service account would let CI do it.
-      # Until then, rules are deployed manually from a machine already logged
-      # into the Firebase CLI:
-      #
-      #   firebase deploy --only firestore:rules --project starium-rafa-app
-      #
-      # TO RE-ENABLE: restore the step below AND grant those two IAM roles.
-      #
-      #   - name: Deploy Firestore Rules
-      #     env:
-      #       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
-      #     run: |
-      #       printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/gac.json"
-      #       GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gac.json" \
-      #         npx --yes firebase-tools@latest deploy \
-      #           --only firestore:rules \
-      #           --project starium-rafa-app \
-      #           --non-interactive
-      #       shred -u "$RUNNER_TEMP/gac.json" || rm -f "$RUNNER_TEMP/gac.json"
-      #
-      # Until this is re-enabled, firestore.rules changes are NOT live. Verify
-      # after any rule edit:
-      #   firebase deploy --only firestore:rules --project starium-rafa-app
-      #
-      # ─── COMPOSITE INDEXES: A SECOND MANUAL STEP ────────────────────────
-      # Added 18 Oct 2026, after the leave_requests collection went live.
-      #
-      # The same reasoning applies to firestore.indexes.json, which this repo
-      # did not have until now. Firestore serves a query that combines a
-      # where-filter with an orderBy on a different field ONLY if a composite
-      # index covers both. Without one the read fails with FAILED_PRECONDITION
-      # — which this app's error handlers swallow, so the page just renders
-      # empty and nobody is told why.
-      #
-      # That is not hypothetical. Shipping leave_requests surfaced the
-      # pre-existing breakage in pallet_transfers, where
-      # where(shiftApprovalDocId) + orderBy(stoppedAt) had never had an index
-      # and the pallet transfer subscription had been returning nothing.
-      #
-      # After editing firestore.indexes.json:
-      #   firebase deploy --only firestore:indexes --project starium-rafa-app
-      #
-      # New indexes take time to build. Until they report READY, Firestore
-      # answers FAILED_PRECONDITION with "that index is currently building" —
-      # a different message from "requires an index", and easy to misread as
-      # "the deploy did not work". Wait for READY, then check with:
-      #   bash scripts/probe-firestore-indexes.sh
-      #
-      # Do NOT deploy with --force: it deletes every index in the project that
-      # is absent from firestore.indexes.json, and this file only catalogues
-      # the query shapes checked so far.
+  deploy-firestore-rules:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Firestore Rules & Indexes
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STARIUM_RAFA_APP }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/gac.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gac.json"
+          npx --yes firebase-tools@latest deploy \
+            --only firestore:rules,firestore:indexes \
+            --project starium-rafa-app \
+            --non-interactive
+          shred -u "$RUNNER_TEMP/gac.json" || rm -f "$RUNNER_TEMP/gac.json"
+
+  deploy-cloudflare-worker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: email-worker/package-lock.json
+
+      - name: Install Worker dependencies
+        run: npm install
+        working-directory: email-worker
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: email-worker
+          command: deploy

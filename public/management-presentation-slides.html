@@ -192,6 +192,21 @@ const slides = [
     tags:['RBAC','Administration','Live Visibility']
   },
   {
+    badge:'Employee Onboarding & Leave Management',
+    title:'Your Paper Leave Form, Digitized — End to End',
+    text:'<strong>Employee Roster</strong> — HR registers every employee once (SAP, name, dept, shift, contacts). <strong>My Leave</strong> — Staff self-service: live balance, request form, history, notice validation. <strong>Leave Approvals</strong> — Three-stage chain (Supervisor → HOD → Head of HR) with deputy fallback, self-sign refusal. <strong>Printable Form</strong> — Fits exactly one A4 page, all signatures, dates, recall/cancel/reject reasons. <strong>Recall from Leave</strong> — HR cuts short started leave; consumed days stay counted, remainder returns to balance. <strong>Email Notifications</strong> — 7 events (submitted, signed, approved, rejected, lodged, cancelled, recalled) via Cloudflare Worker + Gmail SMTP. No leave purpose in emails. <strong>HR Lodge Leave</strong> — One click to file for staff without login.',
+    accent:3,
+    tags:['HR','Compliance','Zero Paper'],
+    cards:[
+      {icon:'👥',title:'Employee Roster',desc:'SAP, name, dept, shift, contacts — one record'},
+      {icon:'📝',title:'My Leave',desc:'Live balance, request form, notice check, self-overlap block'},
+      {icon:'✅',title:'Approvals',desc:'3-stage chain, deputy fallback, state tags'},
+      {icon:'🖨️',title:'Printable Form',desc:'One A4 page, all signatures, reasons'},
+      {icon:'↩',title:'Recall',desc:'Cut short started leave; days returned'},
+      {icon:'📧',title:'Emails',desc:'7 events, no purpose, deterministic dedupe'}
+    ]
+  },
+  {
     badge:'Why Hire the Architect',
     title:'One Person Built It. One Person Maintains It.',
     sub:'No Agency. No Team. No Finger-Pointing.',
