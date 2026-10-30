@@ -107,26 +107,44 @@ export function prepareLeaveRequest(input, { policy, employee, existingRequests 
   const leaveYear = getLeaveYear(starts || new Date(), policy);
 
   // Entitlement: pro-rated for new joiners when the policy says so.
-  const fullEntitlement = leaveType?.balanceTracked
+  // ONLY for balance-tracked types. Non-tracked types (compassionate, maternity,
+  // examination) get a duration cap instead of a balance.
+  const isBalanceTracked = leaveType?.balanceTracked === true;
+  const fullEntitlement = isBalanceTracked
     ? (leaveType.id === 'casual' ? policy.casualEntitlementDays : policy.annualEntitlementDays)
     : 0;
 
-  const entitled = proRateEntitlement(fullEntitlement, employee?.dateJoined, policy, starts || new Date());
+  const entitled = isBalanceTracked
+    ? proRateEntitlement(fullEntitlement, employee?.dateJoined, policy, starts || new Date())
+    : 0;
 
   // Carry-over is the capped remainder of the PREVIOUS leave year. Only
   // computed for balance-tracked types; a non-tracked type has no balance to
   // carry.
-  const carryOver = leaveType?.balanceTracked
+  const carryOver = isBalanceTracked
     ? applyCarryOver(entitled, policy)
     : 0;
 
-  const alreadyTaken = leaveType?.balanceTracked
+  const alreadyTaken = isBalanceTracked
     ? sumApprovedDays(existingRequests, { employeeId: employee?.id, leaveYear })
     : 0;
 
-  const balance = calculateBalance({
-    entitlement: entitled, carryOver, alreadyTaken, requestedDays,
-  });
+  // Balance calculation only for balance-tracked types. For non-tracked types
+  // we return a special balance object indicating "not applicable" so the UI
+  // can show the duration cap instead of balance arithmetic.
+  const balance = isBalanceTracked
+    ? calculateBalance({
+        entitlement: entitled, carryOver, alreadyTaken, requestedDays,
+      })
+    : {
+        totalEntitled: 0,
+        daysTaken: 0,
+        daysRequested: requestedDays,
+        outstandingBefore: null,  // null signals "N/A" to the UI
+        outstandingAfter: null,
+        exceedsBalance: false,
+        maxDurationDays: leaveType?.maxDurationDays || 0,
+      };
 
   // Resumption date and the non-working days the staff member will not be
   // charged for — these replace the paper form's hand-written "Public Holidays
@@ -151,6 +169,7 @@ export function prepareLeaveRequest(input, { policy, employee, existingRequests 
     leaveType, requestedDays, leaveYear, entitlement: entitled, carryOver,
     alreadyTaken, pendingDays, balance, resumptionDate, excludedDays, overlap,
     spansLeaveYear: (starts && ends) ? spansLeaveYearFlag(starts, ends, policy) : false,
+    isBalanceTracked,
   };
 }
 

@@ -310,26 +310,58 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
             <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">
               Leave year {prepared?.leaveYear ?? '—'} — worked out for you
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <StatBox label="Entitled" value={prepared?.entitlement ?? 0} sub="days this year" />
-              <StatBox label="Already taken" value={prepared?.alreadyTaken ?? 0} sub="approved leave" />
-              <StatBox label="This request" value={prepared?.requestedDays ?? 0} sub="working days"
-                tone={prepared?.requestedDays ? 'text-primary' : ''} />
-              <StatBox
-                label="Outstanding after"
-                value={prepared?.balance?.outstandingAfter ?? 0}
-                sub={prepared?.balance?.exceedsBalance ? 'exceeds balance' : 'days remaining'}
-                tone={prepared?.balance?.exceedsBalance ? 'text-status-danger' : 'text-status-success'}
-              />
-            </div>
+            {prepared?.isBalanceTracked ? (
+              // Balance-tracked types (annual, casual): show full balance arithmetic
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <StatBox label="Entitled" value={prepared?.entitlement ?? 0} sub="days this year" />
+                  <StatBox label="Already taken" value={prepared?.alreadyTaken ?? 0} sub="approved leave" />
+                  <StatBox label="This request" value={prepared?.requestedDays ?? 0} sub="working days"
+                    tone={prepared?.requestedDays ? 'text-primary' : ''} />
+                  <StatBox
+                    label="Outstanding after"
+                    value={prepared?.balance?.outstandingAfter ?? 0}
+                    sub={prepared?.balance?.exceedsBalance ? 'exceeds balance' : 'days remaining'}
+                    tone={prepared?.balance?.exceedsBalance ? 'text-status-danger' : 'text-status-success'}
+                  />
+                </div>
 
-            {/* Days committed to requests still in the chain. They count
-                against the balance just as surely as approved days — without
-                this line a refusal that mentions them would be a mystery. */}
-            {(prepared?.pendingDays ?? 0) > 0 && (
-              <div className="mt-2 text-xs text-status-warning">
-                ⏳ {prepared.pendingDays} working {prepared.pendingDays === 1 ? 'day is' : 'days are'} already
-                awaiting approval and count towards your remaining balance.
+                {/* Days committed to requests still in the chain. They count
+                    against the balance just as surely as approved days — without
+                    this line a refusal that mentions them would be a mystery. */}
+                {(prepared?.pendingDays ?? 0) > 0 && (
+                  <div className="mt-2 text-xs text-status-warning">
+                    ⏳ {prepared.pendingDays} working {prepared.pendingDays === 1 ? 'day is' : 'days are'} already
+                    awaiting approval and count towards your remaining balance.
+                  </div>
+                )}
+              </>
+            ) : (
+              // Non-balance-tracked types (maternity, compassionate, examination):
+              // show duration cap instead of balance arithmetic
+              <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-bold text-lg">
+                      {prepared?.balance?.maxDurationDays ?? 0} working days maximum
+                    </div>
+                    <div className="text-gray-500 text-sm mt-1">
+                      This leave type has no balance. One request may span up to{' '}
+                      {prepared?.balance?.maxDurationDays ?? 0} working days.
+                    </div>
+                  </div>
+                  <StatBox
+                    label="This request"
+                    value={prepared?.requestedDays ?? 0}
+                    sub="working days"
+                    tone={prepared?.requestedDays ? 'text-primary' : ''}
+                  />
+                </div>
+                {(prepared?.requestedDays ?? 0) > (prepared?.balance?.maxDurationDays ?? 0) && (
+                  <div className="mt-2 text-xs text-status-danger">
+                    ⚠️ This request exceeds the {prepared?.balance?.maxDurationDays ?? 0}-day cap for {prepared?.leaveType?.label}.
+                  </div>
+                )}
               </div>
             )}
 
