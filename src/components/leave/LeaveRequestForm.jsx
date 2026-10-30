@@ -398,7 +398,7 @@ export default function LeaveRequestForm({ lodgedFor = null, onExit = null }) {
             <div>
               <label className={labelCls}>Declaration — type your full name *</label>
               <input value={confirmedName} onChange={e => setConfirmedName(e.target.value)}
-                placeholder={userFullName || 'Your full name'} className={inputCls} />
+                placeholder={employee?.fullName || 'Your full name'} className={inputCls} />
             </div>
           </div>
 
