@@ -34,6 +34,10 @@ import Reports from './pages/Reports';
 import QCSachetProductionChecks from './pages/QCSachetProductionChecks';
 import QCSachetReport from './pages/QCSachetReport';
 import ECDensityIndex from './pages/ECDensityIndex';
+import CartonWasteIndex from './pages/CartonWasteIndex';
+import LaminateWasteIndex from './pages/LaminateWasteIndex';
+import PalletTransferIndex from './pages/PalletTransferIndex';
+import QCSachetIndex from './pages/QCSachetIndex';
 
 function App() {
   return (
@@ -80,6 +84,10 @@ function App() {
       <Route path="/pallet-transfer" element={<ProtectedRoute><PalletTransfer /></ProtectedRoute>} />
       <Route path="/pallet-transfer-report" element={<ProtectedRoute><PalletTransferReport /></ProtectedRoute>} />
       <Route path="/ec-density-index" element={<ProtectedRoute><ECDensityIndex /></ProtectedRoute>} />
+      <Route path="/carton-waste-index" element={<ProtectedRoute><CartonWasteIndex /></ProtectedRoute>} />
+      <Route path="/laminate-waste-index" element={<ProtectedRoute><LaminateWasteIndex /></ProtectedRoute>} />
+      <Route path="/pallet-transfer-index" element={<ProtectedRoute><PalletTransferIndex /></ProtectedRoute>} />
+      <Route path="/qc-sachet-index" element={<ProtectedRoute><QCSachetIndex /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/qc-sachet-report" element={<ProtectedRoute><QCSachetReport /></ProtectedRoute>} />
     </Routes>

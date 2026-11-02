@@ -3,6 +3,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement,
 import { Bar, Doughnut } from 'react-chartjs-2';
 import Layout from '../components/Layout';
 import { useConfig } from '../context/ConfigContext';
+import { useSearchParams } from 'react-router-dom';
 import { subscribeToPalletTransfersByDateRange } from '../services/palletTransferOperations';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Title, Tooltip, Legend);
@@ -13,6 +14,7 @@ function toDateStr(d) {
 
 export default function PalletTransferReport() {
   const { config, loadingConfig } = useConfig();
+  const [searchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,30 +25,44 @@ export default function PalletTransferReport() {
     return toDateStr(d);
   }, []);
 
-  const fromDateDefault = sevenDaysAgo;
-  const toDateDefault = today;
+  // Initialize from query params or defaults
+  const defaultDate = searchParams.get('date') || today;
+  const defaultShift = searchParams.get('shift') || 'all';
+  const defaultGram = searchParams.get('gram') || 'all';
+  const defaultTeam = searchParams.get('team') || 'all';
 
-  const [filterFromDate, setFilterFromDate] = useState(fromDateDefault);
-  const [filterToDate, setFilterToDate] = useState(toDateDefault);
-  const [filterShift, setFilterShift] = useState('all');
-  const [filterGram, setFilterGram] = useState('all');
-  const [filterTeam, setFilterTeam] = useState('all');
+  const [filterDate, setFilterDate] = useState(defaultDate);
+  const [filterShift, setFilterShift] = useState(defaultShift);
+  const [filterGram, setFilterGram] = useState(defaultGram);
+  const [filterTeam, setFilterTeam] = useState(defaultTeam);
+
+  const sevenDaysWindowStart = useMemo(() => {
+    const d = new Date(filterDate);
+    d.setDate(d.getDate() - 3);
+    return toDateStr(d);
+  }, [filterDate]);
+
+  const sevenDaysWindowEnd = useMemo(() => {
+    const d = new Date(filterDate);
+    d.setDate(d.getDate() + 3);
+    return toDateStr(d);
+  }, [filterDate]);
 
   const grams = Object.keys(config?.gramSpecs || {});
   const teamsConfig = config?.packagingTeams?.labels || [];
 
   useEffect(() => {
     if (loadingConfig) return;
-    const unsub = subscribeToPalletTransfersByDateRange(sevenDaysAgo, today, (data) => {
+    // Subscribe to 7-day window around the filter date
+    const unsub = subscribeToPalletTransfersByDateRange(sevenDaysWindowStart, sevenDaysWindowEnd, (data) => {
       setRecords(data);
       setLoading(false);
     });
     return () => unsub();
-  }, [loadingConfig, sevenDaysAgo, today]);
+  }, [loadingConfig, sevenDaysWindowStart, sevenDaysWindowEnd]);
 
   const filtered = records.filter(r => {
-    if (filterFromDate && r.date < filterFromDate) return false;
-    if (filterToDate && r.date > filterToDate) return false;
+    if (filterDate && r.date !== filterDate) return false;
     if (filterShift !== 'all' && r.shift !== filterShift) return false;
     if (filterGram !== 'all' && r.gram !== filterGram) return false;
     if (filterTeam !== 'all' && r.team !== filterTeam) return false;
@@ -126,13 +142,17 @@ export default function PalletTransferReport() {
     }
   };
 
-  const weekLabels = [];
+  // Day vs Night chart — 7 days with queried date in the middle
+  const windowLabels = [];
   const dayData = [];
   const nightData = [];
   const dayCartonTotals = {};
   const nightCartonTotals = {};
 
-  for (const r of records) {
+  // Use all records in the 7-day window (not just filtered) for the chart
+  const windowRecords = records.filter(r => r.date >= sevenDaysWindowStart && r.date <= sevenDaysWindowEnd);
+  
+  for (const r of windowRecords) {
     const d = r.date;
     if (r.shift === 'DAY') {
       dayCartonTotals[d] = (dayCartonTotals[d] || 0) + (r.totalCartons || 0);
@@ -141,17 +161,24 @@ export default function PalletTransferReport() {
     }
   }
 
-  const allDates = [...new Set([...Object.keys(dayCartonTotals), ...Object.keys(nightCartonTotals)])].sort();
+  // Generate 7 days: 3 before, the filter date, 3 after
+  const allDates = [];
+  for (let i = -3; i <= 3; i++) {
+    const d = new Date(filterDate);
+    d.setDate(d.getDate() + i);
+    allDates.push(toDateStr(d));
+  }
+
   for (const d of allDates) {
     const dateObj = new Date(d + 'T12:00:00');
     const label = dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-    weekLabels.push(label);
+    windowLabels.push(label);
     dayData.push(dayCartonTotals[d] || 0);
     nightData.push(nightCartonTotals[d] || 0);
   }
 
   const weekChartData = {
-    labels: weekLabels,
+    labels: windowLabels,
     datasets: [
       {
         label: 'Day Shift',
@@ -216,18 +243,13 @@ export default function PalletTransferReport() {
   return (
     <Layout title="📦 Pallet Transfer Report" subtitle="Carton transfer analysis from production to warehouse" maxWidth="max-w-7xl">
       {loading ? (
-        <div className="text-center text-gray-400 mt-20 animate-pulse text-lg">Loading 7-day data...</div>
+        <div className="text-center text-gray-400 mt-20 animate-pulse text-lg">Loading data...</div>
       ) : (
         <>
           <div className="flex flex-wrap gap-3 mb-6 items-end">
             <div>
-              <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">📅 From</label>
-              <input type="date" value={filterFromDate} onChange={e => setFilterFromDate(e.target.value)}
-                className="bg-[#1a1a1a] text-white border border-[#444] p-2.5 rounded-lg outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">📅 To</label>
-              <input type="date" value={filterToDate} onChange={e => setFilterToDate(e.target.value)}
+              <label className="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">📅 Date</label>
+              <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
                 className="bg-[#1a1a1a] text-white border border-[#444] p-2.5 rounded-lg outline-none focus:border-primary text-sm" />
             </div>
             <div>
@@ -253,7 +275,7 @@ export default function PalletTransferReport() {
               </select>
             </div>
             <div>
-              <button onClick={() => { setFilterFromDate(sevenDaysAgo); setFilterToDate(today); setFilterShift('all'); setFilterGram('all'); setFilterTeam('all'); }}
+              <button onClick={() => { setFilterDate(today); setFilterShift('all'); setFilterGram('all'); setFilterTeam('all'); }}
                 className="bg-[#333] text-gray-300 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#444] transition-colors border border-[#555]">
                 🔄 Reset
               </button>
@@ -354,15 +376,16 @@ export default function PalletTransferReport() {
             </div>
           )}
 
-          {weekLabels.length > 0 && (
+          {windowLabels.length > 0 && (
             <div className="bg-dark-card p-6 rounded-xl border border-[#333] mb-6">
-              <h3 className="text-primary font-bold mb-4 uppercase tracking-wider text-sm">📈 Day vs Night — Cartons Transferred Over Time (7-Day)</h3>
+              <h3 className="text-primary font-bold mb-4 uppercase tracking-wider text-sm">📈 Day vs Night — Cartons Transferred Over Time (7-Day Window)</h3>
+              <p className="text-gray-400 text-xs mb-4">Queried date ({filterDate}) is centered in the 7-day window. Use this to compare shifts across the week.</p>
               <div className="h-[300px]"><Bar data={weekChartData} options={weekChartOptions} /></div>
             </div>
           )}
 
-          {filtered.length === 0 && weekLabels.length === 0 && (
-            <div className="text-center text-gray-500 py-20 text-lg">No transfers found in this period.</div>
+          {filtered.length === 0 && windowLabels.length === 0 && (
+            <div className="text-center text-gray-500 py-20 text-lg">No transfers found for this date/shift/team/gram.</div>
           )}
         </>
       )}

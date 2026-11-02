@@ -45,6 +45,10 @@ export const MENU_CONFIG = [
     icon: '📑',
     children: [
       { path: '/ec-density-index', label: 'EC Density Data Index', icon: '📊', allowedRoles: [] }, // super_admin only (empty allowedRoles)
+      { path: '/carton-waste-index', label: 'Carton Waste Data Index', icon: '📦', allowedRoles: [] },
+      { path: '/laminate-waste-index', label: 'Laminate Waste Data Index', icon: '🗑️', allowedRoles: [] },
+      { path: '/pallet-transfer-index', label: 'Pallet Transfer Data Index', icon: '📦', allowedRoles: [] },
+      { path: '/qc-sachet-index', label: 'QC Sachet Data Index', icon: '⚖️', allowedRoles: [] },
       { path: '/qc-density-report', label: 'QC Density Report', icon: '📈', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] },
       { path: '/carton-waste-report', label: 'Carton Waste Report', icon: '📦', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
       { path: '/pallet-transfer-report', label: 'Pallet Transfer Report', icon: '📋', allowedRoles: ['prod_manager', 'packaging_manager', 'qc_manager'] },

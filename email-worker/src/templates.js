@@ -14,12 +14,15 @@
 
 const fmt = (value) => {
   if (!value) return '—';
-  // The app stores dates as yyyy-mm-dd (local). Parse as local to avoid
-  // the UTC midnight shift that new Date('2026-11-02') causes.
+  // The app stores dates as yyyy-mm-dd (local) OR Firestore Timestamps.
+  // Parse as local to avoid the UTC midnight shift.
   let d;
   if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const [y, m, day] = value.split('-').map(Number);
     d = new Date(y, m - 1, day);
+  } else if (value && typeof value === 'object' && 'seconds' in value) {
+    // Firestore Timestamp: { seconds, nanoseconds }
+    d = new Date(value.seconds * 1000 + Math.floor(value.nanoseconds / 1e6));
   } else {
     d = value instanceof Date ? value : new Date(value);
   }
