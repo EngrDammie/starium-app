@@ -33,6 +33,7 @@ import PalletTransferReport from './pages/PalletTransferReport';
 import Reports from './pages/Reports';
 import QCSachetProductionChecks from './pages/QCSachetProductionChecks';
 import QCSachetReport from './pages/QCSachetReport';
+import ECDensityIndex from './pages/ECDensityIndex';
 
 function App() {
   return (
@@ -78,6 +79,7 @@ function App() {
       <Route path="/laminate-waste-report" element={<ProtectedRoute><LaminateWasteReport /></ProtectedRoute>} />
       <Route path="/pallet-transfer" element={<ProtectedRoute><PalletTransfer /></ProtectedRoute>} />
       <Route path="/pallet-transfer-report" element={<ProtectedRoute><PalletTransferReport /></ProtectedRoute>} />
+      <Route path="/ec-density-index" element={<ProtectedRoute><ECDensityIndex /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/qc-sachet-report" element={<ProtectedRoute><QCSachetReport /></ProtectedRoute>} />
     </Routes>

@@ -1,5 +1,6 @@
 // src/pages/Reports.jsx
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -11,6 +12,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 export default function Reports() {
   const { config, loadingConfig } = useConfig();
+  const [searchParams] = useSearchParams();
   
   // 🎯 FIX: Old manual security checks completely stripped out!
   // ProtectedRoute handles all security before this page even loads.
@@ -19,11 +21,27 @@ export default function Reports() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [mode, setMode] = useState('level9');
-  const [shift, setShift] = useState('DAY');
+  // Initialize from query params or defaults
+  const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0]);
+  const [mode, setMode] = useState(searchParams.get('mode') || 'level9');
+  const [shift, setShift] = useState(searchParams.get('shift') || 'DAY');
 
   const [reportData, setReportData] = useState(null);
+
+  // Auto-generate report on mount if query params are present
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    const urlMode = searchParams.get('mode');
+    const urlShift = searchParams.get('shift');
+    
+    if (urlDate && urlMode && urlShift) {
+      // URL has all required params — generate report automatically
+      setDate(urlDate);
+      setMode(urlMode);
+      setShift(urlShift);
+      generateReport();
+    }
+  }, [searchParams]);
 
   const generateReport = async () => {
     if (!date) return setError('Please select a date');

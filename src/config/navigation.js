@@ -44,6 +44,7 @@ export const MENU_CONFIG = [
     title: 'Reports',
     icon: '📑',
     children: [
+      { path: '/ec-density-index', label: 'EC Density Data Index', icon: '📊', allowedRoles: [] }, // super_admin only (empty allowedRoles)
       { path: '/qc-density-report', label: 'QC Density Report', icon: '📈', allowedRoles: ['qc_manager', 'prod_manager', 'hr_manager'] },
       { path: '/carton-waste-report', label: 'Carton Waste Report', icon: '📦', allowedRoles: ['prod_manager', 'qc_manager', 'packaging_manager'] },
       { path: '/pallet-transfer-report', label: 'Pallet Transfer Report', icon: '📋', allowedRoles: ['prod_manager', 'packaging_manager', 'qc_manager'] },
