@@ -20,6 +20,7 @@ import { useConfig } from '../context/ConfigContext';
 import {
   subscribeToLeaveRequests, cancelLeaveRequest, confirmResumption, prepareLeaveRequest,
 } from '../services/leaveOperations';
+import { leaveNotifications } from '../services/leaveNotifications';
 import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 // Print: HR's cabinet still runs on paper, and the printed copy must match
 // the app or the two become systems to reconcile. See LeavePrint.jsx.
@@ -27,7 +28,7 @@ import { Link } from 'react-router-dom';
 // ONE vocabulary for status labels and colours, shared with the approvers'
 // screen — the employee and the signers must never see the same request
 // described two different ways.
-import { leaveStatusLabel, leaveStatusStyle } from '../components/leave/leaveStatus';
+import { leaveStatusLabel, leaveStatusStyle, isLeaveCompleted } from '../components/leave/leaveStatus';
 
 function fmt(d) {
   if (!d) return '—';
@@ -75,6 +76,16 @@ export default function MyLeave() {
     if (!employee?.id) return;
     return subscribeToLeaveRequests(setRequests, { employeeId: employee.id });
   }, [employee?.id]);
+
+  // Fire resumption notifications for naturally completed leaves (idempotent)
+  useEffect(() => {
+    if (!requests.length) return;
+    requests.forEach(r => {
+      if (r.status === 'approved') {
+        leaveNotifications.checkAndNotifyResumed(r);
+      }
+    });
+  }, [requests]);
 
   // Balance derived from the request history — the same figures the form
   // shows, so the two can never disagree. With no dates passed, the engine
@@ -226,14 +237,15 @@ export default function MyLeave() {
             <div className="flex flex-col gap-3">
               {requests.map(r => {
                 const canCancel = r.status?.startsWith('pending_') && r.workflow?.[finalStageId]?.status !== 'approved';
+                const completed = isLeaveCompleted(r);
                 return (
                   <div key={r.id} className="bg-dark-card border border-[#333] rounded-xl p-5">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white font-bold">{r.leaveTypeLabel || r.leaveType}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${leaveStatusStyle(r.status)}`}>
-                            {leaveStatusLabel(r.status, policy)}
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${leaveStatusStyle(r.status, r)}`}>
+                            {leaveStatusLabel(r.status, policy, r)}
                           </span>
                           {r.lodgedBy && (
                             <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-status-warning/50 text-status-warning">
@@ -259,6 +271,11 @@ export default function MyLeave() {
                         {r.status === 'recalled' && (
                           <div className="text-status-warning text-xs mt-1">
                             Recalled after {r.daysConsumed} of {r.requestedDays} days — {r.daysReturned} returned to your balance.
+                          </div>
+                        )}
+                        {completed && (
+                          <div className="text-[#2196F3] text-xs mt-1">
+                            Leave completed — returned to work on {r.resumptionDate ? fmt(r.resumptionDate) : 'the scheduled date'}.
                           </div>
                         )}
                       </div>

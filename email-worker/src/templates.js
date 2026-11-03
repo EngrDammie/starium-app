@@ -124,6 +124,15 @@ export function buildMessage(event, { request, stageLabel, reason, actorEmail, a
           footer(appUrl, `Your leave history: ${myUrl}`),
       };
 
+    case 'resumed':
+      return {
+        subject: `Leave completed — ${name} has returned to work`,
+        body:
+          `The leave for ${name} from ${range(request)} (${days} working days) has ended.\n\n` +
+          `The employee is now back at work as of ${fmt(request.resumptionDate)}.\n\n` +
+          footer(appUrl, `The full leave record: ${appUrl}/#/leave-approvals`),
+      };
+
     default:
       return null;
   }

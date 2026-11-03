@@ -31,11 +31,12 @@ import { useNetwork } from '../context/NetworkContext';
 import {
   subscribeToLeaveRequests, decideLeaveRequest, cancelLeaveRequest, recallFromLeave,
 } from '../services/leaveOperations';
+import { leaveNotifications } from '../services/leaveNotifications';
 import { spansLeaveYear, toLocalDate } from '../services/leaveCalculations';
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
-import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote } from '../components/leave/leaveStatus';
+import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote, isLeaveCompleted } from '../components/leave/leaveStatus';
 import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 import { subscribeToAccessView } from '../services/userAccessOperations';
 
@@ -119,9 +120,10 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
   // The request's own conclusion, in the same words and colours the employee
   // sees on My Leave. The stepper below shows WHO signed; this shows WHAT
   // became of the request — the two answers the Decided tray needs.
-  const statusLabel = leaveStatusLabel(request.status, policy);
-  const statusStyle = leaveStatusStyle(request.status);
+  const statusLabel = leaveStatusLabel(request.status, policy, request);
+  const statusStyle = leaveStatusStyle(request.status, request);
   const decided = decidedAt(request);
+  const completed = isLeaveCompleted(request);
 
   const act = async (decision) => {
     if (busy) return;
@@ -236,7 +238,7 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
           was built for never saw it at all. Found live by the founder,
           27 Oct 2026; the browser suite now walks the whole chain and
           reverses an approval through this exact button. */}
-      {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && (
+      {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && !completed && (
         <div className="mt-4 pt-4 border-t border-[#333]">
           {!showCancel && !showRecall ? (
             <div className="flex items-center gap-2 flex-wrap">
@@ -438,6 +440,16 @@ export default function LeaveApprovals() {
 
   useEffect(() => subscribeToLeaveRequests(setRequests), []);
   useEffect(() => subscribeToAccessView(setAccess), []);
+
+  // Fire resumption notifications for naturally completed leaves (idempotent)
+  useEffect(() => {
+    if (!requests.length) return;
+    requests.forEach(r => {
+      if (r.status === 'approved') {
+        leaveNotifications.checkAndNotifyResumed(r);
+      }
+    });
+  }, [requests]);
 
   const buckets = useMemo(() => {
     if (!policy) return { mine: [], others: [], decided: [] };

@@ -32,6 +32,7 @@ const EVENTS = new Set([
   'lodged',
   'cancelled',
   'recalled',
+  'resumed',
 ]);
 
 function queueDocId(requestId, event) {
@@ -139,4 +140,21 @@ export const leaveNotifications = {
   lodged: (requestId) => notifyLeaveEvent(requestId, 'lodged'),
   cancelled: (requestId, stageId) => notifyLeaveEvent(requestId, 'cancelled', stageId),
   recalled: (requestId) => notifyLeaveEvent(requestId, 'recalled'),
+  resumed: (requestId) => notifyLeaveEvent(requestId, 'resumed'),
+  // Check if an approved leave has naturally completed and send resumption
+  // notification if not already sent. Call this when loading leave requests.
+  checkAndNotifyResumed: async (request) => {
+    if (!request || request.status !== 'approved') return;
+    // Inline isLeaveCompleted logic to avoid import issues
+    const resumptionDate = request.resumptionDate;
+    if (!resumptionDate) return;
+    const d = resumptionDate instanceof Date ? resumptionDate : new Date(resumptionDate);
+    if (isNaN(d)) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (d >= today) return;
+    // The notifyLeaveEvent function is idempotent — if the queue doc already
+    // has status 'sent', it won't send again.
+    await notifyLeaveEvent(request.id, 'resumed');
+  },
 };

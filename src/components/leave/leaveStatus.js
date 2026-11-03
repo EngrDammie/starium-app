@@ -16,6 +16,8 @@
 // HOD while the rest of the app says the new name, and a hard-coded style
 // map would silently lose its colour for any id it had not seen before.
 
+import { toLocalDate } from '../../services/leaveCalculations';
+
 // Terminal states. Pending states are derived, because their labels belong
 // to the policy, not to this file.
 const TERMINAL_LABELS = {
@@ -23,6 +25,7 @@ const TERMINAL_LABELS = {
   rejected: 'Rejected',
   cancelled: 'Cancelled',
   recalled: 'Recalled',
+  completed: 'Completed',
 };
 
 const PENDING_STYLE = 'bg-status-warning/20 text-status-warning border-status-warning/40';
@@ -36,11 +39,24 @@ const TERMINAL_STYLES = {
   // Cut short, not cancelled: the leave happened, then stopped. Amber —
   // worth noticing, nothing to mourn.
   recalled: 'bg-status-warning/20 text-status-warning border-status-warning/40',
+  // Leave has ended naturally — the person is back at work. Blue — neutral,
+  // informative, distinct from "Approved" (still active) and "Recalled" (cut short).
+  completed: 'bg-[#2196F3]/20 text-[#2196F3] border-[#2196F3]/40',
 };
+
+// Check if an approved leave has ended (resumption date is in the past)
+export function isLeaveCompleted(request) {
+  if (!request || request.status !== 'approved') return false;
+  const resumptionDate = toLocalDate(request.resumptionDate);
+  if (!resumptionDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return resumptionDate < today;
+}
 
 export const isPending = (status) => String(status || '').startsWith('pending_');
 
-export function leaveStatusLabel(status, policy) {
+export function leaveStatusLabel(status, policy, request) {
   if (!status) return '—';
 
   // "pending_hod" → "Awaiting HOD / Subsidiary", using whatever the stage is
@@ -51,12 +67,20 @@ export function leaveStatusLabel(status, policy) {
     return `Awaiting ${stage?.label || stageId}`;
   }
 
+  // Show "Completed" for approved leaves that have ended
+  if (status === 'approved' && request && isLeaveCompleted(request)) {
+    return TERMINAL_LABELS.completed;
+  }
+
   return TERMINAL_LABELS[status] || status;
 }
 
-export function leaveStatusStyle(status) {
+export function leaveStatusStyle(status, request) {
   if (!status) return 'border-[#333] text-gray-500';
   if (isPending(status)) return PENDING_STYLE;
+  if (status === 'approved' && request && isLeaveCompleted(request)) {
+    return TERMINAL_STYLES.completed;
+  }
   return TERMINAL_STYLES[status] || 'border-[#333] text-gray-500';
 }
 

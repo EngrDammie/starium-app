@@ -552,6 +552,7 @@ export async function recallFromLeave(requestId, {
       updatedBy: user?.email || null,
     });
     leaveNotifications.recalled(requestId);
+    leaveNotifications.resumed(requestId);
     return { ok: true, daysConsumed: computed.daysConsumed, daysReturned: computed.daysReturned };
   } catch (error) {
     return { ok: false, error: error.message };

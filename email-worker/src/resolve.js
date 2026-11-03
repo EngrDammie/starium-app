@@ -99,6 +99,18 @@ export function resolveEvent(event, { request, employee, holders, policy, queueD
         actorEmail: request.cancelledBy || null,
       };
 
+    case 'resumed':
+      // The leave has naturally ended or was recalled — the employee is back.
+      // Notify the employee and the approvers who signed.
+      if (request.status !== 'approved' && request.status !== 'recalled') return null;
+      return {
+        recipients: [employeeEmail, ...(holders || []).map((h) => h.email)].filter(Boolean),
+        // For recalled leave, daysConsumed/daysReturned are on the request
+        // For naturally completed leave, they aren't — template handles both.
+        reason: request.recallReason || null,
+        actorEmail: request.recalledBy || null,
+      };
+
     default:
       return null;
   }
