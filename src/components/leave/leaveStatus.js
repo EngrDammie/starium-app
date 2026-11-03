@@ -44,14 +44,14 @@ const TERMINAL_STYLES = {
   completed: 'bg-[#2196F3]/20 text-[#2196F3] border-[#2196F3]/40',
 };
 
-// Check if an approved leave has ended (resumption date is in the past)
+// Check if an approved leave has ended (resumption date is today or in the past)
 export function isLeaveCompleted(request) {
   if (!request || request.status !== 'approved') return false;
   const resumptionDate = toLocalDate(request.resumptionDate);
   if (!resumptionDate) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return resumptionDate < today;
+  return resumptionDate <= today;
 }
 
 export const isPending = (status) => String(status || '').startsWith('pending_');

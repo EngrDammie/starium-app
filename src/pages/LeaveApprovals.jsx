@@ -240,62 +240,7 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
           reverses an approval through this exact button. */}
       {canManage && request.status !== 'cancelled' && request.status !== 'rejected' && !completed && (
         <div className="mt-4 pt-4 border-t border-[#333]">
-          {!showCancel && !showRecall ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              {request.status === 'approved' && started ? (
-                <button onClick={() => setShowRecall(true)} disabled={busy}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-warning hover:text-white transition-colors disabled:opacity-50"
-                  title="Cut this leave short at the point of return — the days already taken stay counted, the rest return to the balance.">
-                  ↩ Recall from leave
-                </button>
-              ) : (
-                <button onClick={() => {
-                  if (request.status === 'approved') { setShowCancel(true); }
-                  else { setShowCancel(true); } // pending: still show confirm dialog, but reason optional
-                }} disabled={busy}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
-                  title={request.status === 'approved'
-                    ? 'Reverse this approved leave — a written reason is recorded on the request.'
-                    : 'Cancel this pending request; the days return to the employee.'}>
-                  ✕ {request.status === 'approved' ? 'Cancel this approved leave' : 'Cancel this request'}
-                </button>
-              )}
-              <span className="text-gray-500 text-xs">
-                {request.status === 'approved' && started
-                  ? 'Cutting leave short keeps the days already taken on the record; the unused days return.'
-                  : request.status === 'approved'
-                    ? 'Reversing approved leave requires a written reason; it is recorded on the request.'
-                    : 'The days return to the employee' + '’' + 's balance.'}
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <input
-                autoFocus
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder={request.status === 'approved'
-                  ? 'Reason for cancelling approved leave — recorded on the request (required)'
-                  : 'Reason for cancelling (optional) — recorded on the request'}
-                className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
-              />
-              <div className="flex gap-2">
-                <button onClick={doCancel} disabled={busy || (request.status === 'approved' && !note.trim())}
-                  className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
-                  {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
-                </button>
-                <button onClick={() => { setShowCancel(false); setNote(''); }}
-                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
-                  Back
-                </button>
-              </div>
-              {request.status === 'approved' && (
-                <span className="text-gray-500 text-xs">Approved leave requires a written reason.</span>
-              )}
-            </div>
-          )}
-
-          {showRecall && (
+          {showRecall ? (
             <div className="flex flex-col gap-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
@@ -328,7 +273,58 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
                 The app works out the days already taken; the unused days return to the balance at once.
               </span>
             </div>
+          ) : showCancel ? (
+            <div className="flex flex-col gap-2">
+              <input
+                autoFocus
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder={request.status === 'approved'
+                  ? 'Reason for cancelling approved leave — recorded on the request (required)'
+                  : 'Reason for cancelling (optional) — recorded on the request'}
+                className="w-full bg-[#1a1a1a] text-white border border-status-warning/50 p-3 rounded-lg outline-none focus:border-status-warning text-sm"
+              />
+              <div className="flex gap-2">
+                <button onClick={doCancel} disabled={busy || (request.status === 'approved' && !note.trim())}
+                  className="bg-status-danger text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#E53935] transition-colors disabled:opacity-50">
+                  {busy ? 'Cancelling…' : 'Confirm — cancel this leave'}
+                </button>
+                <button onClick={() => { setShowCancel(false); setNote(''); }}
+                  className="bg-[#333] text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#444] transition-colors">
+                  Back
+                </button>
+              </div>
+              {request.status === 'approved' && (
+                <span className="text-gray-500 text-xs">Approved leave requires a written reason.</span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap">
+              {request.status === 'approved' && started ? (
+                <button onClick={() => setShowRecall(true)} disabled={busy}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-warning hover:text-white transition-colors disabled:opacity-50"
+                  title="Cut this leave short at the point of return — the days already taken stay counted, the rest return to the balance.">
+                  ↩ Recall from leave
+                </button>
+              ) : (
+                <button onClick={() => { setShowCancel(true); }} disabled={busy}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#333] text-gray-300 hover:bg-status-danger hover:text-white transition-colors disabled:opacity-50"
+                  title={request.status === 'approved'
+                    ? 'Reverse this approved leave — a written reason is recorded on the request.'
+                    : 'Cancel this pending request; the days return to the employee.'}>
+                  ✕ {request.status === 'approved' ? 'Cancel this approved leave' : 'Cancel this request'}
+                </button>
+              )}
+              <span className="text-gray-500 text-xs">
+                {request.status === 'approved' && started
+                  ? 'Cutting leave short keeps the days already taken on the record; the unused days return.'
+                  : request.status === 'approved'
+                    ? 'Reversing approved leave requires a written reason; it is recorded on the request.'
+                    : 'The days return to the employee' + '’' + 's balance.'}
+              </span>
+            </div>
           )}
+
         </div>
       )}
 
