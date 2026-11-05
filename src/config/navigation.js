@@ -87,6 +87,9 @@ export const MENU_CONFIG = [
     icon: '🛡️',
     children: [
       { path: '/system-config', label: 'System Config', icon: '🔧', allowedRoles: [] }, 
+      // Create complete user (employee + login + roles) in one atomic flow.
+      // hr_manager and super_admin only — hr_staff can view roster but not create logins/roles.
+      { path: '/create-complete-user', label: 'Create Complete User', icon: '➕', allowedRoles: ['hr_manager'] },
       // hr_manager may manage accounts (decision 16 Oct 2026). The page itself
       // gates Super Admin to the founder — see UserManagement.jsx
       // `mayGrantSuperAdmin`.
