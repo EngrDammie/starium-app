@@ -1,6 +1,8 @@
 // src/services/leaveWorkflow.js
 //
 // The sequential approval chain, as PURE functions.
+
+import { toLocalDate } from './leaveCalculations';
 //
 // ──────────────────────────────────────────────────────────────────────────
 // WHY THIS FILE HAS NO FIREBASE IMPORTS
@@ -220,13 +222,14 @@ export function buildDecisionPatch({
 // resolved by the caller from user_roles + employees. `requests` is the
 // approved requests for those people. Pure date work; no database.
 export function awayHolders({ holders, requests, onDate = new Date() }) {
+  const today = toLocalDate(onDate); // midnight for date-only comparison
   const out = [];
   for (const holder of holders || []) {
     const away = (requests || []).find(r => {
       if (r.employeeId !== holder.employeeId) return false;
-      const start = r.leaveCommences instanceof Date ? r.leaveCommences : new Date(r.leaveCommences);
-      const end = r.leaveEnds instanceof Date ? r.leaveEnds : new Date(r.leaveEnds);
-      return !isNaN(start) && !isNaN(end) && onDate >= start && onDate <= end;
+      const start = toLocalDate(r.leaveCommences);
+      const end = toLocalDate(r.leaveEnds);
+      return start && end && today >= start && today <= end;
     });
     if (away) out.push({ holder, until: away.leaveEnds });
   }

@@ -153,12 +153,12 @@ export default function Dashboard() {
   // different thing from being entitled to know why they are ill.
   const policy = config?.leavePolicy;
   const awayToday = useMemo(() => {
-    const now = new Date();
+    const today = toLocalDate(new Date());
     return leaveRequests.filter(r => {
       if (r.status !== 'approved') return false;
-      const start = r.leaveCommences instanceof Date ? r.leaveCommences : new Date(r.leaveCommences);
-      const end = r.leaveEnds instanceof Date ? r.leaveEnds : new Date(r.leaveEnds);
-      return !isNaN(start) && !isNaN(end) && now >= start && now <= end;
+      const start = toLocalDate(r.leaveCommences);
+      const end = toLocalDate(r.leaveEnds);
+      return start && end && today >= start && today <= end;
     }).sort((a, b) => (a.employeeName || '').localeCompare(b.employeeName || ''));
   }, [leaveRequests]);
 

@@ -111,12 +111,12 @@ export default function LeaveReport() {
   }, [rows, search, deptFilter]);
 
   const stats = useMemo(() => {
-    const now = new Date();
+    const today = toLocalDate(new Date()); // midnight today for date-only comparison
     const awayNow = requests.filter(r => {
       if (r.status !== 'approved') return false;
       const s = toLocalDate(r.leaveCommences);
       const e = toLocalDate(r.leaveEnds);
-      return s && e && now >= s && now <= e;
+      return s && e && today >= s && today <= e;
     });
     const pending = requests.filter(r => String(r.status || '').startsWith('pending_'));
     const approvedDays = requests
