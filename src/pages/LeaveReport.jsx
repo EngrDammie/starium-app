@@ -91,10 +91,10 @@ export default function LeaveReport() {
           pending,
           approvedThisYear: approvedThisYear.length,
           onLeaveToday: approvedThisYear.some(r => {
-            const now = new Date();
+            const today = toLocalDate(new Date());
             const s = toLocalDate(r.leaveCommences);
             const en = toLocalDate(r.leaveEnds);
-            return s && en && now >= s && now <= en;
+            return s && en && today >= s && today <= en;
           }),
         };
       });
