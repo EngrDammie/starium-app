@@ -16,6 +16,7 @@ import { subscribeToAllBagInspections } from '../services/qcBagInspectionOperati
 import { subscribeToAllCartonInspections } from '../services/qcCartonInspectionOperations';
 import { subscribeToLeaveRequests } from '../services/leaveOperations';
 import { currentStageIndex, userCanActAtStage } from '../services/leaveWorkflow';
+import { toLocalDate } from '../services/leaveCalculations';
 import { pluralize } from '../services/formatUtils';
 
 export default function Dashboard() {
