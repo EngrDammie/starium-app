@@ -54,6 +54,22 @@ export function isLeaveCompleted(request) {
   return resumptionDate <= today;
 }
 
+// Check if a leave record has been closed (return confirmed by employee or HR)
+export function isLeaveClosed(request) {
+  return !!(request?.closedAt);
+}
+
+// Format the closed/resumed timestamp for display
+export function formatClosedAt(request) {
+  const raw = request?.resumedOn || request?.closedAt;
+  if (!raw) return null;
+  const d = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : new Date(raw));
+  if (isNaN(d)) return null;
+  // Format as "6 Nov 2026, 14:32"
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
+    ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
 export const isPending = (status) => String(status || '').startsWith('pending_');
 
 export function leaveStatusLabel(status, policy, request) {

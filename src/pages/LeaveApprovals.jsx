@@ -36,7 +36,7 @@ import { spansLeaveYear, toLocalDate } from '../services/leaveCalculations';
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
-import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote, isLeaveCompleted } from '../components/leave/leaveStatus';
+import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote, isLeaveCompleted, isLeaveClosed, formatClosedAt } from '../components/leave/leaveStatus';
 import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 import { subscribeToAccessView } from '../services/userAccessOperations';
 
@@ -216,6 +216,11 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
           <div className="text-gray-400 text-sm mt-1">
             {fmt(request.leaveCommences)} → {fmt(request.leaveEnds)} · <strong className="text-white">{request.requestedDays}</strong> working days · resumes {fmt(request.resumptionDate)}
           </div>
+          {isLeaveClosed(request) && (
+            <div className="text-gray-400 text-xs mt-1">
+              ✓ Return confirmed {formatClosedAt(request) ? `on ${formatClosedAt(request)}` : ''}
+            </div>
+          )}
           {request.purpose && <div className="text-gray-500 text-xs mt-1">Reason given: {request.purpose}</div>}
           {request.handoverNote && (
             <div className="text-gray-500 text-xs mt-1">Handover note: {request.handoverNote}</div>

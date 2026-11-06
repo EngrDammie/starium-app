@@ -28,7 +28,7 @@ import { Link } from 'react-router-dom';
 // ONE vocabulary for status labels and colours, shared with the approvers'
 // screen — the employee and the signers must never see the same request
 // described two different ways.
-import { leaveStatusLabel, leaveStatusStyle, isLeaveCompleted } from '../components/leave/leaveStatus';
+import { leaveStatusLabel, leaveStatusStyle, isLeaveCompleted, isLeaveClosed, formatClosedAt } from '../components/leave/leaveStatus';
 
 function fmt(d) {
   if (!d) return '—';
@@ -276,6 +276,11 @@ export default function MyLeave() {
                         {completed && (
                           <div className="text-[#2196F3] text-xs mt-1">
                             Leave completed — returned to work on {r.resumptionDate ? fmt(r.resumptionDate) : 'the scheduled date'}.
+                          </div>
+                        )}
+                        {isLeaveClosed(r) && (
+                          <div className="text-gray-400 text-xs mt-1">
+                            ✓ Return confirmed {formatClosedAt(r) ? `on ${formatClosedAt(r)}` : ''}
                           </div>
                         )}
                       </div>
