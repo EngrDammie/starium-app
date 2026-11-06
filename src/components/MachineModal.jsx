@@ -9,14 +9,17 @@ export default function MachineModal({ isOpen, onClose, machine, isMatch, isSele
   const spec = config.gramSpecs?.[String(machine.gram)];
   const min = spec ? spec.min : machine.min;
   const max = spec ? spec.max : machine.max;
-  
+
   // Carton Breakdown logic from your old app
   let cartonContent = 'N/A';
   if (spec && spec.piecesPerCarton) {
-    cartonContent = spec.piecesBreakdown 
-      ? `${spec.piecesPerCarton} pieces (${spec.piecesBreakdown})` 
+    cartonContent = spec.piecesBreakdown
+      ? `${spec.piecesPerCarton} pieces (${spec.piecesBreakdown})`
       : `${spec.piecesPerCarton} pieces`;
   }
+
+  // Packer's Breakdown
+  const packerBreakdown = spec?.packerBreakdown;
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.3s_ease]" onClick={onClose}>
@@ -50,13 +53,19 @@ export default function MachineModal({ isOpen, onClose, machine, isMatch, isSele
             <span className="text-gray-400">📦 Carton Content:</span>
             <span className="text-primary font-bold text-right w-1/2">{cartonContent}</span>
           </div>
+          {packerBreakdown && (
+            <div className="flex justify-between border-b border-[#333] pb-2">
+              <span className="text-gray-400">📦 Packer's Breakdown:</span>
+              <span className="text-primary font-bold text-right w-1/2">{packerBreakdown}</span>
+            </div>
+          )}
         </div>
 
         <label className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl cursor-pointer mb-4 hover:bg-primary/20 transition">
-          <input 
-            type="checkbox" 
-            checked={isSelected} 
-            onChange={onToggleSelect} 
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
             className="w-5 h-5 accent-primary cursor-pointer"
           />
           <span className="text-white font-bold text-sm">✅ Select for powder collection</span>
@@ -64,7 +73,7 @@ export default function MachineModal({ isOpen, onClose, machine, isMatch, isSele
 
         {/* Show Override button ONLY if it doesn't naturally match and isn't selected yet */}
         {!isMatch && !isSelected && (
-          <button 
+          <button
             onClick={onOverride}
             className="w-full py-3 mb-4 bg-status-warning text-black font-bold rounded-lg hover:bg-[#FFB74D] transition-transform hover:scale-105"
           >
@@ -72,7 +81,7 @@ export default function MachineModal({ isOpen, onClose, machine, isMatch, isSele
           </button>
         )}
 
-        <button 
+        <button
           onClick={onClose}
           className="w-full py-3 bg-primary text-black font-bold rounded-lg hover:bg-status-success transition-transform hover:scale-105"
         >

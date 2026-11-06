@@ -280,6 +280,9 @@ export default function Level9Exec() {
               <div className="flex justify-between border-b border-[#333] pb-2"><span className="text-gray-400">Gram Setting:</span><span className="text-primary font-bold">{detailsMachine.gram}g</span></div>
               <div className="flex justify-between border-b border-[#333] pb-2"><span className="text-gray-400">Density Range:</span><span className="text-primary font-bold">{(config.gramSpecs?.[String(detailsMachine.gram)]?.min || detailsMachine.min).toFixed(3)} - {(config.gramSpecs?.[String(detailsMachine.gram)]?.max || detailsMachine.max).toFixed(3)}</span></div>
               <div className="flex justify-between border-b border-[#333] pb-2"><span className="text-gray-400">Status:</span><span className="font-bold" style={{ color: getMachineStatus(detailsMachine).color }}>{getMachineStatus(detailsMachine).text}</span></div>
+              {config.gramSpecs?.[String(detailsMachine.gram)]?.packerBreakdown && (
+                <div className="flex justify-between border-b border-[#333] pb-2"><span className="text-gray-400">Packer's Breakdown:</span><span className="text-primary font-bold text-sm">{config.gramSpecs[String(detailsMachine.gram)].packerBreakdown}</span></div>
+              )}
             </div>
             <button onClick={() => setDetailsMachine(null)} className="w-full py-3 bg-primary text-black font-bold rounded-lg hover:bg-primary-dark transition-colors">Close</button>
           </div>

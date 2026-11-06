@@ -112,6 +112,10 @@ export function GramModal({ gramForm, setGramForm, saveGramSpec, onClose }) {
             <label className="text-xs text-gray-400 uppercase font-bold">📝 Breakdown (Free Text)</label>
             <input type="text" value={gramForm.breakdown} onChange={e => setGramForm({...gramForm, breakdown: e.target.value})} placeholder="e.g., 27 strings * 6 pcs" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
           </div>
+          <div>
+            <label className="text-xs text-gray-400 uppercase font-bold">📦 Packer's Breakdown (How packers count sachets per carton)</label>
+            <input type="text" value={gramForm.packerBreakdown} onChange={e => setGramForm({...gramForm, packerBreakdown: e.target.value})} placeholder="e.g., 150 sachets = 1 carton" className="w-full mt-1 p-3 bg-[#1a1a1a] text-white border border-[#444] rounded-lg outline-none focus:border-primary" />
+          </div>
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="text-xs text-gray-400 uppercase font-bold">🛍️ Bags per Carton</label>

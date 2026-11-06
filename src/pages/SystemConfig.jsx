@@ -286,7 +286,7 @@ export default function SystemConfig() {
   const saveGramSpec = async (e) => {
     e.preventDefault();
     const newSpecs = { ...config.gramSpecs };
-    const { oldGram, gram, min, max, pieces, breakdown, bags, freebies } = gramForm;
+    const { oldGram, gram, min, max, pieces, breakdown, packerBreakdown, bags, freebies } = gramForm;
     const bagCount = parseInt(bags) || 0;
     const freebieCount = parseInt(freebies) || 0;
 
@@ -295,6 +295,7 @@ export default function SystemConfig() {
       min: parseFloat(min), max: parseFloat(max),
       piecesPerCarton: parseInt(pieces) || (bagCount + freebieCount),
       piecesBreakdown: breakdown || `${bagCount} pcs + ${freebieCount} freebies`,
+      packerBreakdown: packerBreakdown || '',
       bagCount, freebieCount
     };
 

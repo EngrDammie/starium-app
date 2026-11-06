@@ -9,16 +9,17 @@ export default function GramSpecsTab({ config, setGramForm, setIsGramModalOpen, 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">⚖️ Gram</th><th className="p-3">⬇️ Min Density</th><th className="p-3">⬆️ Max Density</th><th className="p-3">📦 Pieces</th><th className="p-3">📝 Breakdown</th><th className="p-3">🛍️ Bags</th><th className="p-3">🎁 Freebies</th><th className="p-3">⚡ Actions</th></tr>
+            <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider"><th className="p-3">⚖️ Gram</th><th className="p-3">⬇️ Min Density</th><th className="p-3">⬆️ Max Density</th><th className="p-3">📦 Pieces</th><th className="p-3">📝 Breakdown</th><th className="p-3">📦 Packer's Breakdown</th><th className="p-3">🛍️ Bags</th><th className="p-3">🎁 Freebies</th><th className="p-3">⚡ Actions</th></tr>
           </thead>
           <tbody className="divide-y divide-[#333]">
             {Object.entries(config.gramSpecs || {}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([gram, spec]) => (
               <tr key={gram} className="hover:bg-white/5">
                 <td className="p-3 text-status-warning font-bold">{gram}g</td><td className="p-3 text-white">{spec.min.toFixed(3)}</td><td className="p-3 text-white">{spec.max.toFixed(3)}</td><td className="p-3 text-gray-300">{spec.piecesPerCarton || 'N/A'}</td>
                 <td className="p-3 text-gray-400 text-sm">{spec.piecesBreakdown || '-'}</td>
+                <td className="p-3 text-gray-400 text-sm">{spec.packerBreakdown || '-'}</td>
                 <td className="p-3 text-white">{spec.bagCount ?? '-'}</td>
                 <td className="p-3 text-white">{spec.freebieCount ?? '-'}</td>
-                <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', bags: spec.bagCount||'', freebies: spec.freebieCount||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">✏️ Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Delete</button></td>
+                <td className="p-3 flex gap-2"><button onClick={() => { setGramForm({ oldGram: gram, gram, min: spec.min, max: spec.max, pieces: spec.piecesPerCarton||'', breakdown: spec.piecesBreakdown||'', packerBreakdown: spec.packerBreakdown||'', bags: spec.bagCount||'', freebies: spec.freebieCount||'', isEdit: true }); setIsGramModalOpen(true); }} className="bg-[#333] text-white px-3 py-1 rounded hover:bg-[#555]">✏️ Edit</button><button onClick={() => deleteGramSpec(gram)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Delete</button></td>
               </tr>
             ))}
           </tbody>
