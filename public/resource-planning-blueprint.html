@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Planning & Profit Modelling — Starium Rafa ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #0B3D26;
+    --green: #176B3A;
+    --leaf: #4F9D58;
+    --gold: #D9A441;
+    --earth: #C87532;
+    --cream: #F7F3E8;
+    --paper: #FCFCF8;
+    --ink: #1D2922;
+    --muted: #637269;
+    --hairline: #E2DFD1;
+    --accent-blue: #1E88E5;
+    --accent-orange: #F57C00;
+    --accent-red: #C62828;
+    --accent-purple: #7B1FA2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #EEEBDF;
+    color: var(--ink);
+    padding: 28px 16px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(29,41,34,.08), 0 18px 50px rgba(29,41,34,.13);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .masthead {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--green) 80%, #1E7A44 100%);
+    padding: 48px 54px 42px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 90% 12%, rgba(217,164,65,.18) 0, transparent 38%),
+      radial-gradient(circle at 5% 100%, rgba(255,255,255,.07) 0, transparent 42%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    color: var(--gold);
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .32em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Manrope', sans-serif;
+    color: #fff; font-size: 34px; font-weight: 800;
+    letter-spacing: -.018em; line-height: 1.18;
+    max-width: 800px; margin-bottom: 12px;
+  }
+  .mast-sub { color: rgba(255,255,255,.87); font-size: 17px; max-width: 700px; font-weight: 500; }
+  .mast-rule { width: 64px; height: 3px; background: var(--gold); border-radius: 2px; margin-top: 24px; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .badge-green { background: rgba(79,157,88,.15); color: var(--leaf); border: 1px solid var(--leaf); }
+  .badge-gold { background: rgba(217,164,65,.15); color: var(--gold); border: 1px solid var(--gold); }
+  .badge-blue { background: rgba(30,136,229,.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+  .badge-purple { background: rgba(123,31,162,.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+
+  .content { padding: 40px 54px 36px; }
+  .section-head { display: flex; align-items: baseline; gap: 13px; margin: 44px 0 18px; }
+  .section-head:first-child { margin-top: 0; }
+  .section-num { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13px; color: var(--gold); letter-spacing: .08em; }
+  .section-title { font-family: 'Manrope', sans-serif; font-size: 22px; font-weight: 800; color: var(--forest); letter-spacing: -.01em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--hairline); transform: translateY(-4px); }
+  .section-desc { font-size: 14px; color: var(--muted); margin: -8px 0 18px; max-width: 780px; }
+
+  /* Visual flow diagram */
+  .flow-diagram { margin: 24px 0; }
+  .flow-step {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 22px;
+    background: #fff;
+    border: 1.5px solid var(--hairline);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    transition: all .2s ease;
+  }
+  .flow-step:hover { border-color: var(--gold); box-shadow: 0 8px 24px rgba(11,61,38,.12); transform: translateX(4px); }
+  .flow-number {
+    width: 44px; height: 44px; flex: 0 0 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 18px; color: #fff;
+    border-radius: 12px;
+  }
+  .step-1 { background: var(--forest); }
+  .step-2 { background: var(--green); }
+  .step-3 { background: var(--leaf); }
+  .step-4 { background: var(--gold); color: var(--ink); }
+  .step-5 { background: var(--accent-purple); }
+  .flow-content { flex: 1; min-width: 0; }
+  .flow-title { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; color: var(--forest); margin-bottom: 4px; }
+  .flow-desc { font-size: 13px; color: var(--muted); }
+  .flow-arrow { font-size: 24px; color: var(--gold); margin: 8px 0; text-align: center; }
+
+  /* Formula boxes */
+  .formula-box {
+    background: linear-gradient(135deg, var(--cream) 0%, #fff 100%);
+    border: 2px solid var(--hairline);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 18px 0;
+    position: relative;
+  }
+  .formula-box::before {
+    content: attr(data-label);
+    position: absolute; top: -10px; left: 20px;
+    font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--gold);
+    background: var(--paper); padding: 0 8px;
+  }
+  .formula-title { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; color: var(--forest); margin-bottom: 10px; }
+  .formula-math { font-family: 'SF Mono', 'Monospace', monospace; font-size: 15px; color: var(--ink); background: #fff; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--hairline); overflow-x: auto; }
+  .formula-var { color: var(--accent-blue); font-weight: 700; }
+  .formula-var-cost { color: var(--accent-red); font-weight: 700; }
+  .formula-var-revenue { color: var(--green); font-weight: 700; }
+  .formula-var-profit { color: var(--accent-purple); font-weight: 700; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 18px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--hairline); }
+  th { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; background: var(--cream); }
+  td { color: var(--ink); }
+  tr:hover td { background: var(--cream); }
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+  .mono { font-family: 'SF Mono', monospace; font-size: 13px; }
+  .positive { color: var(--green); font-weight: 700; }
+  .negative { color: var(--accent-red); font-weight: 700; }
+
+  /* Info cards */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 20px 0; }
+  .info-card {
+    background: #fff; border: 1.5px solid var(--hairline); border-radius: 14px;
+    padding: 20px 22px; transition: all .2s ease;
+  }
+  .info-card:hover { border-color: var(--gold); box-shadow: 0 8px 24px rgba(11,61,38,.1); }
+  .info-icon { font-size: 26px; margin-bottom: 8px; }
+  .info-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; color: var(--forest); margin-bottom: 6px; }
+  .info-text { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+  /* Highlight box */
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(11,61,38,.05) 0%, rgba(23,107,58,.05) 100%);
+    border-left: 4px solid var(--gold);
+    border-radius: 12px; padding: 20px 24px; margin: 20px 0;
+  }
+  .highlight-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; color: var(--forest); margin-bottom: 8px; }
+  .highlight-text { font-size: 13.5px; color: var(--ink); line-height: 1.6; }
+
+  /* Phase cards */
+  .phase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 20px 0; }
+  .phase-card {
+    background: #fff; border: 1.5px solid var(--hairline); border-radius: 16px;
+    padding: 24px; position: relative; overflow: hidden;
+  }
+  .phase-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .phase-1::before { background: var(--forest); }
+  .phase-2::before { background: var(--green); }
+  .phase-3::before { background: var(--leaf); }
+  .phase-4::before { background: var(--gold); }
+  .phase-5::before { background: var(--accent-purple); }
+  .phase-num { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: .1em; margin-bottom: 6px; }
+  .phase-title { font-family: 'Manrope', sans-serif; font-size: 17px; font-weight: 800; color: var(--forest); margin-bottom: 10px; }
+  .phase-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Code snippet */
+  .code-block {
+    background: #1D2922; color: #E2DFD1; border-radius: 12px; padding: 20px; font-family: 'SF Mono', monospace; font-size: 12.5px; line-height: 1.6; overflow-x: auto; margin: 16px 0;
+  }
+  .code-comment { color: var(--muted); }
+  .code-keyword { color: var(--gold); }
+  .code-string { color: var(--leaf); }
+  .code-number { color: var(--accent-orange); }
+  .code-func { color: var(--accent-blue); }
+
+  .foot-band {
+    border-top: 2.5px solid var(--forest);
+    background: var(--cream);
+    padding: 15px 54px 16px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .foot-left { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 13px; color: var(--muted); }
+  .foot-right { font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--green); white-space: nowrap; }
+
+  @media (max-width: 700px) {
+    .masthead, .content, .foot-band { padding-left: 24px; padding-right: 24px; }
+    .masthead h1 { font-size: 27px; }
+    .section-title { white-space: normal; }
+    .flow-step { flex-direction: column; align-items: flex-start; }
+    .flow-arrow { transform: rotate(90deg); margin: 4px 0; }
+  }
+  @media print {
+    *, *::before, *::after { color: #000 !important; background: transparent !important; box-shadow: none !important; }
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border-radius: 0; max-width: none; }
+    @page { size: A4; margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">Starium Rafa ERP — Engineering Blueprint</div>
+    <h1>Resource Planning & Profit Modelling</h1>
+    <p class="mast-sub">From raw materials to packaged cartons — how every kilogram of input becomes revenue, profit, and a decision the Plant Manager can trust.</p>
+    <div class="mast-rule"></div>
+    <div class="badge-row">
+      <span class="badge badge-green">Raw Materials → Powder</span>
+      <span class="badge badge-gold">Powder → Sachets</span>
+      <span class="badge badge-blue">Sachets → Cartons</span>
+      <span class="badge badge-purple">Cost → Profit</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">What the Plant Manager Asked For</span><span class="section-line"></span></div>
+    <p class="section-desc">In plain English: "I put raw materials in. I get detergent powder out. I pack that powder into sachets (85g, 22g, 40g, 850g). I put sachets in cartons. I sell the cartons. Tell me — for every Naira I spend on raw materials, how many Naira do I get back? And how much powder, sachets, and cartons does that make?"</p>
+
+    <div class="highlight-box">
+      <div class="highlight-title">🎯 The Core Question</div>
+      <p class="highlight-text">If I spend <strong>₦X on raw materials</strong>, how many <strong>kilograms of powder</strong> do I make? How many <strong>sachets of each size</strong>? How many <strong>cartons</strong>? And what is my <strong>revenue, cost, and profit</strong> at the end?</p>
+    </div>
+
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">The Whole Journey — Visual Flow</span><span class="section-line"></span></div>
+    <p class="section-desc">Every factory run follows the same path. The feature makes this path visible, calculable, and editable.</p>
+
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="flow-number step-1">1</div>
+        <div class="flow-content">
+          <div class="flow-title">📥 Raw Materials In</div>
+          <div class="flow-desc">Surfactants (LABSA, SLES), builders (Soda Ash, Zeolite), enzymes, fragrance, colour, fillers. Each has a cost per kg.</div>
+        </div>
+      </div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step">
+        <div class="flow-number step-2">2</div>
+        <div class="flow-content">
+          <div class="flow-title">⚙️ Standard Recipe (Bill of Materials)</div>
+          <div class="flow-desc">Fixed ratios: e.g., 1000 kg powder = 120 kg LABSA + 80 kg SLES + 300 kg Soda Ash + 5 kg Enzyme + 2 kg Fragrance + 493 kg Filler. Yield % accounts for dust loss, moisture, off-spec.</div>
+        </div>
+      </div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step">
+        <div class="flow-number step-3">3</div>
+        <div class="flow-content">
+          <div class="flow-title">🏭 Powder Produced (kg)</div>
+          <div class="flow-desc">Total finished powder after mixing, drying, sieving. This is the "bridging quantity" — it connects raw material cost to packaging.</div>
+        </div>
+      </div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step">
+        <div class="flow-number step-4">4</div>
+        <div class="flow-content">
+          <div class="flow-title">📦 Packed into Sachets → Cartons</div>
+          <div class="flow-desc">Powder split across SKUs: 85g × N sachets, 22g × M sachets, 40g × P sachets, 850g × Q sachets. Each SKU has pieces-per-carton from Gram Specs.</div>
+        </div>
+      </div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step">
+        <div class="flow-number step-5">5</div>
+        <div class="flow-content">
+          <div class="flow-title">💰 Revenue, Cost, Profit</div>
+          <div class="flow-desc">Selling price per carton × cartons = Revenue. Raw material cost + packaging cost + conversion cost = Total Cost. Revenue − Cost = Profit. Margin % = Profit ÷ Revenue.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">The Mathematics — Formulas a 5-Year-Old Can Follow</span><span class="section-line"></span></div>
+
+    <div class="formula-box" data-label="Step 1: Raw Material Cost">
+      <div class="formula-title">Total Raw Material Cost (₦)</div>
+      <div class="formula-math">
+<span class="code-keyword">For each ingredient i:</span>
+  <span class="code-string">cost_i</span> = <span class="code-string">qty_kg_i</span> × <span class="code-string">price_per_kg_i</span>
+
+<span class="code-keyword">Total_Raw_Cost</span> = Σ <span class="code-string">cost_i</span>  (sum over all ingredients)
+      </div>
+    </div>
+
+    <div class="formula-box" data-label="Step 2: Powder Yield from Recipe">
+      <div class="formula-title">Powder Produced (kg) from a Given Raw Material Batch</div>
+      <div class="formula-math">
+<span class="code-keyword">Recipe defines:</span>  <span class="code-string">input_kg_per_batch</span>  →  <span class="code-string">output_kg_per_batch</span>
+<span class="code-keyword">Yield_Percent</span> = (<span class="code-string">output_kg_per_batch</span> ÷ <span class="code-string">input_kg_per_batch</span>) × 100
+
+<span class="code-keyword">If you spend ₦Total_Raw_Cost:</span>
+  <span class="code-string">total_input_kg</span> = Σ <span class="code-string">qty_kg_i</span>
+  <span class="code-string">powder_kg</span> = <span class="code-string">total_input_kg</span> × (<span class="code-string">Yield_Percent</span> ÷ 100)
+      </div>
+    </div>
+
+    <div class="formula-box" data-label="Step 3: Sachets from Powder">
+      <div class="formula-title">How Many Sachets of Each Size?</div>
+      <div class="formula-math">
+<span class="code-keyword">Packing_Plan defines the split (percentages must total 100%):</span>
+  <span class="code-string">pct_85g</span> + <span class="code-string">pct_22g</span> + <span class="code-string">pct_40g</span> + <span class="code-string">pct_850g</span> = 100%
+
+<span class="code-keyword">Powder allocated to each SKU:</span>
+  <span class="code-string">kg_85g</span>   = <span class="code-string">powder_kg</span> × <span class="code-string">pct_85g</span>   ÷ 100
+  <span class="code-string">kg_22g</span>   = <span class="code-string">powder_kg</span> × <span class="code-string">pct_22g</span>   ÷ 100
+  <span class="code-string">kg_40g</span>   = <span class="code-string">powder_kg</span> × <span class="code-string">pct_40g</span>   ÷ 100
+  <span class="code-string">kg_850g</span>  = <span class="code-string">powder_kg</span> × <span class="code-string">pct_850g</span>  ÷ 100
+
+<span class="code-keyword">Sachet counts:</span>
+  <span class="code-string">sachets_85g</span>  = (<span class="code-string">kg_85g</span>   × 1000) ÷ 85
+  <span class="code-string">sachets_22g</span>  = (<span class="code-string">kg_22g</span>   × 1000) ÷ 22
+  <span class="code-string">sachets_40g</span>  = (<span class="code-string">kg_40g</span>   × 1000) ÷ 40
+  <span class="code-string">sachets_850g</span> = (<span class="code-string">kg_850g</span>  × 1000) ÷ 850
+      </div>
+    </div>
+
+    <div class="formula-box" data-label="Step 4: Cartons from Sachets (uses Gram Specs)">
+      <div class="formula-title">Cartons per SKU (from System Config → Gram Specs)</div>
+      <div class="formula-math">
+<span class="code-comment">// Each gram spec already has: piecesPerCarton = bags + freebies</span>
+<span class="code-keyword">cartons_85g</span>  = <span class="code-string">sachets_85g</span>  ÷ <span class="code-string">piecesPerCarton_85g</span>
+<span class="code-keyword">cartons_22g</span>  = <span class="code-string">sachets_22g</span>  ÷ <span class="code-string">piecesPerCarton_22g</span>
+<span class="code-keyword">cartons_40g</span>  = <span class="code-string">sachets_40g</span>  ÷ <span class="code-string">piecesPerCarton_40g</span>
+<span class="code-keyword">cartons_850g</span> = <span class="code-string">sachets_850g</span> ÷ <span class="code-string">piecesPerCarton_850g</span>
+
+<span class="code-keyword">total_cartons</span> = <span class="code-string">cartons_85g</span> + <span class="code-string">cartons_22g</span> + <span class="code-string">cartons_40g</span> + <span class="code-string">cartons_850g</span>
+      </div>
+    </div>
+
+    <div class="formula-box" data-label="Step 5: Revenue, Cost, Profit">
+      <div class="formula-title">The Money — What Comes In, What Goes Out, What Stays</div>
+      <div class="formula-math">
+<span class="code-comment">// Revenue (selling side)</span>
+<span class="code-string">revenue_85g</span>  = <span class="code-string">cartons_85g</span>  × <span class="code-string">selling_price_per_carton_85g</span>
+<span class="code-string">revenue_22g</span>  = <span class="code-string">cartons_22g</span>  × <span class="code-string">selling_price_per_carton_22g</span>
+<span class="code-string">revenue_40g</span>  = <span class="code-string">cartons_40g</span>  × <span class="code-string">selling_price_per_carton_40g</span>
+<span class="code-string">revenue_850g</span> = <span class="code-string">cartons_850g</span> × <span class="code-string">selling_price_per_carton_850g</span>
+<span class="code-keyword">Total_Revenue</span> = Σ <span class="code-string">revenue_sku</span>
+
+<span class="code-comment">// Cost (making side)</span>
+<span class="code-string">packaging_cost_85g</span>  = <span class="code-string">cartons_85g</span>  × <span class="code-string">carton_cost_85g</span>
+<span class="code-string">packaging_cost_22g</span>  = <span class="code-string">cartons_22g</span>  × <span class="code-string">carton_cost_22g</span>
+<span class="code-string">packaging_cost_40g</span>  = <span class="code-string">cartons_40g</span>  × <span class="code-string">carton_cost_40g</span>
+<span class="code-string">packaging_cost_850g</span> = <span class="code-string">cartons_850g</span> × <span class="code-string">carton_cost_850g</span>
+<span class="code-keyword">Total_Packaging_Cost</span> = Σ <span class="code-string">packaging_cost_sku</span>
+
+<span class="code-string">conversion_cost</span> = <span class="code-string">powder_kg</span> × <span class="code-string">conversion_cost_per_kg</span>  <span class="code-comment">// electricity, labour, maintenance per kg powder</span>
+
+<span class="code-keyword">Total_Cost</span> = <span class="code-string">Total_Raw_Cost</span> + <span class="code-string">Total_Packaging_Cost</span> + <span class="code-string">conversion_cost</span>
+
+<span class="code-comment">// Profit & Margin</span>
+<span class="code-keyword">Profit</span> = <span class="code-string">Total_Revenue</span> − <span class="code-string">Total_Cost</span>
+<span class="code-keyword">Margin_Percent</span> = (<span class="code-string">Profit</span> ÷ <span class="code-string">Total_Revenue</span>) × 100
+
+<span class="code-comment">// Key ratios the Plant Manager wants</span>
+<span class="code-keyword">Profit_Per_Naira_Raw_Material</span> = <span class="code-string">Profit</span> ÷ <span class="code-string">Total_Raw_Cost</span>
+<span class="code-keyword">Revenue_Per_Naira_Raw_Material</span> = <span class="code-string">Total_Revenue</span> ÷ <span class="code-string">Total_Raw_Cost</span>
+<span class="code-keyword">Cartons_Per_Naira_Raw_Material</span> = <span class="code-string">total_cartons</span> ÷ <span class="code-string">Total_Raw_Cost</span>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Example Walkthrough — Numbers That Tell the Story</span><span class="section-line"></span></div>
+
+    <p class="section-desc">Let's plug in real-ish numbers so you can see exactly what the screen will show.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ingredient</th>
+            <th class="text-right">Qty (kg)</th>
+            <th class="text-right">₦/kg</th>
+            <th class="text-right">Cost (₦)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>LABSA (Surfactant)</td><td class="text-right mono">120</td><td class="text-right mono">850</td><td class="text-right mono positive">102,000</td></tr>
+          <tr><td>SLES (Surfactant)</td><td class="text-right mono">80</td><td class="text-right mono">920</td><td class="text-right mono positive">73,600</td></tr>
+          <tr><td>Soda Ash (Builder)</td><td class="text-right mono">300</td><td class="text-right mono">180</td><td class="text-right mono positive">54,000</td></tr>
+          <tr><td>Zeolite (Builder)</td><td class="text-right mono">150</td><td class="text-right mono">220</td><td class="text-right mono positive">33,000</td></tr>
+          <tr><td>Enzyme</td><td class="text-right mono">5</td><td class="text-right mono">12,000</td><td class="text-right mono positive">60,000</td></tr>
+          <tr><td>Fragrance</td><td class="text-right mono">2</td><td class="text-right mono">8,500</td><td class="text-right mono positive">17,000</td></tr>
+          <tr><td>Colour</td><td class="text-right mono">1</td><td class="text-right mono">15,000</td><td class="text-right mono positive">15,000</td></tr>
+          <tr><td>Filler (Sodium Sulphate)</td><td class="text-right mono">493</td><td class="text-right mono">45</td><td class="text-right mono positive">22,185</td></tr>
+          <tr style="background: var(--cream); font-weight: 700;"><td>TOTAL RAW INPUT</td><td class="text-right mono">1,151</td><td></td><td class="text-right mono positive">376,785</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box" data-label="Recipe Yield">
+      <div class="formula-title">Standard Batch: 1,151 kg in → 1,000 kg powder out (86.9% yield)</div>
+      <div class="formula-math">
+<span class="code-string">powder_kg</span> = 1,151 × 0.869 = <span class="code-number">1,000 kg</span> (exactly one batch)
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Packing Plan (Plant Manager sets this)</th>
+            <th class="text-center">%</th>
+            <th class="text-right">Powder (kg)</th>
+            <th class="text-right">Sachets</th>
+            <th class="text-right">Pieces/Carton</th>
+            <th class="text-right">Cartons</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>85g Sachets</td><td class="text-center mono">40%</td><td class="text-right mono">400</td><td class="text-right mono">4,705,882</td><td class="text-right mono">162</td><td class="text-right mono">29,049</td></tr>
+          <tr><td>22g Sachets</td><td class="text-center mono">25%</td><td class="text-right mono">250</td><td class="text-right mono">11,363,636</td><td class="text-right mono">450</td><td class="text-right mono">25,253</td></tr>
+          <tr><td>40g Sachets</td><td class="text-center mono">20%</td><td class="text-right mono">200</td><td class="text-right mono">5,000,000</td><td class="text-right mono">270</td><td class="text-right mono">18,519</td></tr>
+          <tr><td>850g Sachets</td><td class="text-center mono">15%</td><td class="text-right mono">150</td><td class="text-right mono">176,471</td><td class="text-right mono">20</td><td class="text-right mono">8,824</td></tr>
+          <tr style="background: var(--cream); font-weight: 700;"><td>TOTAL</td><td class="text-center mono">100%</td><td class="text-right mono">1,000</td><td class="text-right mono">21,245,989</td><td></td><td class="text-right mono">81,645</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Selling & Cost per Carton</th>
+            <th class="text-right">Sell Price (₦)</th>
+            <th class="text-right">Carton Cost (₦)</th>
+            <th class="text-right">Cartons</th>
+            <th class="text-right">Revenue (₦)</th>
+            <th class="text-right">Packaging Cost (₦)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>85g</td><td class="text-right mono">4,800</td><td class="text-right mono">650</td><td class="text-right mono">29,049</td><td class="text-right mono positive">139,435,200</td><td class="text-right mono negative">18,881,850</td></tr>
+          <tr><td>22g</td><td class="text-right mono">3,200</td><td class="text-right mono">480</td><td class="text-right mono">25,253</td><td class="text-right mono positive">80,809,600</td><td class="text-right mono negative">12,121,440</td></tr>
+          <tr><td>40g</td><td class="text-right mono">3,800</td><td class="text-right mono">520</td><td class="text-right mono">18,519</td><td class="text-right mono positive">70,372,200</td><td class="text-right mono negative">9,629,880</td></tr>
+          <tr><td>850g</td><td class="text-right mono">2,900</td><td class="text-right mono">420</td><td class="text-right mono">8,824</td><td class="text-right mono positive">25,589,600</td><td class="text-right mono negative">3,706,080</td></tr>
+          <tr style="background: var(--cream); font-weight: 700;"><td>TOTAL</td><td></td><td></td><td class="text-right mono">81,645</td><td class="text-right mono positive">316,206,600</td><td class="text-right mono negative">44,339,250</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box" data-label="Final Profit Calculation">
+      <div class="formula-title">The Bottom Line</div>
+      <div class="formula-math">
+<span class="code-keyword">Total_Revenue</span>        = <span class="code-number positive">316,206,600</span>
+<span class="code-string">Total_Raw_Cost</span>       = <span class="code-number negative">376,785</span>
+<span class="code-string">Total_Packaging_Cost</span> = <span class="code-number negative">44,339,250</span>
+<span class="code-string">Conversion_Cost</span>      = 1,000 kg × ₦150/kg = <span class="code-number negative">150,000</span>
+<span class="code-string">Total_Cost</span>           = <span class="code-number negative">44,866,035</span>
+
+<span class="code-keyword">Profit</span>                 = <span class="code-number positive">271,340,565</span>
+<span class="code-keyword">Margin_Percent</span>       = <span class="code-number positive">85.8%</span>
+
+<span class="code-comment">// The Plant Manager's KPIs</span>
+<span class="code-keyword">Profit per ₦1 Raw Material</span>   = <span class="code-number positive">720×</span>  (₦7.20 profit for every ₦1 spent on raw mats)
+<span class="code-keyword">Revenue per ₦1 Raw Material</span>  = <span class="code-number positive">839×</span>
+<span class="code-keyword">Cartons per ₦1 Raw Material</span>  = <span class="code-number positive">0.217</span> cartons
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">What the Feature Must Do — Phase by Phase</span><span class="section-line"></span></div>
+
+    <div class="phase-grid">
+      <div class="phase-card phase-1">
+        <div class="phase-num">Phase 1 — Foundations</div>
+        <div class="phase-title">📋 Recipe & Ingredient Master</div>
+        <div class="phase-desc">Create "Standard Recipes" (BOMs) in System Config. Each recipe = name, version, yield %, list of ingredients with fixed kg per batch. Link ingredients to a master price list (₦/kg, editable). Store multiple recipes (premium, standard, economy).</div>
+      </div>
+      <div class="phase-card phase-2">
+        <div class="phase-num">Phase 2 — Planning Screen</div>
+        <div class="phase-title">🎯 Resource Planning Dashboard</div>
+        <div class="phase-desc">Input: "I have ₦5,000,000 for raw materials" OR "I want to produce 10,000 kg powder". Auto-calculates everything downstream. Sliders for packing plan split (85g/22g/40g/850g %). Live preview of cartons, revenue, cost, profit.</div>
+      </div>
+      <div class="phase-card phase-3">
+        <div class="phase-num">Phase 3 — What-If Scenarios</div>
+        <div class="phase-title">🔮 Scenario Comparison</div>
+        <div class="phase-desc">Save multiple plans side-by-side: "If I shift 5% from 85g to 850g, what happens to profit?" "If LABSA price rises 15%, what's the new margin?" "Which SKU mix maximises profit given current prices?"</div>
+      </div>
+      <div class="phase-card phase-4">
+        <div class="phase-num">Phase 4 — Actuals vs Plan</div>
+        <div class="phase-title">📊 Variance Tracking</div>
+        <div class="phase-desc">After production: connect to actual QC test data (powder density, sachet weights, carton counts from existing modules). Show: planned vs actual yield, planned vs actual sachet count, planned vs actual profit. Flag variances > threshold.</div>
+      </div>
+      <div class="phase-card phase-5">
+        <div class="phase-num">Phase 5 — Executive Reports</div>
+        <div class="phase-title">📈 Profitability Reports</div>
+        <div class="phase-desc">PDF/Excel export for Plant Manager & Finance: Run summary, SKU profitability table, raw material cost trend, packing efficiency, margin waterfall. Schedule weekly auto-email to stakeholders.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">Data Model — What Lives in Firestore</span><span class="section-line"></span></div>
+
+    <div class="code-block">
+<span class="code-comment">// config/settings → recipes (new subcollection or map)</span>
+<span class="code-keyword">recipes</span>: {
+  <span class="code-string">"premium_v1"</span>: {
+    <span class="code-string">name</span>: <span class="code-string">"Premium Detergent"</span>,
+    <span class="code-string">version</span>: 1,
+    <span class="code-string">yieldPercent</span>: 86.9,
+    <span class="code-string">batchInputKg</span>: 1151,
+    <span class="code-string">batchOutputKg</span>: 1000,
+    <span class="code-string">ingredients</span>: [
+      { <span class="code-string">id</span>: <span class="code-string">"LABSA"</span>, <span class="code-string">name</span>: <span class="code-string">"LABSA"</span>, <span class="code-string">kgPerBatch</span>: 120, <span class="code-string">unit</span>: <span class="code-string">"kg"</span> },
+      { <span class="code-string">id</span>: <span class="code-string">"SLES"</span>,  <span class="code-string">kgPerBatch</span>: 80  },
+      { <span class="code-string">id</span>: <span class="code-string">"SODA_ASH"</span>, <span class="code-string">kgPerBatch</span>: 300 },
+      ...
+    ]
+  }
+}
+
+<span class="code-comment">// config/settings → ingredientPrices (editable by Finance/Plant Manager)</span>
+<span class="code-keyword">ingredientPrices</span>: {
+  <span class="code-string">"LABSA"</span>:       { <span class="code-string">pricePerKg</span>: 850,   <span class="code-string">currency</span>: <span class="code-string">"NGN"</span>, <span class="code-string">updatedAt</span>: <span class="code-string">timestamp</span>, <span class="code-string">updatedBy</span>: <span class="code-string">"finance@starium.com"</span> },
+  <span class="code-string">"SLES"</span>:        { <span class="code-string">pricePerKg</span>: 920 },
+  <span class="code-string">"SODA_ASH"</span>:    { <span class="code-string">pricePerKg</span>: 180 },
+  ...
+}
+
+<span class="code-comment">// config/settings → skuSellingPrices & skuCartonCosts</span>
+<span class="code-keyword">skuSellingPrices</span>: {
+  <span class="code-string">"85"</span>:  { <span class="code-string">pricePerCarton</span>: 4800, <span class="code-string">currency</span>: <span class="code-string">"NGN"</span> },
+  <span class="code-string">"22"</span>:  { <span class="code-string">pricePerCarton</span>: 3200 },
+  <span class="code-string">"40"</span>:  { <span class="code-string">pricePerCarton</span>: 3800 },
+  <span class="code-string">"850"</span>: { <span class="code-string">pricePerCarton</span>: 2900 }
+}
+
+<span class="code-keyword">skuCartonCosts</span>: {
+  <span class="code-string">"85"</span>:  { <span class="code-string">costPerCarton</span>: 650 },
+  <span class="code-string">"22"</span>:  { <span class="code-string">costPerCarton</span>: 480 },
+  <span class="code-string">"40"</span>:  { <span class="code-string">costPerCarton</span>: 520 },
+  <span class="code-string">"850"</span>: { <span class="code-string">costPerCarton</span>: 420 }
+}
+
+<span class="code-comment">// config/settings → conversionCostPerKg (electricity + labour + maintenance per kg powder)</span>
+<span class="code-keyword">conversionCostPerKg</span>: 150
+
+<span class="code-comment">// planning_runs collection — every plan saved by Plant Manager</span>
+<span class="code-keyword">planning_runs</span>: {
+  <span class="code-string">runId</span>: {
+    <span class="code-string">name</span>: <span class="code-string">"Q1 2027 Production Plan"</span>,
+    <span class="code-string">recipeId</span>: <span class="code-string">"premium_v1"</span>,
+    <span class="code-string">inputMode</span>: <span class="code-string">"rawMaterialBudget"</span>,  <span class="code-comment">// or "targetPowderKg"</span>
+    <span class="code-string">inputValue</span>: 5000000,  <span class="code-comment">// ₦5M budget</span>
+    <span class="code-string">packingPlan</span>: { <span class="code-string">"85"</span>: 40, <span class="code-string">"22"</span>: 25, <span class="code-string">"40"</span>: 20, <span class="code-string">"850"</span>: 15 },
+    <span class="code-string">results</span>: { <span class="code-comment">// auto-calculated snapshot</span>
+      <span class="code-string">totalRawCost</span>: 3767850,
+      <span class="code-string">powderKg</span>: 10000,
+      <span class="code-string">sachets</span>: { <span class="code-string">"85"</span>: 47058823, <span class="code-string">"22"</span>: 113636363, ... },
+      <span class="code-string">cartons</span>: { <span class="code-string">"85"</span>: 290486, <span class="code-string">"22"</span>: 252525, ... },
+      <span class="code-string">totalCartons</span>: 816450,
+      <span class="code-string">totalRevenue</span>: 3162066000,
+      <span class="code-string">totalCost</span>: 448660350,
+      <span class="code-string">profit</span>: 2713405650,
+      <span class="code-string">marginPercent</span>: 85.8,
+      <span class="code-string">profitPerNairaRaw</span>: 720
+    },
+    <span class="code-string">createdAt</span>: <span class="code-string">timestamp</span>,
+    <span class="code-string">createdBy</span>: <span class="code-string">"plant.manager@starium.com"</span>
+  }
+}
+
+<span class="code-comment">// actuals_runs collection — linked to real production data</span>
+<span class="code-keyword">actuals_runs</span>: {
+  <span class="code-string">runId</span>: {
+    <span class="code-string">planId</span>: <span class="code-string">"planning_run_abc123"</span>,
+    <span class="code-string">actualPowderKg</span>: 9850,
+    <span class="code-string">actualSachets</span>: { <span class="code-string">"85"</span>: 46200000, ... },
+    <span class="code-string">actualCartons</span>: { <span class="code-string">"85"</span>: 285000, ... },
+    <span class="code-string">variancePercent</span>: -1.5,
+    <span class="code-string">recordedAt</span>: <span class="code-string">timestamp</span>,
+    <span class="code-string">recordedBy</span>: <span class="code-string">"qc_supervisor@starium.com"</span>
+  }
+}
+    </div>
+
+    <div class="section-head"><span class="section-num">07</span><span class="section-title">UI Sketch — What the Plant Manager Sees</span><span class="section-line"></span></div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">🖥️ Resource Planning Page Layout</div>
+      <p class="highlight-text"><strong>Left Panel (Inputs)</strong> — Recipe dropdown, Input mode toggle (Budget / Target Powder), Number input, Packing plan sliders (4 bars = 100%), Ingredient price override toggles.<br><br><strong>Centre Panel (Live Calculations)</strong> — Big cards: Powder (kg), Total Sachets, Total Cartons, Revenue (₦), Cost (₦), Profit (₦), Margin (%).<br><br><strong>Right Panel (SKU Breakdown)</strong> — Table: SKU | % | Powder (kg) | Sachets | Cartons | Sell Price | Carton Cost | Revenue | Cost | Profit | Margin.<br><br><strong>Bottom (Actions)</strong> — Save Plan, Compare Scenarios, Export PDF, Email to Finance.</p>
+    </div>
+
+    <div class="section-head"><span class="section-num">08</span><span class="section-title">Integration Points — Where It Touches Existing Code</span><span class="section-line"></span></div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">⚖️</div>
+        <div class="info-title">Gram Specs (System Config)</div>
+        <div class="info-text">Reads <code>piecesPerCarton</code> for 85, 22, 40, 850g. Already exists. New field <code>packerBreakdown</code> already added.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📦</div>
+        <div class="info-title">Packaging Teams</div>
+        <div class="info-text">Uses team labels (A, B, C) and shift config for conversion cost per kg.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🔬</div>
+        <div class="info-title">QC Density Tests</div>
+        <div class="info-text">Actual powder kg produced per shift → feeds <code>actuals_runs</code> for variance.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📊</div>
+        <div class="info-title">Reports Module</div>
+        <div class="info-text">New report type: "Resource Plan vs Actual" with margin waterfall.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📧</div>
+        <div class="info-title">Email Worker</div>
+        <div class="info-text">Scheduled weekly plan summary to Plant Manager + Finance.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">👤</div>
+        <div class="info-title">User Roles</div>
+        <div class="info-text">New action role: <code>resource_planner</code> — Plant Manager, Finance, COO.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">09</span><span class="section-title">Security & Permissions</span><span class="section-line"></span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Role</th><th>View Plans</th><th>Create/Edit Plans</th><th>Edit Prices</th><th>Edit Recipes</th><th>View Actuals</th><th>Export/Email</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Plant Manager</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">✅</td></tr>
+          <tr><td>Finance Manager</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">✅</td><td class="text-center">—</td><td class="text-center">✅</td><td class="text-center">✅</td></tr>
+          <tr><td>COO / MD</td><td class="text-center">✅</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">✅</td><td class="text-center">✅</td></tr>
+          <tr><td>QC Manager</td><td class="text-center">✅</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">✅</td><td class="text-center">—</td></tr>
+          <tr><td>Production Manager</td><td class="text-center">✅</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">✅</td><td class="text-center">—</td></tr>
+          <tr><td>Others</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td><td class="text-center">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-head"><span class="section-num">10</span><span class="section-title">Implementation Roadmap — What to Build First</span><span class="section-line"></span></div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">1️⃣</div>
+        <div class="info-title">Week 1-2: Recipe & Price Master</div>
+        <div class="info-text">System Config tab: Recipes (CRUD), Ingredient Prices (editable table), SKU Prices & Carton Costs, Conversion Cost. Firestore writes under <code>config/settings</code>.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">2️⃣</div>
+        <div class="info-title">Week 3-4: Calculation Engine</div>
+        <div class="info-text">Pure TS functions in <code>src/services/resourcePlanning.ts</code> — no Firebase, just math. Input: recipe, prices, packing plan, budget/target. Output: full result object. Unit tests for every formula.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">3️⃣</div>
+        <div class="info-title">Week 5: Planning Page UI</div>
+        <div class="info-text">New route <code>/resource-planning</code>. Left/centre/right layout. Sliders for packing plan. Live recalc on every keystroke (debounced). Save plan button → writes to <code>planning_runs</code>.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">4️⃣</div>
+        <div class="info-title">Week 6: Scenario Compare</div>
+        <div class="info-text">Side-by-side view of 2-3 saved plans. Highlight differences. "What if LABSA +15%?" button that clones plan with overridden price.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">5️⃣</div>
+        <div class="info-title">Week 7: Actuals & Variance</div>
+        <div class="info-text">Link to shift test data. Page to record actuals per run. Variance table (Plan vs Actual) with conditional formatting.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">6️⃣</div>
+        <div class="info-title">Week 8: Reports & Polish</div>
+        <div class="info-text">PDF export (jsPDF), Excel export (SheetJS), scheduled email via Cloudflare Worker. Add to Reports menu. Role guards. End-to-end test.</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">11</span><span class="section-title">Key Decisions to Confirm with Plant Manager</span><span class="section-line"></span></div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Recipe Count</div>
+        <div class="info-text">How many standard recipes? (Premium, Standard, Economy, Export?) Start with ONE.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Price Source</div>
+        <div class="info-text">Who updates ingredient prices? Finance? Procurement? How often? (Monthly? Per PO?)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Selling Prices</div>
+        <div class="info-text">Are carton selling prices fixed per SKU or do they vary by customer/region?</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Packing Plan</div>
+        <div class="info-text">Is the % split fixed per recipe or does the Plant Manager decide per run?</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Conversion Cost</div>
+        <div class="info-text">What goes into ₦/kg conversion? (Power, labour, maintenance, depreciation?) Single number or breakdown?</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">❓</div>
+        <div class="info-title">Actuals Source</div>
+        <div class="info-text">Which existing module has the "real" powder kg produced? QC Density? Packing records?</div>
+      </div>
+    </div>
+
+    <div class="section-head"><span class="section-num">12</span><span class="section-title">The "5-Year-Old" Summary</span><span class="section-line"></span></div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">🧸 Imagine This...</div>
+      <p class="highlight-text">You have a <strong>magic recipe book</strong>. You tell it: "I have ₦5 million to buy ingredients." The book instantly tells you:<br><br>
+      📦 "You'll make <strong>10,000 kg</strong> of powder."<br>
+      🧴 "That becomes <strong>21 million sachets</strong> — mostly 85g and 22g."<br>
+      📦 "Packed into <strong>81,645 cartons</strong>."<br>
+      💰 "You'll sell them for <strong>₦316 million</strong>."<br>
+      💸 "It costs you <strong>₦44.9 million</strong> to make."<br>
+      💚 "You keep <strong>₦271 million</strong> profit — that's <strong>86% margin</strong>."<br>
+      📈 "For every <strong>₦1</strong> you spend on raw materials, you get <strong>₦7.20</strong> profit back."<br><br>
+      Then you say: "What if I make more 850g and fewer 22g?" — and the book recalculates in a blink.<br><br>
+      <strong>That's the feature. Simple inputs. Instant, trustworthy answers. No spreadsheets. No guesswork.</strong></p>
+    </div>
+
+  </div>
+
+  <div class="foot-band">
+    <span class="foot-left">Built for the Plant Manager who wants to turn raw numbers into clear decisions.</span>
+    <span class="foot-right">Engr. Damilare Paul Ayodele · Nov 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
