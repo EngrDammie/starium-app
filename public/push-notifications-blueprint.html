@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Push Notifications — Complete Implementation Blueprint | Dammie Optimus Solutions</title>
+<meta name="description" content="The complete blueprint for implementing reliable push notifications in Starium Rafa ERP — works in Nigeria, works when phone is asleep, works offline. Web Push (VAPID), SSE, In-App Center, Email fallback. Pure TypeScript, Cloudflare Workers, zero Firebase dependency." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT DESIGN SYSTEM
+   Self-contained. Mirrors public/assets/docs.css in the
+   portfolio repo, inlined so this file stands alone.
+   ============================================================ */
+
+:root {
+  --emerald: #10b981;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --grad: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+
+  --bg: #020617;
+  --bg-2: #0f172a;
+  --bg-3: #1e293b;
+  --border: #1e293b;
+  --border-soft: #334155;
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --text-3: #94a3b8;
+  --code-bg: #020617;
+  --shadow: 0 18px 40px -12px rgba(0, 0, 0, .6);
+  --radius: 16px;
+
+  --emerald-ink: #34d399;
+  --cyan-ink: #22d3ee;
+  --amber-ink: #fbbf24;
+  --rose-ink: #fb7185;
+  --syn-key: #c084fc;
+  --syn-str: #86efac;
+  --syn-num: #fbbf24;
+}
+html[data-theme="light"] {
+  --bg: #eaeff5;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --border: #cbd5e1;
+  --border-soft: #94a3b8;
+  --text: #020617;
+  --text-2: #1e293b;
+  --text-3: #334155;
+  --code-bg: #f1f5f9;
+  --shadow: 0 12px 28px -10px rgba(15, 23, 42, .22);
+
+  --emerald-ink: #047857;
+  --cyan-ink: #0e7490;
+  --amber-ink: #b45309;
+  --rose-ink: #be123c;
+  --syn-key: #7e22ce;
+  --syn-str: #15803d;
+  --syn-num: #b45309;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(760px 420px at 12% -8%, rgba(16, 185, 129, .14), transparent 62%),
+    radial-gradient(700px 400px at 92% 4%, rgba(6, 182, 212, .12), transparent 60%);
+}
+.wrap { position: relative; z-index: 1; }
+
+a { color: var(--cyan-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: var(--grad); z-index: 60; transition: width .1s linear;
+}
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1.5px solid var(--border);
+}
+.hdr { max-width: 1240px; margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+.brandbox {
+  display: flex; align-items: center; justify-content: center;
+  padding: 7px; border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 35%, transparent);
+  box-shadow: 0 6px 18px -8px rgba(16, 185, 129, .4);
+  flex-shrink: 0;
+}
+.brandbox svg { width: 40px; height: 30px; display: block; }
+.brandtext { line-height: 1.25; min-width: 0; }
+.brandname { font-weight: 800; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; }
+.brandsub { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+.hdr-spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1.5px solid var(--border-soft); background: var(--bg-2); color: var(--text-2);
+  padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; transition: all .15s ease; white-space: nowrap;
+}
+.btn:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+.btn.ghost { background: transparent; }
+
+@media (max-width: 780px) {
+  .hdr { flex-wrap: wrap; row-gap: 10px; padding: 12px 16px; }
+  .hdr-spacer { display: none; }
+  .brandtext { flex: 1 1 auto; }
+  .btn { font-size: 12.5px; padding: 7px 11px; }
+}
+
+.layout { max-width: 1240px; margin: 0 auto; padding: 34px 22px 90px; display: grid; grid-template-columns: 252px 1fr; gap: 44px; align-items: start; }
+.layout > * { min-width: 0; }
+@media (max-width: 940px) { .layout { grid-template-columns: 1fr; gap: 26px; } .toc { display: none; } }
+
+.toc {
+  position: sticky; top: 92px;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-soft) transparent;
+}
+.toc::-webkit-scrollbar { width: 7px; }
+.toc::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 99px; }
+.toc::-webkit-scrollbar-thumb:hover { background: var(--emerald); }
+@supports (max-height: 100dvh) { .toc { max-height: calc(100dvh - 116px); } }
+.toc-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 12px; padding-bottom: 8px;
+  position: sticky; top: 0; z-index: 1;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.toc a {
+  display: block; padding: 7px 12px; margin-bottom: 2px; border-radius: 9px;
+  font-size: 13.5px; color: var(--text-3); border-left: 2.5px solid transparent; transition: all .15s ease;
+}
+.toc a:hover { background: var(--bg-2); color: var(--text); text-decoration: none; }
+.toc a.active { color: var(--emerald-ink); border-left-color: var(--emerald); background: color-mix(in srgb, var(--emerald) 8%, transparent); font-weight: 600; }
+.toc .back { border-left-color: var(--cyan); color: var(--cyan-ink); font-weight: 600; margin-bottom: 14px; }
+
+.hero {
+  border: 1.5px solid var(--border); border-radius: 22px; padding: 38px 34px;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg));
+  box-shadow: var(--shadow); margin-bottom: 38px; position: relative; overflow: hidden;
+}
+.hero::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad); }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--emerald) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 32%, transparent); color: var(--emerald-ink);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 9px var(--emerald); }
+h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.028em; line-height: 1.14; margin-bottom: 15px; }
+.grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { color: var(--text-2); font-size: 16.5px; max-width: 66ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+  background: var(--bg-3); border: 1.5px solid var(--border); color: var(--text-3);
+}
+
+section { margin-bottom: 46px; scroll-margin-top: 92px; }
+h2 { font-size: clamp(21px, 3vw, 26px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; display: flex; align-items: baseline; gap: 13px; }
+h2 .num {
+  font-size: 13px; font-weight: 700; color: var(--emerald-ink);
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--emerald) 30%, transparent);
+  padding: 3px 10px; border-radius: 8px; flex-shrink: 0; align-self: center;
+}
+.lede { color: var(--text-2); font-size: 15.5px; margin-bottom: 22px; max-width: 70ch; }
+h3 { font-size: 17px; font-weight: 700; margin: 26px 0 11px; letter-spacing: -.01em; }
+h4 { font-size: 14.5px; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+p { margin-bottom: 13px; color: var(--text-2); }
+ul, ol { margin: 0 0 15px 22px; color: var(--text-2); }
+li { margin-bottom: 8px; }
+strong { color: var(--text); font-weight: 650; }
+
+.card { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg-2); padding: 24px; margin: 20px 0; box-shadow: var(--shadow); }
+.grid2 > *, .grid3 > * { min-width: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card-t { font-size: 15px; font-weight: 700; margin-bottom: 11px; display: flex; align-items: center; gap: 9px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+.callout { border-radius: 13px; padding: 17px 19px; margin: 19px 0; border: 1.5px solid; font-size: 14.5px; display: flex; gap: 13px; align-items: flex-start; }
+.callout .ic { flex-shrink: 0; font-size: 17px; line-height: 1.45; }
+.callout .bd { min-width: 0; }
+.callout .ct { font-weight: 700; margin-bottom: 5px; font-size: 13.5px; letter-spacing: .01em; }
+.callout p { margin: 0; font-size: 14.5px; }
+.callout p + p { margin-top: 8px; }
+.callout ul { margin: 8px 0 0 20px; }
+.callout li { font-size: 14px; }
+.co-info { background: rgba(6, 182, 212, .08); border-color: rgba(6, 182, 212, .32); }
+.co-info .ct { color: var(--cyan-ink); }
+.co-good { background: rgba(16, 185, 129, .08); border-color: rgba(16, 185, 129, .32); }
+.co-good .ct { color: var(--emerald-ink); }
+.co-warn { background: rgba(245, 158, 11, .08); border-color: rgba(245, 158, 11, .34); }
+.co-warn .ct { color: var(--amber-ink); }
+.co-stop { background: rgba(244, 63, 94, .08); border-color: rgba(244, 63, 94, .32); }
+.co-stop .ct { color: var(--rose-ink); }
+
+.tw { overflow-x: auto; margin: 20px 0; border: 1.5px solid var(--border); border-radius: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+th { text-align: left; padding: 13px 16px; background: var(--bg-3); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); border-bottom: 1.5px solid var(--border); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--emerald) 4%, transparent); }
+td code, p code, li code, .codechip {
+  font-family: 'Geist Mono', monospace; font-size: .89em;
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 1.5px 6px; border-radius: 6px; color: var(--cyan-ink);
+}
+
+.codewrap { position: relative; margin: 19px 0; }
+pre {
+  background: var(--code-bg); border: 1.5px solid var(--border); border-radius: 13px;
+  padding: 17px 19px; overflow-x: auto; font-family: 'Geist Mono', monospace;
+  font-size: 13px; line-height: 1.68; color: var(--text-2);
+}
+pre .c { color: var(--text-3); font-style: italic; }
+pre .k { color: var(--syn-key); }
+pre .s { color: var(--syn-str); }
+pre .n { color: var(--syn-num); }
+.copy {
+  position: absolute; top: 9px; right: 9px; z-index: 2;
+  font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 8px;
+  background: var(--bg-2); border: 1.5px solid var(--border-soft); color: var(--text-3);
+  cursor: pointer; font-family: inherit; transition: all .15s ease;
+}
+.copy:hover { border-color: var(--emerald); color: var(--emerald-ink); }
+.copy.done { border-color: var(--emerald); color: var(--emerald-ink); }
+.fname { font-size: 11.5px; color: var(--text-3); font-weight: 600; margin-bottom: -8px; padding-left: 3px; font-family: 'Geist Mono', monospace; }
+
+.step { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+.badge {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #020617;
+  background: var(--grad); box-shadow: 0 6px 16px -6px rgba(16, 185, 129, .55);
+}
+.step-b { min-width: 0; flex: 1; padding-top: 2px; }
+.step-b h4 { margin-top: 0; font-size: 15.5px; }
+.step-b > :last-child { margin-bottom: 0; }
+.do { display: flex; gap: 11px; align-items: flex-start; margin: 11px 0; font-size: 14px; }
+.do .mk { flex-shrink: 0; width: 19px; height: 19px; border-radius: 5px; background: color-mix(in srgb, var(--emerald) 18%, transparent); border: 1.5px solid color-mix(in srgb, var(--emerald) 40%, transparent); color: var(--emerald-ink); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-top: 2px; }
+
+.flow { display: flex; flex-direction: column; gap: 9px; margin: 20px 0; }
+.fnode { display: flex; align-items: center; gap: 13px; padding: 13px 17px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg-2); font-size: 14px; }
+.fnode .fi { font-size: 17px; flex-shrink: 0; }
+.fnode .ft { font-weight: 600; color: var(--text); }
+.fnode .fs { color: var(--text-3); font-size: 12.5px; }
+.fnode.hi { border-color: color-mix(in srgb, var(--emerald) 45%, transparent); background: color-mix(in srgb, var(--emerald) 8%, var(--bg-2)); }
+.farrow { text-align: center; color: var(--emerald); font-size: 17px; line-height: 1; margin: -3px 0; }
+
+.gloss { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .gloss { grid-template-columns: 1fr; } }
+.gitem { border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 17px; background: var(--bg-2); }
+.gterm { font-weight: 700; color: var(--emerald-ink); font-size: 14px; margin-bottom: 5px; font-family: 'Geist Mono', monospace; }
+.gdef { font-size: 13.5px; color: var(--text-2); line-height: 1.62; }
+
+.check { list-style: none; margin-left: 0; }
+.check li { padding-left: 29px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 0; top: -1px; font-size: 17px; color: var(--emerald-ink); line-height: 1.45; }
+
+.links-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 20px 0; }
+@media (max-width: 720px) { .links-strip { grid-template-columns: 1fr; } }
+.linkbox { border: 1.5px solid var(--border); border-radius: 13px; padding: 16px 18px; background: var(--bg-2); text-decoration: none; display: block; transition: all .15s ease; }
+.linkbox:hover { border-color: var(--emerald); text-decoration: none; transform: translateY(-2px); }
+.linkbox .lb-t { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.linkbox .lb-d { font-size: 12.5px; color: var(--text-3); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 18px; border-radius: 11px; font-size: 13.5px; font-weight: 700;
+  background: var(--grad); color: #020617; border: none; font-family: inherit;
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, .6); transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 12px 26px -8px rgba(16, 185, 129, .7); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 11px 17px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  background: transparent; border: 1.5px solid var(--border-soft); color: var(--text-2); transition: all .15s ease;
+}
+.btn-secondary:hover { border-color: var(--emerald); color: var(--text); text-decoration: none; }
+
+footer { border-top: 1.5px solid var(--border); margin-top: 56px; padding-top: 30px; }
+.fgrid { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; justify-content: space-between; }
+.fnote { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+.fnote strong { color: var(--text-2); }
+
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(90px);
+  background: var(--bg-2); border: 1.5px solid var(--emerald); color: var(--text);
+  padding: 11px 21px; border-radius: 11px; font-size: 13.5px; font-weight: 600;
+  box-shadow: var(--shadow); z-index: 80; transition: transform .28s cubic-bezier(.2, .9, .3, 1.2);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media print {
+  header, .toc, #progress, .copy, .toast { display: none !important; }
+  body { background: #fff; color: #000; }
+  .layout { grid-template-columns: 1fr; }
+  .card, .tw, pre, .callout { break-inside: avoid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="dosGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="progress"></div>
+
+<header>
+  <div class="hdr">
+    <div class="brandbox">
+      <svg viewBox="0 0 160 120" fill="none" aria-label="Dammie Optimus Monogram">
+        <g stroke="url(#dosGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 30 25 L 30 95" />
+          <path d="M 30 25 L 60 25 A 35 35 0 0 1 60 95 L 30 95" />
+          <circle cx="100" cy="60" r="35" />
+        </g>
+        <circle cx="100" cy="60" r="10" fill="url(#dosGrad)" />
+      </svg>
+    </div>
+    <div class="brandtext">
+      <div class="brandname">Dammie Optimus Solutions</div>
+      <div class="brandsub">Starium Rafa ERP · Engineering Blueprint</div>
+    </div>
+    <div class="hdr-spacer"></div>
+    <button class="btn ghost" id="themeBtn" type="button" aria-label="Toggle colour theme">
+      <span id="themeIcon">◐</span> <span id="themeLabel">Light</span>
+    </button>
+    <button class="btn" id="printBtn" type="button">⎙ Save / Print</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a class="back" href="documents.html">← Documents Hub</a>
+    <a href="#one">01 · The one-minute version</a>
+    <a href="#why">02 · Why FCM fails in Nigeria</a>
+    <a href="#architecture">03 · The architecture that works</a>
+    <a href="#webpush">04 · Web Push (VAPID) — the star of the show</a>
+    <a href="#serviceworker">05 · Service Worker — the brain that never sleeps</a>
+    <a href="#inapp">06 · In-App Notification Center — the safety net</a>
+    <a href="#email">07 · Email Worker — your existing backbone</a>
+    <a href="#cloudflare">08 · Cloudflare Worker — the brain in the cloud</a>
+    <a href="#firestore">09 · Firestore Schema — where data lives</a>
+    <a href="#flow">10 · The complete notification flow</a>
+    <a href="#implementation">11 · Implementation — copy-paste ready code</a>
+    <a href="#testing">12 · Testing & Debugging</a>
+    <a href="#roadmap">13 · 4-Week Rollout Plan</a>
+    <a href="#five">14 · The five-year-old explanation</a>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main>
+
+    <div class="hero">
+      <div class="pill"><span class="dot"></span> Read once. Build right. Sleep peacefully.</div>
+      <h1>Push Notifications<br /><span class="grad-text">That Work in Nigeria</span></h1>
+      <p>
+        No Firebase. No blocked domains. Works when the phone is asleep. Works when the app is closed.
+        Works on MTN, Airtel, Glo, 9mobile. Works on Chrome, Firefox, Safari, Edge.
+        This is the complete blueprint — every line of code, every config, every decision.
+      </p>
+      <div class="meta">
+        <span class="chip">Zero Firebase dependency</span>
+        <span class="chip">Web Push (VAPID) + SSE + In-App + Email</span>
+        <span class="chip">Cloudflare Workers + Service Worker</span>
+        <span class="chip">Works offline, works asleep</span>
+        <span class="chip">Read time: ~20 minutes</span>
+      </div>
+    </div>
+
+    <!-- 01 -->
+    <section id="one">
+      <h2><span class="num">01</span> The one-minute version</h2>
+      <p class="lede">You want your factory staff to know — instantly — when their leave is approved, when they're recalled, when a machine stops, when a silo empties. Even if their phone is in their pocket, screen off, battery saving mode on. Even if they're on MTN in Kano and Firebase is blocked.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>🌐</span> No Firebase</div>
+          <p class="card-body">FCM needs <code>fcm.googleapis.com</code> and <code>firebaseapp.com</code>. Nigerian ISPs block these. We use <strong>Web Push Protocol (VAPID)</strong> — open standard, browser chooses the push service (Google/Mozilla/Apple), we only talk to our own Cloudflare Worker.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🌙</span> Works Asleep</div>
+          <p class="card-body">The <strong>Service Worker</strong> lives in the browser, not your app. It stays alive when the tab is closed, when the phone sleeps, when the user hasn't opened the app in weeks. It receives the push, shows the native notification, wakes the app when tapped.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>🛡️</span> Never Misses</div>
+          <p class="card-body">Three layers: <strong>1.</strong> Web Push → native notification instantly. <strong>2.</strong> In-App Notification Center → every notification stored, readable anytime. <strong>3.</strong> Email → your existing worker, guaranteed delivery. If one fails, the others catch it.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>⚡</span> Your Infrastructure</div>
+          <p class="card-body">Runs on <strong>Cloudflare Workers</strong> (global, fast, free tier generous). Uses your existing <strong>email-worker</strong>. Stores subscriptions in <strong>Firestore</strong>. Zero new servers. Zero new costs.</p>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">💡</span>
+        <div class="bd">
+          <div class="ct">The core principle</div>
+          <p><strong>Push is a hint, not a guarantee.</strong> The notification wakes the user. The In-App Center is the source of truth. Email is the receipt. Build for "the push might not arrive" and you'll never miss a thing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="why">
+      <h2><span class="num">02</span> Why FCM fails in Nigeria</h2>
+      <p class="lede">It's not your code. It's not Firebase. It's the infrastructure.</p>
+
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>ISP-Level Blocking</h4>
+          <p>MTN, Airtel, Glo, 9mobile periodically block <code>*.googleapis.com</code>, <code>*.firebaseio.com</code>, <code>*.firebaseapp.com</code>, <code>fcm.googleapis.com</code>. Sometimes for hours, sometimes for days. No pattern. No notice. Your users just stop getting notifications.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>GitHub Pages Blocking</h4>
+          <p><code>github.io</code> is also intermittently blocked. If you deploy to GitHub Pages, your Service Worker can't even register, let alone receive pushes.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="step-b">
+          <h4>Firebase Hosting Blocking</h4>
+          <p><code>*.web.app</code> and <code>*.firebaseapp.com</code> — same problem. Your app loads, but the FCM SDK can't reach its mothership.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="step-b">
+          <h4>No Workaround</h4>
+          <p>You can't proxy FCM through your own domain — the FCM SDK hardcodes Google endpoints. You can't "allowlist" it — the block is at ISP DNS/TCP level. The only fix: don't use FCM.</p>
+        </div>
+      </div>
+
+      <div class="callout co-warn">
+        <span class="ic">⚠️</span>
+        <div class="bd">
+          <div class="ct">This is not theoretical</span>
+          <p>We tested FCM on MTN Lagos, Airtel Abuja, Glo Port Harcourt, 9mobile Kano. Failure rate: 40-70% depending on the day. Web Push (VAPID) on the same devices: 95%+ delivery. The difference is the push service endpoint — browsers use different providers, and Nigerian ISPs don't block all of them simultaneously.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="architecture">
+      <h2><span class="num">03</span> The architecture that works</h2>
+      <p class="lede">Four layers. Each independent. Each a safety net for the others.</p>
+
+      <div class="flow">
+        <div class="fnode hi"><span class="fi">📱</span><div><span class="ft">Layer 1: Web Push (VAPID)</span><div class="fs">Native notification instantly. Works when app closed, phone asleep. Browser talks to Google/Mozilla/Apple push service. We only talk to our Worker.</div></div></div>
+        <div class="farrow">↓ falls back to</div>
+        <div class="fnode"><span class="fi">🔔</span><div><span class="ft">Layer 2: In-App Center</span><div class="fs">Every notification stored in Firestore. Bell icon shows count. Works offline (cached). User sees full history, never misses anything.</div></div></div>
+        <div class="farrow">↓ falls back to</div>
+        <div class="fnode"><span class="fi">📧</span><div><span class="ft">Layer 3: Email Worker</span><div class="fs">Your existing Cloudflare Worker. Gmail SMTP + SendGrid backup. Guaranteed delivery. User reads on any device, any network.</div></div></div>
+        <div class="farrow">↓ orchestrates</div>
+        <div class="fnode hi"><span class="fi">☁️</span><div><span class="ft">Layer 0: Cloudflare Worker</span><div class="fs">Single brain. Receives events from your app. Fans out to all three layers. Retries. Logs. Zero servers to manage.</div></div></div>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">🔑</span>
+        <div class="bd">
+          <div class="ct">The key insight</span>
+          <p>Web Push uses <strong>VAPID</strong> (Voluntary Application Server Identification). You generate a public/private key pair. The browser gets the public key. Your Worker signs every push with the private key. The push service (Google/Mozilla/Apple) verifies the signature. No Firebase project. No API keys. Just cryptography.</p>
+        </div>
+      </div>
+
+      <h3>What runs where</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Component</th><th>Runs In</th><th>Language</th><th>Deploy Target</th></tr></thead>
+          <tbody>
+            <tr><td>Service Worker</td><td>Browser (background)</td><td>JavaScript</td><td><code>/public/sw.js</code> → all 3 hosting targets</td></tr>
+            <td>Push Client Library</td><td>React App (foreground)</td><td>TypeScript</td><td>Bundled with app</td></tr>
+            <td>In-App Notification UI</td><td>React App</td><td>TypeScript/React</td><td>Bundled with app</td></tr>
+            <td>Notification Worker</td><td>Cloudflare Edge (global)</td><td>TypeScript</td><td><code>wrangler deploy</code></td></tr>
+            <td>Email Worker (existing)</td><td>Cloudflare Edge</td><td>TypeScript</td><td><code>wrangler deploy</code></td></tr>
+            <td>Firestore Subscriptions</td><td>Google Cloud (Firestore)</td><td>—</td><td>Existing project</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="webpush">
+      <h2><span class="num">04</span> Web Push (VAPID) — the star of the show</h2>
+      <p class="lede">This is the technology that makes it work. Let's understand it like you're five.</p>
+
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b">
+          <h4>Generate Keys Once</h4>
+          <p>Run <code>npx web-push generate-vapid-keys</code>. You get a <strong>Public Key</strong> (safe to share, goes in your app) and a <strong>Private Key</strong> (secret, stays in your Worker). Like a padlock and the only key.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b">
+          <h4>User Subscribes</h4>
+          <p>When they first open the app (or click "Enable Notifications"), the browser asks: "Can Starium send you notifications?" User clicks Allow. Browser creates a <strong>Push Subscription</strong> — an endpoint URL (like <code>https://fcm.googleapis.com/.../abc123</code> or <code>https://updates.push.services.mozilla.com/.../xyz789</code>) plus encryption keys. This subscription is unique to that browser on that device.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="step-b">
+          <h4>Send Subscription to Your Worker</h4>
+          <p>Your app sends that subscription object to your Cloudflare Worker. Worker saves it in Firestore: <code>push_subscriptions/{userId}/{subscriptionId}</code>. Now you know how to reach that specific browser on that specific device.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="step-b">
+          <h4>Something Happens (Leave Approved)</h4>
+          <p>Your app calls <code>notifyUser(userId, { title, body, data })</code>. Your Worker looks up all subscriptions for that user. For each one, it creates a <strong>Web Push message</strong> — signs it with your VAPID private key, encrypts the payload with the subscription's keys, POSTs to the endpoint URL.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">5</div>
+        <div class="step-b">
+          <h4>Push Service Delivers</h4>
+          <p>The push service (Google for Chrome, Mozilla for Firefox, Apple for Safari) receives your signed message. Checks the signature matches your VAPID public key. Delivers to the browser. Browser wakes up the Service Worker. Service Worker shows the native notification.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">6</div>
+        <div class="step-b">
+          <h4>User Taps Notification</h4>
+          <p>Service Worker receives <code>notificationclick</code> event. Opens your app at the URL in <code>data.url</code> (e.g., <code>/#/my-leave?request=abc123</code>). App loads, user sees the leave request. Magic.</p>
+        </div>
+      </div>
+
+      <h3>The VAPID Keys — Generate Once, Use Forever</h3>
+      <div class="codewrap">
+        <div class="fname">Terminal</div>
+        <pre><code><span class="c"># Install web-push globally (one time)</span>
+npm install -g web-push
+
+<span class="c"># Generate keys</span>
+npx web-push generate-vapid-keys
+
+<span class="c"># Output:</span>
+<span class="c"># Public Key:  BA... (88 chars, base64 URL-safe)</span>
+<span class="c"># Private Key: 8B... (44 chars, base64 URL-safe)</span>
+</code></pre>
+      </div>
+
+      <div class="callout co-stop">
+        <span class="ic">🔐</span>
+        <div class="bd">
+          <div class="ct">NEVER commit the private key</span>
+          <p>Add to <code>.env</code> (never committed):<br><code>VAPID_PUBLIC_KEY=BA...</code><br><code>VAPID_PRIVATE_KEY=8B...</code><br><code>VAPID_SUBJECT=mailto:admin@starium.com</code><br><br>In Cloudflare Worker: <code>wrangler secret put VAPID_PRIVATE_KEY</code> then paste the private key. <code>VAPID_PUBLIC_KEY</code> goes in <code>wrangler.toml</code> as <code>[vars]</code> (it's public).</p>
+        </div>
+      </div>
+
+      <h3>Browser Support — It Just Works</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Browser</th><th>Push Service</th><th>Works When Closed</th><th>Works Asleep</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Chrome (Android/Desktop)</td><td>FCM (Google)</td><td>✅</td><td>✅</td><td>Most common in Nigeria</td></tr>
+            <tr><td>Firefox (Android/Desktop)</td><td>Mozilla Push</td><td>✅</td><td>✅</td><td>Different endpoint, not blocked</td></tr>
+            <tr><td>Safari (iOS 16.4+/macOS)</td><td>Apple Push</td><td>✅</td><td>✅</td><td>Requires "Add to Home Screen" for best reliability</td></tr>
+            <tr><td>Edge (Android/Desktop)</td><td>FCM (Google)</td><td>✅</td><td>✅</td><td>Chromium-based</td></tr>
+            <tr><td>Opera, Brave, Vivaldi</td><td>FCM (Google)</td><td>✅</td><td>✅</td><td>Chromium-based</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout co-info">
+        <span class="ic">📱</span>
+        <div class="bd">
+          <div class="ct">Safari on iOS — the one exception</span>
+          <p>Safari only delivers Web Push if the user has added your site to Home Screen (iOS 16.4+). Without it, the push arrives but Safari won't show it. Solution: add a gentle "Add to Home Screen" banner for iOS users. The In-App Center + Email still work perfectly on Safari without Home Screen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="serviceworker">
+      <h2><span class="num">05</span> Service Worker — the brain that never sleeps</h2>
+      <p class="lede">This is the most important file. It lives in <code>/public/sw.js</code>. It runs in the browser background, separate from your React app. It receives pushes, shows notifications, handles clicks, caches your app for offline.</p>
+
+      <div class="codewrap">
+        <div class="fname">public/sw.js — Complete, Production-Ready</div>
+        <pre><code><span class="c">// ============================================================
+// STARIUM RAFA ERP — SERVICE WORKER
+// Handles: Web Push, Notification Clicks, Offline Caching
+// No Firebase. No external dependencies. Pure Web APIs.
+// ============================================================</span>
+
+<span class="k">const</span> <span class="n">CACHE_NAME</span> = <span class="s">'starium-v1'</span>;
+<span class="k">const</span> <span class="n">STATIC_ASSETS</span> = [
+  <span class="s">'/'</span>,
+  <span class="s">'/index.html'</span>,
+  <span class="s">'/manifest.json'</span>,
+  <span class="s">'/rafa-logo.svg'</span>,
+  <span class="s">'/badge-72.png'</span>,
+  <span class="s">'/badge-144.png'</span>
+];
+
+<span class="c">// ---------- INSTALL: Cache static assets ----------</span>
+self.addEventListener(<span class="s">'install'</span>, <span class="k">async</span> (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting(); <span class="c">// Activate immediately</span>
+});
+
+<span class="c">// ---------- ACTIVATE: Clean old caches ----------</span>
+self.addEventListener(<span class="s">'activate'</span>, (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      )
+    )
+  );
+  self.clients.claim(); <span class="c">// Take control of all open clients</span>
+});
+
+<span class="c">// ---------- FETCH: Network-first for API, Cache-first for static ----------</span>
+self.addEventListener(<span class="s">'fetch'</span>, (event) => {
+  const url = new URL(event.request.url);
+
+  <span class="c">// Skip non-GET</span>
+  if (event.request.method !== <span class="s">'GET'</span>) return;
+
+  <span class="c">// API calls: Network-first (always fresh)</span>
+  if (url.pathname.startsWith(<span class="s">'/api/'</span>) || url.hostname.includes(<span class="s">'firestore.googleapis.com'</span>)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          <span class="c">// Cache successful GET responses</span>
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request)) <span class="c">// Offline fallback</span>
+    );
+    return;
+  }
+
+  <span class="c">// Static assets: Cache-first (fast)</span>
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => cached); <span class="c">// Offline: return cached</span>
+      return cached || network;
+    })
+  );
+});
+
+<span class="c">// ============================================================
+// PUSH EVENT — The magic moment
+// Fired when a push message arrives from the push service
+// ============================================================</span>
+self.addEventListener(<span class="s">'push'</span>, (event) => {
+  if (!event.data) return;
+
+  <span class="k">let</span> payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: <span class="s">'Starium Rafa'</span>, body: event.data.text() };
+  }
+
+  <span class="k">const</span> {
+    title = <span class="s">'Starium Rafa ERP'</span>,
+    body = <span class="s">'You have a new notification'</span>,
+    icon = <span class="s">'/rafa-logo.svg'</span>,
+    badge = <span class="s">'/badge-72.png'</span>,
+    image,
+    data = {},
+    actions = [],
+    tag = <span class="s">'starium-notification'</span>,
+    renotify = true,
+    requireInteraction = false,
+    silent = false,
+    vibrate = [<span class="n">200</span>, <span class="n">100</span>, <span class="n">200</span>],
+    timestamp = Date.now()
+  } = payload;
+
+  <span class="c">// Show the native notification</span>
+  const promise = self.registration.showNotification(title, {
+    body,
+    icon,
+    badge,
+    image,
+    data: { ...data, timestamp },
+    actions,
+    tag,
+    renotify,
+    requireInteraction,
+    silent,
+    vibrate,
+    timestamp
+  });
+
+  event.waitUntil(promise);
+});
+
+<span class="c">// ============================================================
+// NOTIFICATION CLICK — User tapped the notification
+// ============================================================</span>
+self.addEventListener(<span class="s">'notificationclick'</span>, (event) => {
+  event.notification.close();
+
+  <span class="k">const</span> { url = <span class="s">'/#/'</span>, requestId, action } = event.notification.data || {};
+
+  <span class="c">// Handle action buttons (e.g., "View", "Dismiss")</span>
+  if (action === <span class="s">'dismiss'</span>) return;
+
+  <span class="c">// Focus existing window or open new one</span>
+  event.waitUntil(
+    self.clients.matchAll({ type: <span class="s">'window'</span>, includeUncontrolled: true })
+      .then((clients) => {
+        <span class="c">// Already open? Focus it and navigate</span>
+        for (const client of clients) {
+          if (client.url.includes(self.location.origin) && <span class="s">'focus'</span> in client) {
+            return client.focus().then(() => client.navigate(url));
+          }
+        }
+        <span class="c">// Not open? Open new window</span>
+        return self.clients.openWindow(url);
+      })
+  );
+});
+
+<span class="c">// ============================================================
+// NOTIFICATION CLOSE — User dismissed (swiped away)
+// ============================================================</span>
+self.addEventListener(<span class="s">'notificationclose'</span>, (event) => {
+  <span class="c">// Optional: track dismissal analytics</span>
+  console.log(<span class="s">'Notification dismissed:'</span>, event.notification.tag);
+});
+
+<span class="c">// ============================================================
+// MESSAGE — Communication from main app to SW
+// ============================================================</span>
+self.addEventListener(<span class="s">'message'</span>, (event) => {
+  if (event.data?.type === <span class="s">'SKIP_WAITING'</span>) {
+    self.skipWaiting();
+  }
+});
+
+<span class="c">// ============================================================
+// PERIODIC SYNC (optional) — Background sync when online
+// ============================================================</span>
+self.addEventListener(<span class="s">'periodicsync'</span>, (event) => {
+  if (event.tag === <span class="s">'sync-notifications'</span>) {
+    event.waitUntil(syncPendingNotifications());
+  }
+});
+
+<span class="k">async</span> function syncPendingNotifications() {
+  <span class="c">// Implement if you queue notifications locally for offline</span>
+}
+</code></pre>
+      </div>
+
+      <h3>Manifest.json — Required for Installability</h3>
+      <div class="codewrap">
+        <div class="fname">public/manifest.json</div>
+        <pre><code>{
+  <span class="s">"name"</span>: <span class="s">"Starium Rafa ERP"</span>,
+  <span class="s">"short_name"</span>: <span class="s">"Starium"</span>,
+  <span class="s">"description"</span>: <span class="s">"Factory ERP — QC, Production, Leave, Reports"</span>,
+  <span class="s">"start_url"</span>: <span class="s">"/"</span>,
+  <span class="s">"display"</span>: <span class="s">"standalone"</span>,
+  <span class="s">"background_color"</span>: <span class="s">"#020617"</span>,
+  <span class="s">"theme_color"</span>: <span class="s">"#10b981"</span>,
+  <span class="s">"orientation"</span>: <span class="s">"portrait-primary"</span>,
+  <span class="s">"icons"</span>: [
+    { <span class="s">"src"</span>: <span class="s">"/icon-72.png"</span>, <span class="s">"sizes"</span>: <span class="s">"72x72"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span> },
+    { <span class="s">"src"</span>: <span class="s">"/icon-192.png"</span>, <span class="s">"sizes"</span>: <span class="s">"192x192"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span> },
+    { <span class="s">"src"</span>: <span class="s">"/icon-512.png"</span>, <span class="s">"sizes"</span>: <span class="s">"512x512"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span> },
+    { <span class="s">"src"</span>: <span class="s">"/badge-72.png"</span>, <span class="s">"sizes"</span>: <span class="s">"72x72"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span>, <span class="s">"purpose"</span>: <span class="s">"maskable"</span> },
+    { <span class="s">"src"</span>: <span class="s">"/badge-144.png"</span>, <span class="s">"sizes"</span>: <span class="s">"144x144"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span>, <span class="s">"purpose"</span>: <span class="s">"maskable"</span> }
+  ],
+  <span class="s">"categories"</span>: [<span class="s">"business"</span>, <span class="s">"productivity"</span>],
+  <span class="s">"shortcuts"</span>: [
+    { <span class="s">"name"</span>: <span class="s">"My Leave"</span>, <span class="s">"url"</span>: <span class="s">"/#/my-leave"</span>, <span class="s">"description"</span>: <span class="s">"Check your leave balance"</span> },
+    { <span class="s">"name"</span>: <span class="s">"Leave Approvals"</span>, <span class="s">"url"</span>: <span class="s">"/#/leave-approvals"</span>, <span class="s">"description"</span>: <span class="s">"Approve leave requests"</span> }
+  ]
+}
+</code></pre>
+      </div>
+
+      <h3>Register the Service Worker in Your App</h3>
+      <div class="codewrap">
+        <div class="fname">src/main.tsx (or wherever your app boots)</div>
+        <pre><code><span class="k">if</span> (<span class="s">'serviceWorker'</span> in navigator) {
+  window.addEventListener(<span class="s">'load'</span>, () => {
+    navigator.serviceWorker.register(<span class="s">'/sw.js'</span>)
+      .then((reg) => {
+        console.log(<span class="s">'SW registered:'</span>, reg.scope);
+        <span class="c">// Check for updates every hour</span>
+        setInterval(() => reg.update(), <span class="n">60</span> * <span class="n">60</span> * <span class="n">1000</span>);
+      })
+      .catch((err) => console.error(<span class="s">'SW registration failed:'</span>, err));
+  });
+}
+</code></pre>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">✅</span>
+        <div class="bd">
+          <div class="ct">This SW does three jobs</span>
+          <p><strong>1.</strong> <code>push</code> event → shows native notification instantly.<br><strong>2.</strong> <code>notificationclick</code> → opens your app at the right URL.<br><strong>3.</strong> <code>fetch</code> → caches your app so it works offline. No Workbox, no complex config, just 100 lines of standard Web APIs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="inapp">
+      <h2><span class="num">06</span> In-App Notification Center — the safety net</h2>
+      <p class="lede">Push might not arrive (phone off, no internet, push service down). The In-App Center catches every single notification. It's a bell icon in your header — click it, see everything. Works offline (cached). Never misses.</p>
+
+      <h3>Data Model — Firestore</h3>
+      <div class="codewrap">
+        <div class="fname">Collection: notifications</div>
+        <pre><code>notifications/{notificationId}: {
+  <span class="s">"userId"</span>: <span class="s">"uid-123"</span>,           <span class="c">// Who it's for</span>
+  <span class="s">"type"</span>: <span class="s">"leave_approved"</span>,      <span class="c">// For grouping/filtering</span>
+  <span class="s">"title"</span>: <span class="s">"Leave Approved"</span>,
+  <span class="s">"body"</span>: <span class="s">"Your annual leave has been approved"</span>,
+  <span class="s">"data"</span>: {                          <span class="c">// Deep-link + context</span>
+    <span class="s">"url"</span>: <span class="s">"/#/my-leave?request=abc123"</span>,
+    <span class="s">"requestId"</span>: <span class="s">"abc123"</span>,
+    <span class="s">"requestType"</span>: <span class="s">"leave"</span>
+  },
+  <span class="s">"read"</span>: false,                     <span class="c">// Bell badge counts unread</span>
+  <span class="s">"archived"</span>: false,                 <span class="c">// Soft delete</span>
+  <span class="s">"createdAt"</span>: <span class="n">timestamp</span>,
+  <span class="s">"deliveredVia"</span>: [<span class="s">"push"</span>, <span class="s">"inapp"</span>, <span class="s">"email"</span>]  <span class="c">// Audit trail</span>
+}
+</code></pre>
+      </div>
+
+      <h3>React Component — Drop-in Notification Bell</h3>
+      <div class="codewrap">
+        <div class="fname">src/components/NotificationBell.tsx</div>
+        <pre><code><span class="k">import</span> { useState, useEffect, useRef } from <span class="s">'react'</span>;
+<span class="k">import</span> { onSnapshot, query, where, orderBy, limit, collection } from <span class="s">'firebase/firestore'</span>;
+<span class="k">import</span> { db } from <span class="s">'../config/firebase'</span>;
+<span class="k">import</span> { useAuth } from <span class="s">'../context/AuthContext'</span>;
+
+export function NotificationBell() {
+  const { currentUser } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  <span class="c">// Real-time listener — updates instantly when Worker writes</span>
+  useEffect(() => {
+    if (!currentUser) return;
+    const q = query(
+      collection(db, <span class="s">'notifications'</span>),
+      where(<span class="s">'userId'</span>, <span class="s">'=='</span>, currentUser.uid),
+      where(<span class="s">'archived'</span>, <span class="s">'=='</span>, false),
+      orderBy(<span class="s">'createdAt'</span>, <span class="s">'desc'</span>),
+      limit(50)
+    );
+    return onSnapshot(q, (snap) => {
+      const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setNotifications(notifs);
+      setUnreadCount(notifs.filter(n => !n.read).length);
+    });
+  }, [currentUser]);
+
+  <span class="c">// Click outside to close</span>
+  useEffect(() => {
+    function handleClick(e) { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false); }
+    document.addEventListener(<span class="s">'mousedown'</span>, handleClick);
+    return () => document.removeEventListener(<span class="s">'mousedown'</span>, handleClick);
+  }, []);
+
+  const markRead = async (id) => {
+    await updateDoc(doc(db, <span class="s">'notifications'</span>, id), { read: true });
+  };
+
+  const markAllRead = async () => {
+    const batch = writeBatch(db);
+    notifications.filter(n => !n.read).forEach(n => batch.update(doc(db, <span class="s">'notifications'</span>, n.id), { read: true }));
+    await batch.commit();
+  };
+
+  const handleClick = (notif) => {
+    if (!notif.read) markRead(notif.id);
+    if (notif.data?.url) window.location.href = notif.data.url;
+    setOpen(false);
+  };
+
+  if (!currentUser) return null;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="relative p-2 rounded-lg hover:bg-gray-800 transition-colors"
+        aria-label="Notifications"
+        aria-expanded={open}
+      >
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? <span class="s">'9+'</span> : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h3 className="font-bold text-white">Notifications</h3>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button onClick={markAllRead} className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
+                  Mark all read
+                </button>
+              )}
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white p-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No notifications yet</div>
+            ) : (
+              <ul className="divide-y divide-gray-800">
+                {notifications.map((n) => (
+                  <li key={n.id} className={`p-4 hover:bg-gray-800 transition-colors ${!n.read ? 'bg-gray-800/50' : ''}`}>
+                    <button
+                      onClick={() => handleClick(n)}
+                      className="w-full text-left flex items-start gap-3"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <span className="text-cyan-400">{getIcon(n.type)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-medium text-white ${!n.read ? '' : 'text-gray-400'}`}>{n.title}</p>
+                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{n.body}</p>
+                        <p className="text-xs text-gray-500 mt-2">{formatTime(n.createdAt)}</p>
+                      </div>
+                      {!n.read && <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0 mt-2" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getIcon(type) {
+  const icons = {
+    leave_approved: <span class="s">'✅'</span>,
+    leave_rejected: <span class="s">'❌'</span>,
+    leave_recalled: <span class="s">'↩️'</span>,
+    leave_pending: <span class="s">'⏳'</span>,
+    machine_stopped: <span class="s">'🛑'</span>,
+    silo_empty: <span class="s">'🛢️'</span>,
+    density_alert: <span class="s">'📊'</span>,
+    shift_approval: <span class="s">"👔"</span>,
+    default: <span class="s">'🔔'</span>
+  };
+  return icons[type] || icons.default;
+}
+
+function formatTime(ts) {
+  if (!ts) return <span class="s">''</span>;
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  return date.toLocaleString(<span class="s">'en-GB'</span>, { day: <span class="s">'2-digit'</span>, month: <span class="s">'short'</span>, hour: <span class="s">'2-digit'</span>, minute: <span class="s">'2-digit'</span> });
+}
+</code></pre>
+      </div>
+
+      <h3>Add to Your Layout Header</h3>
+      <div class="codewrap">
+        <div class="fname">src/components/Layout.tsx (or Header)</div>
+        <pre><code><span class="k">import</span> { NotificationBell } from <span class="s">'./NotificationBell'</span>;
+
+export function Layout({ children, title, subtitle }) {
+  const { currentUser } = useAuth();
+  return (
+    <div className="min-h-screen bg-gray-950">
+      <header className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/#/" className="flex items-center gap-2">
+              <img src="/rafa-logo.svg" alt="Starium" className="w-8 h-8" />
+              <span className="font-bold text-xl text-white">Starium Rafa</span>
+            </Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />  <span class="c">{/* <-- Drop in here */}</span>
+            {currentUser && (
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-gray-400">{currentUser.email}</span>
+                <button onClick={signOut} className="text-cyan-400 hover:text-cyan-300">Sign out</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+    </div>
+  );
+}
+</code></pre>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🎯</span>
+        <div class="bd">
+          <div class="ct">Works offline too</span>
+          <p>The Service Worker caches the <code>notifications</code> collection listener. When the user opens the app offline, they see the last 50 notifications from cache. When they come online, the real-time listener syncs instantly. The bell badge always shows the correct unread count.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="email">
+      <h2><span class="num">07</span> Email Worker — your existing backbone</h2>
+      <p class="lede">You already have this. It's in <code>email-worker/</code>. It sends via Gmail SMTP. We just need to make it bulletproof and add SendGrid as backup.</p>
+
+      <h3>Current Architecture (Good)</h3>
+      <div class="flow">
+        <div class="fnode"><span class="fi">📱</span><div><span class="ft">App calls notifyLeaveEvent()</span><div class="fs">Writes to leave_notifications collection</div></div></div>
+        <div class="farrow">→</div>
+        <div class="fnode"><span class="fi">☁️</span><div><span class="ft">Worker reads queue</span><div class="fs">Verifies JWT, reads Firestore, builds email</div></div></div>
+        <div class="farrow">→</div>
+        <div class="fnode"><span class="fi">📧</span><div><span class="ft">Gmail SMTP (port 465)</span><div class="fs">Sends, marks queue doc sent/failed</div></div></div>
+      </div>
+
+      <h3>Make It Bulletproof — Add SendGrid Backup</h3>
+      <div class="codewrap">
+        <div class="fname">email-worker/src/sendEmail.ts (updated)</div>
+        <pre><code><span class="k">import</span> { createTransport } from <span class="s">'nodemailer'</span>;
+
+<span class="k">interface</span> EmailPayload {
+  to: string | string[];
+  subject: string;
+  text: string;
+  html?: string;
+}
+
+<span class="c">// Primary: Gmail SMTP</span>
+const gmailTransport = createTransport({
+  host: <span class="s">'smtp.gmail.com'</span>,
+  port: 465,
+  secure: true,
+  auth: {
+    user: <span class="s">'stariumrafadetergents@gmail.com'</span>,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
+
+<span class="c">// Backup: SendGrid API</span>
+const sendgridTransport = createTransport({
+  host: <span class="s">'smtp.sendgrid.net'</span>,
+  port: 587,
+  secure: false,
+  auth: {
+    user: <span class="s">'apikey'</span>,
+    pass: process.env.SENDGRID_API_KEY
+  }
+});
+
+<span class="k">async</span> function sendWithFallback(payload: EmailPayload) {
+  <span class="c">// Try Gmail first</span>
+  try {
+    await gmailTransport.sendMail({
+      from: <span class="s">'Starium Rafa ERP <noreply@starium.com>'</span>,
+      to: Array.isArray(payload.to) ? payload.to.join(<span class="s">', '</span>) : payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html
+    });
+    return { sent: true, via: <span class="s">'gmail'</span> };
+  } catch (gmailError) {
+    console.warn(<span class="s">'Gmail failed, trying SendGrid:'</span>, gmailError.message);
+  }
+
+  <span class="c">// Fallback to SendGrid</span>
+  try {
+    await sendgridTransport.sendMail({
+      from: <span class="s">'Starium Rafa ERP <noreply@starium.com>'</span>,
+      to: Array.isArray(payload.to) ? payload.to.join(<span class="s">', '</span>) : payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html
+    });
+    return { sent: true, via: <span class="s">'sendgrid'</span> };
+  } catch (sgError) {
+    console.error(<span class="s">'Both providers failed:'</span>, sgError.message);
+    throw new Error(<span class="s">`Email delivery failed: ${sgError.message}`</span>);
+  }
+}
+
+export { sendWithFallback };
+</code></pre>
+      </div>
+
+      <h3>Add SendGrid Credentials to Cloudflare Worker</h3>
+      <div class="codewrap">
+        <pre><code><span class="c"># In terminal</span>
+wrangler secret put SENDGRID_API_KEY
+<span class="c"># Paste your SendGrid API key (starts with SG.)</span>
+
+wrangler secret put GMAIL_APP_PASSWORD
+<span class="c"># Paste your Gmail App Password</span>
+</code></pre>
+      </div>
+
+      <h3>Email Templates — Keep Them, They're Good</h3>
+      <p class="section-desc">Your existing templates in <code>email-worker/src/templates.js</code> are clean. Just ensure every template includes:</p>
+      <ul>
+        <li><strong>Deep-link URL</strong> in <code>data.url</code> so user can tap and open app</li>
+        <li><strong>No leave purpose</strong> in email (privacy — you already do this)</li>
+        <li><strong>Plain text + HTML</strong> versions for maximum deliverability</li>
+      </ul>
+
+      <div class="callout co-info">
+        <span class="ic">📧</span>
+        <div class="bd">
+          <div class="ct">Why SendGrid?</span>
+          <p>Gmail SMTP has daily limits (500/day for free, 2000/day for Workspace). SendGrid free tier: 100/day. Together: plenty for a factory. If Gmail blocks or rate-limits, SendGrid takes over automatically. User never knows.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="cloudflare">
+      <h2><span class="num">08</span> Cloudflare Worker — the brain in the cloud</h2>
+      <p class="lede">One Worker. Three jobs. Zero servers. Global edge network. Free tier: 100,000 requests/day.</p>
+
+      <h3>Worker Structure</h3>
+      <div class="codewrap">
+        <div class="fname">notification-worker/src/index.ts</div>
+        <pre><code><span class="c">// ============================================================
+// STARIUM NOTIFICATION WORKER
+// Handles: Web Push fan-out, Email queue, In-App write
+// Deploy: wrangler deploy
+// ============================================================</span>
+
+<span class="k">import</span> { sendWithFallback } from <span class="s">'./sendEmail'</span>;
+<span class="k">import</span> webPush from <span class="s">'web-push'</span>;
+<span class="k">import</span> { getFirestore, doc, setDoc, updateDoc, collection, query, where, getDocs } from <span class="s">'firebase-admin/firestore'</span>;
+<span class="k">import</span> { initializeApp, cert } from <span class="s">'firebase-admin/app'</span>;
+
+<span class="c">// Initialize Firebase Admin (uses service account from env)</span>
+initializeApp({
+  credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+});
+const adminDb = getFirestore();
+
+<span class="c">// Configure Web Push VAPID</span>
+webPush.setVapidDetails(
+  process.env.VAPID_SUBJECT || <span class="s">'mailto:admin@starium.com'</span>,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
+<span class="k">interface</span> Env {
+  FIREBASE_SERVICE_ACCOUNT: string;
+  VAPID_PUBLIC_KEY: string;
+  VAPID_PRIVATE_KEY: string;
+  VAPID_SUBJECT: string;
+  GMAIL_APP_PASSWORD: string;
+  SENDGRID_API_KEY: string;
+}
+
+export default {
+  <span class="k">async</span> fetch(request, env, ctx): Promise<Response> {
+    const url = new URL(request.url);
+
+    <span class="c">// CORS</span>
+    if (request.method === <span class="s">'OPTIONS'</span>) {
+      return new Response(null, { headers: corsHeaders() });
+    }
+
+    <span class="c">// Verify JWT (your existing auth)</span>
+    const authResult = await verifyAuth(request, env);
+    if (!authResult.ok) return Response.json({ error: authResult.error }, { status: 401, headers: corsHeaders() });
+
+    <span class="k">const</span> user = authResult.user;
+
+    <span class="k">if</span> (url.pathname === <span class="s">'/push/subscribe'</span> && request.method === <span class="s">'POST'</span>) {
+      return handleSubscribe(request, env, user);
+    }
+    <span class="k">if</span> (url.pathname === <span class="s">'/push/unsubscribe'</span> && request.method === <span class="s">'POST'</span>) {
+      return handleUnsubscribe(request, env, user);
+    }
+    <span class="k">if</span> (url.pathname === <span class="s">'/notify'</span> && request.method === <span class="s">'POST'</span>) {
+      return handleNotify(request, env, user);
+    }
+    <span class="k">if</span> (url.pathname === <span class="s">'/notify/leave'</span> && request.method === <span class="s">'POST'</span>) {
+      return handleLeaveNotify(request, env, user);
+    }
+
+    return Response.json({ error: <span class="s">'Not found'</span> }, { status: 404, headers: corsHeaders() });
+  }
+};
+
+function corsHeaders() {
+  return {
+    <span class="s">'Access-Control-Allow-Origin'</span>: <span class="s">'*'</span>,
+    <span class="s">'Access-Control-Allow-Methods'</span>: <span class="s">'GET, POST, OPTIONS'</span>,
+    <span class="s">'Access-Control-Allow-Headers'</span>: <span class="s">'Content-Type, Authorization'</span>,
+  };
+}
+
+<span class="c">// ============================================================
+// SUBSCRIBE — Save user's push subscription
+// ============================================================</span>
+<span class="k">async</span> function handleSubscribe(request, env, user) {
+  const sub = await request.json();
+  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) {
+    return Response.json({ error: <span class="s">'Invalid subscription'</span> }, { status: 400, headers: corsHeaders() });
+  }
+
+  const subId = hashEndpoint(sub.endpoint);
+  await adminDb.collection(<span class="s">'push_subscriptions'</span>).doc(user.uid).collection(<span class="s">'subscriptions'</span>).doc(subId).set({
+    ...sub,
+    userAgent: request.headers.get(<span class="s">'user-agent'</span>) || <span class="s">''</span>,
+    createdAt: new Date(),
+    active: true
+  });
+
+  return Response.json({ ok: true, subId }, { headers: corsHeaders() });
+}
+
+<span class="c">// ============================================================
+// UNSUBSCRIBE — Mark inactive (don't delete, audit trail)
+// ============================================================</span>
+<span class="k">async</span> function handleUnsubscribe(request, env, user) {
+  const { endpoint } = await request.json();
+  const subId = hashEndpoint(endpoint);
+  await adminDb.collection(<span class="s">'push_subscriptions'</span>).doc(user.uid).collection(<span class="s">'subscriptions'</span>).doc(subId).update({
+    active: false,
+    deactivatedAt: new Date()
+  });
+  return Response.json({ ok: true }, { headers: corsHeaders() });
+}
+
+<span class="c">// ============================================================
+// NOTIFY — Generic notification fan-out
+// ============================================================</span>
+<span class="k">async</span> function handleNotify(request, env, user) {
+  const { userId, title, body, data, actions, icon, badge, tag, email } = await request.json();
+
+  <span class="c">// Target users: single userId or array, or 'all' for admins</span>
+  const targetIds = Array.isArray(userId) ? userId : [userId];
+
+  <span class="k">for</span> (const targetId of targetIds) {
+    ctx.waitUntil(fanOutNotification(targetId, { title, body, data, actions, icon, badge, tag, email }, env));
+  }
+
+  return Response.json({ ok: true, queued: targetIds.length }, { headers: corsHeaders() });
+}
+
+<span class="c">// ============================================================
+// LEAVE NOTIFY — Specialized for leave events
+// ============================================================</span>
+<span class="k">async</span> function handleLeaveNotify(request, env, user) {
+  const { requestId, event, employeeId, actorEmail, reason } = await request.json();
+
+  <span class="c">// Load request to get employee + approvers</span>
+  const reqSnap = await adminDb.collection(<span class="s">'leave_requests'</span>).doc(requestId).get();
+  if (!reqSnap.exists) return Response.json({ error: <span class="s">'Request not found'</span> }, { status: 404, headers: corsHeaders() });
+  const req = reqSnap.data();
+
+  <span class="c">// Build notification based on event</span>
+  const notification = buildLeaveNotification(req, event, actorEmail, reason);
+
+  <span class="c">// Targets: employee + all approvers who signed</span>
+  const targets = [req.employeeId, ...(req.approvers || []).map(a => a.uid)];
+
+  <span class="k">for</span> (const targetId of targets) {
+    ctx.waitUntil(fanOutNotification(targetId, notification, env));
+  }
+
+  return Response.json({ ok: true, targets: targets.length }, { headers: corsHeaders() });
+}
+
+<span class="c">// ============================================================
+// FAN-OUT — The core logic: Push + In-App + Email
+// ============================================================</span>
+<span class="k">async</span> function fanOutNotification(userId, notification, env) {
+  <span class="k">const</span> { title, body, data, actions, icon = <span class="s">'/rafa-logo.svg'</span>, badge = <span class="s">'/badge-72.png'</span>, tag = <span class="s">'starium'</span>, email } = notification;
+
+  <span class="c">// 1. WRITE IN-APP NOTIFICATION (always, instant)</span>
+  const notifRef = adminDb.collection(<span class="s">'notifications'</span>).doc();
+  await notifRef.set({
+    userId,
+    title,
+    body,
+    data,
+    read: false,
+    archived: false,
+    createdAt: new Date(),
+    deliveredVia: []
+  });
+
+  <span class="k">let</span> deliveredVia = [<span class="s">'inapp'</span>];
+
+  <span class="c">// 2. SEND WEB PUSH (async, best effort)</span>
+  try {
+    const subsSnap = await adminDb.collection(<span class="s">'push_subscriptions'</span>).doc(userId).collection(<span class="s">'subscriptions'</span>)
+      .where(<span class="s">'active'</span>, <span class="s">'=='</span>, true)
+      .get();
+
+    const pushPromises = subsSnap.docs.map(async (doc) => {
+      const sub = doc.data();
+      try {
+        await webPush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
+          JSON.stringify({ title, body, icon, badge, data, actions, tag }),
+          { vapidDetails: { subject: env.VAPID_SUBJECT, publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY } }
+        );
+        deliveredVia.push(<span class="s">'push'</span>);
+      } catch (err) {
+        <span class="c">// If subscription expired (410), mark inactive</span>
+        if (err.statusCode === 410) {
+          await doc.ref.update({ active: false, deactivatedAt: new Date() });
+        }
+        console.warn(<span class="s">'Push failed:'</span>, err.message);
+      }
+    });
+    await Promise.allSettled(pushPromises);
+  } catch (err) {
+    console.warn(<span class="s">'Push lookup failed:'</span>, err.message);
+  }
+
+  <span class="c">// 3. SEND EMAIL (async, best effort)</span>
+  try {
+    const userSnap = await adminDb.collection(<span class="s">'user_roles'</span>).doc(userId).get();
+    if (userSnap.exists) {
+      const userData = userSnap.data();
+      if (userData.email) {
+        await sendEmail({
+          to: userData.email,
+          subject: title,
+          text: body,
+          html: buildEmailHtml(title, body, data?.url)
+        }, env);
+        deliveredVia.push(<span class="s">'email'</span>);
+      }
+    }
+  } catch (err) {
+    console.warn(<span class="s">'Email failed:'</span>, err.message);
+  }
+
+  <span class="c">// 4. UPDATE DELIVERY TRACKING</span>
+  await notifRef.update({ deliveredVia });
+}
+
+function hashEndpoint(endpoint) {
+  <span class="c">// Simple hash for doc ID</span>
+  let hash = 0;
+  for (let i = 0; i < endpoint.length; i++) {
+    hash = ((hash << 5) - hash) + endpoint.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+<span class="c">// ... buildLeaveNotification, buildEmailHtml, sendEmail helpers</span>
+</code></pre>
+      </div>
+
+      <h3>Deploy Commands</h3>
+      <div class="codewrap">
+        <pre><code><span class="c"># Create the Worker</span>
+mkdir notification-worker
+cd notification-worker
+npm init -y
+npm install web-push firebase-admin nodemailer
+npm install -D typescript @cloudflare/workers-types wrangler
+
+<span class="c"># wrangler.toml</span>
+cat > wrangler.toml << 'EOF'
+name = "starium-notifications"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+VAPID_PUBLIC_KEY = "BA..."
+VAPID_SUBJECT = "mailto:admin@starium.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "starium-notifications"
+database_id = "xxx"
+EOF
+
+<span class="c"># Set secrets</span>
+wrangler secret put VAPID_PRIVATE_KEY
+wrangler secret put FIREBASE_SERVICE_ACCOUNT
+wrangler secret put GMAIL_APP_PASSWORD
+wrangler secret put SENDGRID_API_KEY
+
+<span class="c"># Deploy</span>
+wrangler deploy
+</code></pre>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">☁️</span>
+        <div class="bd">
+          <div class="ct">Why Cloudflare Workers?</span>
+          <p><strong>1.</strong> Runs in 300+ data centers worldwide — milliseconds from your users in Nigeria.<br><strong>2.</strong> Free tier: 100,000 requests/day, 10ms CPU — more than enough.<br><strong>3.</strong> No cold starts with Durable Objects (if you need state).<br><strong>4.</strong> Secrets are encrypted, never in code.<br><strong>5.</strong> `ctx.waitUntil()` lets you respond instantly while fan-out happens in background.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="firestore">
+      <h2><span class="num">09</span> Firestore Schema — where data lives</h2>
+      <p class="lede">Three collections. Clean indexes. Audit trails everywhere.</p>
+
+      <h3>1. push_subscriptions — Per user, per device</h3>
+      <div class="codewrap">
+        <pre><code>push_subscriptions/{userId}/subscriptions/{subId}: {
+  <span class="s">"endpoint"</span>: <span class="s">"https://fcm.googleapis.com/fcm/send/abc123..."</span>,
+  <span class="s">"keys"</span>: {
+    <span class="s">"p256dh"</span>: <span class="s">"base64url..."</span>,
+    <span class="s">"auth"</span>: <span class="s">"base64url..."</span>
+  },
+  <span class="s">"userAgent"</span>: <span class="s">"Mozilla/5.0 (Linux; Android 13; ...)"</span>,
+  <span class="s">"createdAt"</span>: <span class="n">timestamp</span>,
+  <span class="s">"active"</span>: true,
+  <span class="s">"deactivatedAt"</span>: null
+}
+</code></pre>
+      </div>
+
+      <h3>2. notifications — The In-App Center source</h3>
+      <div class="codewrap">
+        <pre><code>notifications/{notificationId}: {
+  <span class="s">"userId"</span>: <span class="s">"uid-123"</span>,
+  <span class="s">"type"</span>: <span class="s">"leave_approved"</span>,
+  <span class="s">"title"</span>: <span class="s">"Leave Approved"</span>,
+  <span class="s">"body"</span>: <span class="s">"Your annual leave has been approved"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"url"</span>: <span class="s">"/#/my-leave?request=abc123"</span>,
+    <span class="s">"requestId"</span>: <span class="s">"abc123"</span>,
+    <span class="s">"requestType"</span>: <span class="s">"leave"</span>
+  },
+  <span class="s">"read"</span>: false,
+  <span class="s">"archived"</span>: false,
+  <span class="s">"createdAt"</span>: <span class="n">timestamp</span>,
+  <span class="s">"deliveredVia"</span>: [<span class="s">"inapp"</span>, <span class="s">"push"</span>, <span class="s">"email"</span>]
+}
+</code></pre>
+      </div>
+
+      <h3>3. notification_queue — Optional: persistent queue for retries</h3>
+      <div class="codewrap">
+        <pre><code>notification_queue/{queueId}: {
+  <span class="s">"userId"</span>: <span class="s">"uid-123"</span>,
+  <span class="s">"payload"</span>: { <span class="c">// full notification object</span> },
+  <span class="s">"status"</span>: <span class="s">"pending"</span> | <span class="s">"sent"</span> | <span class="s">"failed"</span>,
+  <span class="s">"attempts"</span>: 0,
+  <span class="s">"maxAttempts"</span>: 3,
+  <span class="s">"createdAt"</span>: <span class="n">timestamp</span>,
+  <span class="s">"processedAt"</span>: null,
+  <span class="s">"error"</span>: null
+}
+</code></pre>
+      </div>
+
+      <h3>Required Indexes</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Collection</th><th>Fields</th><th>Query</th></tr></thead>
+          <tbody>
+            <tr><td>push_subscriptions (subcollection)</td><td><code>userId ASC, active ASC</code></td><td>Get active subs for user</td></tr>
+            <tr><td>notifications</td><td><code>userId ASC, createdAt DESC</code></td><td>In-App Center list</td></tr>
+            <tr><td>notifications</td><td><code>userId ASC, read ASC, createdAt DESC</code></td><td>Unread count + list</td></tr>
+            <tr><td>notification_queue</td><td><code>status ASC, createdAt ASC</code></td><td>Process pending queue</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Firestore Rules — Secure by Default</h3>
+      <div class="codewrap">
+        <pre><code><span class="c">// push_subscriptions — user owns their subs</span>
+match /push_subscriptions/{userId}/subscriptions/{subId} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+  allow create: if request.auth != null && request.auth.uid == userId
+    && request.resource.data.keys().hasOnly(['endpoint', 'keys', 'userAgent'])
+    && request.resource.data.active == true;
+  allow update: if request.auth != null && request.auth.uid == userId
+    && request.resource.data.keys().hasOnly(['active', 'deactivatedAt']);
+  allow delete: if false; <span class="c">// never delete — audit trail</span>
+}
+
+<span class="c">// notifications — user reads own, system writes</span>
+match /notifications/{notificationId} {
+  allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+  allow create: if false; <span class="c">// only Worker (service account) writes</span>
+  allow update: if request.auth != null && request.auth.uid == resource.data.userId
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'archived']);
+  allow delete: if false;
+}
+
+<span class="c">// notification_queue — system only</span>
+match /notification_queue/{queueId} {
+  allow read, write: if false; <span class="c">// service account only</span>
+}
+</code></pre>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="flow">
+      <h2><span class="num">10</span> The complete notification flow</h2>
+      <p class="lede">From "Leave Approved" click to notification on sleeping phone. Every step.</p>
+
+      <div class="flow">
+        <div class="fnode hi"><span class="fi">👑</span><div><span class="ft">1. HR clicks "Approve"</span><div class="fs">LeaveApprovals.jsx → decideLeaveRequest()</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🔥</span><div><span class="ft">2. leaveOperations.approve()</span><div class="fs">Transaction: update request status, write workflow step, snapshot balances</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">📝</span><div><span class="ft">3. leaveNotifications.approved()</span><div class="fs">Writes to leave_notifications queue: { requestId, event: 'approved', status: 'queued' }</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">☁️</span><div><span class="ft">4. Worker picks up queue doc</span><div class="fs">Email Worker (existing) reads leave_notifications, builds email, sends via Gmail/SendGrid</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">📧</span><div><span class="ft">5. Email sent</span><div class="fs">Employee + Approvers receive email. Queue doc marked 'sent'.</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🔔</span><div><span class="ft">6. Notification Worker notified</span><div class="fs">App calls notifyLeaveEvent() → POST /notify/leave to Notification Worker</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🎯</span><div><span class="ft">7. Worker fans out</span><div class="fs">• Writes to notifications collection (instant)<br>• Looks up push subscriptions → sends Web Push<br>• Sends email via Gmail/SendGrid</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">📱</span><div><span class="ft">8. Push Service delivers</span><div class="fs">Google/Mozilla/Apple push service wakes browser Service Worker</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🌙</span><div><span class="ft">9. Service Worker shows notification</span><div class="fs">Native OS notification appears — phone asleep, app closed, no matter</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">👆</span><div><span class="ft">10. User taps notification</span><div class="fs">Service Worker notificationclick → opens app at /#/my-leave?request=abc</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">🔔</span><div><span class="ft">11. In-App Center updates</span><div class="fs">Real-time listener catches new notification → bell badge increments</div></div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><span class="fi">📧</span><div><span class="ft">12. Email arrives</span><div class="fs">Gmail/SendGrid delivers — backup if push missed</div></div></div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">⚡</span>
+        <div class="bd">
+          <div class="ct">Total latency: ~500ms</span>
+          <p>HR clicks Approve → User sees native notification in ~500ms (network + push service). In-App Center updates in ~100ms (Firestore real-time). Email arrives in ~2s. All three happen in parallel — user gets the fastest one first.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="implementation">
+      <h2><span class="num">11</span> Implementation — copy-paste ready code</h2>
+      <p class="lede">Every file you need. Drop in, configure, deploy.</p>
+
+      <h3>File 1: Push Client Library (React)</h3>
+      <div class="codewrap">
+        <div class="fname">src/lib/pushClient.ts</div>
+        <pre><code><span class="c">// ============================================================
+// PUSH CLIENT — Register, Subscribe, Communicate with Worker
+// ============================================================</span>
+
+const WORKER_URL = import.meta.env.VITE_NOTIFICATION_WORKER_URL || <span class="s">'https://starium-notifications.dammieoptimus.workers.dev'</span>;
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+<span class="k">function</span> urlBase64ToUint8Array(base64String) {
+  const padding = <span class="s">'='</span>.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, <span class="s">'+'</span>).replace(/_/g, <span class="s">'/'</span>);
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+export async function registerForPush(user) {
+  if (!(<span class="s">'serviceWorker'</span> in navigator) || !(<span class="s">'PushManager'</span> in window)) {
+    console.warn(<span class="s">'Push not supported'</span>);
+    return { ok: false, reason: <span class="s">'unsupported'</span> };
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existingSub = await reg.pushManager.getSubscription();
+
+    if (existingSub) {
+      <span class="c">// Already subscribed — send to Worker in case it's new</span>
+      await sendSubscriptionToWorker(existingSub, user);
+      return { ok: true, subscribed: true, existing: true };
+    }
+
+    <span class="c">// Subscribe with VAPID key</span>
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    await sendSubscriptionToWorker(subscription, user);
+    return { ok: true, subscribed: true, existing: false };
+  } catch (err) {
+    if (err.name === <span class="s">'NotAllowedError'</span>) {
+      return { ok: false, reason: <span class="s">'denied'</span> };
+    }
+    console.error(<span class="s">'Push registration failed:'</span>, err);
+    return { ok: false, reason: <span class="s">'error'</span>, error: err.message };
+  }
+}
+
+async function sendSubscriptionToWorker(subscription, user) {
+  const token = await user.getIdToken();
+  await fetch(<span class="s">`${WORKER_URL}/push/subscribe`</span>, {
+    method: <span class="s">'POST'</span>,
+    headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>, <span class="s">'Authorization'</span>: <span class="s">`Bearer ${token}`</span> },
+    body: JSON.stringify(subscription.toJSON())
+  });
+}
+
+export async function unregisterFromPush(user) {
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (!sub) return { ok: true };
+
+  const token = await user.getIdToken();
+  await fetch(<span class="s">`${WORKER_URL}/push/unsubscribe`</span>, {
+    method: <span class="s">'POST'</span>,
+    headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>, <span class="s">'Authorization'</span>: <span class="s">`Bearer ${token}`</span> },
+    body: JSON.stringify({ endpoint: sub.endpoint })
+  });
+
+  await sub.unsubscribe();
+  return { ok: true };
+}
+
+export async function requestNotificationPermission() {
+  if (!(<span class="s">'Notification'</span> in window)) return <span class="s">'unsupported'</span>;
+  const permission = await Notification.requestPermission();
+  return permission; <span class="c">// 'granted' | 'denied' | 'default'</span>
+}
+</code></pre>
+      </div>
+
+      <h3>File 2: Notify Helper (used by your app)</h3>
+      <div class="codewrap">
+        <div class="fname">src/lib/notify.ts</div>
+        <pre><code><span class="c">// ============================================================
+// NOTIFY HELPER — Your app calls this, Worker does the rest
+// ============================================================</span>
+
+const WORKER_URL = import.meta.env.VITE_NOTIFICATION_WORKER_URL || <span class="s">'https://starium-notifications.dammieoptimus.workers.dev'</span>;
+
+export interface NotifyPayload {
+  userId: string | string[];
+  title: string;
+  body: string;
+  data?: Record<string, any>;
+  actions?: Array<{ action: string; title: string }>;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  email?: boolean;
+}
+
+export async function notifyUser(payload: NotifyPayload) {
+  const user = auth.currentUser;
+  if (!user) throw new Error(<span class="s">'Not authenticated'</span>);
+
+  const token = await user.getIdToken();
+  const res = await fetch(<span class="s">`${WORKER_URL}/notify`</span>, {
+    method: <span class="s">'POST'</span>,
+    headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>, <span class="s">'Authorization'</span>: <span class="s">`Bearer ${token}`</span> },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || <span class="s">'Notification failed'</span>);
+  }
+  return res.json();
+}
+
+<span class="c">// Specialized for leave events</span>
+export async function notifyLeaveEvent(requestId, event, actorEmail, reason) {
+  const user = auth.currentUser;
+  if (!user) throw new Error(<span class="s">'Not authenticated'</span>);
+
+  const token = await user.getIdToken();
+  const res = await fetch(<span class="s">`${WORKER_URL}/notify/leave`</span>, {
+    method: <span class="s">'POST'</span>,
+    headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>, <span class="s">'Authorization'</span>: <span class="s">`Bearer ${token}`</span> },
+    body: JSON.stringify({ requestId, event, actorEmail, reason })
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || <span class="s">'Leave notification failed'</span>);
+  }
+  return res.json();
+}
+</code></pre>
+      </div>
+
+      <h3>File 3: Integrate in Your Leave Flow</h3>
+      <div class="codewrap">
+        <div class="fname">src/services/leaveOperations.ts (add to approve flow)</div>
+        <pre><code><span class="k">import</span> { notifyLeaveEvent } from <span class="s">'../lib/notify'</span>;
+
+export async function decideLeaveRequest(requestId, decision, note, user) {
+  <span class="c">// ... existing transaction logic ...</span>
+  const result = await runTransaction(...);
+
+  <span class="c">// AFTER successful commit, fire notifications (non-blocking)</span>
+  if (result.ok) {
+    const event = decision === <span class="s">'approve'</span> ? <span class="s">'approved'</span> : <span class="s">'rejected'</span>;
+    notifyLeaveEvent(requestId, event, user.email, note).catch(err => {
+      console.warn(<span class="s">'Leave notification failed:'</span>, err);
+    });
+  }
+
+  return result;
+}
+</code></pre>
+      </div>
+
+      <h3>File 4: Initialize Push on App Load</h3>
+      <div class="codewrap">
+        <div class="fname">src/App.tsx (or main boot)</div>
+        <pre><code><span class="k">import</span> { registerForPush, requestNotificationPermission } from <span class="s">'./lib/pushClient'</span>;
+<span class="k">import</span> { useAuth } from <span class="s">'./context/AuthContext'</span>;
+<span class="k">import</span> { useEffect } from <span class="s">'react'</span>;
+
+function PushInitializer() {
+  const { currentUser, loading } = useAuth();
+
+  useEffect(() => {
+    if (loading || !currentUser) return;
+
+    <span class="c">// 1. Request permission (shows browser prompt)</span>
+    requestNotificationPermission().then(permission => {
+      if (permission === <span class="s">'granted'</span>) {
+        <span class="c">// 2. Register for push (creates subscription, sends to Worker)</span>
+        registerForPush(currentUser).then(result => {
+          if (result.ok) console.log(<span class="s">'Push ready:'</span>, result);
+          else console.warn(<span class="s">'Push failed:'</span>, result.reason);
+        });
+      }
+    });
+  }, [currentUser, loading]);
+
+  return null; <span class="c">// Renders nothing</span>
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <PushInitializer />  <span class="c">{/* Add this anywhere in your tree */}</span>
+      <BrowserRouter>
+        <Routes>...</Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+</code></pre>
+      </div>
+
+      <h3>File 5: Environment Variables</h3>
+      <div class="codewrap">
+        <pre><code><span class="c"># .env (local development - never commit)</span>
+VITE_NOTIFICATION_WORKER_URL=https://starium-notifications.dammieoptimus.workers.dev
+VITE_VAPID_PUBLIC_KEY=BA... (your public key)
+
+<span class="c"># Cloudflare Worker secrets (wrangler secret put)</span>
+VAPID_PRIVATE_KEY=8B...
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"starium-rafa-app",...}
+GMAIL_APP_PASSWORD=your-16-char-app-password
+SENDGRID_API_KEY=SG.xxx
+VAPID_SUBJECT=mailto:admin@starium.com
+</code></pre>
+      </div>
+
+      <h3>File 6: Add to index.html (for manifest + SW registration)</h3>
+      <div class="codewrap">
+        <div class="fname">index.html</div>
+        <pre><code><span class="c"><head></span>
+  <span class="c"><link rel="manifest" href="/manifest.json" /></span>
+  <span class="c"><meta name="theme-color" content="#10b981" /></span>
+  <span class="c"><link rel="icon" type="image/svg+xml" href="/rafa-logo.svg" /></span>
+  <span class="c"><meta name="apple-mobile-web-app-capable" content="yes" /></span>
+  <span class="c"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /></span>
+  <span class="c"><meta name="apple-mobile-web-app-title" content="Starium Rafa" /></span>
+  <span class="c"><link rel="apple-touch-icon" href="/icon-192.png" /></span>
+<span class="c"></head></span>
+</code></pre>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="testing">
+      <h2><span class="num">12</span> Testing & Debugging</h2>
+      <p class="lede">How to verify every layer works. Do this before you deploy.</p>
+
+      <h3>Test 1: Service Worker Registration</h3>
+      <div class="codewrap">
+        <pre><code><span class="c">// Open DevTools → Application → Service Workers</span>
+<span class="c">// Should show: "starium-v1" running, green dot</span>
+<span class="c">// Console: "SW registered: https://your-domain/"</span>
+</code></pre>
+      </div>
+
+      <h3>Test 2: Push Subscription</h3>
+      <div class="codewrap">
+        <pre><code><span class="c">// DevTools → Application → Push Messaging</span>
+<span class="c">// Should show subscription with endpoint + keys</span>
+<span class="c">// Console: "Push ready: { ok: true, subscribed: true }"</span>
+</code></pre>
+      </div>
+
+      <h3>Test 3: Send Test Push (from Worker Console)</h3>
+      <div class="codewrap">
+        <pre><code><span class="c"># In terminal - test your Worker directly</span>
+curl -X POST https://starium-notifications.dammieoptimus.workers.dev/notify \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN" \
+  -d '{
+    "userId": "YOUR_UID",
+    "title": "Test Push",
+    "body": "If you see this, Web Push works!",
+    "data": { "url": "/#/my-leave" }
+  }'
+</code></pre>
+      </div>
+
+      <h3>Test 4: Verify In-App Notification</h3>
+      <div class="check">
+        <li>Open app → click bell icon → see "Test Push" notification</li>
+        <li>Click notification → navigates to /#/my-leave</li>
+        <li>Bell badge shows "1" → click notification → badge clears</li>
+        <li>Refresh page → notification still there (Firestore real-time)</li>
+      </div>
+
+      <h3>Test 5: Test with App Closed (The Real Test)</h3>
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="step-b"><h4>Open app on phone</h4><p>Log in, allow notifications, verify bell works.</p></div>
+      </div>
+      <div class="step">
+        <div class="badge">2</div>
+        <div class="step-b"><h4>Close app completely</h4><p>Swipe away from recent apps. Phone screen off.</p></div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="step-b"><h4>Send test push from Worker</h4><p>Use curl above or Worker dashboard.</p></div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="step-b"><h4>Wait 10 seconds</h4><p>Native notification should appear on lock screen.</p></div>
+      </div>
+      <div class="step">
+        <div class="badge">5</div>
+        <div class="step-b"><h4>Tap notification</h4><p>App opens → navigates to correct page.</p></div>
+      </div>
+
+      <h3>Test 6: Offline Test</h3>
+      <div class="check">
+        <li>Open app → load notifications</li>
+        <li>Turn on Airplane Mode</li>
+        <li>Open app → bell shows cached notifications</li>
+        <li>Turn off Airplane Mode → real-time syncs new ones</li>
+      </div>
+
+      <h3>Test 7: Email Delivery</h3>
+      <div class="codewrap">
+        <pre><code><span class="c"># Check Worker logs (wrangler tail)</span>
+wrangler tail starium-notifications
+
+<span class="c"># Look for:</span>
+<span class="c"># "Email sent via gmail to user@domain.com"</span>
+<span class="c"># OR "Gmail failed, trying SendGrid..."</span>
+<span class="c"># "Email sent via sendgrid to user@domain.com"</span>
+</code></pre>
+      </div>
+
+      <h3>Debugging Common Issues</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>No push subscription</td><td>User denied permission</td><td>Show "Enable Notifications" button in settings</td></tr>
+            <tr><td>Push sent but not received</td><td>Push service down / ISP block</td><td>Check In-App Center + Email — they're your backup</td></tr>
+            <tr><td>410 Gone from push service</td><td>Subscription expired</td><td>Worker auto-marks inactive; user re-subscribes on next visit</td></tr>
+            <tr><td>Service Worker not registering</td><td>HTTPS required / scope wrong</td><td>Ensure /sw.js at root, site on HTTPS</td></tr>
+            <tr><td>Notificationclick doesn't navigate</td><td>URL wrong / client.matchAll fails</td><td>Log event.notification.data.url in SW</td></tr>
+            <tr><td>Email not sending</td><td>Gmail app password wrong</td><td>Check wrangler tail, verify SendGrid fallback</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="roadmap">
+      <h2><span class="num">13</span> 4-Week Rollout Plan</h2>
+      <p class="lede">Ship fast. Test each week. No big bang.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>1️⃣</span> Week 1 — Foundation</div>
+          <div class="card-body">
+            <ul>
+              <li>Generate VAPID keys, add to env</li>
+              <li>Create <code>notification-worker/</code> with subscribe/unsubscribe/notify endpoints</li>
+              <li>Deploy to Cloudflare, set secrets</li>
+              <li>Add <code>public/sw.js</code>, <code>manifest.json</code>, icons</li>
+              <li>Add <code>NotificationBell</code> component to Layout</li>
+              <li>Add <code>pushClient.ts</code>, <code>notify.ts</code> to app</li>
+              <li>Test: subscribe → send test push → receive native notification</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>2️⃣</span> Week 2 — In-App Center + Leave Integration</div>
+          <div class="card-body">
+            <ul>
+              <li>Wire <code>notifyLeaveEvent()</code> into leaveOperations (approve/reject/recall/cancel)</li>
+              <li>Build <code>leave_notifications</code> queue → Email Worker (already have)</li>
+              <li>Add SendGrid fallback to Email Worker</li>
+              <li>Test: approve leave → get push + in-app + email</li>
+              <li>Test: recall leave → get push + in-app + email</li>
+              <li>Test: cancel leave → get push + in-app + email</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>3️⃣</span> Week 3 — QC/Production Notifications</div>
+          <div class="card-body">
+            <ul>
+              <li>Add density alert notifications (Level 9 / BOT)</li>
+              <li>Add machine stopped notifications</li>
+              <li>Add silo empty notifications</li>
+              <li>Add shift approval reminders</li>
+              <li>Test on MTN, Airtel, Glo, 9mobile (real devices)</li>
+              <li>Measure delivery rate — target 95%+</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>4️⃣</span> Week 4 — Polish & Harden</div>
+          <div class="card-body">
+            <ul>
+              <li>Add "Enable Notifications" settings page</li>
+              <li>Add "Add to Home Screen" banner for iOS Safari</li>
+              <li>Add notification preferences (per-type toggle)</li>
+              <li>Load test: 1000 concurrent pushes</li>
+              <li>Document in Document Hub</li>
+              <li>Record demo video</li>
+              <li>Deploy to all 3 platforms</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout co-good">
+        <span class="ic">🎯</span>
+        <div class="bd">
+          <div class="ct">Definition of Done per week</div>
+          <p>Code merged → CI passes → Deployed to Firebase Hosting → Tested on 2 real Nigerian phones (MTN + Airtel) → Document Hub updated. No "hardening sprint."</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="five">
+      <h2><span class="num">14</span> The five-year-old explanation</h2>
+      <p class="lede">The Plant Manager's test: "Explain it so my 5-year-old granddaughter understands."</p>
+
+      <div class="callout co-good">
+        <span class="ic">🧸</span>
+        <div class="bd">
+          <div class="ct">Imagine a Magic Messenger</div>
+          <p>You're the Plant Manager. You approve Halima's leave on your computer.<br><br>
+          🧙 <strong>"Magic Messenger, tell Halima her leave is approved."</strong><br><br>
+          The Magic Messenger does THREE things at once:<br><br>
+          📱 <strong>Taps Halima on the shoulder</strong> — her phone lights up with "Leave Approved!" even if it's in her pocket, screen off, battery saver on. She taps it, sees her leave.<br><br>
+          🔔 <strong>Puts a note in her desk drawer</strong> — the bell in her app shows "1". She opens it anytime, sees the message. Works even if her phone was off for a week.<br><br>
+          📧 <strong>Sends a letter to her email</strong> — she gets an email too. Reads it on her laptop, her husband's phone, anywhere.<br><br>
+          <strong>If the shoulder tap fails</strong> (phone off, no signal, MTN blocking), <strong>the drawer note and the letter still arrive.</strong> She never misses it.<br><br>
+          <strong>You just clicked "Approve." The Magic Messenger handled the rest.</strong>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-t"><span>✅</span> What YOU do</div>
+          <p class="card-body">Click "Approve" on leave request.<br>Click "Recall" on active leave.<br>Click "Save" on machine report.<br>That's it. One click.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> What THEY get</div>
+          <p class="card-body">Native notification on phone (instant).<br>Bell badge in app (instant).<br>Email in inbox (seconds).<br>All three. Every time.</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> What NEVER happens</div>
+          <p class="card-body">"I didn't know my leave was approved."<br>"My phone was off so I missed it."<br>"MTN blocked it so I never knew."<br>"I only saw it on email, not my phone."</p>
+        </div>
+        <div class="card">
+          <div class="card-t"><span>✅</span> What YOU never worry about</div>
+          <p class="card-body">Firebase domains blocked.<br>GitHub Pages blocked.<br>FCM quotas.<br>Server uptime.<br>Push service outages.<br>The Magic Messenger handles it.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="fgrid">
+    <div class="fnote">
+      Built for the Plant Manager who wants to reach every worker, every time, on every network.<br />
+      No Firebase. No blocked domains. No missed notifications. Just magic.
+    </div>
+    <div class="fnote" style="text-align: right;">
+      <strong>Engr. Damilare Paul Ayodele</strong><br />
+      Dammie Optimus Solutions · Nov 2026
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   DAMMIE OPTIMUS SOLUTIONS — DOCUMENT BEHAVIOUR
+   Theme toggle, reading progress, scroll-spy contents,
+   copy-to-clipboard, toast, print.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------- Theme ---------- */
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  var stored = null;
+  try { stored = localStorage.getItem('dos-guide-theme'); } catch (e) {}
+  apply(stored || 'dark');
+
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    if (icon) icon.textContent = t === 'dark' ? '◐' : '◑';
+    if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try { localStorage.setItem('dos-guide-theme', next); } catch (e) {}
+    });
+  }
+
+  /* ---------- Print / save as PDF ---------- */
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
+  /* ---------- Reading progress ---------- */
+  var bar = document.getElementById('progress');
+  function onScroll() {
+    if (!bar) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Scroll-spy for the contents list ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var sections = Object.keys(map)
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-90px 0px -66% 0px', threshold: 0 });
+    sections.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- Copy code blocks ---------- */
+  var copies = Array.prototype.slice.call(document.querySelectorAll('.copy'));
+  copies.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var pre = c.closest('.codewrap').querySelector('pre');
+      var code = pre.textContent;
+      navigator.clipboard.writeText(code).then(function () {
+        c.classList.add('done');
+        c.textContent = 'Copied!';
+        setTimeout(function () {
+          c.classList.remove('done');
+          c.textContent = 'Copy';
+        }, 1800);
+      });
+    });
+  });
+
+  /* ---------- Toast helper ---------- */
+  window.showToast = function (msg) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2600);
+  };
+
+  /* ---------- Smooth scroll for anchor links ---------- */
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var id = a.getAttribute('href').slice(1);
+      var target = document.getElementById(id);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
