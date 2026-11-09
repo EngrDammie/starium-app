@@ -18,6 +18,7 @@ import { subscribeToLeaveRequests } from '../services/leaveOperations';
 import { currentStageIndex, userCanActAtStage } from '../services/leaveWorkflow';
 import { toLocalDate } from '../services/leaveCalculations';
 import { pluralize } from '../services/formatUtils';
+import { calculateStringWeightAverages } from '../services/stringWeightAverages';
 
 export default function Dashboard() {
   const { config, loadingConfig } = useConfig();
@@ -40,6 +41,15 @@ export default function Dashboard() {
   const [leaveRequests, setLeaveRequests] = useState([]);
 
   const sachetTotal = swCount + biCount + ciCount;
+
+// String Weight Averages state
+const [stringWeightAverages, setStringWeightAverages] = useState({
+  totalChecks: 0,
+  totalWeightReadings: 0,
+  perGram: {},
+  overallAvg: null,
+  gramOrder: []
+});
 
   useEffect(() => {
     if (loadingConfig) return;
@@ -142,6 +152,34 @@ export default function Dashboard() {
     const unsubBI = subscribeToAllBagInspections(docId, (records) => setBiCount(records.length));
     const unsubCI = subscribeToAllCartonInspections(docId, (records) => setCiCount(records.length));
     return () => { unsubSW(); unsubBI(); unsubCI(); };
+  }, [config, loadingConfig]);
+
+  // String Weight Averages subscription — real-time running averages per gram
+  useEffect(() => {
+    if (loadingConfig) return;
+    const { shift, date } = getShiftDateInfo(config);
+    const docId = `qc_string_weight_${shift}_${date}`;
+    
+    // Subscribe to Firestore records
+    const unsubSW = subscribeToAllStringWeights(docId, (records) => {
+      const averages = calculateStringWeightAverages(records, config);
+      setStringWeightAverages(averages);
+    });
+
+    // Also include queued (offline) records for instant feedback
+    const updateFromQueue = () => {
+      const queue = JSON.parse(localStorage.getItem('starium_qc_string_weight_queue') || '[]')
+        .filter(q => q.approvalDocId === docId);
+      if (queue.length) {
+        const allRecords = [...records, ...queue];
+        const averages = calculateStringWeightAverages(allRecords, config);
+        setStringWeightAverages(averages);
+      }
+    };
+
+    const queueInterval = setInterval(updateFromQueue, 2000);
+
+    return () => { unsubSW(); clearInterval(queueInterval); };
   }, [config, loadingConfig]);
 
   const isAdminOrQcManager = systemRole === 'super_admin' || (departmentRoles || []).includes('qc_manager');
@@ -453,6 +491,66 @@ export default function Dashboard() {
             </div>
             <div className="text-gray-600 text-[10px] font-bold uppercase tracking-wider mt-1">Total Records This Shift</div>
             <div className="text-gray-600 text-[10px] font-bold uppercase tracking-wider">This Shift</div>
+          </div>
+        )}
+
+        {/* Metric 10: String Weight Averages */}
+        {isAdminOrQcManager ? (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">⚖️</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">⚖️ Average String Weights</h3>
+            
+            {/* Main Number: Total Checks */}
+            <div className="text-5xl font-black text-white mb-1">
+              {stringWeightAverages.totalChecks} 
+              <span className="text-xl font-bold text-gray-400">
+                {pluralize(stringWeightAverages.totalChecks, 'check')}
+              </span>
+            </div>
+            
+            {/* Overall Average */}
+            {stringWeightAverages.overallAvg !== null && (
+              <div className="text-primary text-sm font-bold mb-3">
+                Overall Avg: {stringWeightAverages.overallAvg}g
+              </div>
+            )}
+            
+            {/* Per-Gram Breakdown — Like Carton Warehouse card */}
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {stringWeightAverages.gramOrder.map(g => {
+                const data = stringWeightAverages.perGram[g];
+                if (!data) return null;
+                const isOnTarget = data.target !== null && Math.abs(data.avg - data.target) <= 0.02;
+                return (
+                  <span key={g} className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                    isOnTarget ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  }`}>
+                    {g}g: {data.avg}g ({data.count})
+                  </span>
+                );
+              })}
+            </div>
+            
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">📊 View Report →</div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider">This Shift</div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252525] border border-[#333] p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-primary/50 transition-colors animate-[fadeIn_1s_ease-out]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl">⚖️</div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">⚖️ Average String Weights</h3>
+            <div className="text-5xl font-black text-white mb-1">
+              {stringWeightAverages.totalChecks} <span className="text-xl font-bold text-gray-400">{pluralize(stringWeightAverages.totalChecks, 'check')}</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {stringWeightAverages.gramOrder.map(g => {
+                const data = stringWeightAverages.perGram[g];
+                if (!data) return null;
+                return (
+                  <span key={g} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{g}g: {data.avg}g</span>
+                );
+              })}
+            </div>
+            <div className="text-primary text-xs font-bold uppercase tracking-wider mt-1">This Shift</div>
           </div>
         )}
 

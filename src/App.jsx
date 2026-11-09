@@ -39,6 +39,7 @@ import LaminateWasteIndex from './pages/LaminateWasteIndex';
 import PalletTransferIndex from './pages/PalletTransferIndex';
 import QCSachetIndex from './pages/QCSachetIndex';
 import CreateCompleteUser from './pages/CreateCompleteUser';
+import StringWeightAveragesReport from './pages/StringWeightAveragesReport';
 
 function App() {
   return (
@@ -91,6 +92,7 @@ function App() {
       <Route path="/qc-sachet-index" element={<ProtectedRoute><QCSachetIndex /></ProtectedRoute>} />
       <Route path="/qc-density-report" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/qc-sachet-report" element={<ProtectedRoute><QCSachetReport /></ProtectedRoute>} />
+      <Route path="/string-weight-averages-report" element={<ProtectedRoute><StringWeightAveragesReport /></ProtectedRoute>} />
       <Route path="/create-complete-user" element={<ProtectedRoute><CreateCompleteUser /></ProtectedRoute>} />
     </Routes>
   );
