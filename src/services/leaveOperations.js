@@ -126,7 +126,7 @@ export function prepareLeaveRequest(input, { policy, employee, existingRequests 
     : 0;
 
   const alreadyTaken = isBalanceTracked
-    ? sumApprovedDays(existingRequests, { employeeId: employee?.id, leaveYear })
+    ? sumApprovedDays(existingRequests, { employeeId: employee?.id, leaveYear, leaveTypeId: leaveType?.id })
     : 0;
 
   // Balance calculation only for balance-tracked types. For non-tracked types

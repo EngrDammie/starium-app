@@ -325,13 +325,17 @@ export function calculateBalance({
 // in-progress request erased the days already taken from the ledger — the
 // company under-counted leave that genuinely happened. Rejected and
 // cancelled requests still count for nothing.
-export function sumApprovedDays(requests, { employeeId, leaveYear }) {
+//
+// IMPORTANT: Filters by leaveTypeId so only the relevant leave type counts
+// against its own balance (annual vs casual vs compassionate, etc.)
+export function sumApprovedDays(requests, { employeeId, leaveYear, leaveTypeId }) {
   if (!Array.isArray(requests)) return 0;
   return requests.reduce((sum, r) => {
     const live = r?.status === 'approved' || r?.status === 'recalled';
     if (!live) return sum;
     if (employeeId && r.employeeId !== employeeId) return sum;
     if (leaveYear != null && Number(r.leaveYear) !== Number(leaveYear)) return sum;
+    if (leaveTypeId && r.leaveType !== leaveTypeId) return sum;
     // A recalled request is charged what it consumed; everything else is
     // charged what it asked for.
     const raw = r.status === 'recalled' && Number.isFinite(Number(r.daysConsumed))

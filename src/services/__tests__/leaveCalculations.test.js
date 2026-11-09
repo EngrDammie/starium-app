@@ -332,21 +332,28 @@ describe('calculateBalance', () => {
 
 describe('sumApprovedDays', () => {
   const requests = [
-    { employeeId: 'E1', leaveYear: 2026, requestedDays: 4, status: 'approved' },
-    { employeeId: 'E1', leaveYear: 2026, requestedDays: 3, status: 'approved' },
+    { employeeId: 'E1', leaveYear: 2026, requestedDays: 4, status: 'approved', leaveType: 'annual' },
+    { employeeId: 'E1', leaveYear: 2026, requestedDays: 3, status: 'approved', leaveType: 'annual' },
     { employeeId: 'E1', leaveYear: 2026, requestedDays: 10, status: 'pending_supervisor' },
     { employeeId: 'E1', leaveYear: 2026, requestedDays: 5, status: 'rejected' },
-    { employeeId: 'E2', leaveYear: 2026, requestedDays: 7, status: 'approved' },
-    { employeeId: 'E1', leaveYear: 2025, requestedDays: 6, status: 'approved' },
+    { employeeId: 'E2', leaveYear: 2026, requestedDays: 7, status: 'approved', leaveType: 'annual' },
+    { employeeId: 'E1', leaveYear: 2025, requestedDays: 6, status: 'approved', leaveType: 'annual' },
+    { employeeId: 'E1', leaveYear: 2026, requestedDays: 5, status: 'approved', leaveType: 'compassionate' },
   ];
 
   it('counts only approved leave for that employee and year', () => {
-    expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2026 })).toBe(7);
+    expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2026 })).toBe(12); // 4+3+5 (all types since no filter)
   });
 
   it('excludes other employees and other years', () => {
     expect(sumApprovedDays(requests, { employeeId: 'E2', leaveYear: 2026 })).toBe(7);
     expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2025 })).toBe(6);
+  });
+
+  it('filters by leaveTypeId when provided', () => {
+    expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2026, leaveTypeId: 'annual' })).toBe(7); // 4+3
+    expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2026, leaveTypeId: 'compassionate' })).toBe(5);
+    expect(sumApprovedDays(requests, { employeeId: 'E1', leaveYear: 2026, leaveTypeId: 'casual' })).toBe(0);
   });
 
   it('returns 0 for an empty or missing list', () => {
@@ -794,17 +801,17 @@ describe('computeRecallDays — what was actually taken before the return', () =
 describe('sumApprovedDays — a recalled request counts what it consumed', () => {
   const year = 2026;
   const own = (status, over = {}) => ({
-    employeeId: 'E1', status, requestedDays: 5, leaveYear: 2026, ...over,
+    employeeId: 'E1', status, requestedDays: 5, leaveYear: 2026, leaveType: 'annual', ...over,
   });
 
   it('charges daysConsumed for a recalled request, not requestedDays', () => {
     const list = [own('recalled', { daysConsumed: 2, leaveCommences: new Date(2026, 10, 2), leaveYear: 2026 })];
-    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(2);
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year, leaveTypeId: 'annual' })).toBe(2);
   });
 
   it('still charges requestedDays for a fully approved request', () => {
     const list = [own('approved', { leaveCommences: new Date(2026, 10, 2) })];
-    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(5);
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year, leaveTypeId: 'annual' })).toBe(5);
   });
 
   it('still charges nothing for cancelled and rejected requests', () => {
@@ -812,12 +819,12 @@ describe('sumApprovedDays — a recalled request counts what it consumed', () =>
       own('cancelled', { leaveCommences: new Date(2026, 10, 2) }),
       own('rejected', { leaveCommences: new Date(2026, 10, 2) }),
     ];
-    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(0);
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year, leaveTypeId: 'annual' })).toBe(0);
   });
 
   it('falls back to requestedDays if the recall arithmetic is somehow absent', () => {
     const list = [own('recalled', { leaveCommences: new Date(2026, 10, 2) })];
-    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year })).toBe(5);
+    expect(sumApprovedDays(list, { employeeId: 'E1', leaveYear: year, leaveTypeId: 'annual' })).toBe(5);
   });
 });
 
