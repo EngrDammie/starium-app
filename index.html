@@ -4,9 +4,490 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Starium Rafa ERP</title>
+    <link rel="icon" type="image/svg+xml" href="/rafa-logo.svg" />
+    <meta name="theme-color" content="#0B1D3A" />
+    <style>
+      /* ============================================================
+         STARIUM RAFA — INSTANT LOADING SCREEN
+         Appears BEFORE any JavaScript loads. Pure HTML/CSS.
+         Beautiful, centered, animated. No delay. No flash.
+         ============================================================ */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      :root {
+        --navy-900: #0B1D3A;
+        --navy-800: #112240;
+        --navy-700: #1A2A4A;
+        --cyan-400: #22D3EE;
+        --cyan-500: #06B6D4;
+        --cyan-600: #0891B2;
+        --emerald-400: #34D399;
+        --emerald-500: #10B981;
+        --gold-400: #FBBF24;
+        --gold-500: #F59E0B;
+        --white: #F8FAFC;
+        --slate-300: #CBD5E1;
+        --slate-400: #94A3B8;
+      }
+      
+      @media (prefers-color-scheme: light) {
+        :root {
+          --navy-900: #F1F5F9;
+          --navy-800: #E2E8F0;
+          --navy-700: #CBD5E1;
+          --white: #0F172A;
+          --slate-300: #475569;
+          --slate-400: #64748B;
+        }
+      }
+      
+      html, body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: var(--navy-900);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      }
+      
+      /* Loading Screen Container - fills entire viewport */
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--navy-900);
+        /* Subtle animated gradient background */
+        background-image: 
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.15), transparent),
+          radial-gradient(ellipse 60% 40% at 80% 100%, rgba(16, 185, 129, 0.1), transparent);
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      #loading-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      /* Centered Content Wrapper */
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        text-align: center;
+        padding: 24px;
+        max-width: 400px;
+      }
+      
+      /* Rafa Logo - Animated Entrance */
+      .logo-wrapper {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        filter: drop-shadow(0 0 40px rgba(6, 182, 212, 0.4));
+        animation: logoFloat 4s ease-in-out infinite, logoGlow 3s ease-in-out infinite alternate;
+      }
+      
+      @keyframes logoFloat {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(0.5deg); }
+      }
+      
+      @keyframes logoGlow {
+        0% { filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.3)) drop-shadow(0 0 60px rgba(16, 185, 129, 0.1)); }
+        100% { filter: drop-shadow(0 0 50px rgba(6, 182, 212, 0.5)) drop-shadow(0 0 100px rgba(16, 185, 129, 0.2)); }
+      }
+      
+      .logo-svg {
+        width: 100%;
+        height: 100%;
+        animation: logoSpin 20s linear infinite;
+        transform-origin: center;
+      }
+      
+      @keyframes logoSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Pulsing Ring Behind Logo */
+      .logo-ring {
+        position: absolute;
+        inset: -20px;
+        border: 2px solid rgba(6, 182, 212, 0.3);
+        border-radius: 50%;
+        animation: ringPulse 2.5s ease-out infinite;
+      }
+      
+      .logo-ring:nth-child(2) {
+        animation-delay: 0.8s;
+        inset: -35px;
+        border-color: rgba(16, 185, 129, 0.2);
+      }
+      
+      .logo-ring:nth-child(3) {
+        animation-delay: 1.6s;
+        inset: -50px;
+        border-color: rgba(251, 191, 36, 0.15);
+      }
+      
+      @keyframes ringPulse {
+        0% { transform: scale(0.8); opacity: 0.8; }
+        100% { transform: scale(1.3); opacity: 0; }
+      }
+      
+      /* Status Text - "Processing..." then "Loading..." */
+      .status-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        min-height: 60px;
+      }
+      
+      .status-text {
+        font-family: 'SF Mono', 'Fira Code', 'Monaco', monospace;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--slate-300);
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 20px;
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.1));
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: 100px;
+        animation: statusFade 1.5s ease-in-out infinite alternate;
+        white-space: nowrap;
+      }
+      
+      @keyframes statusFade {
+        0% { opacity: 0.6; border-color: rgba(6, 182, 212, 0.2); }
+        100% { opacity: 1; border-color: rgba(6, 182, 212, 0.5); box-shadow: 0 0 30px rgba(6, 182, 212, 0.15); }
+      }
+      
+      .status-text::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cyan-400), var(--emerald-400));
+        animation: dotPulse 1s ease-in-out infinite alternate;
+        box-shadow: 0 0 15px var(--cyan-400);
+      }
+      
+      @keyframes dotPulse {
+        0% { transform: scale(0.8); opacity: 0.7; }
+        100% { transform: scale(1.2); opacity: 1; }
+      }
+      
+      /* Animated Dots After Text */
+      .status-dots {
+        display: inline-flex;
+        gap: 4px;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+      }
+      
+      .status-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--slate-400);
+        animation: dotBounce 1.4s ease-in-out infinite both;
+      }
+      
+      .status-dots span:nth-child(1) { animation-delay: 0s; background: var(--cyan-400); }
+      .status-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--emerald-400); }
+      .status-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--gold-400); }
+      
+      @keyframes dotBounce {
+        0%, 80%, 100% { transform: scale(0.5); opacity: 0.4; }
+        40% { transform: scale(1.2); opacity: 1; }
+      }
+      
+      /* Progress Bar */
+      .progress-wrapper {
+        width: 100%;
+        max-width: 280px;
+        height: 4px;
+        background: var(--navy-800);
+        border-radius: 100px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--cyan-400), var(--emerald-400), var(--gold-400));
+        background-size: 200% 100%;
+        border-radius: 100px;
+        animation: progressLoad 3s ease-in-out infinite, progressShine 2s linear infinite;
+        transform-origin: left center;
+      }
+      
+      @keyframes progressLoad {
+        0% { width: 0%; transform: translateX(0); }
+        50% { width: 70%; transform: translateX(0); }
+        100% { width: 100%; transform: translateX(0); }
+      }
+      
+      @keyframes progressShine {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      
+      /* Floating Particles */
+      .particles {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        opacity: 0;
+        animation: particleFloat 8s ease-in-out infinite;
+      }
+      
+      .particle:nth-child(1) { left: 10%; animation-delay: 0s; background: var(--cyan-400); }
+      .particle:nth-child(2) { left: 20%; animation-delay: 1s; background: var(--emerald-400); }
+      .particle:nth-child(3) { left: 30%; animation-delay: 2s; background: var(--gold-400); }
+      .particle:nth-child(4) { left: 40%; animation-delay: 3s; background: var(--cyan-400); }
+      .particle:nth-child(5) { left: 50%; animation-delay: 4s; background: var(--emerald-400); }
+      .particle:nth-child(6) { left: 60%; animation-delay: 5s; background: var(--gold-400); }
+      .particle:nth-child(7) { left: 70%; animation-delay: 0.5s; background: var(--cyan-400); }
+      .particle:nth-child(8) { left: 80%; animation-delay: 1.5s; background: var(--emerald-400); }
+      .particle:nth-child(9) { left: 90%; animation-delay: 2.5s; background: var(--gold-400); }
+      
+      @keyframes particleFloat {
+        0% { bottom: -20px; transform: scale(0) translateX(0); opacity: 0; }
+        10% { opacity: 0.8; }
+        50% { opacity: 0.4; }
+        90% { opacity: 0.8; }
+        100% { bottom: 120vh; transform: scale(1) translateX(var(--tx, 0)); opacity: 0; }
+      }
+      
+      /* Subtitle */
+      .subtitle {
+        font-size: 12px;
+        color: var(--slate-400);
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        margin-top: 8px;
+        opacity: 0.7;
+        animation: subtitleFade 3s ease-in-out infinite alternate;
+      }
+      
+      @keyframes subtitleFade {
+        0% { opacity: 0.4; }
+        100% { opacity: 0.8; }
+      }
+      
+      /* Reduced Motion */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        .logo-svg { animation: none; }
+        .particle { display: none; }
+      }
+      
+      /* Responsive */
+      @media (max-width: 480px) {
+        .logo-wrapper { width: 120px; height: 120px; }
+        .status-text { font-size: 12px; padding: 6px 16px; }
+        .progress-wrapper { max-width: 220px; }
+      }
+    </style>
   </head>
   <body>
+    <!-- ============================================================
+         INSTANT LOADING SCREEN — Shows BEFORE React loads
+         ============================================================ -->
+    <div id="loading-screen" role="status" aria-label="Loading Starium Rafa ERP">
+      <div class="particles" aria-hidden="true">
+        <div class="particle" style="--tx: -30px;"></div>
+        <div class="particle" style="--tx: 20px;"></div>
+        <div class="particle" style="--tx: -15px;"></div>
+        <div class="particle" style="--tx: 25px;"></div>
+        <div class="particle" style="--tx: -10px;"></div>
+        <div class="particle" style="--tx: 30px;"></div>
+        <div class="particle" style="--tx: -25px;"></div>
+        <div class="particle" style="--tx: 15px;"></div>
+        <div class="particle" style="--tx: -5px;"></div>
+      </div>
+      
+      <div class="loading-content">
+        <!-- Rafa Logo with Animated Rings -->
+        <div class="logo-wrapper">
+          <div class="logo-ring"></div>
+          <div class="logo-ring"></div>
+          <div class="logo-ring"></div>
+          <svg class="logo-svg" viewBox="0 0 225 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M224.325 63.5161C224.3 63.4873 224.271 63.4585 224.242 63.4379C223.92 63.1869 218.972 65.8084 218.18 60.5325C218.147 60.3061 218.139 60.0715 218.16 59.8452C218.403 56.7504 221.075 29.2555 221.075 29.2555C221.112 28.8727 221.141 28.4982 221.178 28.132L221.71 22.4486C221.751 22.0288 221.405 21.6708 220.98 21.6996C217.747 21.9218 205.706 22.7531 202.51 22.9466C202.056 22.9754 201.697 23.3252 201.656 23.7779L201.586 24.2059C201.541 24.7244 200.98 25.0331 200.522 24.7861C198.65 23.7943 193.928 22.1523 185.524 24.3993C185.095 24.5145 184.67 24.6421 184.25 24.7738C182.827 25.1853 176.885 26.8973 176.885 26.8973C172.151 28.2637 166.637 27.0825 162.955 23.7161C159.656 20.6996 158.146 15.4812 159.285 11.1724C159.845 9.03653 161.136 7.12287 163.017 5.92941C164.629 4.90879 167.037 4.25856 168.324 6.10637C168.485 6.33272 168.608 6.59199 168.707 6.85126C169.285 8.32457 168.901 9.99542 168.332 11.4687C167.763 12.9462 167.004 14.3824 166.827 15.9545C166.501 18.8394 168.365 21.7613 171.029 22.9383C173.689 24.1153 176.943 23.6215 179.318 21.9383C181.693 20.2551 183.194 17.5019 183.631 14.6294C184.844 6.67429 177.066 0.727547 169.549 0.147277C160.505 -0.548225 150.847 1.12674 143.755 7.16402C138.134 11.9461 137.181 17.7776 136.167 24.6174C135.359 30.1032 135.037 35.6426 134.587 41.1654C133.825 50.5773 133.049 56.059 132.274 65.4668L132.163 66.7508C132.006 68.5904 130.27 69.9691 128.468 69.5534C127.511 69.3312 126.662 68.6316 126.41 66.9443C126.377 66.7179 126.369 66.4833 126.385 66.257C126.629 63.1622 129.301 35.6673 129.301 35.6673C129.338 35.2845 129.367 34.91 129.404 34.5479L129.936 28.8645C129.977 28.4447 129.631 28.0867 129.206 28.1155C125.973 28.3377 113.931 29.169 110.736 29.3625C110.282 29.3913 109.923 29.7411 109.882 30.1938L109.812 30.6218C109.766 31.1403 109.206 31.449 108.748 31.2021C106.876 30.2102 102.154 28.5682 93.7498 30.8152C83.0816 33.6672 75.4032 42.1943 72.1908 52.5363C70.599 57.6558 70.2815 63.8824 71.8732 69.3435C71.9763 69.7016 71.898 70.0843 71.6464 7..." stroke="url(#gradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#22D3EE"/>
+                <stop offset="50%" stop-color="#10B981"/>
+                <stop offset="100%" stop-color="#FBBF24"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        
+        <!-- Status Text: Processing... → Loading... -->
+        <div class="status-wrapper">
+          <div class="status-text" id="status-text">
+            <span class="status-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="progress-wrapper" aria-hidden="true">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+        </div>
+        
+        <!-- Subtitle -->
+        <p class="subtitle" id="subtitle">Initializing factory intelligence...</p>
+      </div>
+    </div>
+    
+    <!-- React App Root -->
     <div id="root"></div>
+    
+    <script>
+      // ============================================================
+      // LOADING SCREEN CONTROLLER
+      // Hides loading screen when React app is ready
+      // ============================================================
+      (function() {
+        'use strict';
+        
+        const loadingScreen = document.getElementById('loading-screen');
+        const statusText = document.getElementById('status-text');
+        const progressBar = document.getElementById('progress-bar');
+        const subtitle = document.getElementById('subtitle');
+        
+        // Status messages that cycle
+        const statuses = [
+          { text: 'Processing', subtitle: 'Initializing factory intelligence...' },
+          { text: 'Loading', subtitle: 'Preparing production systems...' },
+          { text: 'Connecting', subtitle: 'Linking to live data streams...' },
+          { text: 'Ready', subtitle: 'All systems operational' }
+        ];
+        
+        let statusIndex = 0;
+        let progress = 0;
+        
+        // Cycle status messages
+        function cycleStatus() {
+          if (!statusText || statusIndex >= statuses.length - 1) return;
+          
+          statusIndex++;
+          const status = statuses[statusIndex];
+          
+          // Update text with animation
+          statusText.style.opacity = '0';
+          statusText.style.transform = 'translateY(-10px)';
+          
+          setTimeout(() => {
+            statusText.innerHTML = status.text + 
+              '<span class="status-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
+            if (subtitle) subtitle.textContent = status.subtitle;
+            
+            statusText.style.opacity = '1';
+            statusText.style.transform = 'translateY(0)';
+          }, 200);
+        }
+        
+        // Animate progress bar
+        function animateProgress() {
+          if (!progressBar) return;
+          
+          const target = Math.min(100, progress + Math.random() * 15 + 5);
+          progress = target;
+          progressBar.style.width = progress + '%';
+          
+          if (progress < 100) {
+            setTimeout(animateProgress, 200 + Math.random() * 300);
+          }
+        }
+        
+        // Start animations
+        animateProgress();
+        
+        // Cycle status every ~2 seconds
+        const statusInterval = setInterval(cycleStatus, 2000);
+        
+        // Watch for React to mount
+        function checkReactReady() {
+          const root = document.getElementById('root');
+          if (root && root.children.length > 0) {
+            // React has rendered - hide loading screen
+            clearInterval(statusInterval);
+            
+            // Final progress
+            if (progressBar) progressBar.style.width = '100%';
+            if (statusText) {
+              statusText.innerHTML = 'Ready' + 
+                '<span class="status-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
+            }
+            if (subtitle) subtitle.textContent = 'Welcome to Starium Rafa ERP';
+            
+            // Fade out loading screen
+            setTimeout(() => {
+              if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+              }
+            }, 400);
+            
+            // Clean up after transition
+            setTimeout(() => {
+              if (loadingScreen) loadingScreen.remove();
+            }, 1000);
+          } else {
+            requestAnimationFrame(checkReactReady);
+          }
+        }
+        
+        // Start checking when DOM is ready
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            requestAnimationFrame(checkReactReady);
+          });
+        } else {
+          requestAnimationFrame(checkReactReady);
+        }
+        
+        // Fallback: force hide after 10 seconds max
+        setTimeout(() => {
+          if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+            clearInterval(statusInterval);
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => loadingScreen.remove(), 1000);
+          }
+        }, 10000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
