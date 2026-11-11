@@ -41,6 +41,19 @@ import QCSachetIndex from './pages/QCSachetIndex';
 import CreateCompleteUser from './pages/CreateCompleteUser';
 import StringWeightAveragesReport from './pages/StringWeightAveragesReport';
 
+// ERP Phase 0 — Procurement / Warehouse / Production
+import PurchaseOrders from './pages/PurchaseOrders';
+import PoApprovals from './pages/PoApprovals';
+import GoodsReceipt from './pages/GoodsReceipt';
+import CreditNotes from './pages/CreditNotes';
+import StockTransfers from './pages/StockTransfers';
+import BinView from './pages/BinView';
+import Boms from './pages/Boms';
+import BomApprovals from './pages/BomApprovals';
+import ProductionOrders from './pages/ProductionOrders';
+import PackingActuals from './pages/PackingActuals';
+import ProductionVariance from './pages/ProductionVariance';
+
 function App() {
   return (
     <Routes>
@@ -94,6 +107,20 @@ function App() {
       <Route path="/qc-sachet-report" element={<ProtectedRoute><QCSachetReport /></ProtectedRoute>} />
       <Route path="/string-weight-averages-report" element={<ProtectedRoute><StringWeightAveragesReport /></ProtectedRoute>} />
       <Route path="/create-complete-user" element={<ProtectedRoute><CreateCompleteUser /></ProtectedRoute>} />
+      {/* ERP Phase 0 — Procurement */}
+      <Route path="/purchase-orders" element={<ProtectedRoute><PurchaseOrders /></ProtectedRoute>} />
+      <Route path="/po-approvals" element={<ProtectedRoute><PoApprovals /></ProtectedRoute>} />
+      <Route path="/goods-receipt" element={<ProtectedRoute><GoodsReceipt /></ProtectedRoute>} />
+      <Route path="/credit-notes" element={<ProtectedRoute><CreditNotes /></ProtectedRoute>} />
+      {/* ERP Phase 0 — Warehouse */}
+      <Route path="/stock-transfers" element={<ProtectedRoute><StockTransfers /></ProtectedRoute>} />
+      <Route path="/bin-view" element={<ProtectedRoute><BinView /></ProtectedRoute>} />
+      {/* ERP Phase 0 — Production */}
+      <Route path="/boms" element={<ProtectedRoute><Boms /></ProtectedRoute>} />
+      <Route path="/bom-approvals" element={<ProtectedRoute><BomApprovals /></ProtectedRoute>} />
+      <Route path="/production-orders" element={<ProtectedRoute><ProductionOrders /></ProtectedRoute>} />
+      <Route path="/packing-actuals" element={<ProtectedRoute><PackingActuals /></ProtectedRoute>} />
+      <Route path="/production-variance" element={<ProtectedRoute><ProductionVariance /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -385,6 +385,92 @@ service cloud.firestore {
       allow write: if !isAuthEnabled() || (isAuthenticated() && request.auth.uid == userId);
     }
 
+    // ─── ERP Phase 0 — Master Data ───────────────────────────
+    // Items, warehouses, bins, vendors — master data for procurement/inventory.
+    // Reads: any authenticated user (needed for PO/GRN/transfer forms).
+    // Writes: admin, or relevant department roles.
+
+    match /items/{itemId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /warehouses/{whId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /bins/{binId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    // ─── ERP Phase 0 — Transactional Data ────────────────────
+    // Purchase Orders, Goods Receipts, Credit Notes, Stock Transfers, Stock Ledger.
+
+    match /purchase_orders/{poId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && request.auth.token.email == request.resource.data.requestedBy);
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin()
+                || request.auth.token.email == resource.data.requestedBy
+                || request.resource.data.approvalState.steps.any(s,
+                    s.status == 'PENDING' && s.role in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles)));
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /goods_receipts/{grnId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && request.auth.token.email == request.resource.data.postedBy);
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /credit_notes/{cnId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && request.auth.token.email == request.resource.data.createdBy);
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /stock_transfers/{transferId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled()
+        || (isAuthenticated() && request.auth.token.email == request.resource.data.requestedBy);
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated()
+            && (isAdmin()
+                || request.auth.token.email == resource.data.requestedBy
+                || request.auth.token.email == resource.data.issuedBy
+                || request.auth.token.email == resource.data.receivedBy));
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
+    match /stock_ledger/{entryId} {
+      // Stock ledger is IMMUTABLE — only create, never update or delete.
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if false;  // never modify — audit trail
+      allow delete: if false;  // never delete — audit trail
+    }
+
     // ─── Default catch-all ─────────────────────────────────
     // When auth is DISABLED → full access
     // When auth is ENABLED  → read: authenticated, write: admin only

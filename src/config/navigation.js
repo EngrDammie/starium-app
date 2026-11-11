@@ -37,7 +37,24 @@ export const MENU_CONFIG = [
       { path: '/carton-waste', label: 'Carton Waste Tracking', icon: '📦', allowedRoles: ['prod_staff', 'prod_manager', 'qc_manager'] },
       { path: '/laminate-waste', label: 'Laminate Waste', icon: '🗑️', allowedRoles: ['prod_staff', 'prod_manager', 'qc_manager'] },
       { path: '/pallet-transfer', label: 'Pallet Transfer', icon: '📦', allowedRoles: ['prod_staff', 'packaging_staff', 'prod_manager', 'packaging_manager'] },
-      { path: '/machine-downtime-log', label: 'Machine Downtime Log', icon: '⏱️', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] }
+      { path: '/machine-downtime-log', label: 'Machine Downtime Log', icon: '⏱️', allowedRoles: ['qc_manager', 'prod_manager', 'packaging_manager'] },
+      { path: '/boms', label: 'BOMs / Recipes', icon: '📖', allowedRoles: ['recipe_manager'] },
+      { path: '/bom-approvals', label: 'BOM Approvals', icon: '✅', allowedRoles: [], allowedActionRoles: ['recipe_manager', 'plant_manager'] },
+      { path: '/production-orders', label: 'Production Orders', icon: '🏭', allowedRoles: ['production_supervisor', 'production_operator'] },
+      { path: '/packing-actuals', label: 'Packing Actuals', icon: '📦', allowedRoles: ['packing_operator', 'production_supervisor'] },
+      { path: '/production-variance', label: 'Production Variance', icon: '📊', allowedRoles: ['production_supervisor', 'plant_manager', 'qc_manager'] }
+    ]
+  },
+  {
+    title: 'Procurement',
+    icon: '📋',
+    children: [
+      { path: '/purchase-orders', label: 'Purchase Orders', icon: '📄', allowedRoles: ['procurement_staff', 'procurement_manager'] },
+      { path: '/po-approvals', label: 'PO Approvals', icon: '✅', allowedRoles: [], allowedActionRoles: ['procurement_head', 'finance_manager', 'plant_manager'] },
+      { path: '/goods-receipt', label: 'Goods Receipt (GRN)', icon: '📥', allowedRoles: ['warehouse_clerk', 'warehouse_manager'] },
+      { path: '/credit-notes', label: 'Credit Notes', icon: '🧾', allowedRoles: ['finance_manager'] },
+      { path: '/stock-transfers', label: 'Stock Transfers', icon: '🚚', allowedRoles: ['warehouse_clerk', 'warehouse_manager', 'production_supervisor'] },
+      { path: '/bin-view', label: 'Bin View', icon: '📦', allowedRoles: ['warehouse_clerk', 'warehouse_manager'] }
     ]
   },
   {

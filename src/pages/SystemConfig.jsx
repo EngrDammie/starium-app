@@ -21,6 +21,10 @@ import LaminateWasteTab from './SystemConfig/LaminateWasteTab';
 import PalletTransferTab from './SystemConfig/PalletTransferTab';
 import ImportExportTab from './SystemConfig/ImportExportTab';
 import LeavePolicyTab from './SystemConfig/LeavePolicyTab';
+import ItemMasterTab from './SystemConfig/ItemMasterTab';
+import WarehouseMasterTab from './SystemConfig/WarehouseMasterTab';
+import VendorMasterTab from './SystemConfig/VendorMasterTab';
+import ApprovalChainsTab from './SystemConfig/ApprovalChainsTab';
 import { MachineModal, LineModal, GramModal } from './SystemConfig/ConfigModals';
 
 export default function SystemConfig() {
@@ -617,6 +621,22 @@ export default function SystemConfig() {
           saveLeavePolicy={saveLeavePolicy}
           users={roleUsers}
         />
+      )}
+
+      {activeTab === 'itemmaster' && (
+        <ItemMasterTab config={config} />
+      )}
+
+      {activeTab === 'warehousemaster' && (
+        <WarehouseMasterTab config={config} />
+      )}
+
+      {activeTab === 'vendormaster' && (
+        <VendorMasterTab config={config} />
+      )}
+
+      {activeTab === 'approvalchains' && (
+        <ApprovalChainsTab config={config} />
       )}
 
       {activeTab === 'importexport' && (

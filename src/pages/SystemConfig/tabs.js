@@ -15,4 +15,9 @@ export const SYSTEM_TABS = [
   { id: 'palletransfer', label: '📦 Pallet Transfer' },
   { id: 'leave', label: '📅 Leave Policy' },
   { id: 'importexport', label: '💾 Import / Export' },
+  // ERP Phase 0 — Master Data
+  { id: 'itemmaster', label: '🏭 Item Master' },
+  { id: 'warehousemaster', label: '🏠 Warehouse Master' },
+  { id: 'vendormaster', label: '🚚 Vendor Master' },
+  { id: 'approvalchains', label: '🔗 Approval Chains' },
 ];

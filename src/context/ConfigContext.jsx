@@ -84,7 +84,17 @@ const DEFAULT_CONFIG = {
     { id: 'packaging_staff', label: 'Packaging Staff', category: 'Production' },
     { id: 'packaging_manager', label: 'Packaging Manager', category: 'Production' },
     { id: 'hr_staff', label: 'HR Staff', category: 'Human Resources' },
-    { id: 'hr_manager', label: 'HR Manager', category: 'Human Resources' }
+    { id: 'hr_manager', label: 'HR Manager', category: 'Human Resources' },
+    // ERP Phase 0 — Procurement / Warehouse / Production
+    { id: 'procurement_staff', label: 'Procurement Officer', category: 'Procurement' },
+    { id: 'procurement_manager', label: 'Procurement Head', category: 'Procurement' },
+    { id: 'finance_manager', label: 'Finance Manager', category: 'Finance' },
+    { id: 'warehouse_clerk', label: 'Warehouse Clerk', category: 'Warehouse' },
+    { id: 'warehouse_manager', label: 'Warehouse Manager', category: 'Warehouse' },
+    { id: 'production_supervisor', label: 'Production Supervisor', category: 'Production' },
+    { id: 'production_operator', label: 'Production Operator', category: 'Production' },
+    { id: 'packing_operator', label: 'Packing Operator', category: 'Production' },
+    { id: 'recipe_manager', label: 'Recipe Manager', category: 'Production' }
   ],
   // HR master data. `hrDepartments` is the list an employee record can be
   // filed under. It is deliberately separate from `departmentRoles`, which
@@ -115,7 +125,13 @@ const DEFAULT_CONFIG = {
     // being able to record a QC check. Someone can hold one without the other.
     { id: 'leave_supervisor', label: '👤 Leave Supervisor' },
     { id: 'leave_hod', label: '🏢 HOD / Subsidiary' },
-    { id: 'leave_hr_head', label: '👑 Head of HR' }
+    { id: 'leave_hr_head', label: '👑 Head of HR' },
+    // ERP Phase 0 — Approval action roles
+    { id: 'procurement_head', label: '📋 Procurement Head (PO Approval)' },
+    { id: 'finance_manager', label: '💰 Finance Manager (PO Approval)' },
+    { id: 'plant_manager', label: '🏭 Plant Manager (PO/BOM Approval)' },
+    { id: 'recipe_manager', label: '📖 Recipe Manager (BOM Approval)' },
+    { id: 'warehouse_manager', label: '🏠 Warehouse Manager (Transfer Approval)' }
   ],
 
   // ─── LEAVE POLICY ───────────────────────────────────────────────────────
