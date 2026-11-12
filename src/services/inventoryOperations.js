@@ -306,6 +306,36 @@ export const DEFAULT_VENDORS = [
   { name: 'West African Chemicals', contactPerson: 'Mr. Ibrahim', email: 'procurement@wac.ng', phone: '+234-800-345-6789', address: 'Plot 88, Ikeja Industrial Layout', paymentTerms: 'Net 45', taxId: 'NG-34567890-0003', isActive: true },
 ];
 
+// Get stock for a specific bin (item + lot level)
+export async function getStockForBin(binId) {
+  const { getCurrentStock } = await import('./stockLedgerOperations');
+  const q = query(
+    collection(db, 'stock_ledger'),
+    where('toBinId', '==', binId),
+    orderBy('performedAt', 'desc')
+  );
+  const snap = await getDocs(q);
+
+  const stockByItem = new Map();
+  snap.docs.forEach(d => {
+    const e = d.data();
+    const key = e.itemId + '|' + (e.lotId || 'nolot');
+    if (!stockByItem.has(key)) {
+      stockByItem.set(key, {
+        itemId: e.itemId,
+        lotId: e.lotId || null,
+        qty: 0,
+        unitOfMeasure: e.unitOfMeasure
+      });
+    }
+    const loc = stockByItem.get(key);
+    const isOut = ['TRANSFER_OUT', 'ISSUE', 'CONSUMPTION'].includes(e.movementType);
+    loc.qty += isOut ? -e.qty : e.qty;
+  });
+
+  return Array.from(stockByItem.values()).filter(l => l.qty > 0);
+}
+
 export async function seedMasterData() {
   // Seed items
   for (const item of DEFAULT_ITEMS) {

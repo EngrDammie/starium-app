@@ -256,7 +256,6 @@ export default function Boms() {
                   <input type="number" name="version" value={form.version} onChange={e => setForm({ ...form, version: Number(e.target.value) || 1 })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required />
                 </div>
               </div>
-            </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Yield %</label>
@@ -271,7 +270,6 @@ export default function Boms() {
                   </select>
                 </div>
               </div>
-            </div>
 
               <div className="border-t border-[#333] pt-4">
                 <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">Ingredients</h5>
@@ -333,6 +331,7 @@ export default function Boms() {
                   ))}
                   <button type="button" onClick={addIngredient} className="w-full py-2 rounded bg-[#333] text-xs text-white hover:bg-[#555]">➕ Add Ingredient</button>
                 </div>
+              </div>
 
               <div className="flex justify-end gap-2 pt-6">
                 <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
