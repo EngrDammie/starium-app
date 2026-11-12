@@ -5,12 +5,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   subscribeToPurchaseOrders, createPurchaseOrder, submitPurchaseOrder,
-  cancelPurchaseOrder
+  cancelPurchaseOrder, getPurchaseOrder
 } from '../services/purchaseOrderOperations';
 import { subscribeToVendors } from '../services/inventoryOperations';
 import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems, subscribeToBins } from '../services/inventoryOperations';
 import { erpNotifications } from '../services/erpNotifications';
+import { generatePOPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function PurchaseOrders() {
@@ -99,6 +100,19 @@ export default function PurchaseOrders() {
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
   };
 
+  const downloadPOPdf = async (po) => {
+    try {
+      // Fetch full PO data if needed
+      const fullPo = po.lines ? po : await getPurchaseOrder(po.poNumber);
+      if (fullPo) {
+        const doc = generatePOPdf(fullPo);
+        downloadPdf(doc, `PO_${fullPo.poNumber}`);
+      }
+    } catch (err) {
+      setToast('Error generating PDF: ' + err.message, true);
+    }
+  };
+
   return (
     <Layout title="📋 Purchase Orders" subtitle="Procure to Receive">
       <div className="flex justify-between items-center mb-6">
@@ -140,6 +154,7 @@ export default function PurchaseOrders() {
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${po.status === 'APPROVED' ? 'bg-status-success/20 text-status-success' : po.status === 'PENDING_APPROVAL' ? 'bg-status-warning/20 text-status-warning' : po.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : 'bg-[#333] text-gray-400'}`}>{po.status}</span></td>
                   <td className="p-3 text-gray-400 text-sm">{po.requestedByName || po.requestedBy}</td>
                   <td className="p-3 flex gap-2">
+                    <button onClick={() => downloadPOPdf(po)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📄 PDF</button>
                     <button onClick={() => handleCancel(po.poNumber)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">🗑️ Cancel</button>
                   </td>
                 </tr>

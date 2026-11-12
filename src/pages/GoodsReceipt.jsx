@@ -10,9 +10,10 @@ import {
 } from '../services/purchaseOrderOperations';
 import {
   createGoodsReceipt, subscribeToGoodsReceipts,
-  createCreditNoteFromGrn
+  createCreditNoteFromGrn, getGoodsReceipt
 } from '../services/goodsReceiptOperations';
 import { subscribeToWarehouses, subscribeToBins } from '../services/inventoryOperations';
+import { generateGRNPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function GoodsReceipt() {
@@ -140,6 +141,18 @@ export default function GoodsReceipt() {
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
   };
 
+  const downloadGRNPdf = async (grn) => {
+    try {
+      const fullGrn = grn.lines ? grn : await getGoodsReceipt(grn.grnNumber);
+      if (fullGrn) {
+        const doc = generateGRNPdf(fullGrn);
+        downloadPdf(doc, `GRN_${fullGrn.grnNumber}`);
+      }
+    } catch (err) {
+      setToast('Error generating PDF: ' + err.message, true);
+    }
+  };
+
   return (
     <Layout title="📥 Goods Receipt (GRN)" subtitle="Receive items from vendors">
       <div className="flex justify-between items-center mb-6">
@@ -202,6 +215,7 @@ export default function GoodsReceipt() {
                 <th className="p-3">📦 Received</th>
                 <th className="p-3">⚖️ Ordered</th>
                 <th className="p-3">📊 Status</th>
+                <th className="p-3">⚡ Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#333]">
@@ -213,6 +227,9 @@ export default function GoodsReceipt() {
                   <td className="p-3 text-white">{grn.totalReceived}</td>
                   <td className="p-3 text-white">{grn.totalOrdered}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${grn.creditNoteCreated ? 'bg-status-warning/20 text-status-warning' : 'bg-[#333] text-gray-400'}`}>{grn.creditNoteCreated ? 'Credit Note' : 'Posted'}</span></td>
+                  <td className="p-3">
+                    <button onClick={() => downloadGRNPdf(grn)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📄 PDF</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

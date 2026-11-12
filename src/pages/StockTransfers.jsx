@@ -8,12 +8,13 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   createStockTransfer, submitStockTransfer, processTransferApproval,
   issueStockTransfer, receiveStockTransfer, cancelStockTransfer,
-  subscribeToStockTransfers
+  subscribeToStockTransfers, getStockTransfer
 } from '../services/stockTransferOperations';
 import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems } from '../services/inventoryOperations';
 import { subscribeToBins } from '../services/inventoryOperations';
 import { useConfig } from '../context/ConfigContext';
+import { generateTransferPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function StockTransfers() {
@@ -126,6 +127,18 @@ export default function StockTransfers() {
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
   };
 
+  const downloadTransferPdf = async (transfer) => {
+    try {
+      const fullTransfer = transfer.lines ? transfer : await getStockTransfer(transfer.transferNumber);
+      if (fullTransfer) {
+        const doc = generateTransferPdf(fullTransfer);
+        downloadPdf(doc, `ST_${fullTransfer.transferNumber}`);
+      }
+    } catch (err) {
+      setToast('Error generating PDF: ' + err.message, true);
+    }
+  };
+
   const statusLabel = (s) => {
     const labels = {
       DRAFT: 'Draft', PENDING_APPROVAL: 'Pending Approval',
@@ -205,6 +218,7 @@ export default function StockTransfers() {
                   <td className="p-3 text-white">{t.lines.length}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${t.status === 'COMPLETED' ? 'bg-status-success/20 text-status-success' : t.status === 'IN_TRANSIT' ? 'bg-status-warning/20 text-status-warning' : t.status === 'PENDING_APPROVAL' ? 'bg-status-warning/20 text-status-warning' : t.status === 'CANCELLED' || t.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : 'bg-[#333] text-gray-400'}`}>{statusLabel(t.status)}</span></td>
                   <td className="p-3 flex gap-2">
+                    <button onClick={() => downloadTransferPdf(t)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📄 PDF</button>
                     {t.status === 'APPROVED' && userCanIssue && (
                       <button onClick={() => { setReceiveOverrides({}); setSelectedTransfer(t); setIssueOpen(true); }} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">📤 Issue</button>
                     )}
