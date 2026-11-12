@@ -10,6 +10,7 @@ import {
 import { subscribeToVendors } from '../services/inventoryOperations';
 import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems, subscribeToBins } from '../services/inventoryOperations';
+import { erpNotifications } from '../services/erpNotifications';
 import Layout from '../components/Layout';
 
 export default function PurchaseOrders() {
@@ -68,6 +69,8 @@ export default function PurchaseOrders() {
     try {
       const poNumber = await createPurchaseOrder(form, 'current-user', 'Current User');
       await submitPurchaseOrder(poNumber);
+      // Notify on submit
+      erpNotifications.poSubmitted(poNumber);
       setToast('Purchase Order created and submitted for approval!', false);
       setCreateOpen(false);
       setForm({
@@ -84,6 +87,7 @@ export default function PurchaseOrders() {
     if (!window.confirm('Cancel this PO?')) return;
     try {
       await cancelPurchaseOrder(poNumber, 'current-user', 'User cancelled');
+      erpNotifications.poCancelled(poNumber);
       setToast('PO cancelled', false);
     } catch (err) {
       setToast('Error cancelling PO', true);

@@ -1,6 +1,6 @@
 // src/services/purchaseOrderOperations.js
 //
-// Purchase Order operations — CRUD + approval workflow integration.
+// Purchase Order operations — CRUD + approval workflow integration + notifications.
 
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc, collection,
@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { initializeApprovalState, processApproval, canUserApprove } from './approvalEngine';
+import { erpNotifications } from './erpNotifications';
 
 const POS_COLLECTION = collection(db, 'purchase_orders');
 
