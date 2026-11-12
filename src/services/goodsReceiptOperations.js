@@ -9,8 +9,9 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { updatePoLineReceivedQty } from './purchaseOrderOperations';
+import { updatePoLineReceivedQty, getPurchaseOrder } from './purchaseOrderOperations';
 import { createStockLedgerEntry, subscribeToStockLedger } from './stockLedgerOperations';
+import { erpNotifications } from './erpNotifications';
 
 const GRNS_COLLECTION = collection(db, 'goods_receipts');
 const CREDIT_NOTES_COLLECTION = collection(db, 'credit_notes');
@@ -107,6 +108,12 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
     await updatePoLineReceivedQty(grnData.poId, line.poLineNumber, line.receivedQty);
   }
 
+  // ─── NOTIFICATIONS ──────────────────────────────────────────────
+  erpNotifications.grnPosted(grnNumber, { poId: grnData.poId, vendorId: grnData.vendorId });
+  if (hasShortfall) {
+    erpNotifications.grnShortfall(grnNumber, { shortLines: shortLines.map(l => ({ itemId: l.itemId, shortQty: l.orderedQty - l.receivedQty })) });
+  }
+
   return { grnNumber, hasShortfall, shortLines, grn };
 }
 
@@ -123,6 +130,10 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
   const shortLines = grn.lines.filter(l => l.matchStatus === 'SHORT');
   if (shortLines.length === 0) throw new Error('No shortfall lines to create credit note');
 
+  // Fetch PO to get actual line prices
+  const poSnap = await getDoc(doc(db, 'purchase_orders', grn.poId));
+  const po = poSnap.exists() ? poSnap.data() : null;
+
   // Generate CN number: CN-YYYY-MM-DD-####
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
@@ -131,8 +142,10 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
   const cnNumber = `CN-${dateStr}-${String(seq).padStart(4, '0')}`;
 
   const cnLines = shortLines.map((line, i) => {
-    const unitPrice = 850; // TODO: Get from PO line item price
-    const taxRate = 7.5;
+    // Get unit price from PO line
+    const poLine = po?.lines?.find(l => l.lineNumber === line.poLineNumber);
+    const unitPrice = poLine?.unitPrice || 0;
+    const taxRate = poLine?.taxRate || 7.5;
     const lineTotal = line.shortQty * unitPrice;
     const taxTotal = lineTotal * (taxRate / 100);
     return {
@@ -189,6 +202,9 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
     updatedAt: serverTimestamp()
   });
 
+  // Notify credit note created
+  erpNotifications.cnCreated(cnNumber, { grnId: grnNumber, vendorId: grn.vendorId });
+
   return cnNumber;
 }
 
@@ -211,6 +227,11 @@ export async function updateCreditNoteStatus(cnNumber, status, actorUid, actorNa
   }
 
   await updateDoc(ref, updates);
+
+  // Notify credit note status change
+  if (status === 'SENT') erpNotifications.cnSent(cnNumber);
+  if (status === 'ACCEPTED') erpNotifications.cnAccepted(cnNumber);
+  if (status === 'APPLIED') erpNotifications.cnApplied(cnNumber);
 }
 
 export async function getCreditNote(cnNumber) {
