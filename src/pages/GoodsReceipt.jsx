@@ -3,19 +3,22 @@
 // Goods Receipt Note (GRN) page — receive items from vendors against POs.
 // Auto-drafts credit note when received < ordered.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-  getAllPurchaseOrders, subscribeToPurchaseOrders,
+  subscribeToPurchaseOrders,
   updatePoLineReceivedQty
 } from '../services/purchaseOrderOperations';
 import {
   createGoodsReceipt, subscribeToGoodsReceipts,
   createCreditNoteFromGrn
 } from '../services/goodsReceiptOperations';
+import { subscribeToWarehouses, subscribeToBins } from '../services/inventoryOperations';
 import Layout from '../components/Layout';
 
 export default function GoodsReceipt() {
   const [pos, setPos] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [bins, setBins] = useState([]);
   const [grns, setGrns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -34,20 +37,29 @@ export default function GoodsReceipt() {
       setLoading(false);
     });
     const u2 = subscribeToGoodsReceipts((g) => setGrns(g));
-    return () => { u1(); u2(); };
+    const u3 = subscribeToWarehouses((w) => setWarehouses(w));
+    const u4 = subscribeToBins((b) => setBins(b));
+    return () => { u1(); u2(); u3(); u4(); };
   }, []);
+
+  // Filter bins by selected warehouse
+  const availableBins = useMemo(() => {
+    if (!form.warehouseId) return [];
+    return bins.filter(b => b.warehouseId === form.warehouseId && b.status === 'AVAILABLE');
+  }, [bins, form.warehouseId]);
 
   const openReceive = (po) => {
     const lines = po.lines.map(line => ({
       poLineNumber: line.lineNumber,
       itemId: line.itemId,
       itemName: line.itemName,
+      itemCode: line.itemCode,
       orderedQty: line.orderedQty,
       receivedQty: 0,
       unitOfMeasure: line.unitOfMeasure,
       lotNumber: '',
       expiryDate: '',
-      binId: '',
+      binId: line.destinationBinId || '', // pre-fill from PO
       condition: 'GOOD',
       notes: ''
     }));
@@ -71,8 +83,35 @@ export default function GoodsReceipt() {
     setForm({ ...form, lines: newLines });
   };
 
+  const validateForm = () => {
+    for (const [i, line] of form.lines.entries()) {
+      if (Number(line.receivedQty) < 0) {
+        return `Line ${i + 1}: Received quantity cannot be negative`;
+      }
+      if (Number(line.receivedQty) > Number(line.orderedQty)) {
+        // Allow over-receipt but warn
+        console.warn(`Line ${i + 1}: Received (${line.receivedQty}) exceeds ordered (${line.orderedQty})`);
+      }
+      if (!line.lotNumber.trim()) {
+        return `Line ${i + 1}: Lot number is required`;
+      }
+      if (!line.binId.trim()) {
+        return `Line ${i + 1}: Bin location is required`;
+      }
+      // Check bin exists in selected warehouse
+      const binExists = availableBins.some(b => b.id === line.binId);
+      if (!binExists && line.binId) {
+        return `Line ${i + 1}: Bin ${line.binId} not found in selected warehouse`;
+      }
+    }
+    if (!form.warehouseId) return 'Warehouse is required';
+    return null;
+  };
+
   const handlePostGRN = async (e) => {
     e.preventDefault();
+    const error = validateForm();
+    if (error) return setToast(error, true);
     try {
       const { grnNumber, hasShortfall, shortLines } = await createGoodsReceipt(form, 'current-user', 'Current User');
       setToast(`GRN ${grnNumber} posted successfully!`, false);
@@ -123,20 +162,22 @@ export default function GoodsReceipt() {
                 <th className="p-3">📄 PO Number</th>
                 <th className="p-3">🏢 Vendor</th>
                 <th className="p-3">💰 Total (₦)</th>
+                <th className="p-3">🏠 Dest. Warehouse</th>
                 <th className="p-3">⚡ Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#333]">
               {loading ? (
-                <tr><td colSpan="4" className="p-6 text-center text-gray-400">Loading...</td></tr>
+                <tr><td colSpan="5" className="p-6 text-center text-gray-400">Loading...</td></tr>
               ) : pos.length === 0 ? (
-                <tr><td colSpan="4" className="p-6 text-center text-gray-400">No approved POs awaiting receipt.</td></tr>
+                <tr><td colSpan="5" className="p-6 text-center text-gray-400">No approved POs awaiting receipt.</td></tr>
               ) : (
                 pos.map((po) => (
                   <tr key={po.poNumber} className="hover:bg-white/5">
                     <td className="p-3 text-status-warning font-bold mono">{po.poNumber}</td>
                     <td className="p-3 text-white">{po.vendorName}</td>
                     <td className="p-3 text-white mono">{po.totalAmount.toLocaleString()}</td>
+                    <td className="p-3 text-gray-400 text-sm">{po.destinationWarehouseId}</td>
                     <td className="p-3">
                       <button onClick={() => openReceive(po)} className="bg-primary text-black px-3 py-1 rounded text-sm font-bold hover:bg-primary-dark">📥 Receive</button>
                     </td>
@@ -195,10 +236,8 @@ export default function GoodsReceipt() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Warehouse</label>
-                  <select name="warehouseId" value={form.warehouseId} onChange={e => setForm({ ...form, warehouseId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
-                    <option value="RM-WH">Raw Material Warehouse (RM-WH)</option>
-                    <option value="PF-L9">Production Floor - Level 9 (PF-L9)</option>
-                    <option value="FG-WH">Finished Goods Warehouse (FG-WH)</option>
+                  <select name="warehouseId" value={form.warehouseId} onChange={e => setForm({ ...form, warehouseId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                    {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
                 </div>
               </div>
@@ -228,7 +267,7 @@ export default function GoodsReceipt() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Received</label>
-                        <input type="number" value={line.receivedQty} onChange={e => updateLine(i, 'receivedQty', Number(e.target.value) || 0)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        <input type="number" value={line.receivedQty} onChange={e => updateLine(i, 'receivedQty', Number(e.target.value) || 0)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="0" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Unit</label>
@@ -236,7 +275,7 @@ export default function GoodsReceipt() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Lot #</label>
-                        <input type="text" value={line.lotNumber} onChange={e => updateLine(i, 'lotNumber', e.target.value)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        <input type="text" value={line.lotNumber} onChange={e => updateLine(i, 'lotNumber', e.target.value)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Expiry</label>
@@ -244,7 +283,12 @@ export default function GoodsReceipt() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Bin</label>
-                        <input type="text" value={line.binId} onChange={e => updateLine(i, 'binId', e.target.value)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" placeholder="e.g. RM-WH-A-03-2-1" />
+                        <select value={line.binId} onChange={e => updateLine(i, 'binId', e.target.value)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          <option value="">Select bin</option>
+                          {availableBins.map(b => (
+                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId})` : '(empty)'}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Condition</label>

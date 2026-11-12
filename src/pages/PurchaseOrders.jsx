@@ -2,14 +2,14 @@
 //
 // Purchase Order list + create page.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-  getAllPurchaseOrders, createPurchaseOrder, submitPurchaseOrder,
-  subscribeToPurchaseOrders, cancelPurchaseOrder
+  subscribeToPurchaseOrders, createPurchaseOrder, submitPurchaseOrder,
+  cancelPurchaseOrder
 } from '../services/purchaseOrderOperations';
-import { getAllVendors, subscribeToVendors } from '../services/inventoryOperations';
-import { getAllWarehouses, subscribeToWarehouses } from '../services/inventoryOperations';
-import { getAllItems, subscribeToItems } from '../services/inventoryOperations';
+import { subscribeToVendors } from '../services/inventoryOperations';
+import { subscribeToWarehouses } from '../services/inventoryOperations';
+import { subscribeToItems, subscribeToBins } from '../services/inventoryOperations';
 import Layout from '../components/Layout';
 
 export default function PurchaseOrders() {
@@ -17,6 +17,7 @@ export default function PurchaseOrders() {
   const [vendors, setVendors] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [items, setItems] = useState([]);
+  const [bins, setBins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
@@ -31,16 +32,39 @@ export default function PurchaseOrders() {
     const u2 = subscribeToVendors((v) => setVendors(v));
     const u3 = subscribeToWarehouses((w) => setWarehouses(w));
     const u4 = subscribeToItems((i) => setItems(i));
-    return () => { u1(); u2(); u3(); u4(); };
+    const u5 = subscribeToBins((b) => setBins(b));
+    return () => { u1(); u2(); u3(); u4(); u5(); };
   }, []);
+
+  // Filter bins by selected destination warehouse
+  const availableBins = useMemo(() => {
+    if (!form.destinationWarehouseId) return [];
+    return bins.filter(b => b.warehouseId === form.destinationWarehouseId && b.status === 'AVAILABLE');
+  }, [bins, form.destinationWarehouseId]);
 
   const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', itemCode: '', orderedQty: 0, unitOfMeasure: 'kg', unitPrice: 0, taxRate: 7.5, destinationBinId: '' }] });
   const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
 
   const totalAmount = form.lines.reduce((sum, l) => sum + (Number(l.orderedQty) || 0) * (Number(l.unitPrice) || 0), 0);
 
+  const validateForm = () => {
+    if (!form.vendorId) return 'Vendor is required';
+    if (!form.destinationWarehouseId) return 'Destination warehouse is required';
+    for (const [i, line] of form.lines.entries()) {
+      if (!line.itemId) return `Line ${i + 1}: Item is required`;
+      if (!Number(line.orderedQty) || Number(line.orderedQty) <= 0) return `Line ${i + 1}: Quantity must be > 0`;
+      if (!Number(line.unitPrice) || Number(line.unitPrice) <= 0) return `Line ${i + 1}: Unit price must be > 0`;
+      if (!line.destinationBinId) return `Line ${i + 1}: Destination bin is required`;
+      const binExists = availableBins.some(b => b.id === line.destinationBinId);
+      if (!binExists && line.destinationBinId) return `Line ${i + 1}: Bin ${line.destinationBinId} not found in selected warehouse`;
+    }
+    return null;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
+    const error = validateForm();
+    if (error) return setToast(error, true);
     try {
       const poNumber = await createPurchaseOrder(form, 'current-user', 'Current User');
       await submitPurchaseOrder(poNumber);
@@ -170,7 +194,7 @@ export default function PurchaseOrders() {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], itemId: item ? item.id : e.target.value, itemName: item ? item.name : '', itemCode: item ? item.code : '', unitOfMeasure: item ? item.unitOfMeasure : 'kg' };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary">
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary" required>
                           <option value="">Select item</option>
                           {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
                         </select>
@@ -181,7 +205,7 @@ export default function PurchaseOrders() {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], orderedQty: Number(e.target.value) || 0 };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="1" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Unit</label>
@@ -197,7 +221,7 @@ export default function PurchaseOrders() {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], unitPrice: Number(e.target.value) || 0 };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="0.01" step="0.01" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Tax %</label>
@@ -209,11 +233,16 @@ export default function PurchaseOrders() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Bin</label>
-                        <input type="text" value={line.destinationBinId} onChange={e => {
+                        <select value={line.destinationBinId} onChange={e => {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], destinationBinId: e.target.value };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          <option value="">Select bin</option>
+                          {availableBins.map(b => (
+                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId}: ${b.currentQty})` : '(empty)'}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="flex justify-end">
                         <button type="button" onClick={() => removeLine(i)} className="text-status-danger hover:text-white">🗑️</button>

@@ -4,15 +4,15 @@
 // Two-step: Warehouse ISSUES → Production/Destination RECEIVES.
 // Configurable approval (default ON per Plant Manager decision).
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   createStockTransfer, submitStockTransfer, processTransferApproval,
   issueStockTransfer, receiveStockTransfer, cancelStockTransfer,
-  subscribeToStockTransfers, getAllStockTransfers, getPendingApprovalsForRole
+  subscribeToStockTransfers
 } from '../services/stockTransferOperations';
-import { getAllWarehouses, subscribeToWarehouses } from '../services/inventoryOperations';
-import { getAllItems, subscribeToItems } from '../services/inventoryOperations';
-import { getAllBins, subscribeToBins } from '../services/inventoryOperations';
+import { subscribeToWarehouses } from '../services/inventoryOperations';
+import { subscribeToItems } from '../services/inventoryOperations';
+import { subscribeToBins } from '../services/inventoryOperations';
 import { useConfig } from '../context/ConfigContext';
 import Layout from '../components/Layout';
 
@@ -33,6 +33,7 @@ export default function StockTransfers() {
   const [issueOpen, setIssueOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState(null);
+  const [receiveOverrides, setReceiveOverrides] = useState({}); // FIXED: state for receive qty overrides
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
@@ -53,11 +54,26 @@ export default function StockTransfers() {
   const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
   const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
 
+  // Filter bins by warehouse
+  const fromBins = useMemo(() => {
+    if (!form.fromWarehouseId) return [];
+    return bins.filter(b => b.warehouseId === form.fromWarehouseId && b.status === 'AVAILABLE' && b.currentQty > 0);
+  }, [bins, form.fromWarehouseId]);
+
+  const toBins = useMemo(() => {
+    if (!form.toWarehouseId) return [];
+    return bins.filter(b => b.warehouseId === form.toWarehouseId && b.status === 'AVAILABLE');
+  }, [bins, form.toWarehouseId]);
+
+  const receiveBins = useMemo(() => {
+    if (!selectedTransfer) return [];
+    return bins.filter(b => b.warehouseId === selectedTransfer.toWarehouseId && b.status === 'AVAILABLE');
+  }, [bins, selectedTransfer]);
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
       const transferNumber = await createStockTransfer(form, 'current-user', 'Current User');
-      // Submit for approval if approval chain enabled
       await submitStockTransfer(transferNumber);
       setToast('Stock transfer created and submitted for approval!', false);
       setCreateOpen(false);
@@ -83,12 +99,13 @@ export default function StockTransfers() {
     }
   };
 
-  const handleReceive = async (receivedOverrides) => {
+  const handleReceive = async () => {
     if (!selectedTransfer) return;
     try {
-      await receiveStockTransfer(selectedTransfer.transferNumber, 'current-user', 'Current User', receivedOverrides);
+      await receiveStockTransfer(selectedTransfer.transferNumber, 'current-user', 'Current User', receiveOverrides);
       setToast('Stock received at destination!', false);
       setReceiveOpen(false);
+      setReceiveOverrides({});
     } catch (err) {
       setToast('Error receiving: ' + err.message, true);
     }
@@ -129,7 +146,7 @@ export default function StockTransfers() {
     <Layout title="🚚 Stock Transfers" subtitle="Move stock between warehouses">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-primary">Stock Transfers</h2>
-        <button onClick={() => setCreateOpen(true)} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">➕ New Transfer</button>
+        <button onClick={() => { setReceiveOverrides({}); setCreateOpen(true); }} className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-dark">➕ New Transfer</button>
       </div>
 
       {toast.show && (
@@ -189,10 +206,10 @@ export default function StockTransfers() {
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${t.status === 'COMPLETED' ? 'bg-status-success/20 text-status-success' : t.status === 'IN_TRANSIT' ? 'bg-status-warning/20 text-status-warning' : t.status === 'PENDING_APPROVAL' ? 'bg-status-warning/20 text-status-warning' : t.status === 'CANCELLED' || t.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : 'bg-[#333] text-gray-400'}`}>{statusLabel(t.status)}</span></td>
                   <td className="p-3 flex gap-2">
                     {t.status === 'APPROVED' && userCanIssue && (
-                      <button onClick={() => { setSelectedTransfer(t); setIssueOpen(true); }} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">📤 Issue</button>
+                      <button onClick={() => { setReceiveOverrides({}); setSelectedTransfer(t); setIssueOpen(true); }} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">📤 Issue</button>
                     )}
                     {t.status === 'IN_TRANSIT' && userCanReceive && (
-                      <button onClick={() => { setSelectedTransfer(t); setReceiveOpen(true); }} className="bg-primary text-black px-3 py-1 rounded text-xs hover:bg-primary-dark">📥 Receive</button>
+                      <button onClick={() => { setReceiveOverrides({}); setSelectedTransfer(t); setReceiveOpen(true); }} className="bg-primary text-black px-3 py-1 rounded text-xs hover:bg-primary-dark">📥 Receive</button>
                     )}
                     {(t.status === 'DRAFT' || t.status === 'REJECTED') && (
                       <button onClick={() => handleCancel(t.transferNumber)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs hover:bg-status-danger hover:text-white">🗑️ Cancel</button>
@@ -264,7 +281,7 @@ export default function StockTransfers() {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], requestedQty: Number(e.target.value) || 0 };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="1" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Unit</label>
@@ -272,19 +289,29 @@ export default function StockTransfers() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">From Bin</label>
-                        <input type="text" value={line.fromBinId} onChange={e => {
+                        <select value={line.fromBinId} onChange={e => {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], fromBinId: e.target.value };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" placeholder="e.g. RM-WH-A-03-2-1" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          <option value="">Select bin</option>
+                          {fromBins.map(b => (
+                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId}: ${b.currentQty} ${b.currentLotId || 'no lot'})` : '(empty)'}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">To Bin</label>
-                        <input type="text" value={line.toBinId} onChange={e => {
+                        <select value={line.toBinId} onChange={e => {
                           const newLines = [...form.lines];
                           newLines[i] = { ...newLines[i], toBinId: e.target.value };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" placeholder="e.g. PF-L9-BIN-01" />
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          <option value="">Select bin</option>
+                          {toBins.map(b => (
+                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId})` : '(empty)'}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="flex justify-end">
                         <button type="button" onClick={() => removeLine(i)} className="text-status-danger hover:text-white">🗑️</button>
@@ -314,6 +341,17 @@ export default function StockTransfers() {
             </div>
             <p className="text-gray-400 mb-6">Issuing transfer <span className="text-white font-mono">{selectedTransfer.transferNumber}</span> from warehouse clerk.</p>
             <p className="text-sm text-gray-300 mb-6">This will decrease stock at <span className="text-white">{selectedTransfer.fromWarehouseName}</span> and mark as IN_TRANSIT.</p>
+            <div className="space-y-3 mb-6">
+              {selectedTransfer.lines.map((line) => (
+                <div key={line.lineNumber} className="bg-[#121212] p-3 rounded border border-[#333]">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-white">{line.itemName}</span>
+                    <span className="text-xs text-gray-400">Qty: {line.requestedQty} {line.unitOfMeasure}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">From: {line.fromBinId} → To: {line.toBinId}</div>
+                </div>
+              ))}
+            </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => setIssueOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
               <button onClick={handleIssue} className="px-6 py-2 rounded bg-status-success text-black font-bold hover:bg-status-success">📤 Confirm Issue</button>
@@ -322,13 +360,13 @@ export default function StockTransfers() {
         </div>
       )}
 
-      {/* Receive Modal */}
+      {/* Receive Modal - FIXED */}
       {receiveOpen && selectedTransfer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white">📥 Receive Stock</h3>
-              <button onClick={() => setReceiveOpen(false)} className="text-gray-400 hover:text-white">&times;</button>
+              <button onClick={() => { setReceiveOpen(false); setReceiveOverrides({}); }} className="text-gray-400 hover:text-white">&times;</button>
             </div>
             <p className="text-gray-400 mb-6">Receiving transfer <span className="text-white font-mono">{selectedTransfer.transferNumber}</span> at <span className="text-white">{selectedTransfer.toWarehouseName}</span>.</p>
             <div className="space-y-3">
@@ -338,16 +376,27 @@ export default function StockTransfers() {
                     <span className="text-sm text-white">{line.itemName}</span>
                     <span className="text-xs text-gray-400">Issued: {line.issuedQty} {line.unitOfMeasure}</span>
                   </div>
-                  <input type="number" placeholder="Received qty" className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" onChange={(e) => {
-                    const overrides = { ...(receiveOverrides || {}), [line.lineNumber]: Number(e.target.value) || 0 };
-                    // Use state for overrides
-                  }} />
+                  <input
+                    type="number"
+                    placeholder="Received qty"
+                    className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary"
+                    min="0"
+                    max={line.issuedQty}
+                    value={receiveOverrides[line.lineNumber] || ''}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setReceiveOverrides(prev => ({
+                        ...prev,
+                        [line.lineNumber]: isNaN(val) || val < 0 ? 0 : Math.min(val, line.issuedQty)
+                      }));
+                    }}
+                  />
                 </div>
               ))}
             </div>
             <div className="flex justify-end gap-2 pt-6">
-              <button onClick={() => setReceiveOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
-              <button onClick={() => handleReceive({})} className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">📥 Confirm Receive</button>
+              <button onClick={() => { setReceiveOpen(false); setReceiveOverrides({}); }} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
+              <button onClick={handleReceive} className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">📥 Confirm Receive</button>
             </div>
           </div>
         </div>
