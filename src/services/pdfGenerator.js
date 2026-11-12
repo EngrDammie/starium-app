@@ -401,16 +401,17 @@ export function generateTransferPdf(transfer) {
 
   // Transfer Details
   y = addSectionTitle(doc, 'TRANSFER DETAILS', y);
-  y = addKeyValuePairs(doc, [
+  const transferPairs = [
     ['Transfer #:', transfer.transferNumber],
     ['From Warehouse:', transfer.fromWarehouseName],
     ['To Warehouse:', transfer.toWarehouseName],
     ['Requested By:', transfer.requestedByName || transfer.requestedBy],
     ['Date Requested:', date],
     ['Status:', transfer.status],
-    ...(transfer.issuedAt ? [{ 'Issued By:', transfer.issuedByName || transfer.issuedBy, 'Date:', new Date(transfer.issuedAt.seconds * 1000).toLocaleDateString() }] : []),
-    ...(transfer.receivedAt ? [{ 'Received By:', transfer.receivedByName || transfer.receivedBy, 'Date:', new Date(transfer.receivedAt.seconds * 1000).toLocaleDateString() }] : []),
-  ], y);
+  ];
+  if (transfer.issuedAt) transferPairs.push(['Issued By', transfer.issuedByName || transfer.issuedBy, 'Date', new Date(transfer.issuedAt.seconds * 1000).toLocaleDateString()]);
+  if (transfer.receivedAt) transferPairs.push(['Received By', transfer.receivedByName || transfer.receivedBy, 'Date', new Date(transfer.receivedAt.seconds * 1000).toLocaleDateString()]);
+  y = addKeyValuePairs(doc, transferPairs, y);
 
   // Line Items
   y = addSectionTitle(doc, 'TRANSFER ITEMS', y);

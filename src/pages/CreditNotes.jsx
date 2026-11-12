@@ -49,7 +49,7 @@ export default function CreditNotes() {
     <Layout title="🧾 Credit Notes" subtitle="Vendor credit notes for shortfalls">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-primary">Credit Notes</h2>
-        <p className="text-gray-400 text-sm">Auto-drafted when GRN received qty < PO ordered qty.</p>
+        <p className="text-gray-400 text-sm">Auto-drafted when GRN received qty { '<' } PO ordered qty.</p>
       </div>
 
       {toast.show && (

@@ -8,12 +8,14 @@ import {
   getApprovalConfig, getApprovalSteps, initializeApprovalState,
   setApprovalChainsCache, loadApprovalChains
 } from '../../services/approvalEngine';
-import { updateDatabase } from '../../pages/SystemConfig/SystemConfig'; // we'll use the config/settings write
-
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
 const CONFIG_DOC = doc(db, 'config', 'settings');
+
+async function saveApprovalChains(chains) {
+  await setDoc(CONFIG_DOC, { approvalChains: chains, updatedAt: new Date() }, { merge: true });
+}
 
 const FLOW_TYPES = [
   { id: 'purchaseOrder', label: '📋 Purchase Order', description: 'PO creation and approval' },
