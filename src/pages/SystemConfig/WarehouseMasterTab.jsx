@@ -38,11 +38,12 @@ export default function WarehouseMasterTab({ config }) {
   useEffect(() => {
     const unsub1 = subscribeToWarehouses((whs) => {
       setWarehouses(whs);
+      setLoading(false);
       if (whs.length > 0 && !selectedWh) setSelectedWh(whs[0].id);
     });
     const unsub2 = subscribeToBins((bs) => setBins(bs));
     return () => { unsub1(); unsub2(); };
-  }, [selectedWh]);
+  }, []);
 
   useEffect(() => {
     if (selectedWh) {
