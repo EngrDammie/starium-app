@@ -134,6 +134,52 @@ const DEFAULT_CONFIG = {
     { id: 'warehouse_manager', label: '🏠 Warehouse Manager (Transfer Approval)' }
   ],
 
+  // ─── APPROVAL CHAINS ──────────────────────────────────────────────────────
+  // Configurable approval workflows per flow type.
+  // Each flow: enabled, required, steps (role + label).
+  // Managed in System Config → Approval Chains tab.
+  approvalChains: {
+    purchaseOrder: {
+      enabled: true,
+      required: true,
+      steps: [
+        { step: 1, role: 'procurement_head', label: 'Procurement Head' },
+        { step: 2, role: 'finance_manager', label: 'Finance Manager' },
+        { step: 3, role: 'plant_manager', label: 'Plant Manager' }
+      ]
+    },
+    stockTransfer: {
+      enabled: true,
+      required: true,
+      steps: [
+        { step: 1, role: 'warehouse_manager', label: 'Warehouse Manager' }
+      ]
+    },
+    bom: {
+      enabled: true,
+      required: true,
+      steps: [
+        { step: 1, role: 'recipe_manager', label: 'Recipe Manager' },
+        { step: 2, role: 'plant_manager', label: 'Plant Manager' }
+      ]
+    },
+    goodsReceipt: {
+      enabled: false,
+      required: false,
+      steps: []
+    },
+    productionOrder: {
+      enabled: false,
+      required: false,
+      steps: []
+    },
+    packingPlan: {
+      enabled: false,
+      required: false,
+      steps: []
+    }
+  },
+
   // ─── LEAVE POLICY ───────────────────────────────────────────────────────
   // Every value here is an ASSUMPTION, not a confirmed company rule. HR has
   // not answered the policy questions yet; these are defensible defaults taken
@@ -319,7 +365,8 @@ export function ConfigProvider({ children }) {
                   const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
                   return [...data.actionRoles, ...missing];
                 })()
-              : DEFAULT_CONFIG.actionRoles
+              : DEFAULT_CONFIG.actionRoles,
+            approvalChains: data.approvalChains || DEFAULT_CONFIG.approvalChains
           });
         } else {
           try {
@@ -373,7 +420,8 @@ export function ConfigProvider({ children }) {
                   const missing = DEFAULT_CONFIG.actionRoles.filter(r => !existingIds.has(r.id));
                   return [...data.actionRoles, ...missing];
                 })()
-              : DEFAULT_CONFIG.actionRoles
+              : DEFAULT_CONFIG.actionRoles,
+            approvalChains: data.approvalChains || DEFAULT_CONFIG.approvalChains
           });
         }
       }, (error) => {
