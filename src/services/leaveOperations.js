@@ -42,6 +42,7 @@ import { pushToQueue, readQueue, writeQueue, clearQueue } from './queueStore';
 import {
   currentStageIndex, buildDecisionPatch,
 } from './leaveWorkflow';
+import { initializeApprovalState, processApproval, canUserApprove, getPendingApprovalsForRole } from './approvalEngine';
 import { computeRecallDays } from './leaveCalculations';
 import { leaveNotifications } from './leaveNotifications';
 
@@ -248,6 +249,9 @@ export async function createLeaveRequest(input, {
 
     status: initialStatus(policy),
     workflow: buildWorkflow(policy),
+
+    // Approval Engine state (generic approval workflow)
+    approvalState: initializeApprovalState('leaveRequest', user?.email || null),
 
     // "Lodged by HR" badge, so an approver is never misled.
     lodgedForEmployeeId: input.lodgedOnBehalf ? employee.id : null,
@@ -594,45 +598,116 @@ export async function decideLeaveRequest(requestId, { decision, note = '', user,
       if (!snap.exists()) throw new Error('That request no longer exists.');
 
       const request = toRequest(snap);
-      const stageIndex = currentStageIndex(request, policy);
 
-      // Refuse rather than recompute: a patch built for a different stage is
-      // a patch built against a request that has already moved on.
-      const built = buildDecisionPatch({ request, policy, decision, note, user, stageIndex });
-      if (!built.ok) throw new DecisionError(built.error);
+      // Check if this is a new-format request (has approvalState from ApprovalEngine)
+      const hasApprovalState = request.approvalState && request.approvalState.approvalEnabled;
 
-      // Firestore's transaction requires every write to be a serverTimestamp,
-      // not the caller-supplied Date the pure engine produced.
-      const workflow = {};
-      for (const [stageId, entry] of Object.entries(built.patch.workflow)) {
-        workflow[stageId] = {
-          ...entry,
-          actedAt: entry.actedAt ? serverTimestamp() : null,
+      if (hasApprovalState) {
+        // NEW FORMAT: Use generic ApprovalEngine
+        const approvalState = request.approvalState;
+        const actorRole = user?.actionRoles?.find(r =>
+          ['leave_supervisor', 'leave_hod', 'leave_hr_head', 'super_admin'].includes(r)
+        ) || user?.systemRole === 'super_admin' ? 'super_admin' : null;
+
+        // Map user's actionRoles to the approval engine role
+        let effectiveRole = null;
+        if (user?.systemRole === 'super_admin') {
+          // Super admin can act as any role - find the current pending step's role
+          const pendingStep = approvalState.steps?.find(s => s.status === 'PENDING');
+          effectiveRole = pendingStep?.role || 'super_admin';
+        } else if (user?.actionRoles?.includes('leave_supervisor')) {
+          effectiveRole = 'leave_supervisor';
+        } else if (user?.actionRoles?.includes('leave_hod')) {
+          effectiveRole = 'leave_hod';
+        } else if (user?.actionRoles?.includes('leave_hr_head')) {
+          effectiveRole = 'leave_hr_head';
+        }
+
+        if (!effectiveRole) {
+          throw new DecisionError('You do not have permission to act on this request.');
+        }
+
+        const action = decision === 'approve' ? 'APPROVE' : 'REJECT';
+        const result = processApproval(approvalState, action, effectiveRole, user?.userFullName || user?.email || 'Unknown', user?.uid || '');
+
+        if (!result.success) {
+          throw new DecisionError(result.message);
+        }
+
+        // Build the update with new approvalState
+        const updateData = {
+          approvalState: result,
+          status: result.newStatus === 'APPROVED' ? 'approved' : result.newStatus === 'REJECTED' ? 'rejected' : result.status,
+          updatedAt: serverTimestamp(),
+          updatedBy: user?.email || null,
         };
+
+        // Also update legacy workflow for backward compatibility
+        if (result.newStatus === 'APPROVED') {
+          updateData.fullyApprovedAt = serverTimestamp();
+        } else if (result.newStatus === 'REJECTED') {
+          updateData.rejectedReason = String(note || '').trim();
+          updateData.rejectedBy = user?.userFullName || user?.email || null;
+          updateData.rejectedAt = serverTimestamp();
+        }
+
+        tx.update(ref, updateData);
+
+        return {
+          stage: result.message,
+          actedAsDeputyFor: null,
+          status: updateData.status,
+          approvalState: result
+        };
+      } else {
+        // OLD FORMAT: Use legacy leaveWorkflow (backward compatibility)
+        const stageIndex = currentStageIndex(request, policy);
+
+        // Refuse rather than recompute: a patch built for a different stage is
+        // a patch built against a request that has already moved on.
+        const built = buildDecisionPatch({ request, policy, decision, note, user, stageIndex });
+        if (!built.ok) throw new DecisionError(built.error);
+
+        // Firestore's transaction requires every write to be a serverTimestamp,
+        // not the caller-supplied Date the pure engine produced.
+        const workflow = {};
+        for (const [stageId, entry] of Object.entries(built.patch.workflow)) {
+          workflow[stageId] = {
+            ...entry,
+            actedAt: entry.actedAt ? serverTimestamp() : null,
+          };
+        }
+
+        tx.update(ref, {
+          workflow,
+          status: built.patch.status,
+          rejectedReason: built.patch.rejectedReason ?? null,
+          rejectedBy: built.patch.rejectedBy ?? null,
+          rejectedAt: built.patch.rejectedAt ? serverTimestamp() : null,
+          fullyApprovedAt: built.patch.fullyApprovedAt ? serverTimestamp() : null,
+          updatedAt: serverTimestamp(),
+          updatedBy: user?.email || null,
+        });
+
+        return { stage: built.stage.label, actedAsDeputyFor: built.actedAsDeputyFor, status: built.patch.status };
       }
-
-      tx.update(ref, {
-        workflow,
-        status: built.patch.status,
-        rejectedReason: built.patch.rejectedReason ?? null,
-        rejectedBy: built.patch.rejectedBy ?? null,
-        rejectedAt: built.patch.rejectedAt ? serverTimestamp() : null,
-        fullyApprovedAt: built.patch.fullyApprovedAt ? serverTimestamp() : null,
-        updatedAt: serverTimestamp(),
-        updatedBy: user?.email || null,
-      });
-
-      return { stage: built.stage.label, actedAsDeputyFor: built.actedAsDeputyFor, status: built.patch.status };
     });
 
     // Fire-and-forget notifications based on the resulting status
-    if (actedAsDeputyFor.status === LEAVE_STATUS.APPROVED) {
+    const finalStatus = actedAsDeputyFor.status;
+    if (finalStatus === 'approved' || finalStatus === LEAVE_STATUS.APPROVED) {
       leaveNotifications.approved(requestId);
-    } else if (actedAsDeputyFor.status === LEAVE_STATUS.REJECTED) {
+    } else if (finalStatus === 'rejected' || finalStatus === LEAVE_STATUS.REJECTED) {
       leaveNotifications.rejected(requestId);
-    } else if (actedAsDeputyFor.status && actedAsDeputyFor.status.startsWith('pending_')) {
-      // Moved to next stage
-      const nextStageId = actedAsDeputyFor.status.replace('pending_', '');
+    } else if (finalStatus && (finalStatus.startsWith('pending_') || finalStatus === 'PENDING_APPROVAL')) {
+      // Moved to next stage - get stage ID from message or next step
+      let nextStageId = 'unknown';
+      if (actedAsDeputyFor.approvalState?.steps) {
+        const nextPending = actedAsDeputyFor.approvalState.steps.find(s => s.status === 'PENDING');
+        if (nextPending) nextStageId = nextPending.role;
+      } else if (actedAsDeputyFor.stage) {
+        nextStageId = actedAsDeputyFor.stage;
+      }
       leaveNotifications.stageSigned(requestId, nextStageId);
     }
 

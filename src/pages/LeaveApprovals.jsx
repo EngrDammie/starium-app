@@ -36,6 +36,7 @@ import { spansLeaveYear, toLocalDate } from '../services/leaveCalculations';
 import {
   currentStageIndex, userCanActAtStage, awayHolders, userInvolvement,
 } from '../services/leaveWorkflow';
+import { canUserApprove, getPendingApprovalsForRole } from '../services/approvalEngine';
 import { leaveStatusLabel, leaveStatusStyle, decidedAt, outcomeNote, isLeaveCompleted, isLeaveClosed, formatClosedAt } from '../components/leave/leaveStatus';
 import { useEmployeeRecord } from '../hooks/useEmployeeRecord';
 import { subscribeToAccessView } from '../services/userAccessOperations';
@@ -53,6 +54,39 @@ const todayKey = () => {
 };
 
 function Stepper({ request, policy, highlight }) {
+  // Check if this is a new-format request (has approvalState from ApprovalEngine)
+  const hasApprovalState = request.approvalState && request.approvalState.approvalEnabled;
+
+  if (hasApprovalState) {
+    // NEW FORMAT: Use approvalState.steps
+    const steps = request.approvalState.steps || [];
+    return (
+      <div className="flex items-center gap-1 flex-wrap mt-3">
+        {steps.map((step, i) => {
+          const done = step.status === 'APPROVED';
+          const rejected = step.status === 'REJECTED';
+          const isNow = step.status === 'PENDING';
+          return (
+            <div key={step.step} className="flex items-center gap-1">
+              <span
+                className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase border ${
+                  done ? 'bg-status-success/20 text-status-success border-status-success/40'
+                    : rejected ? 'bg-status-danger/20 text-status-danger border-status-danger/40'
+                    : isNow ? `border-primary text-primary ${highlight ? 'animate-pulse' : ''}`
+                    : 'border-[#333] text-gray-500'}`}
+                title={step.approvedByName ? `Signed by ${step.approvedByName}` : step.rejectedByName ? `Rejected by ${step.rejectedByName}` : undefined}
+              >
+                {done ? '✓ ' : rejected ? '✕ ' : isNow ? '● ' : ''}{step.label}
+              </span>
+              {i < steps.length - 1 && <span className="text-gray-700 text-xs">→</span>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // OLD FORMAT: Use policy.stages and request.workflow (backward compatibility)
   const stages = policy?.stages || [];
   const at = currentStageIndex(request, policy);
   return (
@@ -112,10 +146,38 @@ function RequestCard({ request, policy, user, isOnline, onDecide, onCancel, onRe
   const [showRecall, setShowRecall] = useState(false);
   const [returnDate, setReturnDate] = useState('');
 
-  const at = currentStageIndex(request, policy);
-  const stage = policy?.stages?.[at];
-  const verdict = userCanActAtStage({ request, policy, stageIndex: at, user });
-  const canAct = verdict.can && isOnline;
+  // Check if this is a new-format request (has approvalState from ApprovalEngine)
+  const hasApprovalState = request.approvalState && request.approvalState.approvalEnabled;
+
+  let at, stage, verdict, canAct;
+  if (hasApprovalState) {
+    // NEW FORMAT: Use approvalState
+    const approvalState = request.approvalState;
+    // Find the current pending step
+    const pendingStep = approvalState.steps?.find(s => s.status === 'PENDING');
+    const userLeaveRoles = user?.actionRoles?.filter(r =>
+      ['leave_supervisor', 'leave_hod', 'leave_hr_head'].includes(r)
+    ) || [];
+    const isSuperAdmin = user?.systemRole === 'super_admin';
+
+    let canApprove = false;
+    if (isSuperAdmin) {
+      canApprove = !!pendingStep;
+    } else {
+      canApprove = userLeaveRoles.some(role => canUserApprove(approvalState, role));
+    }
+
+    canAct = canApprove && isOnline && approvalState.status === 'PENDING_APPROVAL';
+    stage = pendingStep ? { label: pendingStep.label } : null;
+    verdict = { can: canApprove };
+    at = pendingStep ? pendingStep.step - 1 : -1;
+  } else {
+    // OLD FORMAT: Use legacy leaveWorkflow (backward compatibility)
+    at = currentStageIndex(request, policy);
+    stage = policy?.stages?.[at];
+    verdict = userCanActAtStage({ request, policy, stageIndex: at, user });
+    canAct = verdict.can && isOnline;
+  }
 
   // The request's own conclusion, in the same words and colours the employee
   // sees on My Leave. The stepper below shows WHO signed; this shows WHAT
@@ -455,12 +517,51 @@ export default function LeaveApprovals() {
   const buckets = useMemo(() => {
     if (!policy) return { mine: [], others: [], decided: [] };
     const mine = [], others = [], decided = [];
+
+    // Determine user's leave approval roles
+    const userLeaveRoles = user?.actionRoles?.filter(r =>
+      ['leave_supervisor', 'leave_hod', 'leave_hr_head'].includes(r)
+    ) || [];
+    const isSuperAdmin = user?.systemRole === 'super_admin';
+
     for (const r of requests) {
-      const at = currentStageIndex(r, policy);
-      if (at === -1) { decided.push(r); continue; }
-      const verdict = userCanActAtStage({ request: r, policy, stageIndex: at, user });
-      if (verdict.can) mine.push(r);
-      else if (userInvolvement({ policy, user })) others.push(r);
+      // Check if this is a new-format request (has approvalState from ApprovalEngine)
+      const hasApprovalState = r.approvalState && r.approvalState.approvalEnabled;
+
+      if (hasApprovalState) {
+        // NEW FORMAT: Use generic ApprovalEngine
+        if (r.approvalState.status === 'APPROVED' || r.approvalState.status === 'REJECTED' || r.approvalState.status === 'CANCELLED') {
+          decided.push(r);
+        } else if (r.approvalState.status === 'PENDING_APPROVAL') {
+          // Check if user can approve the current pending step
+          let canAct = false;
+          if (isSuperAdmin) {
+            // Super admin can act on any pending step
+            const pendingStep = r.approvalState.steps?.find(s => s.status === 'PENDING');
+            if (pendingStep) canAct = true;
+          } else {
+            canAct = userLeaveRoles.some(role => canUserApprove(r.approvalState, role));
+          }
+
+          if (canAct) {
+            mine.push(r);
+          } else if (userLeaveRoles.length > 0 || isSuperAdmin) {
+            others.push(r);
+          } else {
+            decided.push(r);
+          }
+        } else {
+          decided.push(r);
+        }
+      } else {
+        // OLD FORMAT: Use legacy leaveWorkflow (backward compatibility)
+        const at = currentStageIndex(r, policy);
+        if (at === -1) { decided.push(r); continue; }
+        const verdict = userCanActAtStage({ request: r, policy, stageIndex: at, user });
+        if (verdict.can) mine.push(r);
+        else if (userInvolvement({ policy, user })) others.push(r);
+        else decided.push(r);
+      }
     }
     // Newest decision first. The requests arrive ordered by submission date,
     // which is the right order while they are live — but in the Decided tray
@@ -489,6 +590,8 @@ export default function LeaveApprovals() {
     if (!policy) return {};
     const approved = requests.filter(r => r.status === 'approved');
     const byRole = {};
+
+    // Old format: use policy stages
     for (const stage of policy.stages || []) {
       const holders = (access.people || [])
         .filter(p => {
@@ -499,6 +602,21 @@ export default function LeaveApprovals() {
         .map(p => ({ employeeId: p.id, fullName: p.fullName }));
       byRole[stage.id] = awayHolders({ holders, requests: approved, onDate: new Date() });
     }
+
+    // New format: also add entries for leave action roles (used by ApprovalEngine)
+    // These are the roles that can appear as step roles in the approval chain
+    const leaveActionRoles = ['leave_supervisor', 'leave_hod', 'leave_hr_head'];
+    for (const roleId of leaveActionRoles) {
+      if (byRole[roleId]) continue; // already exists from policy stages
+      const holders = (access.people || [])
+        .filter(p => {
+          const roles = p.role?.actionRoles || p.role?.approvalRoles || [];
+          return roles.includes(roleId);
+        })
+        .map(p => ({ employeeId: p.id, fullName: p.fullName }));
+      byRole[roleId] = awayHolders({ holders, requests: approved, onDate: new Date() });
+    }
+
     return byRole;
   }, [policy, requests, access]);
 
@@ -652,8 +770,20 @@ export default function LeaveApprovals() {
 // away right now? Resolved from the stage's named deputy when one is set,
 // because that is the one person we KNOW is meant to cover.
 function awayWarningFor(request, policy, awayByRole) {
-  const at = currentStageIndex(request, policy);
-  const stage = policy?.stages?.[at];
+  // Check if this is a new-format request (has approvalState from ApprovalEngine)
+  const hasApprovalState = request.approvalState && request.approvalState.approvalEnabled;
+
+  let stage;
+  if (hasApprovalState) {
+    // NEW FORMAT: Use approvalState.steps
+    const pendingStep = request.approvalState.steps?.find(s => s.status === 'PENDING');
+    stage = pendingStep ? { id: pendingStep.role, label: pendingStep.label } : null;
+  } else {
+    // OLD FORMAT: Use policy.stages (backward compatibility)
+    const at = currentStageIndex(request, policy);
+    stage = policy?.stages?.[at];
+  }
+
   if (!stage) return null;
   const away = awayByRole?.[stage.id] || [];
   if (!away.length) return null;

@@ -23,7 +23,8 @@ const FLOW_TYPES = [
   { id: 'stockTransfer', label: '🚚 Stock Transfer', description: 'Moving stock between warehouses' },
   { id: 'bom', label: '📖 BOM / Recipe', description: 'Recipe creation and versioning' },
   { id: 'productionOrder', label: '🏭 Production Order', description: 'Production run planning' },
-  { id: 'packingPlan', label: '📦 Packing Plan', description: 'Powder to sachets to cartons' }
+  { id: 'packingPlan', label: '📦 Packing Plan', description: 'Powder to sachets to cartons' },
+  { id: 'leaveRequest', label: '📅 Leave Request', description: 'Employee leave applications' }
 ];
 
 const AVAILABLE_ROLES = [
@@ -33,7 +34,10 @@ const AVAILABLE_ROLES = [
   { id: 'warehouse_manager', label: 'Warehouse Manager' },
   { id: 'recipe_manager', label: 'Recipe Manager' },
   { id: 'production_supervisor', label: 'Production Supervisor' },
-  { id: 'super_admin', label: 'Super Admin' }
+  { id: 'super_admin', label: 'Super Admin' },
+  { id: 'leave_supervisor', label: 'Leave Supervisor' },
+  { id: 'leave_hod', label: 'Leave HOD' },
+  { id: 'leave_hr_head', label: 'Leave HR Head' }
 ];
 
 export default function ApprovalChainsTab({ config }) {

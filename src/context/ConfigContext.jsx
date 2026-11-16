@@ -177,6 +177,15 @@ const DEFAULT_CONFIG = {
       enabled: false,
       required: false,
       steps: []
+    },
+    leaveRequest: {
+      enabled: true,
+      required: true,
+      steps: [
+        { step: 1, role: 'leave_supervisor', label: 'Leave Supervisor' },
+        { step: 2, role: 'leave_hod', label: 'Leave HOD' },
+        { step: 3, role: 'leave_hr_head', label: 'Leave HR Head' }
+      ]
     }
   },
 
