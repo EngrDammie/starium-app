@@ -160,7 +160,10 @@ export default function ApprovalChainsTab({ config }) {
               <div className="mb-3">
                 <h5 className="text-xs font-bold text-gray-400 uppercase mb-2">Approval Steps</h5>
                 {cfg.steps.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic">No steps — auto-approve</p>
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500 italic">No steps — auto-approve</p>
+                    <button onClick={() => addStep(flow.id)} className="w-full py-1.5 mt-2 rounded bg-[#333] text-xs text-white hover:bg-[#555]">➕ Add Step</button>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {cfg.steps.map((step, i) => (
