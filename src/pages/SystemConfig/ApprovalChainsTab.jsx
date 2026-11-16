@@ -155,35 +155,36 @@ export default function ApprovalChainsTab({ config }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-4">
-                <input type="checkbox" checked={cfg.required} onChange={() => toggleRequired(flow.id)} className="w-4 h-4" />
-                <label className="text-xs text-gray-300">Approval required</label>
+              <div className="flex items-center gap-2 mb-4 opacity-100">
+                <input type="checkbox" checked={cfg.required} onChange={() => toggleRequired(flow.id)} className="w-4 h-4" disabled={!cfg.enabled} />
+                <label className={`text-xs ${cfg.enabled ? 'text-gray-300' : 'text-gray-500'}`}>Approval required</label>
                 {!cfg.required && <span className="text-xs text-gray-500 ml-2">(optional)</span>}
               </div>
 
-              <div className="mb-3">
-                <h5 className="text-xs font-bold text-gray-400 uppercase mb-2">Approval Steps</h5>
+              <div className="mb-3" style={{ opacity: cfg.enabled ? 1 : 0.5 }}>
+                <h5 className={`text-xs font-bold text-gray-400 uppercase mb-2 ${!cfg.enabled ? 'text-gray-500' : ''}`}>Approval Steps</h5>
                 {cfg.steps.length === 0 ? (
                   <div className="space-y-2">
                     <p className="text-xs text-gray-500 italic">No steps — auto-approve</p>
-                    <button onClick={() => addStep(flow.id)} className="w-full py-1.5 mt-2 rounded bg-[#333] text-xs text-white hover:bg-[#555]">➕ Add Step</button>
+                    <button onClick={() => addStep(flow.id)} disabled={!cfg.enabled} className="w-full py-1.5 mt-2 rounded bg-[#333] text-xs text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">➕ Add Step</button>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {cfg.steps.map((step, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-[#121212] border border-[#333] rounded p-2">
+                      <div key={i} className="flex items-center gap-2 bg-[#121212] border border-[#333] rounded p-2" style={{ opacity: cfg.enabled ? 1 : 0.5 }}>
                         <span className="w-5 h-5 rounded bg-[#333] text-xs flex items-center justify-center text-gray-400">{step.step}</span>
                         <select
                           value={step.role}
                           onChange={e => updateStepRole(flow.id, i, e.target.value)}
-                          className="flex-1 p-1 text-xs bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary"
+                          disabled={!cfg.enabled}
+                          className="flex-1 p-1 text-xs bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {AVAILABLE_ROLES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
                         </select>
-                        <button onClick={() => removeStep(flow.id, i)} className="p-1 text-status-danger/60 hover:text-status-danger">🗑️</button>
+                        <button onClick={() => removeStep(flow.id, i)} disabled={!cfg.enabled} className="p-1 text-status-danger/60 hover:text-status-danger disabled:opacity-30 disabled:cursor-not-allowed">🗑️</button>
                       </div>
                     ))}
-                    <button onClick={() => addStep(flow.id)} className="w-full py-1.5 mt-2 rounded bg-[#333] text-xs text-white hover:bg-[#555]">➕ Add Step</button>
+                    <button onClick={() => addStep(flow.id)} disabled={!cfg.enabled} className="w-full py-1.5 mt-2 rounded bg-[#333] text-xs text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">➕ Add Step</button>
                   </div>
                 )}
               </div>
