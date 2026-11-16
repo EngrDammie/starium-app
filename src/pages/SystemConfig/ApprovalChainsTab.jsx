@@ -8,13 +8,13 @@ import {
   getApprovalConfig, getApprovalSteps, initializeApprovalState,
   setApprovalChainsCache, loadApprovalChains
 } from '../../services/approvalEngine';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
 const CONFIG_DOC = doc(db, 'config', 'settings');
 
 async function saveApprovalChains(chains) {
-  await setDoc(CONFIG_DOC, { approvalChains: chains, updatedAt: new Date() }, { merge: true });
+  await setDoc(CONFIG_DOC, { approvalChains: chains, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 const FLOW_TYPES = [
