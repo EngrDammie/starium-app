@@ -163,6 +163,10 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
   };
 
   console.log('[processPoApproval] Writing updates to Firestore:', { poNumber, status: result.newStatus, updates: JSON.stringify(updates, null, 2) });
+  console.log('[processPoApproval] Full updates object:', JSON.stringify(updates, (k, v) => {
+    if (v && v._methodName === 'serverTimestamp') return 'SERVER_TIMESTAMP';
+    return v;
+  }, 2));
   try {
     await updateDoc(ref, updates);
     console.log('[processPoApproval] SUCCESS');
