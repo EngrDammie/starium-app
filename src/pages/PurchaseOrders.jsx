@@ -71,8 +71,11 @@ export default function PurchaseOrders() {
     if (error) return setToast(error, true);
     if (!currentUser) return setToast('Not signed in', true);
     try {
-      const poNumber = await createPurchaseOrder(form, currentUser.uid, currentUser.email);
+      console.log('[PurchaseOrders] Creating PO with user:', { uid: currentUser.uid, email: currentUser.email });
+      const poNumber = await createPurchaseOrder(form, currentUser.email, currentUser.email);  // Pass email as both uid and name for now
+      console.log('[PurchaseOrders] PO created:', poNumber);
       await submitPurchaseOrder(poNumber);
+      console.log('[PurchaseOrders] PO submitted');
       // Notify on submit
       erpNotifications.poSubmitted(poNumber);
       setToast('Purchase Order created and submitted for approval!', false);
@@ -83,7 +86,8 @@ export default function PurchaseOrders() {
         lines: [{ itemId: '', itemName: '', itemCode: '', orderedQty: 0, unitOfMeasure: 'kg', unitPrice: 0, taxRate: 7.5, destinationBinId: '' }]
       });
     } catch (err) {
-      setToast('Error creating PO: ' + err.message, true);
+      console.error('[PurchaseOrders] Error creating PO:', err);
+      setToast('Error creating PO: ' + (err.message || String(err)), true);
     }
   };
 

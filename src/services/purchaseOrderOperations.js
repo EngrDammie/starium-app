@@ -16,51 +16,66 @@ const POS_COLLECTION = collection(db, 'purchase_orders');
 // ─── CREATE PO ───────────────────────────────────────────────────────
 
 export async function createPurchaseOrder(poData, requestedByUid, requestedByName) {
-  // Generate PO number: PO-YYYY-MM-DD-####
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
-  const existing = await getDocs(query(POS_COLLECTION, where('poNumber', '>=', `PO-${dateStr}-`), orderBy('poNumber')));
-  const seq = existing.size + 1;
-  const poNumber = `PO-${dateStr}-${String(seq).padStart(4, '0')}`;
+  console.log('[createPurchaseOrder] START', { requestedByUid, requestedByName, vendorId: poData.vendorId, lines: poData.lines?.length });
 
-  // Initialize approval state
-  const approvalState = initializeApprovalState('purchaseOrder', requestedByUid);
+  try {
+    // Generate PO number: PO-YYYY-MM-DD-####
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    console.log('[createPurchaseOrder] Querying existing POs for date:', dateStr);
+    const existing = await getDocs(query(POS_COLLECTION, where('poNumber', '>=', `PO-${dateStr}-`), orderBy('poNumber')));
+    const seq = existing.size + 1;
+    const poNumber = `PO-${dateStr}-${String(seq).padStart(4, '0')}`;
+    console.log('[createPurchaseOrder] Generated PO number:', poNumber);
 
-  const po = {
-    poNumber,
-    vendorId: poData.vendorId,
-    vendorName: poData.vendorName,
-    destinationWarehouseId: poData.destinationWarehouseId,
-    lines: poData.lines.map((line, i) => ({
-      lineNumber: i + 1,
-      itemId: line.itemId,
-      itemName: line.itemName,
-      itemCode: line.itemCode,
-      orderedQty: line.orderedQty,
-      unitOfMeasure: line.unitOfMeasure,
-      unitPrice: line.unitPrice,
-      currency: 'NGN',
-      taxRate: line.taxRate || 7.5,
-      destinationBinId: line.destinationBinId,
-      receivedQty: 0,
-      status: 'PENDING'
-    })),
-    totalAmount: poData.lines.reduce((sum, l) => sum + (l.orderedQty * l.unitPrice), 0),
-    approvalState,
-    currentApprovalStep: approvalState.currentStep,
-    requestedBy: requestedByUid,
-    requestedByName,
-    requestedAt: serverTimestamp(),
-    expectedDeliveryDate: poData.expectedDeliveryDate,
-    notes: poData.notes || '',
-    status: approvalState.status, // DRAFT | PENDING_APPROVAL | APPROVED | REJECTED | CANCELLED | COMPLETED
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
+    // Initialize approval state
+    console.log('[createPurchaseOrder] Calling initializeApprovalState for purchaseOrder');
+    const approvalState = initializeApprovalState('purchaseOrder', requestedByUid);
+    console.log('[createPurchaseOrder] approvalState:', JSON.stringify(approvalState, null, 2));
 
-  const ref = doc(db, 'purchase_orders', poNumber);
-  await setDoc(ref, po);
-  return poNumber;
+    const po = {
+      poNumber,
+      vendorId: poData.vendorId,
+      vendorName: poData.vendorName,
+      destinationWarehouseId: poData.destinationWarehouseId,
+      lines: poData.lines.map((line, i) => ({
+        lineNumber: i + 1,
+        itemId: line.itemId,
+        itemName: line.itemName,
+        itemCode: line.itemCode,
+        orderedQty: line.orderedQty,
+        unitOfMeasure: line.unitOfMeasure,
+        unitPrice: line.unitPrice,
+        currency: 'NGN',
+        taxRate: line.taxRate || 7.5,
+        destinationBinId: line.destinationBinId,
+        receivedQty: 0,
+        status: 'PENDING'
+      })),
+      totalAmount: poData.lines.reduce((sum, l) => sum + (l.orderedQty * l.unitPrice), 0),
+      approvalState,
+      currentApprovalStep: approvalState.currentStep,
+      requestedBy: requestedByUid,  // This is UID - but Firestore rule expects email!
+      requestedByName,
+      requestedAt: serverTimestamp(),
+      expectedDeliveryDate: poData.expectedDeliveryDate,
+      notes: poData.notes || '',
+      status: approvalState.status, // DRAFT | PENDING_APPROVAL | APPROVED | REJECTED | CANCELLED | COMPLETED
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    console.log('[createPurchaseOrder] Writing PO to Firestore:', { poNumber, requestedBy: requestedByUid, status: po.status });
+    const ref = doc(db, 'purchase_orders', poNumber);
+    await setDoc(ref, po);
+    console.log('[createPurchaseOrder] SUCCESS - PO written');
+    return poNumber;
+  } catch (error) {
+    console.error('[createPurchaseOrder] ERROR:', error);
+    console.error('[createPurchaseOrder] Error code:', error.code);
+    console.error('[createPurchaseOrder] Error message:', error.message);
+    throw error; // Re-throw so caller can handle
+  }
 }
 
 // ─── UPDATE PO (only if DRAFT) ──────────────────────────────────────
@@ -76,14 +91,23 @@ export async function updatePurchaseOrder(poNumber, updates) {
 // ─── SUBMIT PO FOR APPROVAL ─────────────────────────────────────────
 
 export async function submitPurchaseOrder(poNumber) {
+  console.log('[submitPurchaseOrder] START for:', poNumber);
   const ref = doc(db, 'purchase_orders', poNumber);
   const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error('PO not found');
+  if (!snap.exists()) {
+    console.error('[submitPurchaseOrder] PO not found:', poNumber);
+    throw new Error('PO not found');
+  }
   const data = snap.data();
+  console.log('[submitPurchaseOrder] Current PO status:', data.status, 'approvalState:', JSON.stringify(data.approvalState, null, 2));
 
-  if (data.status !== 'DRAFT') throw new Error('Only DRAFT POs can be submitted');
+  if (data.status !== 'DRAFT') {
+    console.error('[submitPurchaseOrder] Cannot submit - status is:', data.status);
+    throw new Error('Only DRAFT POs can be submitted');
+  }
 
   const approvalState = initializeApprovalState('purchaseOrder', data.requestedBy);
+  console.log('[submitPurchaseOrder] New approvalState:', JSON.stringify(approvalState, null, 2));
   await updateDoc(ref, {
     status: approvalState.status,
     currentApprovalStep: approvalState.currentStep,
@@ -91,6 +115,7 @@ export async function submitPurchaseOrder(poNumber) {
     submittedAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
+  console.log('[submitPurchaseOrder] SUCCESS - PO submitted');
   return approvalState;
 }
 

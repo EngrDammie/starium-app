@@ -53,8 +53,14 @@ export async function loadApprovalChains() {
 // ─── GET CONFIG FOR A FLOW TYPE ──────────────────────────────────────
 
 export function getApprovalConfig(flowType) {
-  if (!APPROVAL_CHAINS_CACHE) return { enabled: false, required: false, steps: [] };
-  return APPROVAL_CHAINS_CACHE[flowType] || { enabled: false, required: false, steps: [] };
+  console.log('[getApprovalConfig] Called for:', flowType, 'Cache:', APPROVAL_CHAINS_CACHE ? 'exists' : 'NULL');
+  if (!APPROVAL_CHAINS_CACHE) {
+    console.warn('[getApprovalConfig] Cache is NULL - returning empty config');
+    return { enabled: false, required: false, steps: [] };
+  }
+  const result = APPROVAL_CHAINS_CACHE[flowType] || { enabled: false, required: false, steps: [] };
+  console.log('[getApprovalConfig] Result:', JSON.stringify(result, null, 2));
+  return result;
 }
 
 // Is approval enabled for this flow type?
@@ -75,10 +81,13 @@ export function getApprovalSteps(flowType) {
 // ─── INITIALIZE APPROVAL STATE FOR A NEW DOCUMENT ────────────────────
 
 export function initializeApprovalState(flowType, requestedBy) {
+  console.log('[initializeApprovalState] Called with:', { flowType, requestedBy });
   const config = getApprovalConfig(flowType);
+  console.log('[initializeApprovalState] Config from cache:', JSON.stringify(config, null, 2));
   const steps = config.steps || [];
 
   if (!config.enabled || steps.length === 0) {
+    console.log('[initializeApprovalState] Approval disabled or no steps - returning auto-approved');
     // No approval needed — document is auto-approved
     return {
       approvalRequired: false,
@@ -92,6 +101,7 @@ export function initializeApprovalState(flowType, requestedBy) {
     };
   }
 
+  console.log('[initializeApprovalState] Approval enabled with', steps.length, 'steps');
   return {
     approvalRequired: config.required,
     approvalEnabled: true,
