@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { setApprovalChainsCache } from '../services/approvalEngine';
 
 const ConfigContext = createContext();
 
@@ -377,6 +378,8 @@ export function ConfigProvider({ children }) {
               : DEFAULT_CONFIG.actionRoles,
             approvalChains: data.approvalChains || DEFAULT_CONFIG.approvalChains
           });
+          // Sync approval chains to the approval engine cache on initial load
+          setApprovalChainsCache(data.approvalChains || DEFAULT_CONFIG.approvalChains);
         } else {
           try {
             await setDoc(configRef, { ...DEFAULT_CONFIG, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
@@ -394,6 +397,7 @@ export function ConfigProvider({ children }) {
       unsubscribe = onSnapshot(configRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
+          const approvalChains = data.approvalChains || DEFAULT_CONFIG.approvalChains;
           setConfig({
             ...DEFAULT_CONFIG,
             ...data,
@@ -430,8 +434,10 @@ export function ConfigProvider({ children }) {
                   return [...data.actionRoles, ...missing];
                 })()
               : DEFAULT_CONFIG.actionRoles,
-            approvalChains: data.approvalChains || DEFAULT_CONFIG.approvalChains
+            approvalChains
           });
+          // Sync approval chains to the approval engine cache
+          setApprovalChainsCache(approvalChains);
         }
       }, (error) => {
         if (error.code !== 'permission-denied') {
