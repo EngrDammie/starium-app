@@ -150,6 +150,16 @@ export default function GoodsReceipt() {
     }
   };
 
+  const handleCreateCreditNoteFromGrn = async (grnNumber) => {
+    if (!currentUser) return setToast('Not signed in', true);
+    try {
+      const cnNumber = await createCreditNoteFromGrn(grnNumber, currentUser.email, currentUser.email);
+      setToast(`Credit Note ${cnNumber} created!`, false);
+    } catch (err) {
+      setToast('Error creating credit note: ' + err.message, true);
+    }
+  };
+
   const showToast = (msg, isError) => {
     setToast({ show: true, message: msg, isError });
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
@@ -241,8 +251,11 @@ export default function GoodsReceipt() {
                   <td className="p-3 text-white">{grn.totalReceived}</td>
                   <td className="p-3 text-white">{grn.totalOrdered}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${grn.creditNoteCreated ? 'bg-status-warning/20 text-status-warning' : 'bg-[#333] text-gray-400'}`}>{grn.creditNoteCreated ? 'Credit Note' : 'Posted'}</span></td>
-                  <td className="p-3">
+                  <td className="p-3 flex gap-1">
                     <button onClick={() => downloadGRNPdf(grn)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📄 PDF</button>
+                    {grn.lines?.some(l => l.matchStatus === 'SHORT') && !grn.creditNoteCreated && (
+                      <button onClick={() => handleCreateCreditNoteFromGrn(grn.grnNumber)} className="bg-status-warning/20 text-status-warning px-3 py-1 rounded text-xs hover:bg-status-warning hover:text-white">📝 Create CN</button>
+                    )}
                   </td>
                 </tr>
               ))}
