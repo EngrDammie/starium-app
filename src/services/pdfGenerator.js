@@ -258,7 +258,7 @@ export function generatePOPdf(po) {
 export function generateGRNPdf(grn) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  const date = grn.receivedAt ? new Date(grn.receivedAt.seconds * 1000).toLocaleDateString() : new Date().toLocaleDateString();
+  const date = parseFirestoreTimestamp(grn.receivedAt).toLocaleDateString();
   let y = addHeader(doc, 'GOODS RECEIPT NOTE (GRN)', grn.grnNumber, date);
 
   // PO & Vendor Details
@@ -292,17 +292,17 @@ export function generateGRNPdf(grn) {
   ]);
   y = addTable(doc, grnHeaders, grnRows, y, {
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 18, halign: 'center' },
-      3: { cellWidth: 15, halign: 'right' },
-      4: { cellWidth: 15, halign: 'right' },
-      5: { cellWidth: 12, halign: 'center' },
-      6: { cellWidth: 25 },
-      7: { cellWidth: 20, halign: 'center' },
-      8: { cellWidth: 25 },
-      9: { cellWidth: 18, halign: 'center' },
-      10: { cellWidth: 18, halign: 'center' },
+      0: { cellWidth: 8, halign: 'center' },      // #
+      1: { cellWidth: 28 },                        // Item
+      2: { cellWidth: 15, halign: 'center' },      // Code
+      3: { cellWidth: 12, halign: 'right' },       // Ordered
+      4: { cellWidth: 12, halign: 'right' },       // Received
+      5: { cellWidth: 10, halign: 'center' },      // Unit
+      6: { cellWidth: 20 },                        // Lot #
+      7: { cellWidth: 18, halign: 'center' },      // Expiry
+      8: { cellWidth: 20 },                        // Bin
+      9: { cellWidth: 15, halign: 'center' },      // Condition
+      10: { cellWidth: 15, halign: 'center' },     // Match
     },
   });
 

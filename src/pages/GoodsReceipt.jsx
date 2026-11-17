@@ -33,6 +33,7 @@ export default function GoodsReceipt() {
   });
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
   const [showCreditNote, setShowCreditNote] = useState(false);
+  const [posting, setPosting] = useState(false);
 
   useEffect(() => {
     const u1 = subscribeToPurchaseOrders((p) => {
@@ -113,9 +114,11 @@ export default function GoodsReceipt() {
 
   const handlePostGRN = async (e) => {
     e.preventDefault();
+    if (posting) return;
     const error = validateForm();
     if (error) return setToast(error, true);
     if (!currentUser) return setToast('Not signed in', true);
+    setPosting(true);
     try {
       console.log('[GoodsReceipt] Posting GRN...');
       const { grnNumber, hasShortfall, shortLines } = await createGoodsReceipt(form, currentUser.email, currentUser.email);
@@ -131,6 +134,8 @@ export default function GoodsReceipt() {
     } catch (err) {
       console.error('[GoodsReceipt] Error:', err);
       setToast('Error posting GRN: ' + err.message, true);
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -331,8 +336,8 @@ export default function GoodsReceipt() {
               </div>
 
               <div className="flex justify-end gap-2 pt-6">
-                <button type="button" onClick={() => setReceiveOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
-                <button type="submit" className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">📥 Post GRN</button>
+                <button type="button" onClick={() => setReceiveOpen(false)} disabled={posting} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={posting} className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed">{posting ? '⏳ Posting...' : '📥 Post GRN'}</button>
               </div>
             </form>
           </div>
