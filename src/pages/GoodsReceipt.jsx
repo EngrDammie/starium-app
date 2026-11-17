@@ -35,6 +35,7 @@ export default function GoodsReceipt() {
   const [showCreditNote, setShowCreditNote] = useState(false);
   const [posting, setPosting] = useState(false);
   const [creatingCN, setCreatingCN] = useState(null);
+  const [pendingGrnNumber, setPendingGrnNumber] = useState(null);
 
   useEffect(() => {
     const u1 = subscribeToPurchaseOrders((p) => {
@@ -132,6 +133,7 @@ export default function GoodsReceipt() {
       console.log('[GoodsReceipt] Dialog should close now');
       if (hasShortfall) {
         console.log('[GoodsReceipt] Shortfall detected, showing credit note dialog');
+        setPendingGrnNumber(grnNumber); // Store GRN number for credit note creation
         setShowCreditNote(true);
         setToast(`Shortfall detected on ${shortLines.length} line(s). Create credit note?`, false);
       }
@@ -145,10 +147,12 @@ export default function GoodsReceipt() {
 
   const handleCreateCreditNote = async () => {
     if (!currentUser) return setToast('Not signed in', true);
+    if (!pendingGrnNumber) return setToast('No GRN with shortfall pending', true);
     try {
-      const cnNumber = await createCreditNoteFromGrn(form.poNumber, currentUser.email, currentUser.email);
+      const cnNumber = await createCreditNoteFromGrn(pendingGrnNumber, currentUser.email, currentUser.email);
       setToast(`Credit Note ${cnNumber} created!`, false);
       setShowCreditNote(false);
+      setPendingGrnNumber(null);
     } catch (err) {
       setToast('Error creating credit note: ' + err.message, true);
     }
