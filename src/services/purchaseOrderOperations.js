@@ -147,6 +147,8 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
     ...step,
     approvedAt: step.approvedAt ? now : null,
     rejectedAt: step.rejectedAt ? now : null,
+    // Store rejection reason in the step that was rejected
+    ...(action === 'REJECT' && step.status === 'REJECTED' ? { rejectionReason } : {}),
   })) || [];
 
   const updates = {
@@ -159,7 +161,9 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
     },
     currentApprovalStep: result.currentStep,
     status: result.newStatus,
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    // Also store rejection reason at PO level for easy access
+    ...(action === 'REJECT' ? { rejectedReason: rejectionReason } : {}),
   };
 
   console.log('[processPoApproval] Writing updates to Firestore:', { poNumber, status: result.newStatus, updates: JSON.stringify(updates, null, 2) });

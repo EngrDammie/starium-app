@@ -39,11 +39,11 @@ export default function PoApprovals() {
     return unsub;
   }, [userActionRoles]);
 
-  const handleAction = async (poNumber, action, role, name) => {
+  const handleAction = async (poNumber, action, role, name, rejectionReason = '') => {
     if (!currentUser) return setToast('Not signed in', true);
     try {
-      console.log('[PoApprovals] handleAction:', { poNumber, action, role, name, uid: currentUser.uid, email: currentUser.email });
-      await processPoApproval(poNumber, action, role, currentUser.email, currentUser.uid);
+      console.log('[PoApprovals] handleAction:', { poNumber, action, role, name, uid: currentUser.uid, email: currentUser.email, rejectionReason });
+      await processPoApproval(poNumber, action, role, currentUser.email, currentUser.uid, rejectionReason);
       setToast(`PO ${action.toLowerCase()}ed successfully!`, false);
     } catch (err) {
       console.error('[PoApprovals] Error:', err);
@@ -109,7 +109,7 @@ export default function PoApprovals() {
                       <button onClick={() => handleAction(po.poNumber, 'APPROVE', pendingStep?.role, pendingStep?.label)} className="bg-status-success/20 text-status-success px-3 py-1 rounded hover:bg-status-success hover:text-white">✅ Approve</button>
                       <button onClick={() => {
                         const reason = window.prompt('Rejection reason:');
-                        if (reason) handleAction(po.poNumber, 'REJECT', pendingStep?.role, pendingStep?.label);
+                        if (reason) handleAction(po.poNumber, 'REJECT', pendingStep?.role, pendingStep?.label, reason);
                       }} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">❌ Reject</button>
                     </td>
                   </tr>
