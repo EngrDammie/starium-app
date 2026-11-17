@@ -13,14 +13,14 @@ import Layout from '../components/Layout';
 
 export default function PoApprovals() {
   const { config } = useConfig();
-  const { currentUser } = useAuth();
+  const { currentUser, actionRoles } = useAuth();
   const [pos, setPos] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
-  // Get current user's action roles (from AuthContext, populated from user_roles document)
-  const userActionRoles = currentUser?.actionRoles || [];
+  // Get current user's action roles from AuthContext state
+  const userActionRoles = actionRoles || [];
 
   useEffect(() => {
     const unsub = subscribeToPurchaseOrders((p) => {
@@ -31,14 +31,8 @@ export default function PoApprovals() {
         if (po.approvalState.status !== 'PENDING_APPROVAL') return false;
         const pendingStep = po.approvalState.steps?.find(s => s.status === 'PENDING');
         const match = pendingStep ? userActionRoles.includes(pendingStep.role) : false;
-        if (pendingStep && !match && userActionRoles.length > 0) {
-          console.log('[PoApprovals] FILTERED OUT:', { poNumber: po.poNumber, pendingStepRole: pendingStep.role, userActionRoles });
-        }
         return match;
       });
-      if (userActionRoles.length === 0) {
-        console.warn('[PoApprovals] userActionRoles is EMPTY - user has no actionRoles assigned');
-      }
       setPending(pend);
       setLoading(false);
     });
