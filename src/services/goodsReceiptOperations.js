@@ -217,8 +217,9 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
   });
   console.log('[createCreditNoteFromGrn] GRN updated with credit note link');
 
-  // Notify credit note created
-  erpNotifications.cnCreated(cnNumber, { grnId: grnNumber, vendorId: grn.vendorId });
+  // Notify credit note created (fire-and-forget — never blocks CN creation)
+  erpNotifications.cnCreated(cnNumber, { grnId: grnNumber, vendorId: grn.vendorId })
+    .catch(err => console.warn('[createCreditNoteFromGrn] Notification failed (non-critical):', err.message));
 
   return cnNumber;
 }

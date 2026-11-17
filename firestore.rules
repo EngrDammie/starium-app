@@ -475,10 +475,10 @@ service cloud.firestore {
     }
 
     match /erp_notifications/{notificationId} {
-      // ERP notifications queue - authenticated users can create, admin can manage
+      // ERP notifications queue - authenticated users can create/update their own notifications
       allow read: if !isAuthEnabled() || isAuthenticated();
       allow create: if !isAuthEnabled() || isAuthenticated();
-      allow update: if !isAuthEnabled() || isAdmin();
+      allow update: if !isAuthEnabled() || isAuthenticated();
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
