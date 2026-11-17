@@ -57,11 +57,11 @@ export default function ApprovalChainsTab({ config }) {
 
   const saveChains = async () => {
     try {
-      await setDoc(CONFIG_DOC, { approvalChains: chains, updatedAt: new Date() }, { merge: true });
+      await setDoc(CONFIG_DOC, { approvalChains: chains, updatedAt: serverTimestamp() }, { merge: true });
       setApprovalChainsCache(chains);
-      setToast('Approval chains saved!', false);
+      showToast('Approval chains saved!', false);
     } catch (err) {
-      setToast('Error saving approval chains', true);
+      showToast('Error saving approval chains', true);
       console.error(err);
     }
   };
@@ -205,6 +205,18 @@ export default function ApprovalChainsTab({ config }) {
           <li>• Turn <strong>OFF</strong> to skip approval entirely (auto-approve).</li>
         </ul>
       </div>
+
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-[slideIn_0.3s]">
+          <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 ${
+            toast.isError
+              ? 'bg-status-danger/90 text-white'
+              : 'bg-status-success/90 text-white'
+          }`}>
+            {toast.isError ? '✕' : '✓'} {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
