@@ -34,6 +34,7 @@ export default function GoodsReceipt() {
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
   const [showCreditNote, setShowCreditNote] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [creatingCN, setCreatingCN] = useState(null);
 
   useEffect(() => {
     const u1 = subscribeToPurchaseOrders((p) => {
@@ -152,11 +153,15 @@ export default function GoodsReceipt() {
 
   const handleCreateCreditNoteFromGrn = async (grnNumber) => {
     if (!currentUser) return setToast('Not signed in', true);
+    if (creatingCN) return; // Prevent double-click
+    setCreatingCN(grnNumber);
     try {
       const cnNumber = await createCreditNoteFromGrn(grnNumber, currentUser.email, currentUser.email);
       setToast(`Credit Note ${cnNumber} created!`, false);
     } catch (err) {
       setToast('Error creating credit note: ' + err.message, true);
+    } finally {
+      setCreatingCN(null);
     }
   };
 
@@ -254,7 +259,13 @@ export default function GoodsReceipt() {
                   <td className="p-3 flex gap-1">
                     <button onClick={() => downloadGRNPdf(grn)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📄 PDF</button>
                     {grn.lines?.some(l => l.matchStatus === 'SHORT') && !grn.creditNoteCreated && (
-                      <button onClick={() => handleCreateCreditNoteFromGrn(grn.grnNumber)} className="bg-status-warning/20 text-status-warning px-3 py-1 rounded text-xs hover:bg-status-warning hover:text-white">📝 Create CN</button>
+                      <button 
+                        onClick={() => handleCreateCreditNoteFromGrn(grn.grnNumber)} 
+                        disabled={creatingCN === grn.grnNumber}
+                        className="bg-status-warning/20 text-status-warning px-3 py-1 rounded text-xs hover:bg-status-warning hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {creatingCN === grn.grnNumber ? '⏳ Creating...' : '📝 Create CN'}
+                      </button>
                     )}
                   </td>
                 </tr>
