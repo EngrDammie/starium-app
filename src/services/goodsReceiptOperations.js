@@ -19,12 +19,14 @@ const CREDIT_NOTES_COLLECTION = collection(db, 'credit_notes');
 // ─── CREATE GRN ──────────────────────────────────────────────────────
 
 export async function createGoodsReceipt(grnData, receivedByUid, receivedByName) {
+  console.log('[createGoodsReceipt] START:', { receivedByUid, receivedByName, poId: grnData.poId, lines: grnData.lines?.length });
   // Generate GRN number: GRN-YYYY-MM-DD-####
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
   const existing = await getDocs(query(GRNS_COLLECTION, where('grnNumber', '>=', `GRN-${dateStr}-`), orderBy('grnNumber')));
   const seq = existing.size + 1;
   const grnNumber = `GRN-${dateStr}-${String(seq).padStart(4, '0')}`;
+  console.log('[createGoodsReceipt] Generated GRN number:', grnNumber);
 
   // Build GRN lines with 3-way match flags
   const grnLines = grnData.lines.map((line, i) => {
@@ -80,6 +82,7 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
 
   const ref = doc(db, 'goods_receipts', grnNumber);
   await setDoc(ref, grn);
+  console.log('[createGoodsReceipt] GRN written to Firestore:', grnNumber);
 
   // ─── STOCK LEDGER: POST GRN (+qty to warehouse/bin) ─────────────
 

@@ -117,14 +117,19 @@ export default function GoodsReceipt() {
     if (error) return setToast(error, true);
     if (!currentUser) return setToast('Not signed in', true);
     try {
+      console.log('[GoodsReceipt] Posting GRN...');
       const { grnNumber, hasShortfall, shortLines } = await createGoodsReceipt(form, currentUser.email, currentUser.email);
+      console.log('[GoodsReceipt] GRN created:', grnNumber, 'hasShortfall:', hasShortfall);
       setToast(`GRN ${grnNumber} posted successfully!`, false);
       setReceiveOpen(false);
+      console.log('[GoodsReceipt] Dialog should close now');
       if (hasShortfall) {
+        console.log('[GoodsReceipt] Shortfall detected, showing credit note dialog');
         setShowCreditNote(true);
         setToast(`Shortfall detected on ${shortLines.length} line(s). Create credit note?`, false);
       }
     } catch (err) {
+      console.error('[GoodsReceipt] Error:', err);
       setToast('Error posting GRN: ' + err.message, true);
     }
   };
