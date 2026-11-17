@@ -157,7 +157,7 @@ export function processApproval(currentState, action, actorRole, actorName, acto
       ...currentStepData,
       status: 'APPROVED',
       approvedBy: actorUid,
-      approvedAt: serverTimestamp(),
+      approvedAt: new Date(), // placeholder; caller replaces with serverTimestamp()
       approvedByName: actorName
     };
 
@@ -191,7 +191,7 @@ export function processApproval(currentState, action, actorRole, actorName, acto
         steps: newSteps,
         currentStep: totalSteps,
         totalSteps,
-        approvedAt: serverTimestamp(),
+        approvedAt: new Date(), // placeholder; caller replaces with serverTimestamp()
         approvalEnabled: true,
         approvalRequired: currentState.approvalRequired
       };
@@ -203,7 +203,7 @@ export function processApproval(currentState, action, actorRole, actorName, acto
       ...currentStepData,
       status: 'REJECTED',
       rejectedBy: actorUid,
-      rejectedAt: serverTimestamp(),
+      rejectedAt: new Date(), // placeholder; caller replaces with serverTimestamp()
       rejectedByName: actorName
     };
     return {
@@ -215,7 +215,7 @@ export function processApproval(currentState, action, actorRole, actorName, acto
       steps: newSteps,
       currentStep: currentStepData.step,
       totalSteps,
-      rejectedAt: serverTimestamp(),
+      rejectedAt: new Date(), // placeholder; caller replaces with serverTimestamp()
       approvalEnabled: true,
       approvalRequired: currentState.approvalRequired
     };
