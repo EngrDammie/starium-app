@@ -154,15 +154,16 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
   const cnLines = shortLines.map((line, i) => {
     // Get unit price from PO line
     const poLine = po?.lines?.find(l => l.lineNumber === line.poLineNumber);
-    const unitPrice = poLine?.unitPrice || 0;
-    const taxRate = poLine?.taxRate || 7.5;
-    const lineTotal = line.shortQty * unitPrice;
+    const unitPrice = Number(poLine?.unitPrice) || 0;
+    const taxRate = Number(poLine?.taxRate) || 7.5;
+    const shortQty = Number(line.shortQty) || 0;
+    const lineTotal = shortQty * unitPrice;
     const taxTotal = lineTotal * (taxRate / 100);
     return {
       lineNumber: i + 1,
       itemId: line.itemId,
       itemName: line.itemName,
-      shortQty: line.orderedQty - line.receivedQty,
+      shortQty,
       unitOfMeasure: line.unitOfMeasure,
       unitPrice,
       currency: 'NGN',
