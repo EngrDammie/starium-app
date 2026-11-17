@@ -19,8 +19,8 @@ export default function PoApprovals() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
-  // Get user's action roles from config
-  const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
+  // Get current user's action roles (from AuthContext, populated from user_roles document)
+  const userActionRoles = currentUser?.actionRoles || [];
 
   useEffect(() => {
     const unsub = subscribeToPurchaseOrders((p) => {

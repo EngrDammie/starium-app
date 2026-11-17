@@ -429,8 +429,8 @@ service cloud.firestore {
         || (isAuthenticated()
             && (isAdmin()
                 || request.auth.token.email == resource.data.requestedBy
-                || request.resource.data.approvalState.steps.any(s,
-                    s.status == 'PENDING' && s.role in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles)));
+                || resource.data.approvalState.steps.any(s,
+                    s.status == 'PENDING' && s.role in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
