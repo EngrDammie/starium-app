@@ -60,7 +60,7 @@ export async function createPurchaseOrder(poData, requestedByUid, requestedByNam
       requestedAt: serverTimestamp(),
       expectedDeliveryDate: poData.expectedDeliveryDate,
       notes: poData.notes || '',
-      status: approvalState.status, // DRAFT | PENDING_APPROVAL | APPROVED | REJECTED | CANCELLED | COMPLETED
+      status: 'DRAFT', // Created as DRAFT; submitPurchaseOrder changes to PENDING_APPROVAL
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
