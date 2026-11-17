@@ -3,6 +3,7 @@
 // Purchase Order list + create page.
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   subscribeToPurchaseOrders, createPurchaseOrder, submitPurchaseOrder,
   cancelPurchaseOrder, getPurchaseOrder
@@ -15,6 +16,7 @@ import { generatePOPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function PurchaseOrders() {
+  const { currentUser } = useAuth();
   const [pos, setPos] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -67,8 +69,9 @@ export default function PurchaseOrders() {
     e.preventDefault();
     const error = validateForm();
     if (error) return setToast(error, true);
+    if (!currentUser) return setToast('Not signed in', true);
     try {
-      const poNumber = await createPurchaseOrder(form, 'current-user', 'Current User');
+      const poNumber = await createPurchaseOrder(form, currentUser.uid, currentUser.email);
       await submitPurchaseOrder(poNumber);
       // Notify on submit
       erpNotifications.poSubmitted(poNumber);
