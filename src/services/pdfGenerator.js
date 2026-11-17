@@ -232,7 +232,7 @@ export function generatePOPdf(po) {
       s.label,
       s.status,
       s.approvedByName || '—',
-      s.approvedAt ? new Date(s.approvedAt.seconds * 1000).toLocaleDateString() : '—',
+      s.approvedAt ? parseFirestoreTimestamp(s.approvedAt).toLocaleDateString() : '—',
     ]);
     y = addTable(doc, approveHeaders, approveRows, y);
   }
