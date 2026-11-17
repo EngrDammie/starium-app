@@ -426,11 +426,14 @@ service cloud.firestore {
       allow create: if !isAuthEnabled()
         || (isAuthenticated() && request.auth.token.email == request.resource.data.requestedBy);
       allow update: if !isAuthEnabled()
-        || (isAuthenticated()
-            && (isAdmin()
-                || request.auth.token.email == resource.data.requestedBy
-                || resource.data.approvalState.steps.any(s,
-                    s.status == 'PENDING' && s.role in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles));
+        || (isAuthenticated() && (
+            isAdmin()
+            || request.auth.token.email == resource.data.requestedBy
+            || request.resource.data.status == 'PENDING_APPROVAL'
+            || request.resource.data.status == 'REJECTED'
+            || request.resource.data.status == 'APPROVED'
+            || (!request.resource.data.approvalState && resource.data.approvalState)
+          ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
@@ -466,7 +469,7 @@ service cloud.firestore {
     match /stock_ledger/{entryId} {
       // Stock ledger is IMMUTABLE — only create, never update or delete.
       allow read: if !isAuthEnabled() || isAuthenticated();
-      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow create: if !isAuthEnabled() || isAuthenticated();
       allow update: if false;  // never modify — audit trail
       allow delete: if false;  // never delete — audit trail
     }
