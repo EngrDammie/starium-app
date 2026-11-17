@@ -432,7 +432,7 @@ service cloud.firestore {
             || request.resource.data.status == 'PENDING_APPROVAL'
             || request.resource.data.status == 'REJECTED'
             || request.resource.data.status == 'APPROVED'
-            || (!request.resource.data.approvalState && resource.data.approvalState)
+            || request.resource.data.approvalState == resource.data.approvalState
           ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
@@ -472,6 +472,14 @@ service cloud.firestore {
       allow create: if !isAuthEnabled() || isAuthenticated();
       allow update: if false;  // never modify — audit trail
       allow delete: if false;  // never delete — audit trail
+    }
+
+    match /erp_notifications/{notificationId} {
+      // ERP notifications queue - authenticated users can create, admin can manage
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || isAuthenticated();
+      allow update: if !isAuthEnabled() || isAdmin();
+      allow delete: if !isAuthEnabled() || isAdmin();
     }
 
     // ─── Default catch-all ─────────────────────────────────

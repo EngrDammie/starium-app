@@ -94,9 +94,6 @@ export function AuthProvider({ children }) {
         const roleDoc = await getDoc(doc(db, "user_roles", user.uid));
         const data = roleDoc.exists() ? roleDoc.data() : {};
 
-        console.log('[AuthContext] Raw user_roles document:', data);
-        console.log('[AuthContext] user_roles exists:', roleDoc.exists());
-
         let sysRole = data.systemRole || (data.role === 'admin' ? 'super_admin' : 'standard');
         let deptRoles = data.departmentRoles || (data.role === 'admin' || data.role === 'manager' ? ['qc_manager'] : ['qc_staff']);
         let actRoles = data.actionRoles || data.approvalRoles || [];

@@ -73,14 +73,18 @@ async function writeQueueDoc(entityId, event, extra = {}) {
 }
 
 async function markQueueDoc(id, status, detail = {}) {
-  console.log('[erpNotifications] markQueueDoc:', { id, status });
-  const ref = doc(db, 'erp_notifications', id);
-  await updateDoc(ref, {
-    status,
-    updatedAt: serverTimestamp(),
-    ...detail,
-  });
-  console.log('[erpNotifications] markQueueDoc: success');
+  try {
+    console.log('[erpNotifications] markQueueDoc:', { id, status });
+    const ref = doc(db, 'erp_notifications', id);
+    await updateDoc(ref, {
+      status,
+      updatedAt: serverTimestamp(),
+      ...detail,
+    });
+    console.log('[erpNotifications] markQueueDoc: success');
+  } catch (error) {
+    console.warn('[erpNotifications] markQueueDoc failed (non-critical):', error.message);
+  }
 }
 
 async function callWorker(entityId, event, extra = {}) {
