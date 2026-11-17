@@ -122,13 +122,22 @@ export async function submitPurchaseOrder(poNumber) {
 // ─── APPROVE / REJECT A STEP ────────────────────────────────────────
 
 export async function processPoApproval(poNumber, action, actorRole, actorName, actorUid, rejectionReason = '') {
+  console.log('[processPoApproval] START:', { poNumber, action, actorRole, actorName, actorUid });
   const ref = doc(db, 'purchase_orders', poNumber);
   const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error('PO not found');
+  if (!snap.exists()) {
+    console.error('[processPoApproval] PO not found:', poNumber);
+    throw new Error('PO not found');
+  }
   const data = snap.data();
+  console.log('[processPoApproval] Current PO status:', data.status, 'approvalState:', JSON.stringify(data.approvalState, null, 2));
 
   const result = processApproval(data.approvalState, action, actorRole, actorName, actorUid);
-  if (!result.success) throw new Error(result.message);
+  console.log('[processPoApproval] processApproval result:', JSON.stringify(result, null, 2));
+  if (!result.success) {
+    console.error('[processPoApproval] processApproval failed:', result.message);
+    throw new Error(result.message);
+  }
 
   const updates = {
     approvalState: {
@@ -143,7 +152,9 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
   if (result.approvedAt) updates.approvedAt = result.approvedAt;
   if (result.rejectedAt) updates.rejectedAt = result.rejectedAt;
 
+  console.log('[processPoApproval] Writing updates to Firestore:', { poNumber, status: result.newStatus });
   await updateDoc(ref, updates);
+  console.log('[processPoApproval] SUCCESS');
   return { ...result, poNumber };
 }
 

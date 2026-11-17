@@ -3,6 +3,7 @@
 // PO Approvals queue — shows POs pending approval for the user's role.
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   getPendingApprovalsForRole, processPoApproval, getAllPurchaseOrders,
   subscribeToPurchaseOrders
@@ -12,6 +13,7 @@ import Layout from '../components/Layout';
 
 export default function PoApprovals() {
   const { config } = useConfig();
+  const { currentUser } = useAuth();
   const [pos, setPos] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,10 +39,13 @@ export default function PoApprovals() {
   }, [userActionRoles]);
 
   const handleAction = async (poNumber, action, role, name) => {
+    if (!currentUser) return setToast('Not signed in', true);
     try {
-      await processPoApproval(poNumber, action, role, name, 'current-user');
+      console.log('[PoApprovals] handleAction:', { poNumber, action, role, name, uid: currentUser.uid, email: currentUser.email });
+      await processPoApproval(poNumber, action, role, currentUser.email, currentUser.uid);
       setToast(`PO ${action.toLowerCase()}ed successfully!`, false);
     } catch (err) {
+      console.error('[PoApprovals] Error:', err);
       setToast('Error: ' + err.message, true);
     }
   };
