@@ -139,18 +139,20 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
     throw new Error(result.message);
   }
 
-  // Convert placeholder dates in steps to serverTimestamp() for Firestore
-  const stepsWithServerTimestamps = result.steps?.map(step => ({
+  // Firestore does NOT support serverTimestamp() inside arrays.
+  // Use ISO string dates for step-level timestamps; serverTimestamp() only at top level.
+  const now = new Date().toISOString();
+  const stepsForFirestore = result.steps?.map(step => ({
     ...step,
-    approvedAt: step.approvedAt ? serverTimestamp() : null,
-    rejectedAt: step.rejectedAt ? serverTimestamp() : null,
+    approvedAt: step.approvedAt ? now : null,
+    rejectedAt: step.rejectedAt ? now : null,
   })) || [];
 
   const updates = {
     approvalState: {
-      ...result.steps ? { ...data.approvalState, steps: stepsWithServerTimestamps } : data.approvalState,
+      ...data.approvalState,
       ...result,
-      steps: stepsWithServerTimestamps,
+      steps: stepsForFirestore,
       approvedAt: result.approvedAt ? serverTimestamp() : null,
       rejectedAt: result.rejectedAt ? serverTimestamp() : null,
     },
