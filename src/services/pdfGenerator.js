@@ -157,10 +157,22 @@ function addFooter(doc, preparedBy, approvedBy = '') {
 /**
  * Generate Purchase Order PDF
  */
+function parseFirestoreTimestamp(ts) {
+  if (!ts) return new Date();
+  // Firestore Timestamp object
+  if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+  // ISO string
+  if (typeof ts === 'string') return new Date(ts);
+  // Already a Date
+  if (ts instanceof Date) return ts;
+  // Fallback
+  return new Date();
+}
+
 export function generatePOPdf(po) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  const date = po.requestedAt ? new Date(po.requestedAt.seconds * 1000).toLocaleDateString() : new Date().toLocaleDateString();
+  const date = parseFirestoreTimestamp(po.requestedAt).toLocaleDateString();
   let y = addHeader(doc, 'PURCHASE ORDER', po.poNumber, date);
 
   // Vendor & PO Details
