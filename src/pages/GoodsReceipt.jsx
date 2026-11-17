@@ -41,7 +41,10 @@ export default function GoodsReceipt() {
       setPos(p.filter(po => po.status === 'APPROVED' || po.status === 'PARTIAL'));
       setLoading(false);
     });
-    const u2 = subscribeToGoodsReceipts((g) => setGrns(g));
+    const u2 = subscribeToGoodsReceipts((g) => {
+      console.log('[GoodsReceipt] GRNs updated:', g.map(grn => ({ grn: grn.grnNumber, creditNoteCreated: grn.creditNoteCreated, creditNoteId: grn.creditNoteId })));
+      setGrns(g);
+    });
     const u3 = subscribeToWarehouses((w) => setWarehouses(w));
     const u4 = subscribeToBins((b) => setBins(b));
     return () => { u1(); u2(); u3(); u4(); };
@@ -156,9 +159,12 @@ export default function GoodsReceipt() {
     if (creatingCN) return; // Prevent double-click
     setCreatingCN(grnNumber);
     try {
+      console.log('[GoodsReceipt] Creating credit note for GRN:', grnNumber);
       const cnNumber = await createCreditNoteFromGrn(grnNumber, currentUser.email, currentUser.email);
+      console.log('[GoodsReceipt] Credit note created:', cnNumber);
       setToast(`Credit Note ${cnNumber} created!`, false);
     } catch (err) {
+      console.error('[GoodsReceipt] Error creating credit note:', err);
       setToast('Error creating credit note: ' + err.message, true);
     } finally {
       setCreatingCN(null);
