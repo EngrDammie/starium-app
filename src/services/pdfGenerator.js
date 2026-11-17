@@ -4,14 +4,14 @@
 // Uses jsPDF + autoTable for professional-looking documents.
 
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as autoTable from 'jspdf-autotable';
 
 // Register autoTable plugin for jsPDF v4+ using applyPlugin
 autoTable.applyPlugin(jsPDF);
 
 // Company header
-const COMPANY_NAME = 'STARIUM RAFA DETERGENTS LTD';
-const COMPANY_ADDRESS = 'Plot 45, Industrial Estate, Ota, Ogun State, Nigeria';
+const COMPANY_NAME = 'STARIUM DETERGENT FZE';
+const COMPANY_ADDRESS = 'Alaro City, North West Quadrant, Lekki Free Trade Zone, Epe, Lagos State, Nigeria';
 const COMPANY_PHONE = '+234-800-STARIUM';
 const COMPANY_EMAIL = 'procurement@starium.com';
 
