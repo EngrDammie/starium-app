@@ -31,13 +31,14 @@ export default function PoApprovals() {
         if (po.approvalState.status !== 'PENDING_APPROVAL') return false;
         const pendingStep = po.approvalState.steps?.find(s => s.status === 'PENDING');
         const match = pendingStep ? userActionRoles.includes(pendingStep.role) : false;
-        if (pendingStep && !match) {
+        if (pendingStep && !match && userActionRoles.length > 0) {
           console.log('[PoApprovals] FILTERED OUT:', { poNumber: po.poNumber, pendingStepRole: pendingStep.role, userActionRoles });
         }
         return match;
       });
-      console.log('[PoApprovals] userActionRoles:', userActionRoles);
-      console.log('[PoApprovals] pending POs:', pend.map(po => ({ po: po.poNumber, step: po.approvalState.steps?.find(s => s.status === 'PENDING')?.role })));
+      if (userActionRoles.length === 0) {
+        console.warn('[PoApprovals] userActionRoles is EMPTY - user has no actionRoles assigned');
+      }
       setPending(pend);
       setLoading(false);
     });
