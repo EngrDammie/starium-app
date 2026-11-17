@@ -122,7 +122,7 @@ export async function submitPurchaseOrder(poNumber) {
 // ─── APPROVE / REJECT A STEP ────────────────────────────────────────
 
 export async function processPoApproval(poNumber, action, actorRole, actorName, actorUid, rejectionReason = '') {
-  console.log('[processPoApproval] START:', { poNumber, action, actorRole, actorName, actorUid });
+  console.log('[processPoApproval] START:', { poNumber, action, actorRole, actorName, actorUid, rejectionReason });
   const ref = doc(db, 'purchase_orders', poNumber);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
@@ -130,7 +130,8 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
     throw new Error('PO not found');
   }
   const data = snap.data();
-  console.log('[processPoApproval] Current PO status:', data.status, 'approvalState:', JSON.stringify(data.approvalState, null, 2));
+  console.log('[processPoApproval] Current PO status:', data.status);
+  console.log('[processPoApproval] Current approvalState steps:', JSON.stringify(data.approvalState?.steps, null, 2));
 
   const result = processApproval(data.approvalState, action, actorRole, actorName, actorUid);
   console.log('[processPoApproval] processApproval result:', JSON.stringify(result, null, 2));
@@ -161,10 +162,17 @@ export async function processPoApproval(poNumber, action, actorRole, actorName, 
     updatedAt: serverTimestamp()
   };
 
-  console.log('[processPoApproval] Writing updates to Firestore:', { poNumber, status: result.newStatus });
-  await updateDoc(ref, updates);
-  console.log('[processPoApproval] SUCCESS');
-  return { ...result, poNumber };
+  console.log('[processPoApproval] Writing updates to Firestore:', { poNumber, status: result.newStatus, updates: JSON.stringify(updates, null, 2) });
+  try {
+    await updateDoc(ref, updates);
+    console.log('[processPoApproval] SUCCESS');
+    return { ...result, poNumber };
+  } catch (err) {
+    console.error('[processPoApproval] Firestore error:', err);
+    console.error('[processPoApproval] Error code:', err.code);
+    console.error('[processPoApproval] Error message:', err.message);
+    throw err;
+  }
 }
 
 // ─── CANCEL PO ──────────────────────────────────────────────────────
