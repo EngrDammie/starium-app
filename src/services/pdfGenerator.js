@@ -12,8 +12,8 @@ autoTable.applyPlugin(jsPDF);
 // Company header
 const COMPANY_NAME = 'STARIUM DETERGENT FZE';
 const COMPANY_ADDRESS = 'Alaro City, North West Quadrant, Lekki Free Trade Zone, Epe, Lagos State, Nigeria';
-const COMPANY_PHONE = '+234-800-STARIUM';
-const COMPANY_EMAIL = 'procurement@starium.com';
+const COMPANY_PHONE = '+234 815 980 7682';
+const COMPANY_EMAIL = 'info@starium.ng';
 
 // Colors
 const PRIMARY_COLOR = [16, 185, 129]; // Emerald
