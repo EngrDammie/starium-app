@@ -449,7 +449,18 @@ service cloud.firestore {
       allow read: if !isAuthEnabled() || isAuthenticated();
       allow create: if !isAuthEnabled()
         || (isAuthenticated() && request.auth.token.email == request.resource.data.createdBy);
-      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated() && (
+            isAdmin()
+            || request.auth.token.email == resource.data.createdBy
+            || request.auth.token.email == resource.data.vendorId
+            // Allow finance role to transition DRAFT -> SENT and ACCEPTED -> APPLIED
+            || (request.resource.data.status == 'SENT' && resource.data.status == 'DRAFT' && request.auth.token.email == resource.data.createdBy)
+            || (request.resource.data.status == 'APPLIED' && resource.data.status == 'ACCEPTED' && request.auth.token.email == resource.data.createdBy)
+            // Allow vendor to transition SENT -> ACCEPTED/REJECTED
+            || (request.resource.data.status == 'ACCEPTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
+            || (request.resource.data.status == 'REJECTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
+          ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
