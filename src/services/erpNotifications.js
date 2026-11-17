@@ -60,6 +60,7 @@ async function writeQueueDoc(entityId, event, extra = {}) {
   if (snap.exists() && snap.data().status === 'sent') {
     return id;
   }
+  console.log('[erpNotifications] writeQueueDoc: creating notification', { entityId, event, id });
   await setDoc(ref, {
     entityId,
     event,
@@ -67,19 +68,23 @@ async function writeQueueDoc(entityId, event, extra = {}) {
     createdAt: serverTimestamp(),
     ...extra,
   }, { merge: true });
+  console.log('[erpNotifications] writeQueueDoc: success');
   return id;
 }
 
 async function markQueueDoc(id, status, detail = {}) {
+  console.log('[erpNotifications] markQueueDoc:', { id, status });
   const ref = doc(db, 'erp_notifications', id);
   await updateDoc(ref, {
     status,
     updatedAt: serverTimestamp(),
     ...detail,
   });
+  console.log('[erpNotifications] markQueueDoc: success');
 }
 
 async function callWorker(entityId, event, extra = {}) {
+  console.log('[erpNotifications] callWorker:', { entityId, event, extra });
   const token = await getIdToken();
   const res = await fetch(`${WORKER_URL}/send`, {
     method: 'POST',
@@ -92,8 +97,10 @@ async function callWorker(entityId, event, extra = {}) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data.error || data.detail || `Worker HTTP ${res.status}`;
+    console.error('[erpNotifications] callWorker failed:', msg);
     throw new Error(msg);
   }
+  console.log('[erpNotifications] callWorker success');
   return data;
 }
 
