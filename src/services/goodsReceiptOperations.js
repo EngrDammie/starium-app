@@ -123,19 +123,26 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
 // ─── CREDIT NOTE OPERATIONS ─────────────────────────────────────────
 
 export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, financeOfficerName) {
+  console.log('[createCreditNoteFromGrn] START:', { grnNumber, financeOfficerUid });
   const grnRef = doc(db, 'goods_receipts', grnNumber);
   const grnSnap = await getDoc(grnRef);
   if (!grnSnap.exists()) throw new Error('GRN not found');
   const grn = grnSnap.data();
+  console.log('[createCreditNoteFromGrn] GRN data:', { poId: grn.poId, poNumber: grn.poNumber, vendorId: grn.vendorId });
 
   if (grn.creditNoteCreated) throw new Error('Credit note already exists for this GRN');
 
   const shortLines = grn.lines.filter(l => l.matchStatus === 'SHORT');
   if (shortLines.length === 0) throw new Error('No shortfall lines to create credit note');
 
-  // Fetch PO to get actual line prices
-  const poSnap = await getDoc(doc(db, 'purchase_orders', grn.poId));
+  // Fetch PO to get actual line prices - use poNumber as document ID
+  const poSnap = await getDoc(doc(db, 'purchase_orders', grn.poNumber));
   const po = poSnap.exists() ? poSnap.data() : null;
+  console.log('[createCreditNoteFromGrn] PO found:', !!po, 'PO lines:', po?.lines?.length);
+  if (po?.lines) {
+    console.log('[createCreditNoteFromGrn] PO line numbers:', po.lines.map(l => l.lineNumber));
+    console.log('[createCreditNoteFromGrn] Short line poLineNumbers:', shortLines.map(l => l.poLineNumber));
+  }
 
   // Generate CN number: CN-YYYY-MM-DD-####
   const today = new Date();
@@ -175,7 +182,7 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
     cnNumber,
     grnId: grnNumber,
     grnNumber,
-    poId: grn.poId,
+    poId: grn.poNumber,
     poNumber: grn.poNumber,
     vendorId: grn.vendorId,
     vendorName: grn.vendorName,
@@ -195,15 +202,19 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
     notes: 'Auto-drafted from GRN shortfall'
   };
 
+  console.log('[createCreditNoteFromGrn] Creating credit note:', { cnNumber, createdBy: financeOfficerUid, cnLines: cnLines.length });
   const cnRef = doc(db, 'credit_notes', cnNumber);
   await setDoc(cnRef, creditNote);
+  console.log('[createCreditNoteFromGrn] Credit note written to Firestore');
 
   // Link credit note to GRN
+  console.log('[createCreditNoteFromGrn] Linking credit note to GRN...');
   await updateDoc(grnRef, {
     creditNoteId: cnNumber,
     creditNoteCreated: true,
     updatedAt: serverTimestamp()
   });
+  console.log('[createCreditNoteFromGrn] GRN updated with credit note link');
 
   // Notify credit note created
   erpNotifications.cnCreated(cnNumber, { grnId: grnNumber, vendorId: grn.vendorId });
