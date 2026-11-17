@@ -109,13 +109,18 @@ export default function PurchaseOrders() {
 
   const downloadPOPdf = async (po) => {
     try {
+      console.log('[downloadPOPdf] START for:', po.poNumber);
       // Fetch full PO data if needed
       const fullPo = po.lines ? po : await getPurchaseOrder(po.poNumber);
+      console.log('[downloadPOPdf] Got full PO:', fullPo ? 'yes' : 'no');
       if (fullPo) {
         const doc = generatePOPdf(fullPo);
+        console.log('[downloadPOPdf] PDF generated, calling downloadPdf');
         downloadPdf(doc, `PO_${fullPo.poNumber}`);
+        console.log('[downloadPOPdf] downloadPdf called');
       }
     } catch (err) {
+      console.error('[downloadPOPdf] ERROR:', err);
       setToast('Error generating PDF: ' + err.message, true);
     }
   };
