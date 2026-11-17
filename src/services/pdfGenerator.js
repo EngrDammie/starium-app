@@ -4,7 +4,10 @@
 // Uses jsPDF + autoTable for professional-looking documents.
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+
+// Register autoTable plugin
+jsPDF.API.autoTable = autoTable;
 
 // Company header
 const COMPANY_NAME = 'STARIUM RAFA DETERGENTS LTD';
