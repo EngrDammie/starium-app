@@ -4,6 +4,7 @@
 // Auto-drafts credit note when received < ordered.
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   subscribeToPurchaseOrders,
   updatePoLineReceivedQty
@@ -17,6 +18,7 @@ import { generateGRNPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function GoodsReceipt() {
+  const { currentUser } = useAuth();
   const [pos, setPos] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [bins, setBins] = useState([]);
@@ -113,8 +115,9 @@ export default function GoodsReceipt() {
     e.preventDefault();
     const error = validateForm();
     if (error) return setToast(error, true);
+    if (!currentUser) return setToast('Not signed in', true);
     try {
-      const { grnNumber, hasShortfall, shortLines } = await createGoodsReceipt(form, 'current-user', 'Current User');
+      const { grnNumber, hasShortfall, shortLines } = await createGoodsReceipt(form, currentUser.email, currentUser.email);
       setToast(`GRN ${grnNumber} posted successfully!`, false);
       setReceiveOpen(false);
       if (hasShortfall) {
@@ -127,8 +130,9 @@ export default function GoodsReceipt() {
   };
 
   const handleCreateCreditNote = async () => {
+    if (!currentUser) return setToast('Not signed in', true);
     try {
-      const cnNumber = await createCreditNoteFromGrn(form.poNumber, 'current-user', 'Current User');
+      const cnNumber = await createCreditNoteFromGrn(form.poNumber, currentUser.email, currentUser.email);
       setToast(`Credit Note ${cnNumber} created!`, false);
       setShowCreditNote(false);
     } catch (err) {
