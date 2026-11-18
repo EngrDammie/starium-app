@@ -121,11 +121,14 @@ export default function StockTransfers() {
   const handleReceive = async () => {
     if (!selectedTransfer) return;
     try {
+      console.log('[handleReceive] Receiving transfer:', selectedTransfer.transferNumber, 'user:', currentUser?.email, 'overrides:', receiveOverrides);
       await receiveStockTransfer(selectedTransfer.transferNumber, currentUser?.email, currentUser?.email, receiveOverrides);
+      console.log('[handleReceive] Success');
       setToast('Stock received at destination!', false);
       setReceiveOpen(false);
       setReceiveOverrides({});
     } catch (err) {
+      console.error('[handleReceive] Error:', err);
       setToast('Error receiving: ' + err.message, true);
     }
   };

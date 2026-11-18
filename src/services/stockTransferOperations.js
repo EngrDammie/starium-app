@@ -185,6 +185,8 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
   if (!snap.exists()) throw new Error('Transfer not found');
   const data = snap.data();
 
+  console.log('[receiveStockTransfer] Transfer status:', data.status, 'receivedByUid:', receivedByUid, 'overrides:', receivedQtyOverrides);
+
   if (data.status !== 'IN_TRANSIT') throw new Error('Transfer must be IN_TRANSIT to receive');
 
   // Post TRANSFER_IN ledger entries
@@ -209,6 +211,7 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
   });
 
   await createStockLedgerEntry(ledgerEntries, receivedByUid);
+  console.log('[receiveStockTransfer] Ledger entries created');
 
   // Update transfer lines receivedQty
   const newLines = data.lines.map(line => ({
@@ -217,6 +220,7 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
   }));
 
   const allReceived = newLines.every(l => l.receivedQty >= l.issuedQty);
+  console.log('[receiveStockTransfer] allReceived:', allReceived, 'newStatus:', allReceived ? 'COMPLETED' : 'PARTIAL');
 
   await updateDoc(ref, {
     status: allReceived ? 'COMPLETED' : 'PARTIAL',
@@ -226,6 +230,7 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
     lines: newLines,
     updatedAt: serverTimestamp()
   });
+  console.log('[receiveStockTransfer] Transfer updated');
 }
 
 // ─── CANCEL ──────────────────────────────────────────────────────────
