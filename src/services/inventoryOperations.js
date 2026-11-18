@@ -307,19 +307,21 @@ export const DEFAULT_VENDORS = [
 ];
 
 // Get stock for a specific bin (item + lot level)
+// Queries BOTH toBinId (incoming) and fromBinId (outgoing) to calculate net stock
 export async function getStockForBin(binId) {
-  const { getCurrentStock } = await import('./stockLedgerOperations');
+  const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore');
+  const { db } = await import('../config/firebase');
   console.log('[getStockForBin] Querying stock_ledger for binId:', binId);
-  const q = query(
-    collection(db, 'stock_ledger'),
-    where('toBinId', '==', binId),
-    orderBy('performedAt', 'desc')
-  );
-  const snap = await getDocs(q);
-  console.log('[getStockForBin] Found', snap.docs.length, 'ledger entries for bin:', binId);
+  const [incomingSnap, outgoingSnap] = await Promise.all([
+    getDocs(query(collection(db, 'stock_ledger'), where('toBinId', '==', binId), orderBy('performedAt', 'desc'))),
+    getDocs(query(collection(db, 'stock_ledger'), where('fromBinId', '==', binId), orderBy('performedAt', 'desc')))
+  ]);
+  console.log('[getStockForBin] Found', incomingSnap.docs.length, 'incoming +', outgoingSnap.docs.length, 'outgoing ledger entries for bin:', binId);
 
   const stockByItem = new Map();
-  snap.docs.forEach(d => {
+
+  // Process incoming movements (toBinId == binId) - ADD qty
+  incomingSnap.docs.forEach(d => {
     const e = d.data();
     const key = e.itemId + '|' + (e.lotId || 'nolot');
     if (!stockByItem.has(key)) {
@@ -331,8 +333,23 @@ export async function getStockForBin(binId) {
       });
     }
     const loc = stockByItem.get(key);
-    const isOut = ['TRANSFER_OUT', 'ISSUE', 'CONSUMPTION'].includes(e.movementType);
-    loc.qty += isOut ? -e.qty : e.qty;
+    loc.qty += e.qty; // incoming always adds
+  });
+
+  // Process outgoing movements (fromBinId == binId) - SUBTRACT qty
+  outgoingSnap.docs.forEach(d => {
+    const e = d.data();
+    const key = e.itemId + '|' + (e.lotId || 'nolot');
+    if (!stockByItem.has(key)) {
+      stockByItem.set(key, {
+        itemId: e.itemId,
+        lotId: e.lotId || null,
+        qty: 0,
+        unitOfMeasure: e.unitOfMeasure
+      });
+    }
+    const loc = stockByItem.get(key);
+    loc.qty -= e.qty; // outgoing subtracts
   });
 
   const result = Array.from(stockByItem.values()).filter(l => l.qty > 0);
