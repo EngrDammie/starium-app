@@ -128,12 +128,15 @@ export async function issueStockTransfer(transferNumber, issuedByUid, issuedByNa
 
   // Check stock availability for each line
   for (const line of data.lines) {
+    console.log('[issueStockTransfer] Checking stock for line:', { fromBinId: line.fromBinId, itemId: line.itemId, lotId: line.lotId, requestedQty: line.requestedQty });
     const currentStock = await getCurrentStockForBin(line.fromBinId, line.itemId, line.lotId);
+    console.log('[issueStockTransfer] Current stock:', currentStock);
     if (currentStock < line.requestedQty) {
       throw new Error(`Insufficient stock in ${line.fromBinId} for ${line.itemName}. Available: ${currentStock} ${line.unitOfMeasure}, requested: ${line.requestedQty}`);
     }
   }
 
+  console.log('[issueStockTransfer] Creating TRANSFER_OUT ledger entries');
   // Post TRANSFER_OUT ledger entries
   const ledgerEntries = data.lines.map(line => ({
     itemId: line.itemId,
@@ -152,7 +155,9 @@ export async function issueStockTransfer(transferNumber, issuedByUid, issuedByNa
     notes: `Transfer ${transferNumber} - ISSUED from ${line.fromBinId}`
   }));
 
+  console.log('[issueStockTransfer] Ledger entries:', ledgerEntries);
   await createStockLedgerEntry(ledgerEntries, issuedByUid);
+  console.log('[issueStockTransfer] Ledger entries created');
 
   // Update transfer lines issuedQty
   const newLines = data.lines.map(line => ({
@@ -160,6 +165,7 @@ export async function issueStockTransfer(transferNumber, issuedByUid, issuedByNa
     issuedQty: line.requestedQty
   }));
 
+  console.log('[issueStockTransfer] Updating transfer document to IN_TRANSIT');
   await updateDoc(ref, {
     status: 'IN_TRANSIT',
     issuedBy: issuedByUid,
@@ -168,6 +174,7 @@ export async function issueStockTransfer(transferNumber, issuedByUid, issuedByNa
     lines: newLines,
     updatedAt: serverTimestamp()
   });
+  console.log('[issueStockTransfer] Transfer updated');
 }
 
 // ─── RECEIVE (Production Operator / Destination) ─────────────────────
