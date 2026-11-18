@@ -119,6 +119,8 @@ export async function issueStockTransfer(transferNumber, issuedByUid, issuedByNa
   if (!snap.exists()) throw new Error('Transfer not found');
   const data = snap.data();
 
+  console.log('[issueStockTransfer] Transfer status:', data.status, 'issuedByUid:', issuedByUid);
+
   if (data.status !== 'APPROVED' && data.status !== 'PENDING_APPROVAL') {
     // If approval not required, APPROVED status means ready to issue
     if (data.status !== 'APPROVED') throw new Error('Transfer must be APPROVED before issuing');

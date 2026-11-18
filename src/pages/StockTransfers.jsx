@@ -107,10 +107,13 @@ export default function StockTransfers() {
   const handleIssue = async () => {
     if (!selectedTransfer) return;
     try {
+      console.log('[handleIssue] Issuing transfer:', selectedTransfer.transferNumber, 'user:', currentUser?.email);
       await issueStockTransfer(selectedTransfer.transferNumber, currentUser?.email, currentUser?.email);
+      console.log('[handleIssue] Success');
       setToast('Stock issued! Awaiting receipt at destination.', false);
       setIssueOpen(false);
     } catch (err) {
+      console.error('[handleIssue] Error:', err);
       setToast('Error issuing: ' + err.message, true);
     }
   };
