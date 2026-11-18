@@ -5,6 +5,7 @@
 // Configurable approval (default ON per Plant Manager decision).
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   createStockTransfer, submitStockTransfer, processTransferApproval,
   issueStockTransfer, receiveStockTransfer, cancelStockTransfer,
@@ -19,6 +20,7 @@ import Layout from '../components/Layout';
 
 export default function StockTransfers() {
   const { config } = useConfig();
+  const { currentUser } = useAuth();
   const [transfers, setTransfers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [items, setItems] = useState([]);
@@ -86,7 +88,7 @@ export default function StockTransfers() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const transferNumber = await createStockTransfer(form, 'current-user', 'Current User');
+      const transferNumber = await createStockTransfer(form, currentUser?.email, currentUser?.email);
       await submitStockTransfer(transferNumber);
       setToast('Stock transfer created and submitted for approval!', false);
       setCreateOpen(false);
@@ -104,7 +106,7 @@ export default function StockTransfers() {
   const handleIssue = async () => {
     if (!selectedTransfer) return;
     try {
-      await issueStockTransfer(selectedTransfer.transferNumber, 'current-user', 'Current User');
+      await issueStockTransfer(selectedTransfer.transferNumber, currentUser?.email, currentUser?.email);
       setToast('Stock issued! Awaiting receipt at destination.', false);
       setIssueOpen(false);
     } catch (err) {
@@ -115,7 +117,7 @@ export default function StockTransfers() {
   const handleReceive = async () => {
     if (!selectedTransfer) return;
     try {
-      await receiveStockTransfer(selectedTransfer.transferNumber, 'current-user', 'Current User', receiveOverrides);
+      await receiveStockTransfer(selectedTransfer.transferNumber, currentUser?.email, currentUser?.email, receiveOverrides);
       setToast('Stock received at destination!', false);
       setReceiveOpen(false);
       setReceiveOverrides({});
@@ -127,7 +129,7 @@ export default function StockTransfers() {
   const handleCancel = async (tn) => {
     if (!window.confirm('Cancel this transfer?')) return;
     try {
-      await cancelStockTransfer(tn, 'current-user', 'User cancelled');
+      await cancelStockTransfer(tn, currentUser?.email, 'User cancelled');
       setToast('Transfer cancelled', false);
     } catch (err) {
       setToast('Error cancelling transfer', true);
