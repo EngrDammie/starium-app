@@ -32,7 +32,7 @@ export default function StockTransfers() {
     fromWarehouseId: '', fromWarehouseName: '',
     toWarehouseId: '', toWarehouseName: '',
     notes: '',
-    lines: [{ itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }]
+    lines: [{ itemId: '', itemName: '', itemCode: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }]
   });
   const [issueOpen, setIssueOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function StockTransfers() {
   const userCanReceive = userDeptRoles.includes('production_operator') || userDeptRoles.includes('production_supervisor');
   const userCanApprove = userActionRoles.includes('warehouse_manager');
 
-  const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
+  const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', itemCode: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
   const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
 
   // Filter bins by warehouse (currentQty lives in stock_ledger, not bin doc)
@@ -96,7 +96,7 @@ export default function StockTransfers() {
         fromWarehouseId: '', fromWarehouseName: '',
         toWarehouseId: '', toWarehouseName: '',
         notes: '',
-        lines: [{ itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }]
+        lines: [{ itemId: '', itemName: '', itemCode: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }]
       });
     } catch (err) {
       console.error('[handleSave] Error:', err);
@@ -297,7 +297,7 @@ export default function StockTransfers() {
                         <select name={`line${i}-item`} value={line.itemId} onChange={e => {
                           const item = items.find(x => x.id === e.target.value);
                           const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], itemId: item ? item.id : '', itemName: item ? item.name : '', unitOfMeasure: item ? item.unitOfMeasure : 'kg' };
+                          newLines[i] = { ...newLines[i], itemId: item ? item.id : '', itemName: item ? item.name : '', itemCode: item ? item.code : '', unitOfMeasure: item ? item.unitOfMeasure : 'kg' };
                           setForm({ ...form, lines: newLines });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary">
                           <option value="">Select item</option>
