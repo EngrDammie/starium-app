@@ -156,7 +156,7 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
     const poLine = po?.lines?.find(l => l.lineNumber === line.poLineNumber);
     const unitPrice = Number(poLine?.unitPrice) || 0;
     const taxRate = Number(poLine?.taxRate) || 7.5;
-    const shortQty = Number(line.shortQty) || 0;
+    const shortQty = Number(line.orderedQty) - Number(line.receivedQty);
     const lineTotal = shortQty * unitPrice;
     const taxTotal = lineTotal * (taxRate / 100);
     return {

@@ -455,8 +455,14 @@ service cloud.firestore {
             || request.auth.token.email == resource.data.createdBy
             || request.auth.token.email == resource.data.vendorId
             // Allow finance role to transition DRAFT -> SENT and ACCEPTED -> APPLIED
-            || (request.resource.data.status == 'SENT' && resource.data.status == 'DRAFT' && request.auth.token.email == resource.data.createdBy)
-            || (request.resource.data.status == 'APPLIED' && resource.data.status == 'ACCEPTED' && request.auth.token.email == resource.data.createdBy)
+            || (request.resource.data.status == 'SENT' && resource.data.status == 'DRAFT' && (
+                request.auth.token.email == resource.data.createdBy
+                || 'finance_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+              ))
+            || (request.resource.data.status == 'APPLIED' && resource.data.status == 'ACCEPTED' && (
+                request.auth.token.email == resource.data.createdBy
+                || 'finance_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+              ))
             // Allow vendor to transition SENT -> ACCEPTED/REJECTED
             || (request.resource.data.status == 'ACCEPTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
             || (request.resource.data.status == 'REJECTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
