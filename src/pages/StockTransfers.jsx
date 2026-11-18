@@ -99,6 +99,7 @@ export default function StockTransfers() {
         lines: [{ itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }]
       });
     } catch (err) {
+      console.error('[handleSave] Error:', err);
       setToast('Error creating transfer: ' + err.message, true);
     }
   };
