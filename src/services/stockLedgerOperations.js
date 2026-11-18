@@ -87,13 +87,18 @@ export async function getStockByItem(itemId) {
 }
 
 // ─── GET STOCK FOR A BIN ─────────────────────────────────────────────
+// Queries BOTH toBinId (incoming) and fromBinId (outgoing) to calculate net stock
 
 export async function getStockForBin(binId) {
-  const q = query(LEDGER_COLLECTION, where('toBinId', '==', binId), orderBy('performedAt', 'desc'));
-  const snap = await getDocs(q);
+  const [incomingSnap, outgoingSnap] = await Promise.all([
+    getDocs(query(LEDGER_COLLECTION, where('toBinId', '==', binId), orderBy('performedAt', 'desc'))),
+    getDocs(query(LEDGER_COLLECTION, where('fromBinId', '==', binId), orderBy('performedAt', 'desc')))
+  ]);
 
   const stockByItem = new Map();
-  snap.docs.forEach(d => {
+
+  // Process incoming movements (toBinId == binId) - ADD qty
+  incomingSnap.docs.forEach(d => {
     const e = d.data();
     const key = e.itemId + '|' + (e.lotId || 'nolot');
     if (!stockByItem.has(key)) {
@@ -105,8 +110,23 @@ export async function getStockForBin(binId) {
       });
     }
     const loc = stockByItem.get(key);
-    const isOut = ['TRANSFER_OUT', 'ISSUE', 'CONSUMPTION'].includes(e.movementType);
-    loc.qty += isOut ? -e.qty : e.qty;
+    loc.qty += e.qty; // incoming always adds
+  });
+
+  // Process outgoing movements (fromBinId == binId) - SUBTRACT qty
+  outgoingSnap.docs.forEach(d => {
+    const e = d.data();
+    const key = e.itemId + '|' + (e.lotId || 'nolot');
+    if (!stockByItem.has(key)) {
+      stockByItem.set(key, {
+        itemId: e.itemId,
+        lotId: e.lotId || null,
+        qty: 0,
+        unitOfMeasure: e.unitOfMeasure
+      });
+    }
+    const loc = stockByItem.get(key);
+    loc.qty -= e.qty; // outgoing subtracts
   });
 
   return Array.from(stockByItem.values()).filter(l => l.qty > 0);
