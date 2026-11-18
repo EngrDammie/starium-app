@@ -12,7 +12,7 @@ import {
 } from '../services/stockTransferOperations';
 import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems } from '../services/inventoryOperations';
-import { subscribeToBins } from '../services/inventoryOperations';
+import { subscribeToBins, getStockForBin } from '../services/inventoryOperations';
 import { useConfig } from '../context/ConfigContext';
 import { generateTransferPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
@@ -23,6 +23,7 @@ export default function StockTransfers() {
   const [warehouses, setWarehouses] = useState([]);
   const [items, setItems] = useState([]);
   const [bins, setBins] = useState([]);
+  const [binStock, setBinStock] = useState({}); // binId -> stock array from ledger
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
@@ -44,9 +45,20 @@ export default function StockTransfers() {
     const u1 = subscribeToStockTransfers((t) => { setTransfers(t); setLoading(false); });
     const u2 = subscribeToWarehouses((w) => setWarehouses(w));
     const u3 = subscribeToItems((i) => setItems(i));
-    const u4 = subscribeToBins((b) => setBins(b));
+    const u4 = subscribeToBins((b) => { setBins(b); fetchAllBinStock(b); });
     return () => { u1(); u2(); u3(); u4(); };
   }, []);
+
+  // Fetch real stock for all bins from stock_ledger
+  const fetchAllBinStock = async (binList) => {
+    if (!binList?.length) return;
+    const stockMap = {};
+    await Promise.all(binList.map(async (bin) => {
+      const stock = await getStockForBin(bin.id);
+      if (stock.length > 0) stockMap[bin.id] = stock;
+    }));
+    setBinStock(stockMap);
+  };
 
   const userCanIssue = userDeptRoles.includes('warehouse_clerk') || userDeptRoles.includes('warehouse_manager');
   const userCanReceive = userDeptRoles.includes('production_operator') || userDeptRoles.includes('production_supervisor');
@@ -309,9 +321,16 @@ export default function StockTransfers() {
                           setForm({ ...form, lines: newLines });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                           <option value="">Select bin</option>
-                          {fromBins.map(b => (
-                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId}: ${b.currentQty} ${b.currentLotId || 'no lot'})` : '(empty)'}</option>
-                          ))}
+                          {fromBins.map(b => {
+                            const stock = binStock[b.id] || [];
+                            const totalQty = stock.reduce((sum, s) => sum + s.qty, 0);
+                            const firstItem = stock[0];
+                            return (
+                              <option key={b.id} value={b.id}>
+                                {b.fullAddress} {totalQty > 0 ? `(${firstItem?.itemId}: ${totalQty} ${firstItem?.unitOfMeasure})` : '(empty)'}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div>
@@ -322,9 +341,16 @@ export default function StockTransfers() {
                           setForm({ ...form, lines: newLines });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                           <option value="">Select bin</option>
-                          {toBins.map(b => (
-                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId})` : '(empty)'}</option>
-                          ))}
+                          {toBins.map(b => {
+                            const stock = binStock[b.id] || [];
+                            const totalQty = stock.reduce((sum, s) => sum + s.qty, 0);
+                            const firstItem = stock[0];
+                            return (
+                              <option key={b.id} value={b.id}>
+                                {b.fullAddress} {totalQty > 0 ? `(${firstItem?.itemId}: ${totalQty} ${firstItem?.unitOfMeasure})` : '(empty)'}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div className="flex justify-end">
