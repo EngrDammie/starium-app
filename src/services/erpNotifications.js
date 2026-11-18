@@ -24,6 +24,7 @@ const ERP_EVENTS = new Set([
   'cn_created',
   'cn_sent',
   'cn_accepted',
+  'cn_rejected',
   'cn_applied',
   // Stock Transfer events
   'transfer_created',
@@ -154,6 +155,7 @@ export const erpNotifications = {
   cnCreated: (cnNumber, extra) => notifyErpEvent(cnNumber, 'cn_created', extra),
   cnSent: (cnNumber, extra) => notifyErpEvent(cnNumber, 'cn_sent', extra),
   cnAccepted: (cnNumber, extra) => notifyErpEvent(cnNumber, 'cn_accepted', extra),
+  cnRejected: (cnNumber, extra) => notifyErpEvent(cnNumber, 'cn_rejected', extra),
   cnApplied: (cnNumber, extra) => notifyErpEvent(cnNumber, 'cn_applied', extra),
 
   // Stock Transfer

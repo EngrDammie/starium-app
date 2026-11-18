@@ -24,11 +24,27 @@ export default function CreditNotes() {
     return unsub;
   }, []);
 
-  const handleStatusChange = async (cnNumber, newStatus) => {
-    const reason = newStatus === 'REJECTED' ? window.prompt('Rejection reason:') : '';
+  const handleStatusChange = async (cnNumber, newStatus, cnStatus) => {
+    let reason = '';
+    let onBehalfOf = null;
+    
+    if (newStatus === 'REJECTED') {
+      reason = window.prompt('Rejection reason:') || '';
+      if (!reason) return setToast('Rejection reason is required', true);
+    }
+    
+    // If Finance Manager is acting on behalf of vendor for ACCEPT/REJECT from SENT
+    const isFinanceManager = currentUser?.actionRoles?.includes('finance_manager');
+    const isVendorAction = ['ACCEPTED', 'REJECTED'].includes(newStatus) && cnStatus === 'SENT';
+    
+    if (isFinanceManager && isVendorAction) {
+      onBehalfOf = window.prompt('Acting on behalf of vendor? Enter vendor name/reference (e.g., "Email confirmation from John at Chemsol"):');
+      if (!onBehalfOf) return setToast('On-behalf-of note is required when acting for vendor', true);
+    }
+    
     if (!currentUser) return setToast('Not signed in', true);
     try {
-      await updateCreditNoteStatus(cnNumber, newStatus, currentUser.email, currentUser.email);
+      await updateCreditNoteStatus(cnNumber, newStatus, currentUser.email, currentUser.email, { reason, onBehalfOf });
       setToast(`Credit Note ${newStatus}!`, false);
     } catch (err) {
       setToast('Error: ' + err.message, true);
@@ -90,16 +106,16 @@ export default function CreditNotes() {
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${cn.status === 'ACCEPTED' ? 'bg-status-success/20 text-status-success' : cn.status === 'SENT' ? 'bg-status-warning/20 text-status-warning' : cn.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : cn.status === 'APPLIED' ? 'bg-status-success/20 text-status-success' : 'bg-[#333] text-gray-400'}`}>{statusLabel(cn.status)}</span></td>
                   <td className="p-3 flex gap-2">
                     {cn.status === 'DRAFT' && (
-                      <button onClick={() => handleStatusChange(cn.cnNumber, 'SENT')} className="bg-status-warning/20 text-status-warning px-3 py-1 rounded hover:bg-status-warning hover:text-white">📤 Send</button>
+                      <button onClick={() => handleStatusChange(cn.cnNumber, 'SENT', cn.status)} className="bg-status-warning/20 text-status-warning px-3 py-1 rounded hover:bg-status-warning hover:text-white">📤 Send</button>
                     )}
                     {cn.status === 'SENT' && (
                       <>
-                        <button onClick={() => handleStatusChange(cn.cnNumber, 'ACCEPTED')} className="bg-status-success/20 text-status-success px-3 py-1 rounded hover:bg-status-success hover:text-white">✅ Accept</button>
-                        <button onClick={() => handleStatusChange(cn.cnNumber, 'REJECTED')} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">❌ Reject</button>
+                        <button onClick={() => handleStatusChange(cn.cnNumber, 'ACCEPTED', cn.status)} className="bg-status-success/20 text-status-success px-3 py-1 rounded hover:bg-status-success hover:text-white">✅ Accept</button>
+                        <button onClick={() => handleStatusChange(cn.cnNumber, 'REJECTED', cn.status)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">❌ Reject</button>
                       </>
                     )}
                     {cn.status === 'ACCEPTED' && (
-                      <button onClick={() => handleStatusChange(cn.cnNumber, 'APPLIED')} className="bg-primary text-black px-3 py-1 rounded hover:bg-primary-dark">💰 Apply</button>
+                      <button onClick={() => handleStatusChange(cn.cnNumber, 'APPLIED', cn.status)} className="bg-primary text-black px-3 py-1 rounded hover:bg-primary-dark">💰 Apply</button>
                     )}
                   </td>
                 </tr>

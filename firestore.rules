@@ -441,7 +441,13 @@ service cloud.firestore {
       allow read: if !isAuthEnabled() || isAuthenticated();
       allow create: if !isAuthEnabled()
         || (isAuthenticated() && request.auth.token.email == request.resource.data.postedBy);
-      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled()
+        || (isAuthenticated() && (
+            isAdmin()
+            || request.auth.token.email == resource.data.postedBy
+            // Allow GRN poster to link credit note
+            || (request.resource.data.creditNoteCreated == true && resource.data.creditNoteCreated == false)
+          ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
@@ -463,9 +469,15 @@ service cloud.firestore {
                 request.auth.token.email == resource.data.createdBy
                 || 'finance_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
               ))
-            // Allow vendor to transition SENT -> ACCEPTED/REJECTED
-            || (request.resource.data.status == 'ACCEPTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
-            || (request.resource.data.status == 'REJECTED' && resource.data.status == 'SENT' && request.auth.token.email == resource.data.vendorId)
+            // Allow vendor OR Finance Manager (on behalf of vendor) to transition SENT -> ACCEPTED/REJECTED
+            || (request.resource.data.status == 'ACCEPTED' && resource.data.status == 'SENT' && (
+                request.auth.token.email == resource.data.vendorId
+                || 'finance_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+              ))
+            || (request.resource.data.status == 'REJECTED' && resource.data.status == 'SENT' && (
+                request.auth.token.email == resource.data.vendorId
+                || 'finance_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+              ))
           ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }

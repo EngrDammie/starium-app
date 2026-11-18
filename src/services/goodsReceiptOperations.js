@@ -224,7 +224,8 @@ export async function createCreditNoteFromGrn(grnNumber, financeOfficerUid, fina
   return cnNumber;
 }
 
-export async function updateCreditNoteStatus(cnNumber, status, actorUid, actorName) {
+export async function updateCreditNoteStatus(cnNumber, status, actorUid, actorName, options = {}) {
+  const { reason = '', onBehalfOf = null } = options;
   const ref = doc(db, 'credit_notes', cnNumber);
   const updates = { status, updatedAt: serverTimestamp() };
 
@@ -236,6 +237,17 @@ export async function updateCreditNoteStatus(cnNumber, status, actorUid, actorNa
     updates.acceptedAt = serverTimestamp();
     updates.acceptedBy = actorUid;
     updates.acceptedByName = actorName;
+    if (onBehalfOf) {
+      updates.acceptedOnBehalfOf = onBehalfOf;
+    }
+  } else if (status === 'REJECTED') {
+    updates.rejectedAt = serverTimestamp();
+    updates.rejectedBy = actorUid;
+    updates.rejectedByName = actorName;
+    updates.rejectedReason = reason;
+    if (onBehalfOf) {
+      updates.rejectedOnBehalfOf = onBehalfOf;
+    }
   } else if (status === 'APPLIED') {
     updates.appliedAt = serverTimestamp();
     updates.appliedBy = actorUid;
@@ -247,6 +259,7 @@ export async function updateCreditNoteStatus(cnNumber, status, actorUid, actorNa
   // Notify credit note status change
   if (status === 'SENT') erpNotifications.cnSent(cnNumber);
   if (status === 'ACCEPTED') erpNotifications.cnAccepted(cnNumber);
+  if (status === 'REJECTED') erpNotifications.cnRejected?.(cnNumber);
   if (status === 'APPLIED') erpNotifications.cnApplied(cnNumber);
 }
 
