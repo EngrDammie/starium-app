@@ -3,6 +3,7 @@
 // Credit Notes page — manage vendor credit notes for short/damaged receipts.
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   getAllCreditNotes, subscribeToCreditNotes,
   updateCreditNoteStatus, getCreditNote
@@ -10,6 +11,7 @@ import {
 import Layout from '../components/Layout';
 
 export default function CreditNotes() {
+  const { currentUser } = useAuth();
   const [cns, setCns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
@@ -24,8 +26,9 @@ export default function CreditNotes() {
 
   const handleStatusChange = async (cnNumber, newStatus) => {
     const reason = newStatus === 'REJECTED' ? window.prompt('Rejection reason:') : '';
+    if (!currentUser) return setToast('Not signed in', true);
     try {
-      await updateCreditNoteStatus(cnNumber, newStatus, 'current-user', 'Current User');
+      await updateCreditNoteStatus(cnNumber, newStatus, currentUser.email, currentUser.email);
       setToast(`Credit Note ${newStatus}!`, false);
     } catch (err) {
       setToast('Error: ' + err.message, true);
