@@ -25,18 +25,16 @@ export async function createStockTransfer(transferData, requestedByUid, requeste
   const seq = existing.size + 1;
   const transferNumber = `ST-${dateStr}-${String(seq).padStart(4, '0')}`;
 
-  // Initialize approval state
-  const approvalState = initializeApprovalState('stockTransfer', requestedByUid);
-
+  // Created as DRAFT; submitStockTransfer initializes approval and changes to PENDING_APPROVAL
   const transfer = {
     transferNumber,
     fromWarehouseId: transferData.fromWarehouseId,
     fromWarehouseName: transferData.fromWarehouseName,
     toWarehouseId: transferData.toWarehouseId,
     toWarehouseName: transferData.toWarehouseName,
-    status: approvalState.status, // DRAFT | PENDING_APPROVAL | APPROVED | IN_TRANSIT | COMPLETED | CANCELLED | REJECTED
-    approvalState,
-    currentApprovalStep: approvalState.currentStep,
+    status: 'DRAFT',
+    approvalState: { approvalEnabled: false, approvalRequired: false, currentStep: 0, totalSteps: 0, status: 'DRAFT', steps: [] },
+    currentApprovalStep: 0,
     requestedBy: requestedByUid,
     requestedByName,
     requestedAt: serverTimestamp(),
