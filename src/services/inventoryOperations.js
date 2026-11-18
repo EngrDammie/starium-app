@@ -309,12 +309,14 @@ export const DEFAULT_VENDORS = [
 // Get stock for a specific bin (item + lot level)
 export async function getStockForBin(binId) {
   const { getCurrentStock } = await import('./stockLedgerOperations');
+  console.log('[getStockForBin] Querying stock_ledger for binId:', binId);
   const q = query(
     collection(db, 'stock_ledger'),
     where('toBinId', '==', binId),
     orderBy('performedAt', 'desc')
   );
   const snap = await getDocs(q);
+  console.log('[getStockForBin] Found', snap.docs.length, 'ledger entries for bin:', binId);
 
   const stockByItem = new Map();
   snap.docs.forEach(d => {
@@ -333,7 +335,9 @@ export async function getStockForBin(binId) {
     loc.qty += isOut ? -e.qty : e.qty;
   });
 
-  return Array.from(stockByItem.values()).filter(l => l.qty > 0);
+  const result = Array.from(stockByItem.values()).filter(l => l.qty > 0);
+  console.log('[getStockForBin] Aggregated stock for bin', binId, ':', result);
+  return result;
 }
 
 export async function seedMasterData() {

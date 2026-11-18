@@ -103,7 +103,21 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
     notes: `GRN ${grnNumber} - ${line.condition} (match: ${line.matchStatus})`
   }));
 
+  console.log('[createGoodsReceipt] Creating stock ledger entries:', ledgerEntries.map(e => ({ itemId: e.itemId, lotId: e.lotId, toBinId: e.toBinId, qty: e.qty })));
   await createStockLedgerEntry(ledgerEntries, receivedByUid);
+  console.log('[createGoodsReceipt] Stock ledger entries created successfully');
+
+  // Verify stock ledger entries were created
+  try {
+    const { getStockForBin } = await import('./stockLedgerOperations');
+    for (const entry of ledgerEntries) {
+      const stock = await getStockForBin(entry.toBinId);
+      const itemStock = stock.find(s => s.itemId === entry.itemId && s.lotId === entry.lotId);
+      console.log('[createGoodsReceipt] Verification - Bin:', entry.toBinId, 'Item:', entry.itemId, 'Lot:', entry.lotId, 'Expected:', entry.qty, 'Found:', itemStock?.qty || 0);
+    }
+  } catch (verifyErr) {
+    console.warn('[createGoodsReceipt] Stock verification failed:', verifyErr.message);
+  }
 
   // ─── UPDATE PO LINE RECEIVED QTY ────────────────────────────────
 
