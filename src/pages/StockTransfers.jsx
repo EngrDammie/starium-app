@@ -55,10 +55,10 @@ export default function StockTransfers() {
   const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
   const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
 
-  // Filter bins by warehouse
+  // Filter bins by warehouse (currentQty lives in stock_ledger, not bin doc)
   const fromBins = useMemo(() => {
     if (!form.fromWarehouseId) return [];
-    return bins.filter(b => b.warehouseId === form.fromWarehouseId && b.status === 'AVAILABLE' && b.currentQty > 0);
+    return bins.filter(b => b.warehouseId === form.fromWarehouseId && b.status === 'AVAILABLE');
   }, [bins, form.fromWarehouseId]);
 
   const toBins = useMemo(() => {
