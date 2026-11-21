@@ -487,11 +487,34 @@ service cloud.firestore {
       allow create: if !isAuthEnabled()
         || (isAuthenticated() && request.auth.token.email == request.resource.data.requestedBy);
       allow update: if !isAuthEnabled()
-        || (isAuthenticated()
-            && (isAdmin()
-                || request.auth.token.email == resource.data.requestedBy
-                || request.auth.token.email == resource.data.issuedBy
-                || request.auth.token.email == resource.data.receivedBy));
+        || (isAuthenticated() && (
+            isAdmin()
+            || request.auth.token.email == resource.data.requestedBy
+            || request.auth.token.email == resource.data.issuedBy
+            || request.auth.token.email == resource.data.receivedBy
+            // Allow approval actions when status is PENDING_APPROVAL/REJECTED/APPROVED
+            || request.resource.data.status == 'PENDING_APPROVAL'
+            || request.resource.data.status == 'REJECTED'
+            || request.resource.data.status == 'APPROVED'
+            || request.resource.data.status == 'IN_TRANSIT'
+            // Allow warehouse clerk/manager to issue (APPROVED -> IN_TRANSIT)
+            || (resource.data.status == 'APPROVED' && request.resource.data.status == 'IN_TRANSIT' && (
+                'warehouse_clerk' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+                || 'warehouse_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+                || 'warehouse_clerk' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles
+                || 'warehouse_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles
+              ))
+            // Allow production operator/supervisor to receive (IN_TRANSIT -> COMPLETED/PARTIAL)
+            || (resource.data.status == 'IN_TRANSIT' && (
+                request.resource.data.status == 'COMPLETED'
+                || request.resource.data.status == 'PARTIAL'
+              ) && (
+                'production_operator' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+                || 'production_supervisor' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.actionRoles
+                || 'production_operator' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles
+                || 'production_supervisor' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles
+              ))
+          ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
