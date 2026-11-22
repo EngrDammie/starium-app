@@ -170,6 +170,11 @@ export function subscribeToBins(callback, warehouseId = null) {
   });
 }
 
+// Convenience wrapper for warehouse-scoped bin subscription
+export function subscribeToBinsByWarehouse(warehouseId, callback) {
+  return subscribeToBins(callback, warehouseId);
+}
+
 export async function getAllBins() {
   const q = query(BINS_COLLECTION, orderBy('warehouseId'), orderBy('fullAddress'));
   const snap = await getDocs(q);

@@ -4,7 +4,7 @@
 // Two-step: Warehouse ISSUES → Production/Destination RECEIVES.
 // Configurable approval (default ON per Plant Manager decision).
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   createStockTransfer, submitStockTransfer, processTransferApproval,
@@ -13,7 +13,7 @@ import {
 } from '../services/stockTransferOperations';
 import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems } from '../services/inventoryOperations';
-import { subscribeToBins, getStockForBin } from '../services/inventoryOperations';
+import { subscribeToBinsByWarehouse, getStockForBin } from '../services/inventoryOperations';
 import { useConfig } from '../context/ConfigContext';
 import { generateTransferPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
@@ -24,7 +24,7 @@ export default function StockTransfers() {
   const [transfers, setTransfers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [items, setItems] = useState([]);
-  const [bins, setBins] = useState([]);
+  const [bins, setBins] = useState([]); // bins for currently selected warehouses only
   const [binStock, setBinStock] = useState({}); // binId -> stock array from ledger
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -37,30 +37,82 @@ export default function StockTransfers() {
   const [issueOpen, setIssueOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState(null);
-  const [receiveOverrides, setReceiveOverrides] = useState({}); // FIXED: state for receive qty overrides
+  const [receiveOverrides, setReceiveOverrides] = useState({});
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
 
+  // Track which warehouses we're subscribed to for bins
+  const [subscribedWarehouses, setSubscribedWarehouses] = useState(new Set());
+
+  // Subscribe to transfers, warehouses, items
   useEffect(() => {
     const u1 = subscribeToStockTransfers((t) => { setTransfers(t); setLoading(false); });
     const u2 = subscribeToWarehouses((w) => setWarehouses(w));
     const u3 = subscribeToItems((i) => setItems(i));
-    const u4 = subscribeToBins((b) => { setBins(b); fetchAllBinStock(b); });
-    return () => { u1(); u2(); u3(); u4(); };
+    return () => { u1(); u2(); u3(); };
   }, []);
 
-  // Fetch real stock for all bins from stock_ledger
-  const fetchAllBinStock = async (binList) => {
+  // Subscribe to bins for selected warehouses only
+  useEffect(() => {
+    const neededWarehouses = new Set();
+    if (form.fromWarehouseId) neededWarehouses.add(form.fromWarehouseId);
+    if (form.toWarehouseId) neededWarehouses.add(form.toWarehouseId);
+    if (selectedTransfer?.toWarehouseId) neededWarehouses.add(selectedTransfer.toWarehouseId);
+
+    // Unsubscribe from warehouses no longer needed
+    const currentSubscribed = new Set(subscribedWarehouses);
+    currentSubscribed.forEach(whId => {
+      if (!neededWarehouses.has(whId)) {
+        // Note: subscribeToBinsByWarehouse returns unsubscribe fn, we'd need to track them
+        // For simplicity, we'll resubscribe when needed warehouses change
+      }
+    });
+
+    if (neededWarehouses.size === 0) {
+      setBins([]);
+      setBinStock({});
+      setSubscribedWarehouses(new Set());
+      return;
+    }
+
+    // Subscribe to bins for each needed warehouse
+    const unsubscribes = [];
+    const allBins = [];
+    neededWarehouses.forEach(whId => {
+      const unsub = subscribeToBinsByWarehouse(whId, (binsForWh) => {
+        allBins.push(...binsForWh);
+        setBins([...allBins]);
+      });
+      unsubscribes.push(unsub);
+    });
+
+    setSubscribedWarehouses(neededWarehouses);
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
+  }, [form.fromWarehouseId, form.toWarehouseId, selectedTransfer?.toWarehouseId, subscribedWarehouses]);
+
+  // Fetch stock only for bins that are actually displayed in dropdowns
+  const fetchStockForBins = useCallback(async (binList) => {
     if (!binList?.length) return;
-    const stockMap = {};
+    const stockMap = { ...binStock };
     await Promise.all(binList.map(async (bin) => {
-      const stock = await getStockForBin(bin.id);
-      if (stock.length > 0) stockMap[bin.id] = stock;
+      if (!stockMap[bin.id]) { // only fetch if not already cached
+        const stock = await getStockForBin(bin.id);
+        if (stock.length > 0) stockMap[bin.id] = stock;
+      }
     }));
     setBinStock(stockMap);
-  };
+  }, [binStock]);
+
+  // Trigger stock fetch when filtered bins change
+  useEffect(() => {
+    const relevantBins = [...fromBins, ...toBins, ...receiveBins];
+    fetchStockForBins(relevantBins);
+  }, [fromBins, toBins, receiveBins, fetchStockForBins]);
 
   const userCanIssue = userDeptRoles.includes('warehouse_clerk') || userDeptRoles.includes('warehouse_manager');
   const userCanReceive = userDeptRoles.includes('production_operator') || userDeptRoles.includes('production_supervisor');
