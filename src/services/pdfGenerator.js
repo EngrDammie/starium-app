@@ -470,6 +470,14 @@ export function generateTransferPdf(transfer) {
 }
 
 /**
+ * Generate and download Stock Transfer PDF
+ */
+export function downloadTransferPdf(transfer) {
+  const doc = generateTransferPdf(transfer);
+  downloadPdf(doc, `STOCK-TRANSFER-${transfer.transferNumber}`);
+}
+
+/**
  * Download PDF with proper filename
  */
 export function downloadPdf(doc, baseFilename) {

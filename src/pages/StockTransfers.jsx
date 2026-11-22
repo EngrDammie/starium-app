@@ -15,7 +15,7 @@ import { subscribeToWarehouses } from '../services/inventoryOperations';
 import { subscribeToItems } from '../services/inventoryOperations';
 import { subscribeToBinsByWarehouse, getStockForBin } from '../services/inventoryOperations';
 import { useConfig } from '../context/ConfigContext';
-import { generateTransferPdf, downloadPdf } from '../services/pdfGenerator';
+import { downloadTransferPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
 export default function StockTransfers() {
