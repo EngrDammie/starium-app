@@ -190,6 +190,8 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
   if (data.status !== 'IN_TRANSIT') throw new Error('Transfer must be IN_TRANSIT to receive');
 
   // Post TRANSFER_IN ledger entries
+  // fromBinId is NULL — TRANSFER_IN only adds to destination bin.
+  // Source bin already had TRANSFER_OUT during issue.
   const ledgerEntries = data.lines.map(line => {
     const receivedQty = receivedQtyOverrides[line.lineNumber] || line.issuedQty;
     return {
@@ -197,7 +199,7 @@ export async function receiveStockTransfer(transferNumber, receivedByUid, receiv
       lotId: line.lotId,
       fromWarehouseId: null,
       toWarehouseId: data.toWarehouseId,
-      fromBinId: line.fromBinId,
+      fromBinId: null, // FIXED: don't double-subtract from source bin
       toBinId: line.toBinId,
       movementType: 'TRANSFER_IN',
       qty: receivedQty,

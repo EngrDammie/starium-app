@@ -398,3 +398,31 @@ export async function seedMasterData() {
   }
   return { items: DEFAULT_ITEMS.length, warehouses: DEFAULT_WAREHOUSES.length, vendors: DEFAULT_VENDORS.length };
 }
+
+// ─── LOT NUMBER COUNTER ──────────────────────────────────────────────
+// Atomic counter per date for auto-generating internal lot numbers: LOT-YYYYMMDD-####
+
+const COUNTERS_COLLECTION = collection(db, 'counters');
+
+export async function getNextLotSequence(dateStr) {
+  // dateStr format: 'YYYYMMDD'
+  const counterRef = doc(COUNTERS_COLLECTION, `lotSequence_${dateStr}`);
+  const snap = await getDoc(counterRef);
+
+  let nextSeq = 1;
+  if (snap.exists()) {
+    nextSeq = (snap.data().current || 0) + 1;
+  }
+
+  await setDoc(counterRef, {
+    current: nextSeq,
+    date: dateStr,
+    updatedAt: serverTimestamp()
+  });
+
+  return nextSeq;
+}
+
+export function generateInternalLotNumber(dateStr, sequence) {
+  return `LOT-${dateStr}-${String(sequence).padStart(4, '0')}`;
+}

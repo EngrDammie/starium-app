@@ -11,6 +11,7 @@ import {
 import { db } from '../config/firebase';
 import { updatePoLineReceivedQty, getPurchaseOrder } from './purchaseOrderOperations';
 import { createStockLedgerEntry, subscribeToStockLedger } from './stockLedgerOperations';
+import { getNextLotSequence, generateInternalLotNumber } from './inventoryOperations';
 import { erpNotifications } from './erpNotifications';
 
 const GRNS_COLLECTION = collection(db, 'goods_receipts');
@@ -23,18 +24,25 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
   // Generate GRN number: GRN-YYYY-MM-DD-####
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
+  const lotDateStr = dateStr.replace(/-/g, ''); // YYYYMMDD for lot numbers
   const existing = await getDocs(query(GRNS_COLLECTION, where('grnNumber', '>=', `GRN-${dateStr}-`), orderBy('grnNumber')));
   const seq = existing.size + 1;
   const grnNumber = `GRN-${dateStr}-${String(seq).padStart(4, '0')}`;
   console.log('[createGoodsReceipt] Generated GRN number:', grnNumber);
 
-  // Build GRN lines with 3-way match flags
+  // Get next lot sequence for today (atomic counter)
+  const lotSeq = await getNextLotSequence(lotDateStr);
+
+  // Build GRN lines with 3-way match flags + auto-generate internal lot numbers
   const grnLines = grnData.lines.map((line, i) => {
     const orderedQty = line.orderedQty || 0;
     const receivedQty = line.receivedQty || 0;
     const isShort = receivedQty < orderedQty;
     const isOver = receivedQty > orderedQty;
     const matchStatus = isShort ? 'SHORT' : isOver ? 'OVER' : 'EXACT';
+
+    // Auto-generate internal lot number if not provided (vendors don't provide lot numbers)
+    const internalLotNumber = line.lotNumber?.trim() ? line.lotNumber.trim() : generateInternalLotNumber(lotDateStr, lotSeq + i);
 
     return {
       lineNumber: i + 1,
@@ -44,7 +52,7 @@ export async function createGoodsReceipt(grnData, receivedByUid, receivedByName)
       orderedQty,
       receivedQty,
       unitOfMeasure: line.unitOfMeasure,
-      lotNumber: line.lotNumber,
+      lotNumber: internalLotNumber, // always populated: user-provided or auto-generated
       expiryDate: line.expiryDate,
       binId: line.binId,
       condition: line.condition, // GOOD | DAMAGED | SHORT | WRONG_ITEM
