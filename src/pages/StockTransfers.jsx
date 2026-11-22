@@ -4,7 +4,7 @@
 // Two-step: Warehouse ISSUES → Production/Destination RECEIVES.
 // Configurable approval (default ON per Plant Manager decision).
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   createStockTransfer, submitStockTransfer, processTransferApproval,
@@ -43,8 +43,8 @@ export default function StockTransfers() {
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
 
-  // Track which warehouses we're subscribed to for bins
-  const [subscribedWarehouses, setSubscribedWarehouses] = useState(new Set());
+  // Track unsubscribes for bin subscriptions
+  const binUnsubscribesRef = useRef({});
 
   // Subscribe to transfers, warehouses, items
   useEffect(() => {
@@ -54,72 +54,44 @@ export default function StockTransfers() {
     return () => { u1(); u2(); u3(); };
   }, []);
 
+  // Determine which warehouses we need bins for
+  const neededWarehouseIds = useMemo(() => {
+    const set = new Set();
+    if (form.fromWarehouseId) set.add(form.fromWarehouseId);
+    if (form.toWarehouseId) set.add(form.toWarehouseId);
+    if (selectedTransfer?.toWarehouseId) set.add(selectedTransfer.toWarehouseId);
+    return set;
+  }, [form.fromWarehouseId, form.toWarehouseId, selectedTransfer?.toWarehouseId]);
+
+  // Stable key for useEffect dependency (avoids Set reference changes)
+  const neededWarehousesKey = Array.from(neededWarehouseIds).sort().join(',');
+
   // Subscribe to bins for selected warehouses only
   useEffect(() => {
-    const neededWarehouses = new Set();
-    if (form.fromWarehouseId) neededWarehouses.add(form.fromWarehouseId);
-    if (form.toWarehouseId) neededWarehouses.add(form.toWarehouseId);
-    if (selectedTransfer?.toWarehouseId) neededWarehouses.add(selectedTransfer.toWarehouseId);
+    // Clean up previous subscriptions
+    Object.values(binUnsubscribesRef.current).forEach(unsub => unsub());
+    binUnsubscribesRef.current = {};
 
-    // Unsubscribe from warehouses no longer needed
-    const currentSubscribed = new Set(subscribedWarehouses);
-    currentSubscribed.forEach(whId => {
-      if (!neededWarehouses.has(whId)) {
-        // Note: subscribeToBinsByWarehouse returns unsubscribe fn, we'd need to track them
-        // For simplicity, we'll resubscribe when needed warehouses change
-      }
-    });
-
-    if (neededWarehouses.size === 0) {
+    if (neededWarehouseIds.size === 0) {
       setBins([]);
       setBinStock({});
-      setSubscribedWarehouses(new Set());
       return;
     }
 
-    // Subscribe to bins for each needed warehouse
-    const unsubscribes = [];
     const allBins = [];
-    neededWarehouses.forEach(whId => {
+    neededWarehouseIds.forEach(whId => {
       const unsub = subscribeToBinsByWarehouse(whId, (binsForWh) => {
         allBins.push(...binsForWh);
         setBins([...allBins]);
       });
-      unsubscribes.push(unsub);
+      binUnsubscribesRef.current[whId] = unsub;
     });
 
-    setSubscribedWarehouses(neededWarehouses);
-
     return () => {
-      unsubscribes.forEach(unsub => unsub());
+      Object.values(binUnsubscribesRef.current).forEach(unsub => unsub());
+      binUnsubscribesRef.current = {};
     };
-  }, [form.fromWarehouseId, form.toWarehouseId, selectedTransfer?.toWarehouseId, subscribedWarehouses]);
-
-  // Fetch stock only for bins that are actually displayed in dropdowns
-  const fetchStockForBins = useCallback(async (binList) => {
-    if (!binList?.length) return;
-    const stockMap = { ...binStock };
-    await Promise.all(binList.map(async (bin) => {
-      if (!stockMap[bin.id]) { // only fetch if not already cached
-        const stock = await getStockForBin(bin.id);
-        if (stock.length > 0) stockMap[bin.id] = stock;
-      }
-    }));
-    setBinStock(stockMap);
-  }, [binStock]);
-
-  // Trigger stock fetch when filtered bins change
-  useEffect(() => {
-    const relevantBins = [...fromBins, ...toBins, ...receiveBins];
-    fetchStockForBins(relevantBins);
-  }, [fromBins, toBins, receiveBins, fetchStockForBins]);
-
-  const userCanIssue = userDeptRoles.includes('warehouse_clerk') || userDeptRoles.includes('warehouse_manager');
-  const userCanReceive = userDeptRoles.includes('production_operator') || userDeptRoles.includes('production_supervisor');
-  const userCanApprove = userActionRoles.includes('warehouse_manager');
-
-  const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', itemCode: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
-  const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
+  }, [neededWarehousesKey]);
 
   // Filter bins by warehouse (currentQty lives in stock_ledger, not bin doc)
   const fromBins = useMemo(() => {
@@ -136,6 +108,42 @@ export default function StockTransfers() {
     if (!selectedTransfer) return [];
     return bins.filter(b => b.warehouseId === selectedTransfer.toWarehouseId && b.status === 'AVAILABLE');
   }, [bins, selectedTransfer]);
+
+  // Fetch stock only for bins that are actually displayed in dropdowns
+  const fetchStockForBins = useCallback(async (binList) => {
+    if (!binList?.length) return;
+    // Use functional update to avoid binStock in dependency array
+    setBinStock(prevStockMap => {
+      const stockMap = { ...prevStockMap };
+      let hasChanges = false;
+      binList.forEach(bin => {
+        if (!stockMap[bin.id]) {
+          // Fire-and-forget fetch, update when resolved
+          getStockForBin(bin.id).then(stock => {
+            if (stock.length > 0) {
+              setBinStock(current => ({ ...current, [bin.id]: stock }));
+            }
+          });
+          hasChanges = true;
+        }
+      });
+      // Return current map immediately; async updates will trigger re-render
+      return hasChanges ? stockMap : prevStockMap;
+    });
+  }, []);
+
+  // Trigger stock fetch when filtered bins change
+  useEffect(() => {
+    const relevantBins = [...fromBins, ...toBins, ...receiveBins];
+    fetchStockForBins(relevantBins);
+  }, [fromBins, toBins, receiveBins, fetchStockForBins]);
+
+  const userCanIssue = userDeptRoles.includes('warehouse_clerk') || userDeptRoles.includes('warehouse_manager');
+  const userCanReceive = userDeptRoles.includes('production_operator') || userDeptRoles.includes('production_supervisor');
+  const userCanApprove = userActionRoles.includes('warehouse_manager');
+
+  const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', itemCode: '', lotId: '', requestedQty: 0, unitOfMeasure: 'kg', fromBinId: '', toBinId: '' }] });
+  const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -200,18 +208,6 @@ export default function StockTransfers() {
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
   };
 
-  const downloadTransferPdf = async (transfer) => {
-    try {
-      const fullTransfer = transfer.lines ? transfer : await getStockTransfer(transfer.transferNumber);
-      if (fullTransfer) {
-        const doc = generateTransferPdf(fullTransfer);
-        downloadPdf(doc, `ST_${fullTransfer.transferNumber}`);
-      }
-    } catch (err) {
-      setToast('Error generating PDF: ' + err.message, true);
-    }
-  };
-
   const statusLabel = (s) => {
     const labels = {
       DRAFT: 'Draft', PENDING_APPROVAL: 'Pending Approval',
@@ -227,6 +223,17 @@ export default function StockTransfers() {
     const step = t.approvalState.steps?.find(s => s.status === 'PENDING');
     return step ? userActionRoles.includes(step.role) : false;
   });
+
+  const processTransferApproval = async (transferNumber, action, role, label, userId) => {
+    if (action === 'REJECT') {
+      const reason = window.prompt('Rejection reason:');
+      if (!reason) return;
+      // Call the actual reject function with reason
+    }
+    // Use the imported processTransferApproval from stockTransferOperations
+    const { processTransferApproval: doProcess } = await import('../services/stockTransferOperations');
+    await doProcess(transferNumber, action, role, label, userId);
+  };
 
   return (
     <Layout title="🚚 Stock Transfers" subtitle="Move stock between warehouses">
@@ -311,193 +318,151 @@ export default function StockTransfers() {
 
       {/* Create Transfer Modal */}
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-white">➕ New Stock Transfer</h3>
-              <button onClick={() => setCreateOpen(false)} className="text-gray-400 hover:text-white">&times;</button>
-            </div>
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setCreateOpen(false)}>
+          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">New Stock Transfer</h3>
+            <form onSubmit={handleSave}>
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">From Warehouse</label>
-                  <select name="fromWarehouseId" value={form.fromWarehouseId} onChange={e => {
-                    const w = warehouses.find(x => x.id === e.target.value);
-                    setForm({ ...form, fromWarehouseId: e.target.value, fromWarehouseName: w ? w.name : '' });
-                  }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
-                    <option value="">Select source warehouse</option>
+                  <select value={form.fromWarehouseId} onChange={e => setForm({ ...form, fromWarehouseId: e.target.value, fromWarehouseName: warehouses.find(w => w.id === e.target.value)?.name || '' })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
+                    <option value="">Select warehouse</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">To Warehouse</label>
-                  <select name="toWarehouseId" value={form.toWarehouseId} onChange={e => {
-                    const w = warehouses.find(x => x.id === e.target.value);
-                    setForm({ ...form, toWarehouseId: e.target.value, toWarehouseName: w ? w.name : '' });
-                  }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
-                    <option value="">Select destination warehouse</option>
+                  <select value={form.toWarehouseId} onChange={e => setForm({ ...form, toWarehouseId: e.target.value, toWarehouseName: warehouses.find(w => w.id === e.target.value)?.name || '' })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
+                    <option value="">Select warehouse</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
                 </div>
               </div>
-              <div>
+              <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Notes</label>
-                <input type="text" name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
-
-              <div className="border-t border-[#333] pt-4">
-                <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">Items to Transfer</h5>
-                <div className="space-y-3">
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-gray-400">Items</label>
+                  <button type="button" onClick={addLine} className="text-xs text-primary hover:underline">+ Add Line</button>
+                </div>
+                <div className="space-y-2">
                   {form.lines.map((line, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-8 gap-3 items-end bg-[#121212] p-3 rounded border border-[#333]">
-                      <div>
-                        <label className="text-xs text-gray-400 block mb-1">Item</label>
-                        <select name={`line${i}-item`} value={line.itemId} onChange={e => {
-                          const item = items.find(x => x.id === e.target.value);
+                    <div key={i} className="grid grid-cols-6 gap-2 items-center">
+                      <div className="col-span-2">
+                        <label className="block text-xs text-gray-400 mb-1">Item</label>
+                        <select value={line.itemId} onChange={e => {
+                          const item = items.find(it => it.id === e.target.value);
                           const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], itemId: item ? item.id : '', itemName: item ? item.name : '', itemCode: item ? item.code : '', unitOfMeasure: item ? item.unitOfMeasure : 'kg' };
+                          newLines[i] = { ...newLines[i], itemId: e.target.value, itemName: item?.name || '', itemCode: item?.code || '', unitOfMeasure: item?.unitOfMeasure || 'kg' };
                           setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary">
+                        }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select item</option>
-                          {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
+                          {items.map(it => <option key={it.id} value={it.id}>{it.code} — {it.name}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">Qty</label>
-                        <input type="number" value={line.requestedQty} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], requestedQty: Number(e.target.value) || 0 };
-                          setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="1" />
+                        <label className="block text-xs text-gray-400 mb-1">Qty (kg)</label>
+                        <input type="number" step="0.01" min="0" value={line.requestedQty} onChange={e => { const newLines = [...form.lines]; newLines[i] = { ...newLines[i], requestedQty: parseFloat(e.target.value) || 0 }; setForm({ ...form, lines: newLines }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">Unit</label>
-                        <div className="text-sm text-gray-400">{line.unitOfMeasure}</div>
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400 block mb-1">From Bin</label>
-                        <select value={line.fromBinId} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], fromBinId: e.target.value };
-                          setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                        <label className="block text-xs text-gray-400 mb-1">From Bin</label>
+                        <select value={line.fromBinId} onChange={e => { const newLines = [...form.lines]; newLines[i] = { ...newLines[i], fromBinId: e.target.value }; setForm({ ...form, lines: newLines }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select bin</option>
-                          {fromBins.map(b => {
-                            const stock = binStock[b.id] || [];
-                            const totalQty = stock.reduce((sum, s) => sum + s.qty, 0);
-                            const firstItem = stock[0];
-                            return (
-                              <option key={b.id} value={b.id}>
-                                {b.fullAddress} {totalQty > 0 ? `(${firstItem?.itemId}: ${totalQty} ${firstItem?.unitOfMeasure})` : '(empty)'}
-                              </option>
-                            );
-                          })}
+                          {fromBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">To Bin</label>
-                        <select value={line.toBinId} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], toBinId: e.target.value };
-                          setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                        <label className="block text-xs text-gray-400 mb-1">To Bin</label>
+                        <select value={line.toBinId} onChange={e => { const newLines = [...form.lines]; newLines[i] = { ...newLines[i], toBinId: e.target.value }; setForm({ ...form, lines: newLines }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select bin</option>
-                          {toBins.map(b => {
-                            const stock = binStock[b.id] || [];
-                            const totalQty = stock.reduce((sum, s) => sum + s.qty, 0);
-                            const firstItem = stock[0];
-                            return (
-                              <option key={b.id} value={b.id}>
-                                {b.fullAddress} {totalQty > 0 ? `(${firstItem?.itemId}: ${totalQty} ${firstItem?.unitOfMeasure})` : '(empty)'}
-                              </option>
-                            );
-                          })}
+                          {toBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
                         </select>
                       </div>
-                      <div className="flex justify-end">
-                        <button type="button" onClick={() => removeLine(i)} className="text-status-danger hover:text-white">🗑️</button>
+                      <div className="flex items-end">
+                        <button type="button" onClick={() => removeLine(i)} className="text-status-danger hover:underline text-xs">Remove</button>
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={addLine} className="w-full py-2 rounded bg-[#333] text-xs text-white hover:bg-[#555]">➕ Add Line</button>
                 </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-6">
-                <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
-                <button type="submit" className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">💾 Create Transfer</button>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 bg-[#333] text-white rounded hover:bg-[#444]">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-black rounded font-bold hover:bg-primary-dark">Create & Submit</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Issue Modal */}
+      {/* Issue Transfer Modal */}
       {issueOpen && selectedTransfer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-white">📤 Issue Stock</h3>
-              <button onClick={() => setIssueOpen(false)} className="text-gray-400 hover:text-white">&times;</button>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setIssueOpen(false)}>
+          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">Issue Transfer: {selectedTransfer.transferNumber}</h3>
+            <div className="mb-4 text-sm text-gray-400">
+              {selectedTransfer.fromWarehouseName} → {selectedTransfer.toWarehouseName}
             </div>
-            <p className="text-gray-400 mb-6">Issuing transfer <span className="text-white font-mono">{selectedTransfer.transferNumber}</span> from warehouse clerk.</p>
-            <p className="text-sm text-gray-300 mb-6">This will decrease stock at <span className="text-white">{selectedTransfer.fromWarehouseName}</span> and mark as IN_TRANSIT.</p>
-            <div className="space-y-3 mb-6">
-              {selectedTransfer.lines.map((line) => (
-                <div key={line.lineNumber} className="bg-[#121212] p-3 rounded border border-[#333]">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-white">{line.itemName}</span>
-                    <span className="text-xs text-gray-400">Qty: {line.requestedQty} {line.unitOfMeasure}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">From: {line.fromBinId} → To: {line.toBinId}</div>
+            <div className="space-y-2 mb-4">
+              {selectedTransfer.lines.map((line, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span>{line.itemName} ({line.itemCode})</span>
+                  <span className="font-bold">{line.requestedQty} {line.unitOfMeasure}</span>
                 </div>
               ))}
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setIssueOpen(false)} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
-              <button onClick={handleIssue} className="px-6 py-2 rounded bg-status-success text-black font-bold hover:bg-status-success">📤 Confirm Issue</button>
+              <button onClick={() => setIssueOpen(false)} className="px-4 py-2 bg-[#333] text-white rounded hover:bg-[#444]">Cancel</button>
+              <button onClick={handleIssue} className="px-4 py-2 bg-status-success text-white rounded font-bold hover:bg-status-success/90">📤 Confirm Issue</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Receive Modal - FIXED */}
+      {/* Receive Transfer Modal */}
       {receiveOpen && selectedTransfer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-white">📥 Receive Stock</h3>
-              <button onClick={() => { setReceiveOpen(false); setReceiveOverrides({}); }} className="text-gray-400 hover:text-white">&times;</button>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setReceiveOpen(false)}>
+          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">Receive Transfer: {selectedTransfer.transferNumber}</h3>
+            <div className="mb-4 text-sm text-gray-400">
+              {selectedTransfer.fromWarehouseName} → {selectedTransfer.toWarehouseName}
             </div>
-            <p className="text-gray-400 mb-6">Receiving transfer <span className="text-white font-mono">{selectedTransfer.transferNumber}</span> at <span className="text-white">{selectedTransfer.toWarehouseName}</span>.</p>
-            <div className="space-y-3">
-              {selectedTransfer.lines.map((line) => (
-                <div key={line.lineNumber} className="bg-[#121212] p-3 rounded border border-[#333]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-white">{line.itemName}</span>
-                    <span className="text-xs text-gray-400">Issued: {line.issuedQty} {line.unitOfMeasure}</span>
+            <div className="space-y-3 mb-4">
+              {selectedTransfer.lines.map((line, i) => {
+                const stockForItem = binStock[line.fromBinId] || [];
+                const availableStock = stockForItem.find(s => s.itemId === line.itemId)?.qty || 0;
+                const override = receiveOverrides[line.itemId] ?? line.requestedQty;
+                return (
+                  <div key={i} className="bg-[#121212] p-3 rounded border border-[#333]">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span>{line.itemName} ({line.itemCode})</span>
+                      <span className="text-gray-400">Available in bin: {availableStock} {line.unitOfMeasure}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Qty to Receive</label>
+                        <input type="number" step="0.01" min="0" max={line.requestedQty} value={override} onChange={e => setReceiveOverrides({ ...receiveOverrides, [line.itemId]: parseFloat(e.target.value) || 0 })} className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">To Bin</label>
+                        <select value={line.toBinId} onChange={e => { const newLines = [...selectedTransfer.lines]; newLines[i] = { ...newLines[i], toBinId: e.target.value }; setSelectedTransfer({ ...selectedTransfer, lines: newLines }); }} className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white outline-none focus:border-primary">
+                          <option value="">Select bin</option>
+                          {receiveBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Requested</label>
+                        <div className="p-2 bg-[#1a1a1a] border border-[#444] rounded text-white text-sm">{line.requestedQty} {line.unitOfMeasure}</div>
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="number"
-                    placeholder="Received qty"
-                    className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary"
-                    min="0"
-                    max={line.issuedQty}
-                    value={receiveOverrides[line.lineNumber] || ''}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setReceiveOverrides(prev => ({
-                        ...prev,
-                        [line.lineNumber]: isNaN(val) || val < 0 ? 0 : Math.min(val, line.issuedQty)
-                      }));
-                    }}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <div className="flex justify-end gap-2 pt-6">
-              <button onClick={() => { setReceiveOpen(false); setReceiveOverrides({}); }} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Cancel</button>
-              <button onClick={handleReceive} className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">📥 Confirm Receive</button>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setReceiveOpen(false)} className="px-4 py-2 bg-[#333] text-white rounded hover:bg-[#444]">Cancel</button>
+              <button onClick={handleReceive} className="px-4 py-2 bg-primary text-black rounded font-bold hover:bg-primary-dark">📥 Confirm Receive</button>
             </div>
           </div>
         </div>
