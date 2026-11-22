@@ -178,6 +178,13 @@ service cloud.firestore {
       allow write: if !isAuthEnabled() || isAdmin();
     }
 
+    // ─── counters collection (atomic sequences for lot numbers, etc.) ───
+    match /counters/{counterId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create, update: if !isAuthEnabled() || isAuthenticated();
+      allow delete: if false; // never delete counters
+    }
+
     // ─── user_roles collection ─────────────────────────────
     // WHO CAN READ: any signed-in user. This used to be world-readable,
     // which put every staff member's email and roles on the open internet
