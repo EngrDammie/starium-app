@@ -203,8 +203,8 @@ export default function StockTransfers() {
                     <div className="text-xs text-gray-400">{t.fromWarehouseName} → {t.toWarehouseName}</div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => processTransferApproval(t.transferNumber, 'APPROVE', step?.role, step?.label, 'current-user')} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">✅</button>
-                    <button onClick={() => { const r = window.prompt('Reason:'); if (r) processTransferApproval(t.transferNumber, 'REJECT', step?.role, step?.label, 'current-user'); }} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs hover:bg-status-danger hover:text-white">❌</button>
+                    <button onClick={() => processTransferApproval(t.transferNumber, 'APPROVE', step?.role, step?.label, 'current-user')} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">✅ Approve</button>
+                    <button onClick={() => { const r = window.prompt('Reason:'); if (r) processTransferApproval(t.transferNumber, 'REJECT', step?.role, step?.label, 'current-user'); }} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs hover:bg-status-danger hover:text-white">❌ Reject</button>
                   </div>
                 </div>
               );
