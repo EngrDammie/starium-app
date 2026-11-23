@@ -69,23 +69,52 @@ export async function cloneBom(bomId, newVersion, createdByUid, createdByName) {
   const original = await getBom(bomId);
   if (!original) throw new Error('BOM not found');
 
-  const newBomData = {
+  const baseId = original.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const newBomId = `${baseId}_v${newVersion}`;
+
+  // Force DRAFT status so user can edit before activating
+  const approvalState = {
+    approvalRequired: false,
+    approvalEnabled: false,
+    currentStep: 0,
+    totalSteps: 0,
+    status: 'DRAFT',
+    steps: [],
+    approvedAt: null,
+    rejectedAt: null
+  };
+
+  const newBom = {
+    bomId: newBomId,
     name: original.name,
     version: newVersion,
-    yieldPercent: original.yieldPercent,
+    status: 'DRAFT',
     category: original.category,
-    ingredients: original.ingredients.map(ing => ({
+    yieldPercent: original.yieldPercent,
+    batchInputKg: original.batchInputKg,
+    batchOutputKg: original.batchOutputKg,
+    ingredients: original.ingredients.map((ing, i) => ({
+      lineNumber: i + 1,
       itemId: ing.itemId,
       itemName: ing.itemName,
       itemCode: ing.itemCode,
-      kgPerBatch: ing.kgPerBatch,
-      unitOfMeasure: ing.unitOfMeasure,
-      isCritical: ing.isCritical,
-      notes: ing.notes
-    }))
+      kgPerBatch: Number(ing.kgPerBatch),
+      unitOfMeasure: ing.unitOfMeasure || 'kg',
+      isCritical: ing.isCritical !== false,
+      notes: ing.notes || ''
+    })),
+    approvalState,
+    currentApprovalStep: 0,
+    createdBy: createdByUid,
+    createdByName,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    approvedAt: null
   };
 
-  return createBom(newBomData, createdByUid, createdByName);
+  const ref = doc(db, 'boms', newBomId);
+  await setDoc(ref, newBom);
+  return newBomId;
 }
 
 export async function submitBomForApproval(bomId) {
