@@ -14,16 +14,20 @@ const BOMS_COLLECTION = collection(db, 'boms');
 // ─── CREATE BOM ──────────────────────────────────────────────────────
 
 export async function createBom(bomData, createdByUid, createdByName) {
+  console.log('[createBom] START', { name: bomData.name, ingredients: bomData.ingredients?.length });
   // Generate BOM ID: name_version
   const baseId = bomData.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   const version = bomData.version || 1;
   const bomId = `${baseId}_v${version}`;
+  console.log('[createBom] Generated bomId:', bomId);
 
   // Calculate batch input/output
   const batchInputKg = bomData.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0);
   const batchOutputKg = batchInputKg * (Number(bomData.yieldPercent || 0) / 100);
+  console.log('[createBom] batchInputKg:', batchInputKg, 'batchOutputKg:', batchOutputKg);
 
   const approvalState = initializeApprovalState('bom', createdByUid);
+  console.log('[createBom] approvalState:', approvalState);
 
   const bom = {
     bomId,

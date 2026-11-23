@@ -93,16 +93,23 @@ export default function Boms() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    console.log('[handleSave] START', { editMode, editingBom, formKeys: Object.keys(form), ingredientsCount: form.ingredients?.length });
     try {
       if (editMode && editingBom) {
+        console.log('[handleSave] Calling updateBom...');
         await updateBom(editingBom.id, form);
+        console.log('[handleSave] updateBom succeeded');
         setToast('BOM updated!', false);
       } else {
-        await createBom(form, 'current-user', 'Current User');
+        console.log('[handleSave] Calling createBom...');
+        const bomId = await createBom(form, 'current-user', 'Current User');
+        console.log('[handleSave] createBom succeeded, bomId:', bomId);
         setToast('BOM created!', false);
       }
+      console.log('[handleSave] Closing modal...');
       setCreateOpen(false);
     } catch (err) {
+      console.error('[handleSave] ERROR:', err);
       setToast('Error saving BOM: ' + err.message, true);
     }
   };
