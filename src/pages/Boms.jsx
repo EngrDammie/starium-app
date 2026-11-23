@@ -49,24 +49,28 @@ export default function Boms() {
   }));
 
   const updateIngredientField = useCallback((i, field, value) => {
-    const newIngs = [...form.ingredients];
-    newIngs[i] = { ...newIngs[i], [field]: value };
-    setForm({ ...form, ingredients: newIngs });
-  }, [form.ingredients]);
+    setForm(prevForm => {
+      const newIngs = [...prevForm.ingredients];
+      newIngs[i] = { ...newIngs[i], [field]: value };
+      return { ...prevForm, ingredients: newIngs };
+    });
+  }, []);
 
   const onIngredientItemSelect = useCallback((i, itemId) => {
     const item = items.find(it => it.id === itemId);
     if (!item) return;
-    const newIngs = [...form.ingredients];
-    newIngs[i] = {
-      ...newIngs[i],
-      itemId: item.id,
-      itemName: item.name,
-      itemCode: item.code,
-      unitOfMeasure: item.unitOfMeasure || 'kg'
-    };
-    setForm({ ...form, ingredients: newIngs });
-  }, [items, form.ingredients]);
+    setForm(prevForm => {
+      const newIngs = [...prevForm.ingredients];
+      newIngs[i] = {
+        ...newIngs[i],
+        itemId: item.id,
+        itemName: item.name,
+        itemCode: item.code,
+        unitOfMeasure: item.unitOfMeasure || 'kg'
+      };
+      return { ...prevForm, ingredients: newIngs };
+    });
+  }, [items]);
 
   const handleOpenModal = (bom = null) => {
     if (bom) {
