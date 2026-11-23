@@ -2,18 +2,20 @@
 //
 // BOM / Recipe management — CRUD for recipes with ingredients, yield %, versioning.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   createBom, submitBomForApproval, processBomApproval, activateBom, archiveBom, deleteBom, cloneBom,
   subscribeToBoms, getAllBoms, getActiveBoms, getPendingApprovalsForRole
 } from '../services/bomOperations';
 import { useConfig } from '../context/ConfigContext';
+import { subscribeToItems } from '../services/inventoryOperations';
 import Layout from '../components/Layout';
 
 export default function Boms() {
   const { config } = useConfig();
   const [boms, setBoms] = useState([]);
   const [activeBoms, setActiveBoms] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -30,7 +32,8 @@ export default function Boms() {
   useEffect(() => {
     const u1 = subscribeToBoms((b) => setBoms(b));
     const u2 = subscribeToBoms((b) => setActiveBoms(b.filter(bom => bom.status === 'ACTIVE')), { status: 'ACTIVE' });
-    return () => { u1(); u2(); };
+    const u3 = subscribeToItems((it) => setItems(it));
+    return () => { u1(); u2(); u3(); };
   }, []);
 
   const userCanCreate = userDeptRoles.includes('recipe_manager');
@@ -38,6 +41,26 @@ export default function Boms() {
 
   const addIngredient = () => setForm({ ...form, ingredients: [...form.ingredients, { itemId: '', itemName: '', itemCode: '', kgPerBatch: 0, unitOfMeasure: 'kg', isCritical: true, notes: '' }] });
   const removeIngredient = (i) => setForm({ ...form, ingredients: form.ingredients.filter((_, idx) => idx !== i) });
+
+  const updateIngredientField = useCallback((i, field, value) => {
+    const newIngs = [...form.ingredients];
+    newIngs[i] = { ...newIngs[i], [field]: value };
+    setForm({ ...form, ingredients: newIngs });
+  }, [form.ingredients]);
+
+  const onIngredientItemSelect = useCallback((i, itemId) => {
+    const item = items.find(it => it.id === itemId);
+    if (!item) return;
+    const newIngs = [...form.ingredients];
+    newIngs[i] = {
+      ...newIngs[i],
+      itemId: item.id,
+      itemName: item.name,
+      itemCode: item.code,
+      unitOfMeasure: item.unitOfMeasure || 'kg'
+    };
+    setForm({ ...form, ingredients: newIngs });
+  }, [items, form.ingredients]);
 
   const handleOpenModal = (bom = null) => {
     if (bom) {
@@ -278,35 +301,31 @@ export default function Boms() {
                     <div key={i} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-[#121212] p-3 rounded border border-[#333]">
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Item</label>
-                        <input type="text" value={ing.itemName} onChange={e => {
-                          const newIngs = [...form.ingredients];
-                          newIngs[i] = { ...newIngs[i], itemName: e.target.value };
-                          setForm({ ...form, ingredients: newIngs });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        <select
+                          value={ing.itemId}
+                          onChange={e => onIngredientItemSelect(i, e.target.value)}
+                          className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary"
+                        >
+                          <option value="">Select item</option>
+                          {items.map(it => (
+                            <option key={it.id} value={it.id}>{it.code} — {it.name}</option>
+                          ))}
+                        </select>
+                        {ing.itemName && !items.find(it => it.id === ing.itemId) && (
+                          <div className="text-xs text-status-warning mt-1">Custom item: {ing.itemName}</div>
+                        )}
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Code</label>
-                        <input type="text" value={ing.itemCode} onChange={e => {
-                          const newIngs = [...form.ingredients];
-                          newIngs[i] = { ...newIngs[i], itemCode: e.target.value };
-                          setForm({ ...form, ingredients: newIngs });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        <input type="text" value={ing.itemCode} readOnly className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-400" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Qty/Batch</label>
-                        <input type="number" value={ing.kgPerBatch} onChange={e => {
-                          const newIngs = [...form.ingredients];
-                          newIngs[i] = { ...newIngs[i], kgPerBatch: Number(e.target.value) || 0 };
-                          setForm({ ...form, ingredients: newIngs });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="0.01" step="0.01" />
+                        <input type="number" value={ing.kgPerBatch} onChange={e => updateIngredientField(i, 'kgPerBatch', Number(e.target.value) || 0)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="0.01" step="0.01" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Unit</label>
-                        <input type="text" value={ing.unitOfMeasure} onChange={e => {
-                          const newIngs = [...form.ingredients];
-                          newIngs[i] = { ...newIngs[i], unitOfMeasure: e.target.value };
-                          setForm({ ...form, ingredients: newIngs });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                        <input type="text" value={ing.unitOfMeasure} readOnly className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-400" />
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" name={`ing${i}-critical`} checked={ing.isCritical} onChange={e => {
