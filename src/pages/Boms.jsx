@@ -39,8 +39,14 @@ export default function Boms() {
   const userCanCreate = userDeptRoles.includes('recipe_manager');
   const userCanApprove = userActionRoles.includes('recipe_manager') || userActionRoles.includes('plant_manager');
 
-  const addIngredient = () => setForm({ ...form, ingredients: [...form.ingredients, { itemId: '', itemName: '', itemCode: '', kgPerBatch: 0, unitOfMeasure: 'kg', isCritical: true, notes: '' }] });
-  const removeIngredient = (i) => setForm({ ...form, ingredients: form.ingredients.filter((_, idx) => idx !== i) });
+  const addIngredient = () => setForm(prevForm => ({
+    ...prevForm,
+    ingredients: [...prevForm.ingredients, { itemId: '', itemName: '', itemCode: '', kgPerBatch: 0, unitOfMeasure: 'kg', isCritical: true, notes: '' }]
+  }));
+  const removeIngredient = (i) => setForm(prevForm => ({
+    ...prevForm,
+    ingredients: prevForm.ingredients.filter((_, idx) => idx !== i)
+  }));
 
   const updateIngredientField = useCallback((i, field, value) => {
     const newIngs = [...form.ingredients];
@@ -282,7 +288,7 @@ export default function Boms() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Yield %</label>
-                  <input type="number" name="yieldPercent" value={form.yieldPercent} onChange={e => setForm({ ...form, yieldPercent: Number(e.target.value) || 86.9 })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" step="0.1" min="0" max="100" required />
+                  <input type="number" name="yieldPercent" value={form.yieldPercent} onChange={e => { const v = Number(e.target.value); setForm({ ...form, yieldPercent: Number.isNaN(v) ? form.yieldPercent : v }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" step="0.1" min="0" max="100" required />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Category</label>
