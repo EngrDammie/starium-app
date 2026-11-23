@@ -30,8 +30,12 @@ export default function Boms() {
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
 
   useEffect(() => {
-    const u1 = subscribeToBoms((b) => { console.log('[Boms] subscribeToBoms callback:', b.length, b); setBoms(b); });
-    const u2 = subscribeToBoms((b) => { console.log('[Boms] subscribeToBoms ACTIVE callback:', b.length); setActiveBoms(b.filter(bom => bom.status === 'ACTIVE')); }, { status: 'ACTIVE' });
+    let firstLoad = true;
+    const u1 = subscribeToBoms((b) => {
+      setBoms(b);
+      if (firstLoad) { setLoading(false); firstLoad = false; }
+    });
+    const u2 = subscribeToBoms((b) => setActiveBoms(b.filter(bom => bom.status === 'ACTIVE')), { status: 'ACTIVE' });
     const u3 = subscribeToItems((it) => setItems(it));
     return () => { u1(); u2(); u3(); };
   }, []);
