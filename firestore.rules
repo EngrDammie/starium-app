@@ -425,6 +425,15 @@ service cloud.firestore {
       allow delete: if !isAuthEnabled() || isAdmin();
     }
 
+    // ─── item_categories ─────────────────────────────────────
+    // Item categories — dynamic master data. Admin writes, all authenticated read.
+    match /item_categories/{catId} {
+      allow read: if !isAuthEnabled() || isAuthenticated();
+      allow create: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow update: if !isAuthEnabled() || (isAuthenticated() && isAdmin());
+      allow delete: if !isAuthEnabled() || isAdmin();
+    }
+
     // ─── ERP Phase 0 — Transactional Data ────────────────────
     // Purchase Orders, Goods Receipts, Credit Notes, Stock Transfers, Stock Ledger.
 

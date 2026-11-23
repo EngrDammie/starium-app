@@ -16,6 +16,7 @@ const ITEMS_COLLECTION = collection(db, 'items');
 const WAREHOUSES_COLLECTION = collection(db, 'warehouses');
 const BINS_COLLECTION = collection(db, 'bins');
 const VENDORS_COLLECTION = collection(db, 'vendors');
+const CATEGORIES_COLLECTION = collection(db, 'item_categories');
 
 // ─── ITEMS ───────────────────────────────────────────────────────────
 
@@ -61,6 +62,48 @@ export function subscribeToItems(callback) {
 
 export async function getAllItems() {
   const q = query(ITEMS_COLLECTION, orderBy('name'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// ─── ITEM CATEGORIES ─────────────────────────────────────────────────
+
+export async function createCategory(categoryData) {
+  const id = categoryData.id || categoryData.label.toUpperCase().replace(/\s+/g, '_');
+  const ref = doc(CATEGORIES_COLLECTION, id);
+  await setDoc(ref, {
+    ...categoryData,
+    id,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  return id;
+}
+
+export async function updateCategory(id, updates) {
+  await updateDoc(doc(CATEGORIES_COLLECTION, id), {
+    ...updates,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function deleteCategory(id) {
+  await deleteDoc(doc(CATEGORIES_COLLECTION, id));
+}
+
+export function subscribeToCategories(callback) {
+  const q = query(CATEGORIES_COLLECTION, orderBy('label'));
+  return onSnapshot(q, (snap) => {
+    const categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(categories);
+  }, (err) => {
+    if (err.code !== 'permission-denied') console.error('categories subscription error:', err);
+    callback([]);
+  });
+}
+
+export async function getAllCategories() {
+  const q = query(CATEGORIES_COLLECTION, orderBy('label'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
@@ -363,6 +406,21 @@ export async function getStockForBin(binId) {
 }
 
 export async function seedMasterData() {
+  // Seed item categories (must be first — items reference categories)
+  const DEFAULT_CATEGORIES = [
+    { id: 'RAW_MATERIAL', label: 'Raw Material', description: 'Primary production inputs', isActive: true },
+    { id: 'PACKAGING', label: 'Packaging', description: 'Packaging materials', isActive: true },
+    { id: 'CONSUMABLE', label: 'Consumable', description: 'Consumable supplies', isActive: true },
+    { id: 'OFFICE_SUPPLY', label: 'Office Supply', description: 'Office supplies', isActive: true },
+    { id: 'FINISHED_GOOD', label: 'Finished Good', description: 'Finished products', isActive: true }
+  ];
+  for (const cat of DEFAULT_CATEGORIES) {
+    try {
+      await createCategory(cat);
+    } catch (e) {
+      // Ignore if already exists
+    }
+  }
   // Seed items
   for (const item of DEFAULT_ITEMS) {
     try {
