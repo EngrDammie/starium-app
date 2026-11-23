@@ -3,7 +3,7 @@
 // Goods Receipt Note (GRN) page — receive items from vendors against POs.
 // Auto-drafts credit note when received < ordered.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   subscribeToPurchaseOrders,
@@ -13,7 +13,7 @@ import {
   createGoodsReceipt, subscribeToGoodsReceipts,
   createCreditNoteFromGrn, getGoodsReceipt
 } from '../services/goodsReceiptOperations';
-import { subscribeToWarehouses, subscribeToBins } from '../services/inventoryOperations';
+import { subscribeToWarehouses, subscribeToBinsByWarehouse, getStockForBin } from '../services/inventoryOperations';
 import { generateGRNPdf, downloadPdf } from '../services/pdfGenerator';
 import Layout from '../components/Layout';
 
@@ -21,7 +21,8 @@ export default function GoodsReceipt() {
   const { currentUser } = useAuth();
   const [pos, setPos] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
-  const [bins, setBins] = useState([]);
+  const [bins, setBins] = useState([]); // bins for selected warehouse only
+  const [binStock, setBinStock] = useState({}); // binId -> stock array from ledger
   const [grns, setGrns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -37,6 +38,9 @@ export default function GoodsReceipt() {
   const [creatingCN, setCreatingCN] = useState(null);
   const [pendingGrnNumber, setPendingGrnNumber] = useState(null);
 
+  // Track bin subscription unsubscribe
+  const binUnsubscribeRef = useRef(null);
+
   useEffect(() => {
     const u1 = subscribeToPurchaseOrders((p) => {
       setPos(p.filter(po => po.status === 'APPROVED' || po.status === 'PARTIAL'));
@@ -47,15 +51,52 @@ export default function GoodsReceipt() {
       setGrns(g);
     });
     const u3 = subscribeToWarehouses((w) => setWarehouses(w));
-    const u4 = subscribeToBins((b) => setBins(b));
-    return () => { u1(); u2(); u3(); u4(); };
+    return () => { u1(); u2(); u3(); if (binUnsubscribeRef.current) binUnsubscribeRef.current(); };
   }, []);
 
+  // Subscribe to bins for selected warehouse only
+  useEffect(() => {
+    if (binUnsubscribeRef.current) {
+      binUnsubscribeRef.current();
+      binUnsubscribeRef.current = null;
+    }
+    if (!form.warehouseId) {
+      setBins([]);
+      setBinStock({});
+      return;
+    }
+    binUnsubscribeRef.current = subscribeToBinsByWarehouse(form.warehouseId, (binsForWh) => {
+      setBins(binsForWh.filter(b => b.status === 'AVAILABLE'));
+    });
+    return () => { if (binUnsubscribeRef.current) binUnsubscribeRef.current(); };
+  }, [form.warehouseId]);
+
   // Filter bins by selected warehouse
-  const availableBins = useMemo(() => {
-    if (!form.warehouseId) return [];
-    return bins.filter(b => b.warehouseId === form.warehouseId && b.status === 'AVAILABLE');
-  }, [bins, form.warehouseId]);
+  const availableBins = useMemo(() => bins, [bins]);
+
+  // Fetch stock for available bins (cached)
+  const fetchBinStock = useCallback(async (binList) => {
+    if (!binList?.length) return;
+    setBinStock(prev => {
+      const stockMap = { ...prev };
+      let hasChanges = false;
+      binList.forEach(bin => {
+        if (!stockMap[bin.id]) {
+          getStockForBin(bin.id).then(stock => {
+            if (stock.length > 0) {
+              setBinStock(current => ({ ...current, [bin.id]: stock }));
+            }
+          });
+          hasChanges = true;
+        }
+      });
+      return hasChanges ? stockMap : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    fetchBinStock(availableBins);
+  }, [availableBins, fetchBinStock]);
 
   // Client-side lot number generator (matches server: LOT-YYYYMMDD-####)
   const generateLotNumber = (index) => {
@@ -357,9 +398,13 @@ export default function GoodsReceipt() {
                         <label className="text-xs text-gray-400 block mb-1">Bin</label>
                         <select value={line.binId} onChange={e => updateLine(i, 'binId', e.target.value)} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                           <option value="">Select bin</option>
-                          {availableBins.map(b => (
-                            <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId})` : '(empty)'}</option>
-                          ))}
+                          {availableBins.map(b => {
+                            const stock = binStock[b.id] || [];
+                            const stockLabel = stock.length > 0
+                              ? stock.map(s => `${s.itemId} ${s.qty} ${s.unitOfMeasure}`).join(', ')
+                              : '(empty)';
+                            return <option key={b.id} value={b.id}>{b.fullAddress} — {stockLabel}</option>;
+                          })}
                         </select>
                       </div>
                       <div>
