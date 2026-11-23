@@ -438,11 +438,11 @@ service cloud.firestore {
     match /boms/{bomId} {
       allow read: if !isAuthEnabled() || isAuthenticated();
       allow create: if !isAuthEnabled()
-        || (isAuthenticated() && 'recipe_manager' in request.auth.token.departmentRoles);
+        || (isAuthenticated() && 'recipe_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles);
       allow update: if !isAuthEnabled()
         || (isAuthenticated() && (
             isAdmin()
-            || 'recipe_manager' in request.auth.token.departmentRoles
+            || 'recipe_manager' in get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.departmentRoles
           ));
       allow delete: if !isAuthEnabled() || isAdmin();
     }
