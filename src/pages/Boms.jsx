@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  createBom, submitBomForApproval, processBomApproval, activateBom, archiveBom, deleteBom, cloneBom,
+  createBom, submitBomForApproval, processBomApproval, activateBom, archiveBom, deleteBom, cloneBom, updateBom,
   subscribeToBoms, getAllBoms, getActiveBoms, getPendingApprovalsForRole
 } from '../services/bomOperations';
 import { useConfig } from '../context/ConfigContext';
@@ -156,6 +156,8 @@ export default function Boms() {
     setTimeout(() => setToast({ show: false, message: '', isError: false }), 3000);
   };
 
+  const formatQty = (val) => Number(val).toFixed(2).replace(/\.00$/, '');
+
   const statusLabel = (s) => {
     const labels = { DRAFT: 'Draft', PENDING_APPROVAL: 'Pending Approval', APPROVED: 'Approved', ACTIVE: 'Active', ARCHIVED: 'Archived', REJECTED: 'Rejected' };
     return labels[s] || s;
@@ -207,8 +209,8 @@ export default function Boms() {
                     <td className="p-3 text-status-warning font-bold">{bom.name}</td>
                     <td className="p-3 text-white mono">v{bom.version}</td>
                     <td className="p-3 text-white">{bom.yieldPercent}%</td>
-                    <td className="p-3 text-white">{bom.batchInputKg}</td>
-                    <td className="p-3 text-white">{bom.batchOutputKg}</td>
+                    <td className="p-3 text-white">{formatQty(bom.batchInputKg)}</td>
+                    <td className="p-3 text-white">{formatQty(bom.batchOutputKg)}</td>
                     <td className="p-3 text-white">{bom.ingredients.length}</td>
                     <td className="p-3 flex gap-2">
                       <button onClick={() => handleClone(bom)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📋 Clone</button>

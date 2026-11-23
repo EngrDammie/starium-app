@@ -3,30 +3,39 @@
 // BOM Approvals — approve/reject recipe changes.
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import {
+  subscribeToBoms, processBomApproval
+} from '../services/bomOperations';
 import Layout from '../components/Layout';
 
 export default function BomApprovals() {
-  const [boms, setBoms] = useState([
-    {
-      id: 'bom_001',
-      name: 'Premium Detergent v2',
-      version: 2,
-      status: 'PENDING_APPROVAL',
-      currentStep: 1,
-      totalSteps: 2,
-      steps: [
-        { step: 1, role: 'recipe_manager', label: 'Recipe Manager', status: 'PENDING' },
-        { step: 2, role: 'plant_manager', label: 'Plant Manager', status: 'WAITING' }
-      ],
-      requestedByName: 'Recipe Manager',
-      createdAt: new Date().toISOString()
-    }
-  ]);
+  const { currentUser } = useAuth();
+  const { config } = useConfig();
+  const [boms, setBoms] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
-  const handleAction = async (bomId, action) => {
+  const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
+
+  useEffect(() => {
+    const unsub = subscribeToBoms((b) => {
+      // Filter to only BOMs pending approval where current user is the approver
+      const pending = b.filter(bom => {
+        if (!bom.approvalState || !bom.approvalState.approvalEnabled) return false;
+        if (bom.approvalState.status !== 'PENDING_APPROVAL') return false;
+        const step = bom.approvalState.steps?.find(s => s.status === 'PENDING');
+        return step ? userActionRoles.includes(step.role) : false;
+      });
+      setBoms(pending);
+    });
+    return unsub;
+  }, [userActionRoles]);
+
+  const handleAction = async (bomId, action, role, label) => {
     try {
-      setToast(`BOM ${action.toLowerCase()}ed!`, false);
+      await processBomApproval(bomId, action, role, label, currentUser?.email);
+      setToast(`BOM ${action === 'APPROVE' ? 'approved' : 'rejected'}!`, false);
     } catch (err) {
       setToast('Error: ' + err.message, true);
     }
@@ -66,16 +75,16 @@ export default function BomApprovals() {
             </thead>
             <tbody className="divide-y divide-[#333]">
               {boms.map((bom) => {
-                const step = bom.steps.find(s => s.status === 'PENDING');
+                const step = bom.approvalState.steps?.find(s => s.status === 'PENDING');
                 return (
                   <tr key={bom.id} className="hover:bg-white/5">
                     <td className="p-3 text-status-warning font-bold">{bom.name}</td>
                     <td className="p-3 text-white mono">v{bom.version}</td>
-                    <td className="p-3 text-gray-400 text-sm">Step {bom.currentStep} of {bom.totalSteps}</td>
+                    <td className="p-3 text-gray-400 text-sm">Step {bom.approvalState.currentStep} of {bom.approvalState.totalSteps}</td>
                     <td className="p-3 text-white">{step?.label || '—'}</td>
                     <td className="p-3 flex gap-2">
-                      <button onClick={() => handleAction(bom.id, 'APPROVE')} className="bg-status-success/20 text-status-success px-3 py-1 rounded hover:bg-status-success hover:text-white">✅</button>
-                      <button onClick={() => { const r = window.prompt('Reason:'); if (r) handleAction(bom.id, 'REJECT'); }} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded hover:bg-status-danger hover:text-white">❌</button>
+                      <button onClick={() => handleAction(bom.id, 'APPROVE', step?.role, step?.label)} className="bg-status-success/20 text-status-success px-3 py-1 rounded text-xs hover:bg-status-success hover:text-white">✅ Approve</button>
+                      <button onClick={() => { const r = window.prompt('Rejection reason:'); if (r) handleAction(bom.id, 'REJECT', step?.role, step?.label); }} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs hover:bg-status-danger hover:text-white">❌ Reject</button>
                     </td>
                   </tr>
                 );
