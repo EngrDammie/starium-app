@@ -370,14 +370,26 @@ export default function StockTransfers() {
                         <label className="block text-xs text-gray-400 mb-1">From Bin</label>
                         <select value={line.fromBinId} onChange={e => { const newLines = [...form.lines]; newLines[i] = { ...newLines[i], fromBinId: e.target.value }; setForm({ ...form, lines: newLines }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select bin</option>
-                          {fromBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
+                          {fromBins.map(b => {
+  const stock = binStock[b.id] || [];
+  const stockLabel = stock.length > 0
+    ? stock.map(s => `${s.itemId} ${s.qty} ${s.unitOfMeasure}`).join(', ')
+    : '(empty)';
+  return <option key={b.id} value={b.id}>{b.fullAddress || b.code} — {stockLabel}</option>;
+})}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs text-gray-400 mb-1">To Bin</label>
                         <select value={line.toBinId} onChange={e => { const newLines = [...form.lines]; newLines[i] = { ...newLines[i], toBinId: e.target.value }; setForm({ ...form, lines: newLines }); }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select bin</option>
-                          {toBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
+                          {toBins.map(b => {
+  const stock = binStock[b.id] || [];
+  const stockLabel = stock.length > 0
+    ? stock.map(s => `${s.itemId} ${s.qty} ${s.unitOfMeasure}`).join(', ')
+    : '(empty)';
+  return <option key={b.id} value={b.id}>{b.fullAddress || b.code} — {stockLabel}</option>;
+})}
                         </select>
                       </div>
                       <div className="flex items-end">
@@ -448,7 +460,13 @@ export default function StockTransfers() {
                         <label className="block text-xs text-gray-400 mb-1">To Bin</label>
                         <select value={line.toBinId} onChange={e => { const newLines = [...selectedTransfer.lines]; newLines[i] = { ...newLines[i], toBinId: e.target.value }; setSelectedTransfer({ ...selectedTransfer, lines: newLines }); }} className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white outline-none focus:border-primary">
                           <option value="">Select bin</option>
-                          {receiveBins.map(b => <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>)}
+                          {receiveBins.map(b => {
+  const stock = binStock[b.id] || [];
+  const stockLabel = stock.length > 0
+    ? stock.map(s => `${s.itemId} ${s.qty} ${s.unitOfMeasure}`).join(', ')
+    : '(empty)';
+  return <option key={b.id} value={b.id}>{b.fullAddress || b.code} — {stockLabel}</option>;
+})}
                         </select>
                       </div>
                       <div>
