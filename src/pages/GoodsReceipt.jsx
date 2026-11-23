@@ -57,8 +57,15 @@ export default function GoodsReceipt() {
     return bins.filter(b => b.warehouseId === form.warehouseId && b.status === 'AVAILABLE');
   }, [bins, form.warehouseId]);
 
+  // Client-side lot number generator (matches server: LOT-YYYYMMDD-####)
+  const generateLotNumber = (index) => {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    return `LOT-${dateStr}-${String(index + 1).padStart(4, '0')}`;
+  };
+
   const openReceive = (po) => {
-    const lines = po.lines.map(line => ({
+    const lines = po.lines.map((line, i) => ({
       poLineNumber: line.lineNumber,
       itemId: line.itemId,
       itemName: line.itemName,
@@ -66,7 +73,7 @@ export default function GoodsReceipt() {
       orderedQty: line.orderedQty,
       receivedQty: 0,
       unitOfMeasure: line.unitOfMeasure,
-      lotNumber: '',
+      lotNumber: generateLotNumber(i), // pre-fill with auto-generated lot number
       expiryDate: '',
       binId: line.destinationBinId || '', // pre-fill from PO
       condition: 'GOOD',
