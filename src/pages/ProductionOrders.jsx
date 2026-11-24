@@ -37,6 +37,8 @@ export default function ProductionOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [actualsOpen, setActualsOpen] = useState(false);
   const [actualsForm, setActualsForm] = useState({ actualConsumption: [], actualPowderKg: 0, outputLotId: '' });
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingBom, setViewingBom] = useState(null);
 
   // Ensure packing plan sums to 100%
   const normalizePackingPlan = useCallback((plan) => {
@@ -54,6 +56,15 @@ export default function ProductionOrders() {
     }
     return normalized;
   }, []);
+
+  // Find selected BOM for live calculations
+  const selectedBom = activeBoms.find(b => b.id === form.bomId);
+  
+  // Live batch calculations
+  const batchInputKg = selectedBom ? selectedBom.batchInputKg * form.plannedBatches : 0;
+  const batchOutputKg = selectedBom ? selectedBom.batchOutputKg * form.plannedBatches : 0;
+  const totalInputKg = selectedBom ? selectedBom.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0) * form.plannedBatches : 0;
+  const totalOutputKg = totalInputKg * (selectedBom?.yieldPercent || 100) / 100;
 
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
@@ -274,7 +285,15 @@ export default function ProductionOrders() {
       {createOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-[fadeIn_0.2s_ease]" onClick={() => setCreateOpen(false)}>
           <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4">New Production Order</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">New Production Order</h3>
+              <div className="flex items-center gap-2">
+                {selectedBom && (
+                  <button type="button" onClick={() => { setViewingBom(selectedBom); setViewOpen(true); }} className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs hover:bg-blue-500/30 hover:text-white">👁️ View Recipe</button>
+                )}
+                <button type="button" onClick={() => setCreateOpen(false)} className="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
+              </div>
+            </div>
             <form onSubmit={handleCreate}>
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">BOM (Active only)</label>
@@ -283,6 +302,33 @@ export default function ProductionOrders() {
                   {activeBoms.map(b => <option key={b.id} value={b.id}>{b.name} v{b.version} — {b.batchOutputKg} kg/batch</option>)}
                 </select>
               </div>
+              {/* Live Batch Calculation */}
+              {selectedBom && (
+                <div className="bg-[#0a0a0a] border border-primary/30 rounded-lg p-4 mb-4">
+                  <h5 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">📊 Expected Production (per batch × {form.plannedBatches})</h5>
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                      <div className="text-xs text-gray-400 mb-1">Total Input (kg)</div>
+                      <div className="text-2xl font-bold text-status-warning font-mono">{formatQty(totalInputKg)}</div>
+                      <div className="text-xs text-gray-500 mt-1">{selectedBom.ingredients.length} ingredients × {form.plannedBatches} batch(es)</div>
+                    </div>
+                    <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                      <div className="text-xs text-gray-400 mb-1">Expected Output (kg) @ {selectedBom.yieldPercent}%</div>
+                      <div className="text-2xl font-bold text-status-success font-mono">{formatQty(totalOutputKg)}</div>
+                      <div className="text-xs text-gray-500 mt-1">Input × Yield% = {formatQty(totalInputKg)} × {selectedBom.yieldPercent}%</div>
+                    </div>
+                  </div>
+                  <div className="bg-[#121212] p-3 rounded border border-[#333]">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><span className="text-gray-400">Per-batch Input:</span> <span className="text-white font-mono">{formatQty(selectedBom.batchInputKg)} kg</span></div>
+                      <div><span className="text-gray-400">Per-batch Output:</span> <span className="text-white font-mono">{formatQty(selectedBom.batchOutputKg)} kg</span></div>
+                      <div><span className="text-gray-400">Batches:</span> <span className="text-white font-mono">{form.plannedBatches}</span></div>
+                      <div><span className="text-gray-400">Yield:</span> <span className="text-white font-mono">{selectedBom.yieldPercent}%</span></div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">Total Output = Total Input × Yield% = {formatQty(totalInputKg)} × {selectedBom.yieldPercent}% = {formatQty(totalOutputKg)} kg</div>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Planned Batches</label>
@@ -425,6 +471,110 @@ export default function ProductionOrders() {
                 <button type="submit" className="px-4 py-2 bg-primary text-black rounded font-bold hover:bg-primary-dark">🏁 Complete Production</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Recipe Modal */}
+      {viewOpen && viewingBom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-[fadeIn_0.2s_ease]" onClick={() => { setViewOpen(false); setViewingBom(null); }}>
+          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6 border-b border-[#333] pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-white">{viewingBom.name}</h3>
+                <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
+                  <span>Version: <span className="text-white font-mono">v{viewingBom.version}</span></span>
+                  <span className={`px-2 py-0.5 rounded ${statusColor(viewingBom.status)}`}>{statusLabel(viewingBom.status)}</span>
+                  <span>Category: <span className="text-white">{viewingBom.category?.replace(/_/g, ' ')}</span></span>
+                </div>
+              </div>
+              <button onClick={() => { setViewOpen(false); setViewingBom(null); }} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">📊 Batch Summary (per batch)</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-400">Yield %</span><span className="text-white font-bold">{viewingBom.yieldPercent}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Input (kg)</span><span className="text-white font-bold">{formatQty(viewingBom.batchInputKg)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Output (kg)</span><span className="text-white font-bold">{formatQty(viewingBom.batchOutputKg)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Ingredients</span><span className="text-white font-bold">{viewingBom.ingredients.length}</span></div>
+                </div>
+              </div>
+              <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">📋 Expected for {form.plannedBatches} Batch(es)</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-400">Total Input (kg)</span><span className="text-white font-bold">{formatQty(viewingBom.batchInputKg * form.plannedBatches)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Expected Output (kg)</span><span className="text-white font-bold">{formatQty((viewingBom.batchInputKg * form.plannedBatches) * (viewingBom.yieldPercent || 100) / 100)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Batches</span><span className="text-white font-bold">{form.plannedBatches}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Yield %</span><span className="text-white font-bold">{viewingBom.yieldPercent}%</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ingredients Table with Batch Multiplication */}
+            <div className="mb-6">
+              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">🧪 Ingredients ({viewingBom.ingredients.length}) — Quantities × {form.plannedBatches} Batch(es)</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider">
+                      <th className="p-3">#</th>
+                      <th className="p-3">🧪 Item</th>
+                      <th className="p-3">🔢 Code</th>
+                      <th className="p-3">⚖️ Per Batch (kg)</th>
+                      <th className="p-3">⚖️ Total (kg)</th>
+                      <th className="p-3">⚖️ Unit</th>
+                      <th className="p-3">⭐ Critical</th>
+                      <th className="p-3">📝 Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {viewingBom.ingredients.map((ing, i) => (
+                      <tr key={i} className="hover:bg-white/5">
+                        <td className="p-3 text-white mono">{i + 1}</td>
+                        <td className="p-3 text-white">{ing.itemName}</td>
+                        <td className="p-3 text-gray-400 font-mono text-sm">{ing.itemCode || '—'}</td>
+                        <td className="p-3 text-white">{formatQty(ing.kgPerBatch)}</td>
+                        <td className="p-3 text-white font-bold">{formatQty(ing.kgPerBatch * form.plannedBatches)}</td>
+                        <td className="p-3 text-white">{ing.unitOfMeasure}</td>
+                        <td className="p-3 text-center">{ing.isCritical ? <span className="text-status-success">✅ Yes</span> : <span className="text-gray-400">No</span>}</td>
+                        <td className="p-3 text-gray-400 text-sm">{ing.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Approval History */}
+            {viewingBom.approvalState && viewingBom.approvalState.steps && viewingBom.approvalState.steps.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">✅ Approval History</h4>
+                <div className="space-y-2">
+                  {viewingBom.approvalState.steps.map((step, i) => (
+                    <div key={i} className="bg-[#121212] p-3 rounded border border-[#333] flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${step.status === 'APPROVED' ? 'bg-status-success/20 text-status-success' : step.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : step.status === 'PENDING' ? 'bg-status-warning/20 text-status-warning' : 'bg-[#333] text-gray-400'}`}>
+                          {step.status}
+                        </span>
+                        <span className="text-white">{step.label || step.role}</span>
+                        {step.status === 'APPROVED' && step.approvedByName && <span className="text-xs text-gray-400">by {step.approvedByName}</span>}
+                        {step.status === 'REJECTED' && step.rejectedByName && <span className="text-xs text-gray-400">by {step.rejectedByName}</span>}
+                      </div>
+                      <div className="text-right text-xs text-gray-400">
+                        {step.approvedAt && <div>Approved: {new Date(step.approvedAt.seconds * 1000).toLocaleString()}</div>}
+                        {step.rejectedAt && <div>Rejected: {new Date(step.rejectedAt.seconds * 1000).toLocaleString()}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-[#333]">
+              <button onClick={() => { setViewOpen(false); setViewingBom(null); }} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Close</button>
+            </div>
           </div>
         </div>
       )}
