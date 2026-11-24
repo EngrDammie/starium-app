@@ -324,6 +324,28 @@ export default function Boms() {
                 </div>
               </div>
 
+              {/* Live Batch Calculation */}
+              <div className="bg-[#0a0a0a] border border-primary/30 rounded-lg p-4 mb-4">
+                <h5 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">📊 Live Batch Calculation</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                    <div className="text-xs text-gray-400 mb-1">Total Input (kg)</div>
+                    <div className="text-2xl font-bold text-status-warning font-mono">
+                      {formatQty(form.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0))}
+                    </div>
+                  </div>
+                  <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                    <div className="text-xs text-gray-400 mb-1">Total Output (kg) @ {form.yieldPercent}%</div>
+                    <div className="text-2xl font-bold text-status-success font-mono">
+                      {formatQty((form.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0)) * (Number(form.yieldPercent) || 0) / 100)}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-gray-500">
+                  Output = Input × (Yield % ÷ 100) = {formatQty(form.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0))} × {Number(form.yieldPercent) || 0}% = {formatQty((form.ingredients.reduce((sum, ing) => sum + Number(ing.kgPerBatch || 0), 0)) * (Number(form.yieldPercent) || 0) / 100)} kg
+                </div>
+              </div>
+
               <div className="border-t border-[#333] pt-4">
                 <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">Ingredients</h5>
                 <div className="space-y-3">
