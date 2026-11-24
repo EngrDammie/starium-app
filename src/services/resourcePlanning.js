@@ -5,101 +5,105 @@
 
 export const SKU_IDS = ['22', '40', '45', '85', '125', '170', '850'];
 
-export interface GramSpec {
-  piecesPerCarton: number;
-  packerBreakdown: string;
-  bagCount: number;
-  freebieCount: number;
-  minDensity: number;
-  maxDensity: number;
-}
+/**
+ * @typedef {Object} GramSpec
+ * @property {number} piecesPerCarton
+ * @property {string} packerBreakdown
+ * @property {number} bagCount
+ * @property {number} freebieCount
+ * @property {number} minDensity
+ * @property {number} maxDensity
+ */
 
-export interface PackingPlan {
-  '22': number;
-  '40': number;
-  '45': number;
-  '85': number;
-  '125': number;
-  '170': number;
-  '850': number;
-}
+/**
+ * @typedef {Object} PackingPlan
+ * @property {number} '22'
+ * @property {number} '40'
+ * @property {number} '45'
+ * @property {number} '85'
+ * @property {number} '125'
+ * @property {number} '170'
+ * @property {number} '850'
+ */
 
-export interface SkuPricing {
-  sellingPricePerCarton: number;
-  cartonCost: number;
-}
+/**
+ * @typedef {Object} SkuPricing
+ * @property {number} sellingPricePerCarton
+ * @property {number} cartonCost
+ */
 
-export interface Recipe {
-  name: string;
-  version: number;
-  yieldPercent: number;
-  batchInputKg: number;
-  batchOutputKg: number;
-  ingredients: Array<{
-    id: string;
-    name: string;
-    kgPerBatch: number;
-    unitOfMeasure: string;
-    pricePerKg: number;
-  }>;
-}
+/**
+ * @typedef {Object} Recipe
+ * @property {string} name
+ * @property {number} version
+ * @property {number} yieldPercent
+ * @property {number} batchInputKg
+ * @property {number} batchOutputKg
+ * @property {Array<{id: string, name: string, kgPerBatch: number, unitOfMeasure: string, pricePerKg: number}>} ingredients
+ */
 
-export interface PlanInput {
-  recipe: Recipe;
-  inputMode: 'rawMaterialBudget' | 'targetPowderKg';
-  inputValue: number;
-  packingPlan: PackingPlan;
-  gramSpecs: Record<string, GramSpec>;
-  skuPricing: Record<string, SkuPricing>;
-  powderDensity: number;
-  conversionCostPerKg: number;
-}
+/**
+ * @typedef {Object} PlanInput
+ * @property {Recipe} recipe
+ * @property {'rawMaterialBudget'|'targetPowderKg'} inputMode
+ * @property {number} inputValue
+ * @property {PackingPlan} packingPlan
+ * @property {Record<string, GramSpec>} gramSpecs
+ * @property {Record<string, SkuPricing>} skuPricing
+ * @property {number} powderDensity
+ * @property {number} conversionCostPerKg
+ */
 
-export interface SkuResult {
-  percentage: number;
-  powderKg: number;
-  sachets: number;
-  cartons: number;
-  piecesPerCarton: number;
-  packerBreakdown: string;
-  densityValid: boolean;
-  skuGrams: number;
-}
+/**
+ * @typedef {Object} SkuResult
+ * @property {number} percentage
+ * @property {number} powderKg
+ * @property {number} sachets
+ * @property {number} cartons
+ * @property {number} piecesPerCarton
+ * @property {string} packerBreakdown
+ * @property {boolean} densityValid
+ * @property {number} skuGrams
+ */
 
-export interface PlanOutput {
-  powderKg: number;
-  totalRawCost: number;
-  skus: Record<string, SkuResult>;
-  totalSachets: number;
-  totalCartons: number;
-  financials: {
-    totalRevenue: number;
-    totalRawCost: number;
-    totalPackagingCost: number;
-    conversionCost: number;
-    totalCost: number;
-    profit: number;
-    marginPercent: number;
-    profitPerNairaRaw: number;
-    revenuePerNairaRaw: number;
-    cartonsPerNairaRaw: number;
-    skuFinancials: Record<string, {
-      cartons: number;
-      revenue: number;
-      packagingCost: number;
-      profit: number;
-      marginPercent: number;
-    }>;
-  };
-}
+/**
+ * @typedef {Object} PlanOutput
+ * @property {number} powderKg
+ * @property {number} totalRawCost
+ * @property {Record<string, SkuResult>} skus
+ * @property {number} totalSachets
+ * @property {number} totalCartons
+ * @property {Object} financials
+ * @property {number} financials.totalRevenue
+ * @property {number} financials.totalRawCost
+ * @property {number} financials.totalPackagingCost
+ * @property {number} financials.conversionCost
+ * @property {number} financials.totalCost
+ * @property {number} financials.profit
+ * @property {number} financials.marginPercent
+ * @property {number} financials.profitPerNairaRaw
+ * @property {number} financials.revenuePerNairaRaw
+ * @property {number} financials.cartonsPerNairaRaw
+ * @property {Record<string, {cartons: number, revenue: number, packagingCost: number, profit: number, marginPercent: number}>} financials.skuFinancials
+ */
 
 // ─── PURE CALCULATION FUNCTIONS ────────────────────────────────────
 
-export function calculateRawMaterialCost(recipe: Recipe): number {
+/**
+ * @param {Recipe} recipe
+ * @returns {number}
+ */
+export function calculateRawMaterialCost(recipe) {
   return recipe.ingredients.reduce((sum, ing) => sum + ing.kgPerBatch * ing.pricePerKg, 0);
 }
 
-export function calculatePowderKg(recipe: Recipe, inputMode: 'rawMaterialBudget' | 'targetPowderKg', inputValue: number): number {
+/**
+ * @param {Recipe} recipe
+ * @param {'rawMaterialBudget'|'targetPowderKg'} inputMode
+ * @param {number} inputValue
+ * @returns {number}
+ */
+export function calculatePowderKg(recipe, inputMode, inputValue) {
   if (inputMode === 'targetPowderKg') return inputValue;
 
   const totalRawCost = calculateRawMaterialCost(recipe);
@@ -108,13 +112,15 @@ export function calculatePowderKg(recipe: Recipe, inputMode: 'rawMaterialBudget'
   return batches * recipe.batchOutputKg;
 }
 
-export function calculateSachetsAndCartons(
-  powderKg: number,
-  packingPlan: PackingPlan,
-  gramSpecs: Record<string, GramSpec>,
-  powderDensity: number
-): { skus: Record<string, SkuResult>; totalSachets: number; totalCartons: number } {
-  const results: Record<string, SkuResult> = {};
+/**
+ * @param {number} powderKg
+ * @param {PackingPlan} packingPlan
+ * @param {Record<string, GramSpec>} gramSpecs
+ * @param {number} powderDensity
+ * @returns {{skus: Record<string, SkuResult>, totalSachets: number, totalCartons: number}}
+ */
+export function calculateSachetsAndCartons(powderKg, packingPlan, gramSpecs, powderDensity) {
+  const results = {};
   let totalSachets = 0;
   let totalCartons = 0;
 
@@ -153,16 +159,18 @@ export function calculateSachetsAndCartons(
   return { skus: results, totalSachets, totalCartons };
 }
 
-export function calculateFinancials(
-  skuResults: Record<string, SkuResult>,
-  skuPricing: Record<string, SkuPricing>,
-  totalRawCost: number,
-  powderKg: number,
-  conversionCostPerKg: number
-) {
+/**
+ * @param {Record<string, SkuResult>} skuResults
+ * @param {Record<string, SkuPricing>} skuPricing
+ * @param {number} totalRawCost
+ * @param {number} powderKg
+ * @param {number} conversionCostPerKg
+ * @returns {Object}
+ */
+export function calculateFinancials(skuResults, skuPricing, totalRawCost, powderKg, conversionCostPerKg) {
   let totalRevenue = 0;
   let totalPackagingCost = 0;
-  const skuFinancials: Record<string, any> = {};
+  const skuFinancials = {};
 
   for (const [sku, data] of Object.entries(skuResults)) {
     const pricing = skuPricing[sku];
@@ -206,7 +214,11 @@ export function calculateFinancials(
   };
 }
 
-export function runResourcePlan(input: PlanInput): PlanOutput {
+/**
+ * @param {PlanInput} input
+ * @returns {PlanOutput}
+ */
+export function runResourcePlan(input) {
   const totalRawCost = calculateRawMaterialCost(input.recipe);
   const powderKg = calculatePowderKg(input.recipe, input.inputMode, input.inputValue);
   const sachetsAndCartons = calculateSachetsAndCartons(powderKg, input.packingPlan, input.gramSpecs, input.powderDensity);
@@ -224,8 +236,12 @@ export function runResourcePlan(input: PlanInput): PlanOutput {
 
 // ─── VALIDATION ────────────────────────────────────────────────────
 
-export function validatePackingPlan(packingPlan: PackingPlan): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
+/**
+ * @param {PackingPlan} packingPlan
+ * @returns {{valid: boolean, errors: string[]}}
+ */
+export function validatePackingPlan(packingPlan) {
+  const errors = [];
   const total = SKU_IDS.reduce((sum, sku) => sum + (packingPlan[sku] || 0), 0);
 
   if (Math.abs(total - 100) > 0.01) {
@@ -244,8 +260,14 @@ export function validatePackingPlan(packingPlan: PackingPlan): { valid: boolean;
   return { valid: errors.length === 0, errors };
 }
 
-export function validateDensityForSkus(powderDensity: number, gramSpecs: Record<string, GramSpec>, packingPlan: PackingPlan): Record<string, { valid: boolean; warning: string }> {
-  const results: Record<string, { valid: boolean; warning: string }> = {};
+/**
+ * @param {number} powderDensity
+ * @param {Record<string, GramSpec>} gramSpecs
+ * @param {PackingPlan} packingPlan
+ * @returns {Record<string, {valid: boolean, warning: string}>}
+ */
+export function validateDensityForSkus(powderDensity, gramSpecs, packingPlan) {
+  const results = {};
 
   for (const sku of SKU_IDS) {
     const spec = gramSpecs[sku];
