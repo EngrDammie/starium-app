@@ -3,6 +3,7 @@
 // BOM / Recipe management — CRUD for recipes with ingredients, yield %, versioning.
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   createBom, submitBomForApproval, processBomApproval, activateBom, archiveBom, deleteBom, cloneBom, updateBom,
   subscribeToBoms, getAllBoms, getActiveBoms, getPendingApprovalsForRole
@@ -13,6 +14,7 @@ import Layout from '../components/Layout';
 
 export default function Boms() {
   const { config } = useConfig();
+  const { systemRole } = useAuth();
   const [boms, setBoms] = useState([]);
   const [activeBoms, setActiveBoms] = useState([]);
   const [items, setItems] = useState([]);
@@ -25,9 +27,12 @@ export default function Boms() {
     ingredients: [{ itemId: '', itemName: '', itemCode: '', kgPerBatch: 0, unitOfMeasure: 'kg', isCritical: true, notes: '' }]
   });
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingBom, setViewingBom] = useState(null);
 
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
+  const isAdmin = systemRole === 'super_admin';
 
   useEffect(() => {
     let firstLoad = true;
@@ -250,8 +255,8 @@ export default function Boms() {
                   <td className="p-3 text-white mono">v{bom.version}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs ${statusColor(bom.status)}`}>{statusLabel(bom.status)}</span></td>
                   <td className="p-3 text-white">{bom.yieldPercent}%</td>
-                  <td className="p-3 text-white">{bom.batchInputKg}</td>
-                  <td className="p-3 text-white">{bom.batchOutputKg}</td>
+                  <td className="p-3 text-white">{formatQty(bom.batchInputKg)}</td>
+                  <td className="p-3 text-white">{formatQty(bom.batchOutputKg)}</td>
                   <td className="p-3 text-white">{bom.ingredients.length}</td>
                   <td className="p-3 flex gap-2">
                     {bom.status === 'DRAFT' && userCanCreate && (
@@ -264,11 +269,19 @@ export default function Boms() {
                       <button onClick={() => handleActivate(bom.id)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">✅ Activate</button>
                     )}
                     {(bom.status === 'DRAFT' || bom.status === 'REJECTED') && userCanCreate && (
-                      <button onClick={() => handleDelete(bom.id)} className="bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs hover:bg-status-danger hover:text-white">🗑️</button>
+                      <button
+                        onClick={isAdmin ? () => handleDelete(bom.id) : undefined}
+                        disabled={!isAdmin}
+                        className={`bg-status-danger/20 text-status-danger px-3 py-1 rounded text-xs ${isAdmin ? 'hover:bg-status-danger hover:text-white' : 'opacity-40 cursor-not-allowed'}`}
+                        title={isAdmin ? '' : 'Only super_admin can delete BOMs'}
+                      >
+                        🗑️
+                      </button>
                     )}
                     {bom.status !== 'ARCHIVED' && (
                       <button onClick={() => handleClone(bom)} className="bg-primary/20 text-primary px-3 py-1 rounded text-xs hover:bg-primary hover:text-white">📋 Clone</button>
                     )}
+                    <button onClick={() => { setViewingBom(bom); setViewOpen(true); }} className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs hover:bg-blue-500/30 hover:text-white">👁️ View</button>
                   </td>
                 </tr>
               ))
@@ -374,6 +387,120 @@ export default function Boms() {
                 <button type="submit" className="px-6 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">💾 Save</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View BOM Modal */}
+      {viewOpen && viewingBom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-[fadeIn_0.2s_ease]" onClick={() => { setViewOpen(false); setViewingBom(null); }}>
+          <div className="bg-[#1a1a1a] border border-[#444] rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6 border-b border-[#333] pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-white">{viewingBom.name}</h3>
+                <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
+                  <span>Version: <span className="text-white font-mono">v{viewingBom.version}</span></span>
+                  <span className={`px-2 py-0.5 rounded ${statusColor(viewingBom.status)}`}>{statusLabel(viewingBom.status)}</span>
+                  <span>Category: <span className="text-white">{viewingBom.category?.replace(/_/g, ' ')}</span></span>
+                </div>
+              </div>
+              <button onClick={() => { setViewOpen(false); setViewingBom(null); }} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">📊 Batch Summary</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-400">Yield %</span><span className="text-white font-bold">{viewingBom.yieldPercent}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Input (kg)</span><span className="text-white font-bold">{formatQty(viewingBom.batchInputKg)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Output (kg)</span><span className="text-white font-bold">{formatQty(viewingBom.batchOutputKg)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Ingredients</span><span className="text-white font-bold">{viewingBom.ingredients.length}</span></div>
+                </div>
+              </div>
+              <div className="bg-[#121212] p-4 rounded border border-[#333]">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">📋 Metadata</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-400">BOM ID</span><span className="text-white font-mono text-xs">{viewingBom.bomId || viewingBom.id}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Created By</span><span className="text-white">{viewingBom.createdByName || viewingBom.createdBy || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Created At</span><span className="text-white">{viewingBom.createdAt ? new Date(viewingBom.createdAt.seconds * 1000).toLocaleString() : '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Updated At</span><span className="text-white">{viewingBom.updatedAt ? new Date(viewingBom.updatedAt.seconds * 1000).toLocaleString() : '—'}</span></div>
+                  {viewingBom.approvedAt && (
+                    <div className="flex justify-between"><span className="text-gray-400">Approved At</span><span className="text-white">{new Date(viewingBom.approvedAt.seconds * 1000).toLocaleString()}</span></div>
+                  )}
+                  {viewingBom.activatedAt && (
+                    <div className="flex justify-between"><span className="text-gray-400">Activated At</span><span className="text-white">{new Date(viewingBom.activatedAt.seconds * 1000).toLocaleString()}</span></div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Ingredients Table */}
+            <div className="mb-6">
+              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">🧪 Ingredients ({viewingBom.ingredients.length})</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-primary text-primary text-xs uppercase tracking-wider">
+                      <th className="p-3">#</th>
+                      <th className="p-3">🧪 Item</th>
+                      <th className="p-3">🔢 Code</th>
+                      <th className="p-3">⚖️ Qty/Batch</th>
+                      <th className="p-3">⚖️ Unit</th>
+                      <th className="p-3">⭐ Critical</th>
+                      <th className="p-3">📝 Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#333]">
+                    {viewingBom.ingredients.map((ing, i) => (
+                      <tr key={i} className="hover:bg-white/5">
+                        <td className="p-3 text-white mono">{i + 1}</td>
+                        <td className="p-3 text-white">{ing.itemName}</td>
+                        <td className="p-3 text-gray-400 font-mono text-sm">{ing.itemCode || '—'}</td>
+                        <td className="p-3 text-white">{formatQty(ing.kgPerBatch)}</td>
+                        <td className="p-3 text-white">{ing.unitOfMeasure}</td>
+                        <td className="p-3 text-center">{ing.isCritical ? <span className="text-status-success">✅ Yes</span> : <span className="text-gray-400">No</span>}</td>
+                        <td className="p-3 text-gray-400 text-sm">{ing.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Approval History */}
+            {viewingBom.approvalState && viewingBom.approvalState.steps && viewingBom.approvalState.steps.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">✅ Approval History</h4>
+                <div className="space-y-2">
+                  {viewingBom.approvalState.steps.map((step, i) => (
+                    <div key={i} className="bg-[#121212] p-3 rounded border border-[#333] flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${step.status === 'APPROVED' ? 'bg-status-success/20 text-status-success' : step.status === 'REJECTED' ? 'bg-status-danger/20 text-status-danger' : step.status === 'PENDING' ? 'bg-status-warning/20 text-status-warning' : 'bg-[#333] text-gray-400'}`}>
+                          {step.status}
+                        </span>
+                        <span className="text-white">{step.label || step.role}</span>
+                        {step.status === 'APPROVED' && step.approvedByName && <span className="text-xs text-gray-400">by {step.approvedByName}</span>}
+                        {step.status === 'REJECTED' && step.rejectedByName && <span className="text-xs text-gray-400">by {step.rejectedByName}</span>}
+                      </div>
+                      <div className="text-right text-xs text-gray-400">
+                        {step.approvedAt && <div>Approved: {new Date(step.approvedAt.seconds * 1000).toLocaleString()}</div>}
+                        {step.rejectedAt && <div>Rejected: {new Date(step.rejectedAt.seconds * 1000).toLocaleString()}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-[#333]">
+              <button onClick={() => { setViewOpen(false); setViewingBom(null); }} className="px-4 py-2 rounded bg-[#333] text-white hover:bg-[#555]">Close</button>
+              {viewingBom.status === 'DRAFT' && userCanCreate && (
+                <button onClick={() => { setViewOpen(false); setViewingBom(null); handleOpenModal(viewingBom); }} className="px-4 py-2 rounded bg-primary text-black font-bold hover:bg-primary-dark">✏️ Edit</button>
+              )}
+              {viewingBom.status === 'APPROVED' && userCanCreate && (
+                <button onClick={() => { setViewOpen(false); setViewingBom(null); handleActivate(viewingBom.id); }} className="px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30">✅ Activate</button>
+              )}
+            </div>
           </div>
         </div>
       )}
