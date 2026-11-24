@@ -13,6 +13,15 @@ import {
 import { subscribeToBoms, getActiveBoms } from '../services/bomOperations';
 import Layout from '../components/Layout';
 
+const SKU_IDS = ['22', '40', '45', '85', '125', '170', '850'];
+
+const generateLotNumber = (prefix = 'L-FG') => {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+  const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `${prefix}-${dateStr}-${random}`;
+};
+
 export default function ProductionOrders() {
   const { currentUser } = useAuth();
   const { config } = useConfig();
@@ -22,12 +31,29 @@ export default function ProductionOrders() {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
     bomId: '', plannedBatches: 1, plannedStartDate: '', plannedEndDate: '',
-    notes: '', packingPlan: { '22': 0, '40': 0, '45': 0, '85': 0, '125': 0, '170': 0, '850': 0 }
+    notes: '', outputLotId: '', packingPlan: { '22': 15, '40': 20, '45': 25, '85': 10, '125': 15, '170': 10, '850': 5 }
   });
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [actualsOpen, setActualsOpen] = useState(false);
   const [actualsForm, setActualsForm] = useState({ actualConsumption: [], actualPowderKg: 0, outputLotId: '' });
+
+  // Ensure packing plan sums to 100%
+  const normalizePackingPlan = useCallback((plan) => {
+    const total = Object.values(plan).reduce((sum, v) => sum + Number(v || 0), 0);
+    if (total === 0) return plan;
+    const normalized = {};
+    Object.entries(plan).forEach(([k, v]) => {
+      normalized[k] = Math.round((Number(v || 0) / total) * 10000) / 100;
+    });
+    const keys = Object.keys(normalized);
+    const currentTotal = keys.reduce((sum, k) => sum + normalized[k], 0);
+    if (currentTotal !== 100 && keys.length > 0) {
+      const maxKey = keys.reduce((a, b) => normalized[a] > normalized[b] ? a : b);
+      normalized[maxKey] = Math.round((normalized[maxKey] + (100 - currentTotal)) * 100) / 100;
+    }
+    return normalized;
+  }, []);
 
   const userActionRoles = config?.actionRoles?.map(r => r.id) || [];
   const userDeptRoles = config?.departmentRoles?.map(r => r.id) || [];
@@ -57,7 +83,12 @@ export default function ProductionOrders() {
     e.preventDefault();
     if (!form.bomId || !form.plannedBatches) return showToast('BOM and batches required', true);
     try {
-      const orderNumber = await createProductionOrder(form, currentUser?.email, currentUser?.email);
+      const finalForm = {
+        ...form,
+        outputLotId: form.outputLotId.trim() || generateLotNumber(),
+        packingPlan: normalizePackingPlan(form.packingPlan)
+      };
+      const orderNumber = await createProductionOrder(finalForm, currentUser?.email, currentUser?.email);
       showToast(`Production order ${orderNumber} created!`, false);
       setCreateOpen(false);
     } catch (err) {
@@ -102,7 +133,11 @@ export default function ProductionOrders() {
     e.preventDefault();
     if (!selectedOrder) return;
     try {
-      await completeProductionOrder(selectedOrder.orderNumber, currentUser?.email, currentUser?.email, actualsForm);
+      const finalActuals = {
+        ...actualsForm,
+        outputLotId: actualsForm.outputLotId.trim() || generateLotNumber()
+      };
+      await completeProductionOrder(selectedOrder.orderNumber, currentUser?.email, currentUser?.email, finalActuals);
       showToast('Production completed!', false);
       setActualsOpen(false);
       setSelectedOrder(null);
@@ -265,7 +300,15 @@ export default function ProductionOrders() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
-                  <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" placeholder="Auto-generated if empty" />
+                  <div className="relative">
+                    <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary pr-24" placeholder="Auto-generated if empty" />
+                    {form.outputLotId === '' && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 bg-[#121212] px-1">
+                        {generateLotNumber()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate (format: L-FG-YYYYMMDD-XXXXX)</p>
                 </div>
               </div>
               <div className="mb-4">
@@ -273,14 +316,48 @@ export default function ProductionOrders() {
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
               <div className="mb-4">
-                <label className="block text-xs text-gray-400 mb-1">Packing Plan (sachets per batch)</label>
-                <div className="grid grid-cols-4 gap-2 text-xs">
-                  {Object.entries(form.packingPlan).map(([gram, qty]) => (
-                    <div key={gram} className="flex items-center gap-2">
-                      <span className="text-gray-400 w-16">{gram}g</span>
-                      <input type="number" min="0" value={qty} onChange={e => setForm({ ...form, packingPlan: { ...form.packingPlan, [gram]: Number(e.target.value) || 0 } })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                <label className="block text-xs text-gray-400 mb-1">Packing Plan (% per sachet size — total = 100%)</label>
+                <div className="space-y-2">
+                  {SKU_IDS.map((gram) => (
+                    <div key={gram} className="flex items-center gap-3">
+                      <span className="text-gray-400 w-16 text-xs">{gram}g</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={form.packingPlan[gram] || 0}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          const updated = { ...form.packingPlan, [gram]: val };
+                          setForm({ ...form, packingPlan: normalizePackingPlan(updated) });
+                        }}
+                        className="flex-1 h-2 bg-[#121212] appearance-none cursor-pointer accent-primary"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={form.packingPlan[gram] || 0}
+                        onChange={e => {
+                          const val = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                          const updated = { ...form.packingPlan, [gram]: val };
+                          setForm({ ...form, packingPlan: normalizePackingPlan(updated) });
+                        }}
+                        className="w-16 p-1 bg-[#121212] border border-[#444] rounded text-white text-xs outline-none focus:border-primary text-center"
+                      />
+                      <span className="text-xs text-gray-400 w-4">%</span>
                     </div>
                   ))}
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span className="w-16">Total</span>
+                    <div className="flex-1 h-2 bg-[#333] rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-100" style={{ width: `${Object.values(form.packingPlan).reduce((a, b) => a + Number(b || 0), 0)}%` }}></div>
+                    </div>
+                    <span className="font-bold text-white w-10" style={{ color: Object.values(form.packingPlan).reduce((a, b) => a + Number(b || 0), 0) === 100 ? '#4ade80' : '#f87171' }}>
+                      {Object.values(form.packingPlan).reduce((a, b) => a + Number(b || 0), 0).toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
@@ -300,7 +377,15 @@ export default function ProductionOrders() {
             <form onSubmit={handleComplete}>
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
-                <input type="text" value={actualsForm.outputLotId} onChange={e => setActualsForm({ ...actualsForm, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" placeholder="Auto-generated if empty" />
+                <div className="relative">
+                  <input type="text" value={actualsForm.outputLotId} onChange={e => setActualsForm({ ...actualsForm, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary pr-24" placeholder="Auto-generated if empty" />
+                  {actualsForm.outputLotId === '' && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 bg-[#121212] px-1">
+                      {generateLotNumber()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate (format: L-FG-YYYYMMDD-XXXXX)</p>
               </div>
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Actual Output (kg)</label>
