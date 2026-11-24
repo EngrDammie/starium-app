@@ -86,7 +86,7 @@ export default function ProductionOrders() {
   };
 
   const handleOpenCreate = () => {
-    setForm({ bomId: '', plannedBatches: 1, plannedStartDate: '', plannedEndDate: '', notes: '', packingPlan: { '22': 0, '40': 0, '45': 0, '85': 0, '125': 0, '170': 0, '850': 0 } });
+    setForm({ bomId: '', plannedBatches: 1, plannedStartDate: '', plannedEndDate: '', notes: '', outputLotId: generateLotNumber(), packingPlan: { '22': 15, '40': 20, '45': 25, '85': 10, '125': 15, '170': 10, '850': 5 } });
     setCreateOpen(true);
   };
 
@@ -135,7 +135,7 @@ export default function ProductionOrders() {
       unitOfMeasure: p.unitOfMeasure,
       lotId: ''
     }));
-    setActualsForm({ actualConsumption, actualPowderKg: order.plannedPowderKg, outputLotId: '' });
+    setActualsForm({ actualConsumption, actualPowderKg: order.plannedPowderKg, outputLotId: generateLotNumber() });
     setSelectedOrder(order);
     setActualsOpen(true);
   };
@@ -346,15 +346,8 @@ export default function ProductionOrders() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
-                  <div className="relative">
-                    <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary pr-24" placeholder="Auto-generated if empty" />
-                    {form.outputLotId === '' && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 bg-[#121212] px-1">
-                        {generateLotNumber()}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate (format: L-FG-YYYYMMDD-XXXXX)</p>
+                  <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                  <p className="text-xs text-gray-500 mt-1">Auto-generated (format: L-FG-YYYYMMDD-XXXXX) — editable</p>
                 </div>
               </div>
               <div className="mb-4">
@@ -423,15 +416,8 @@ export default function ProductionOrders() {
             <form onSubmit={handleComplete}>
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
-                <div className="relative">
-                  <input type="text" value={actualsForm.outputLotId} onChange={e => setActualsForm({ ...actualsForm, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary pr-24" placeholder="Auto-generated if empty" />
-                  {actualsForm.outputLotId === '' && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 bg-[#121212] px-1">
-                      {generateLotNumber()}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate (format: L-FG-YYYYMMDD-XXXXX)</p>
+                <input type="text" value={actualsForm.outputLotId} onChange={e => setActualsForm({ ...actualsForm, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                <p className="text-xs text-gray-500 mt-1">Auto-generated (format: L-FG-YYYYMMDD-XXXXX) — editable</p>
               </div>
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Actual Output (kg)</label>
