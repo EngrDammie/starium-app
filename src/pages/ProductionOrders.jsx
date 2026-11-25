@@ -1,6 +1,6 @@
 // src/pages/ProductionOrders.jsx
 //
-// Production Orders — plan batches from BOMs, track actuals vs planned.
+// Production Orders — plan batches from BOMs, track actuals vs calculated variance.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,7 @@ import {
   subscribeToProductionOrders
 } from '../services/productionOperations';
 import { subscribeToBoms, getActiveBoms } from '../services/bomOperations';
-import { subscribeToBins, getStockForBin } from '../services/inventoryOperations';
+import { subscribeToWarehouses, subscribeToBins, getStockForBin } from '../services/inventoryOperations';
 import Layout from '../components/Layout';
 
 const SKU_IDS = ['22', '40', '45', '85', '125', '170', '850'];
@@ -28,12 +28,14 @@ export default function ProductionOrders() {
   const { config } = useConfig();
   const [orders, setOrders] = useState([]);
   const [activeBoms, setActiveBoms] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
-    bomId: '', plannedBatches: 1, plannedStartDate: '', plannedEndDate: '',
+    bomId: '', sourceWarehouseId: '', destinationWarehouseId: '',
+    plannedBatches: 1, plannedStartDate: '', plannedEndDate: '',
     notes: '', outputLotId: '', packingPlan: { '22': 15, '40': 20, '45': 25, '85': 10, '125': 15, '170': 10, '850': 5 },
-    binAssignments: {} // itemId -> { fromBinId: '', toBinId: '' }
+    binAssignments: {}, destinationBinId: ''
   });
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -42,9 +44,9 @@ export default function ProductionOrders() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewingBom, setViewingBom] = useState(null);
 
-  // Bin selection state
-  const [productionFloorBins, setProductionFloorBins] = useState([]); // bins in Production Floor warehouse
-  const [finishedGoodsBins, setFinishedGoodsBins] = useState([]); // bins in Finished Goods warehouse
+  // Bin selection state — source warehouse bins (for ingredients) and destination warehouse bins (for output)
+  const [sourceBins, setSourceBins] = useState([]);
+  const [destinationBins, setDestinationBins] = useState([]);
   const [binStock, setBinStock] = useState({}); // binId -> stock array from ledger
   const binUnsubscribeRef = useRef(null);
 
@@ -67,7 +69,7 @@ export default function ProductionOrders() {
 
   // Find selected BOM for live calculations
   const selectedBom = activeBoms.find(b => b.id === form.bomId);
-  
+
   // Live batch calculations
   const batchInputKg = selectedBom ? selectedBom.batchInputKg * form.plannedBatches : 0;
   const batchOutputKg = selectedBom ? selectedBom.batchOutputKg * form.plannedBatches : 0;
@@ -83,51 +85,51 @@ export default function ProductionOrders() {
     return () => { u1(); };
   }, []);
 
-  // Subscribe to all bins when BOM changes — user selects any bin with stock
+  // Subscribe to all warehouses so user can pick one
+  useEffect(() => {
+    subscribeToWarehouses((ws) => setWarehouses(ws));
+  }, []);
+
+  // Subscribe to bins for selected source warehouse
   useEffect(() => {
     if (binUnsubscribeRef.current) {
       binUnsubscribeRef.current();
       binUnsubscribeRef.current = null;
     }
-    setProductionFloorBins([]);
-    setFinishedGoodsBins([]);
+    setSourceBins([]);
     setBinStock({});
 
-    if (!selectedBom) return;
+    if (!form.sourceWarehouseId) return;
 
-    binUnsubscribeRef.current = subscribeToBins((bins) => {
-      // Split into Production Floor vs Finished Goods based on warehouse code
-      const pfBins = bins.filter(b => b.status === 'AVAILABLE' && b.warehouseId && b.warehouseId.toUpperCase().includes('PF'));
-      const fgBins = bins.filter(b => b.status === 'AVAILABLE' && b.warehouseId && b.warehouseId.toUpperCase().includes('FG'));
-      setProductionFloorBins(pfBins);
-      setFinishedGoodsBins(fgBins);
-    });
+    binUnsubscribeRef.current = subscribeToBins((allBins) => {
+      const wsBins = allBins.filter(b => b.warehouseId === form.sourceWarehouseId && b.status === 'AVAILABLE');
+      setSourceBins(wsBins);
 
-    return () => {
-      if (binUnsubscribeRef.current) binUnsubscribeRef.current();
-    };
-  }, [selectedBom]);
-
-  // Fetch stock for all available bins when they change
-  useEffect(() => {
-    const allBins = [...productionFloorBins, ...finishedGoodsBins];
-    if (allBins.length === 0) {
-      setBinStock({});
-      return;
-    }
-
-    const stockMap = {};
-    let fetched = 0;
-    allBins.forEach(bin => {
-      getStockForBin(bin.id).then(stock => {
-        stockMap[bin.id] = stock;
-        fetched++;
-        if (fetched === allBins.length) {
-          setBinStock(stockMap);
-        }
+      // Fetch stock for source bins
+      const stockMap = {};
+      let fetched = 0;
+      if (wsBins.length === 0) { setBinStock({}); return; }
+      wsBins.forEach(bin => {
+        getStockForBin(bin.id).then(stock => {
+          stockMap[bin.id] = stock;
+          fetched++;
+          if (fetched === wsBins.length) setBinStock(stockMap);
+        });
       });
     });
-  }, [productionFloorBins, finishedGoodsBins]);
+
+    return () => { if (binUnsubscribeRef.current) binUnsubscribeRef.current(); };
+  }, [form.sourceWarehouseId]);
+
+  // Subscribe to bins for selected destination warehouse
+  useEffect(() => {
+    setDestinationBins([]);
+    if (!form.destinationWarehouseId) return;
+    subscribeToBins((allBins) => {
+      const wsBins = allBins.filter(b => b.warehouseId === form.destinationWarehouseId && b.status === 'AVAILABLE');
+      setDestinationBins(wsBins);
+    });
+  }, [form.destinationWarehouseId]);
 
   // Initialize binAssignments when BOM changes
   useEffect(() => {
@@ -150,13 +152,16 @@ export default function ProductionOrders() {
   };
 
   const handleOpenCreate = () => {
-    setForm({ bomId: '', plannedBatches: 1, plannedStartDate: '', plannedEndDate: '', notes: '', outputLotId: generateLotNumber(), packingPlan: { '22': 15, '40': 20, '45': 25, '85': 10, '125': 15, '170': 10, '850': 5 }, binAssignments: {}, destinationBinId: '' });
+    setForm({ bomId: '', sourceWarehouseId: '', destinationWarehouseId: '',
+      plannedBatches: 1, plannedStartDate: '', plannedEndDate: '', notes: '',
+      outputLotId: generateLotNumber(), packingPlan: { '22': 15, '40': 20, '45': 25, '85': 10, '125': 15, '170': 10, '850': 5 },
+      binAssignments: {}, destinationBinId: '' });
     setCreateOpen(true);
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.bomId || !form.plannedBatches) return showToast('BOM and batches required', true);
+    if (!form.bomId || !form.plannedBatches || !form.sourceWarehouseId) return showToast('BOM, source warehouse, and batches required', true);
     try {
       const finalForm = {
         ...form,
@@ -190,7 +195,6 @@ export default function ProductionOrders() {
   };
 
   const handleOpenActuals = (order) => {
-    // Pre-fill actuals form with planned consumption
     const actualConsumption = order.plannedConsumption.map(p => ({
       itemId: p.itemId,
       itemName: p.itemName,
@@ -224,7 +228,6 @@ export default function ProductionOrders() {
   const handleCancel = async (orderNumber) => {
     if (!window.confirm('Cancel this order?')) return;
     try {
-      // TODO: implement cancelProductionOrder
       showToast('Not implemented yet', true);
     } catch (err) {
       showToast('Error: ' + err.message, true);
@@ -366,6 +369,7 @@ export default function ProductionOrders() {
                   {activeBoms.map(b => <option key={b.id} value={b.id}>{b.name} v{b.version} — {b.batchOutputKg} kg/batch</option>)}
                 </select>
               </div>
+
               {/* Live Batch Calculation */}
               {selectedBom && (
                 <div className="bg-[#0a0a0a] border border-primary/30 rounded-lg p-4 mb-4">
@@ -394,10 +398,48 @@ export default function ProductionOrders() {
                 </div>
               )}
 
-              {/* Ingredient Bin Selection */}
-              {selectedBom && (
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Planned Batches</label>
+                  <input type="number" min="1" value={form.plannedBatches} onChange={e => setForm({ ...form, plannedBatches: Number(e.target.value) || 1 })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Planned Start Date</label>
+                  <input type="date" value={form.plannedStartDate} onChange={e => setForm({ ...form, plannedStartDate: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Planned End Date</label>
+                  <input type="date" value={form.plannedEndDate} onChange={e => setForm({ ...form, plannedEndDate: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
+                  <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                  <p className="text-xs text-gray-500 mt-1">Auto-generated (format: L-FG-YYYYMMDD-XXXXX) — editable</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Source Warehouse (ingredients)</label>
+                  <select value={form.sourceWarehouseId} onChange={e => setForm({ ...form, sourceWarehouseId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
+                    <option value="">Select warehouse</option>
+                    {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Destination Warehouse (output)</label>
+                  <select value={form.destinationWarehouseId} onChange={e => setForm({ ...form, destinationWarehouseId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
+                    <option value="">Select warehouse</option>
+                    {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Source bins for ingredients */}
+              {form.sourceWarehouseId && sourceBins.length > 0 && (
                 <div className="mb-4">
-                  <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">📦 Select Source Bin per Ingredient (Production Floor)</h5>
+                  <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">📥 Select Source Bin per Ingredient</h5>
                   <div className="space-y-2 overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -405,13 +447,13 @@ export default function ProductionOrders() {
                           <th className="p-2">🧪 Ingredient</th>
                           <th className="p-2">📦 Planned (kg)</th>
                           <th className="p-2">📥 From Bin</th>
-                          <th className="p-2">📤 Stock in Bin</th>
+                          <th className="p-2">📊 Stock in Bin</th>
                         </tr>
                       </thead>
                       <tbody>
                         {selectedBom.ingredients.map((ing, i) => {
                           const assignment = form.binAssignments[ing.itemId] || { fromBinId: '', toBinId: '' };
-                          const bin = productionFloorBins.find(b => b.id === assignment.fromBinId);
+                          const bin = sourceBins.find(b => b.id === assignment.fromBinId);
                           const stock = binStock[assignment.fromBinId] || [];
                           const itemStock = stock.find(s => s.itemId === ing.itemId);
                           const availableQty = itemStock ? itemStock.qty : 0;
@@ -432,7 +474,7 @@ export default function ProductionOrders() {
                                   className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary text-xs"
                                 >
                                   <option value="">Select bin</option>
-                                  {productionFloorBins.map(b => (
+                                  {sourceBins.map(b => (
                                     <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>
                                   ))}
                                 </select>
@@ -466,36 +508,20 @@ export default function ProductionOrders() {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Planned Batches</label>
-                  <input type="number" min="1" value={form.plannedBatches} onChange={e => setForm({ ...form, plannedBatches: Number(e.target.value) || 1 })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Planned Start Date</label>
-                  <input type="date" value={form.plannedStartDate} onChange={e => setForm({ ...form, plannedStartDate: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-                </div>
+
+              <div className="mb-4">
+                <label className="block text-xs text-gray-400 mb-1">Destination Bin (finished powder)</label>
+                <select value={form.destinationBinId} onChange={e => setForm({ ...form, destinationBinId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
+                  <option value="">Select bin</option>
+                  {destinationBins.map(b => (
+                    <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>
+                  ))}
+                </select>
+                {form.destinationWarehouseId && destinationBins.length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">No available bins in this warehouse.</p>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Planned End Date</label>
-                  <input type="date" value={form.plannedEndDate} onChange={e => setForm({ ...form, plannedEndDate: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Output Lot #</label>
-                  <input type="text" value={form.outputLotId} onChange={e => setForm({ ...form, outputLotId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
-                  <p className="text-xs text-gray-500 mt-1">Auto-generated (format: L-FG-YYYYMMDD-XXXXX) — editable</p>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Finished Goods Bin (output)</label>
-                  <select value={form.destinationBinId} onChange={e => setForm({ ...form, destinationBinId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary">
-                    <option value="">Select FG bin</option>
-                    {finishedGoodsBins.map(b => (
-                      <option key={b.id} value={b.id}>{b.fullAddress || b.code}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+
               <div className="mb-4">
                 <label className="block text-xs text-gray-400 mb-1">Notes</label>
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />

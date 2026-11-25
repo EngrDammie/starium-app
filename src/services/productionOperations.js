@@ -74,6 +74,8 @@ export async function createProductionOrder(orderData, createdByUid, createdByNa
     recordedBy: null,
     recordedAt: null,
     notes: orderData.notes || '',
+    sourceWarehouseId: orderData.sourceWarehouseId || '',   // warehouse for ingredients
+    destinationWarehouseId: orderData.destinationWarehouseId || '', // warehouse for finished goods
     binAssignments: orderData.binAssignments || {}, // itemId -> { fromBinId: '', toBinId: '' }
     destinationBinId: orderData.destinationBinId || '', // Finished Goods bin for output
     createdAt: serverTimestamp(),
