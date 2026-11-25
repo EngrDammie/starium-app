@@ -230,10 +230,17 @@ export default function PurchaseOrders() {
                             const item = items.find(x => x.id === value);
                             const newLines = [...form.lines];
                             if (item) {
-                              newLines[i] = { ...newLines[i], itemId: item.id, itemName: item.name, itemCode: item.code, unitOfMeasure: item.unitOfMeasure || 'kg' };
+                              newLines[i] = { 
+                                ...newLines[i], 
+                                itemId: item.id, 
+                                itemName: item.name, 
+                                itemCode: item.code, 
+                                unitOfMeasure: item.unitOfMeasure || 'kg',
+                                unitPrice: item.standardCost || 0
+                              };
                             } else {
                               // If item not found (shouldn't happen with valid selection), clear the selection
-                              newLines[i] = { ...newLines[i], itemId: '', itemName: '', itemCode: '', unitOfMeasure: 'kg' };
+                              newLines[i] = { ...newLines[i], itemId: '', itemName: '', itemCode: '', unitOfMeasure: 'kg', unitPrice: 0 };
                             }
                             setForm({ ...form, lines: newLines });
                           }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
