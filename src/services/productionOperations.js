@@ -74,6 +74,8 @@ export async function createProductionOrder(orderData, createdByUid, createdByNa
     recordedBy: null,
     recordedAt: null,
     notes: orderData.notes || '',
+    binAssignments: orderData.binAssignments || {}, // itemId -> { fromBinId: '', toBinId: '' }
+    destinationBinId: orderData.destinationBinId || '', // Finished Goods bin for output
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
@@ -132,6 +134,36 @@ export async function startProductionOrder(orderNumber, startedByUid, startedByN
   const data = snap.data();
 
   if (data.status !== 'APPROVED' && data.status !== 'RELEASED') throw new Error('Order must be APPROVED/RELEASED to start');
+
+  // Validate bin assignments exist for all ingredients
+  const binAssignments = data.binAssignments || {};
+  for (const ing of data.plannedConsumption) {
+    if (!binAssignments[ing.itemId] || !binAssignments[ing.itemId].fromBinId) {
+      throw new Error(`No source bin assigned for ${ing.itemName}. Please select a bin before starting.`);
+    }
+  }
+
+  // Post CONSUMPTION ledger entries from assigned bins
+  const ledgerEntries = data.plannedConsumption.map(ing => {
+    const assignment = binAssignments[ing.itemId] || {};
+    return {
+      itemId: ing.itemId,
+      lotId: null,
+      fromWarehouseId: null,
+      toWarehouseId: null,
+      fromBinId: assignment.fromBinId,
+      toBinId: null,
+      movementType: 'CONSUMPTION',
+      qty: ing.plannedQty,
+      unitOfMeasure: ing.unitOfMeasure,
+      referenceType: 'PRODUCTION_ORDER',
+      referenceId: orderNumber,
+      performedBy: startedByUid,
+      performedAt: serverTimestamp(),
+      notes: `Production ${orderNumber} - CONSUMED ${ing.plannedQty} ${ing.unitOfMeasure} from bin ${assignment.fromBinId}`
+    };
+  });
+  await createStockLedgerEntry(ledgerEntries, startedByUid);
 
   await updateDoc(ref, {
     status: 'IN_PROGRESS',
@@ -192,33 +224,37 @@ export async function completeProductionOrder(orderNumber, completedByUid, compl
   const gramSpecs = await import('../config/firebase').then(() => import('../context/ConfigContext')).catch(() => ({ gramSpecs: {} }));
   // Note: In real implementation, would fetch from ConfigContext
 
-  // Post stock ledger CONSUMPTION for actuals
-  const ledgerEntries = actualConsumptionWithVariance.map(act => ({
-    itemId: act.itemId,
-    lotId: act.lotId,
-    fromWarehouseId: 'PF-L9', // TODO: Get from order
-    toWarehouseId: null,
-    fromBinId: null,
-    toBinId: null,
-    movementType: 'CONSUMPTION',
-    qty: act.actualQty,
-    unitOfMeasure: act.unitOfMeasure,
-    referenceType: 'PRODUCTION_ORDER',
-    referenceId: orderNumber,
-    performedBy: completedByUid,
-    performedAt: serverTimestamp(),
-    notes: `Production ${orderNumber} - CONSUMED ${act.actualQty} ${act.unitOfMeasure}`
-  }));
+  // Post stock ledger CONSUMPTION for actuals — from assigned bins
+  const binAssignments = data.binAssignments || {};
+  const ledgerEntries = actualConsumptionWithVariance.map(act => {
+    const assignment = binAssignments[act.itemId] || {};
+    return {
+      itemId: act.itemId,
+      lotId: act.lotId,
+      fromWarehouseId: null,
+      toWarehouseId: null,
+      fromBinId: assignment.fromBinId,
+      toBinId: null,
+      movementType: 'CONSUMPTION',
+      qty: act.actualQty,
+      unitOfMeasure: act.unitOfMeasure,
+      referenceType: 'PRODUCTION_ORDER',
+      referenceId: orderNumber,
+      performedBy: completedByUid,
+      performedAt: serverTimestamp(),
+      notes: `Production ${orderNumber} - CONSUMED ${act.actualQty} ${act.unitOfMeasure} from bin ${assignment.fromBinId}`
+    };
+  });
   await createStockLedgerEntry(ledgerEntries, completedByUid);
 
-  // Post PRODUCTION_OUTPUT
+  // Post PRODUCTION_OUTPUT to destination bin
   const outputEntry = {
     itemId: 'FINISHED_POWDER',
     lotId: outputLotId,
     fromWarehouseId: null,
-    toWarehouseId: 'FG-WH',
+    toWarehouseId: null,
     fromBinId: null,
-    toBinId: 'FG-WH-BIN-01',
+    toBinId: data.destinationBinId || null,
     movementType: 'PRODUCTION_OUTPUT',
     qty: actualPowderKg,
     unitOfMeasure: 'kg',
@@ -226,7 +262,7 @@ export async function completeProductionOrder(orderNumber, completedByUid, compl
     referenceId: orderNumber,
     performedBy: completedByUid,
     performedAt: serverTimestamp(),
-    notes: `Production ${orderNumber} - OUTPUT ${actualPowderKg} kg powder (Lot: ${outputLotId})`
+    notes: `Production ${orderNumber} - OUTPUT ${actualPowderKg} kg powder (Lot: ${outputLotId}) to bin ${data.destinationBinId || 'unspecified'}`
   };
   await createStockLedgerEntry([outputEntry], completedByUid);
 
