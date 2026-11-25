@@ -220,15 +220,27 @@ export default function PurchaseOrders() {
                     <div key={i} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-[#121212] p-3 rounded border border-[#333]">
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Item</label>
-                        <select name={`line${i}-item`} value={line.itemId} onChange={e => {
-                          const item = items.find(x => x.id === e.target.value || x.code === e.target.value);
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], itemId: item ? item.id : e.target.value, itemName: item ? item.name : '', itemCode: item ? item.code : '', unitOfMeasure: item ? item.unitOfMeasure : 'kg' };
-                          setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-300 outline-none focus:border-primary" required>
-                          <option value="">Select item</option>
-                          {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
-                        </select>
+                        {items.length === 0 ? (
+                          <div className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-500 text-xs">
+                            Loading items...
+                          </div>
+                        ) : (
+                          <select name={`line${i}-item`} value={line.itemId} onChange={e => {
+                            const value = e.target.value;
+                            const item = items.find(x => x.id === value);
+                            const newLines = [...form.lines];
+                            if (item) {
+                              newLines[i] = { ...newLines[i], itemId: item.id, itemName: item.name, itemCode: item.code, unitOfMeasure: item.unitOfMeasure || 'kg' };
+                            } else {
+                              // If item not found (shouldn't happen with valid selection), clear the selection
+                              newLines[i] = { ...newLines[i], itemId: '', itemName: '', itemCode: '', unitOfMeasure: 'kg' };
+                            }
+                            setForm({ ...form, lines: newLines });
+                          }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                            <option value="">Select item</option>
+                            {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
+                          </select>
+                        )}
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Qty</label>
