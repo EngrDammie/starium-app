@@ -195,14 +195,14 @@ export default function PurchaseOrders() {
                   <select name="vendorId" value={form.vendorId} onChange={e => {
                     const v = vendors.find(x => x.id === e.target.value);
                     setForm(prevForm => ({ ...prevForm, vendorId: e.target.value, vendorName: v ? v.name : '' }));
-                  }} onFocus={stopProp} onBlur={stopProp} onKeyDown={stopProp} onMouseDown={stopProp} onClick={stopProp} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                  }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                     <option value="">Select vendor</option>
                     {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Destination Warehouse</label>
-                  <select name="destinationWarehouseId" value={form.destinationWarehouseId} onChange={e => setForm(prevForm => ({ ...prevForm, destinationWarehouseId: e.target.value }))} onFocus={stopProp} onBlur={stopProp} onKeyDown={stopProp} onMouseDown={stopProp} onClick={stopProp} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                  <select name="destinationWarehouseId" value={form.destinationWarehouseId} onChange={e => setForm(prevForm => ({ ...prevForm, destinationWarehouseId: e.target.value }))} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                     <option value="">Select warehouse</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
@@ -248,7 +248,7 @@ export default function PurchaseOrders() {
                               }
                               return { ...prevForm, lines: newLines };
                             });
-                          }} onFocus={stopProp} onBlur={stopProp} onKeyDown={stopProp} onMouseDown={stopProp} onClick={stopProp} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                             <option value="">Select item</option>
                             {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
                           </select>
@@ -306,7 +306,7 @@ export default function PurchaseOrders() {
                             newLines[i] = { ...newLines[i], destinationBinId: e.target.value };
                             return { ...prevForm, lines: newLines };
                           });
-                        }} onFocus={stopProp} onBlur={stopProp} onKeyDown={stopProp} onMouseDown={stopProp} onClick={stopProp} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                           <option value="">Select bin</option>
                           {availableBins.map(b => (
                             <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId}: ${b.currentQty})` : '(empty)'}</option>
