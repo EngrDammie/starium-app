@@ -112,7 +112,7 @@ export default function GoodsReceipt() {
       itemName: line.itemName,
       itemCode: line.itemCode,
       orderedQty: line.orderedQty,
-      receivedQty: 0,
+      receivedQty: line.orderedQty, // pre-load with ordered qty; user can edit for shortfalls
       unitOfMeasure: line.unitOfMeasure,
       lotNumber: generateLotNumber(i), // pre-fill with auto-generated lot number
       expiryDate: '',

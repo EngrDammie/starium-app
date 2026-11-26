@@ -53,6 +53,7 @@ function addHeader(doc, title, docNumber, date) {
 }
 
 function addSectionTitle(doc, title, y) {
+  y = ensureSpace(doc, y, 20);
   doc.setFillColor(...PRIMARY_COLOR);
   doc.rect(14, y, 182, 8, 'F');
   doc.setTextColor(255, 255, 255);
@@ -63,7 +64,7 @@ function addSectionTitle(doc, title, y) {
 }
 
 function addKeyValuePairs(doc, pairs, startY, col1Width = 50) {
-  let y = startY;
+  let y = ensureSpace(doc, startY, pairs.length * 6 + 10);
   doc.setFontSize(9);
   pairs.forEach(([key, value]) => {
     doc.setFont('helvetica', 'bold');
@@ -74,6 +75,16 @@ function addKeyValuePairs(doc, pairs, startY, col1Width = 50) {
     doc.text(String(value), 16 + col1Width, y);
     y += 6;
   });
+  return y;
+}
+
+function ensureSpace(doc, y, neededSpace) {
+  const pageHeight = doc.internal.pageSize.height;
+  const bottomMargin = 25;
+  if (y + neededSpace > pageHeight - bottomMargin) {
+    doc.addPage();
+    return 20;
+  }
   return y;
 }
 
@@ -116,7 +127,16 @@ function addTable(doc, headers, rows, startY, options = {}) {
     },
   });
 
-  return doc.lastAutoTable.finalY + 5;
+  // Ensure we have enough space for subsequent content
+  // If table ended near bottom of page, move to next page
+  const finalY = doc.lastAutoTable.finalY;
+  const pageHeight = doc.internal.pageSize.height;
+  const bottomMargin = 25; // space for footer
+  if (finalY > pageHeight - bottomMargin) {
+    doc.addPage();
+    return 20; // start near top of new page
+  }
+  return finalY + 5;
 }
 
 function addFooter(doc, preparedBy, approvedBy = '') {
@@ -244,6 +264,7 @@ export function generatePOPdf(po) {
     doc.setTextColor(...DARK_COLOR);
     doc.setFont('helvetica', 'normal');
     const lines = doc.splitTextToSize(po.notes, 180);
+    y = ensureSpace(doc, y, lines.length * 5 + 10);
     doc.text(lines, 16, y);
     y += lines.length * 5;
   }
