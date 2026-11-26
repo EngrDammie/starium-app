@@ -217,7 +217,7 @@ export default function PurchaseOrders() {
                 <h5 className="text-xs font-bold text-gray-400 uppercase mb-3">Line Items</h5>
                 <div className="space-y-3">
                   {form.lines.map((line, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-[#121212] p-3 rounded border border-[#333]">
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-8 gap-3 items-end bg-[#121212] p-3 rounded border border-[#333]">
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Item</label>
                         {items.length === 0 ? (
@@ -248,6 +248,10 @@ export default function PurchaseOrders() {
                             {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
                           </select>
                         )}
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Code</label>
+                        <input type="text" value={line.itemCode} readOnly className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-gray-400" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Qty</label>
