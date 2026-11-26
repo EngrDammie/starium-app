@@ -46,8 +46,8 @@ export default function PurchaseOrders() {
     return bins.filter(b => b.warehouseId === form.destinationWarehouseId && b.status === 'AVAILABLE');
   }, [bins, form.destinationWarehouseId]);
 
-  const addLine = () => setForm({ ...form, lines: [...form.lines, { itemId: '', itemName: '', itemCode: '', orderedQty: 0, unitOfMeasure: 'kg', unitPrice: 0, taxRate: 7.5, destinationBinId: '' }] });
-  const removeLine = (i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) });
+  const addLine = () => setForm(prevForm => ({ ...prevForm, lines: [...prevForm.lines, { itemId: '', itemName: '', itemCode: '', orderedQty: 0, unitOfMeasure: 'kg', unitPrice: 0, taxRate: 7.5, destinationBinId: '' }] }));
+  const removeLine = (i) => setForm(prevForm => ({ ...prevForm, lines: prevForm.lines.filter((_, idx) => idx !== i) }));
 
   const totalAmount = form.lines.reduce((sum, l) => sum + (Number(l.orderedQty) || 0) * (Number(l.unitPrice) || 0), 0);
 
@@ -80,11 +80,12 @@ export default function PurchaseOrders() {
       erpNotifications.poSubmitted(poNumber);
       setToast('Purchase Order created and submitted for approval!', false);
       setCreateOpen(false);
-      setForm({
+      setForm(prevForm => ({
+        ...prevForm,
         vendorId: '', vendorName: '', destinationWarehouseId: '',
         expectedDeliveryDate: '', notes: '',
         lines: [{ itemId: '', itemName: '', itemCode: '', orderedQty: 0, unitOfMeasure: 'kg', unitPrice: 0, taxRate: 7.5, destinationBinId: '' }]
-      });
+      }));
     } catch (err) {
       console.error('[PurchaseOrders] Error creating PO:', err);
       setToast('Error creating PO: ' + (err.message || String(err)), true);
@@ -190,15 +191,15 @@ export default function PurchaseOrders() {
                   <label className="block text-xs text-gray-400 mb-1">Vendor</label>
                   <select name="vendorId" value={form.vendorId} onChange={e => {
                     const v = vendors.find(x => x.id === e.target.value);
-                    setForm({ ...form, vendorId: e.target.value, vendorName: v ? v.name : '' });
-                  }} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                    setForm(prevForm => ({ ...prevForm, vendorId: e.target.value, vendorName: v ? v.name : '' }));
+                  }} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                     <option value="">Select vendor</option>
                     {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Destination Warehouse</label>
-                  <select name="destinationWarehouseId" value={form.destinationWarehouseId} onChange={e => setForm({ ...form, destinationWarehouseId: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                  <select name="destinationWarehouseId" value={form.destinationWarehouseId} onChange={e => setForm(prevForm => ({ ...prevForm, destinationWarehouseId: e.target.value }))} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                     <option value="">Select warehouse</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
@@ -206,11 +207,11 @@ export default function PurchaseOrders() {
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Expected Delivery Date</label>
-                <input type="date" name="expectedDeliveryDate" value={form.expectedDeliveryDate} onChange={e => setForm({ ...form, expectedDeliveryDate: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                <input type="date" name="expectedDeliveryDate" value={form.expectedDeliveryDate} onChange={e => setForm(prevForm => ({ ...prevForm, expectedDeliveryDate: e.target.value }))} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Notes</label>
-                <input type="text" name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
+                <input type="text" name="notes" value={form.notes} onChange={e => setForm(prevForm => ({ ...prevForm, notes: e.target.value }))} className="w-full p-2 bg-[#121212] border border-[#444] rounded text-white outline-none focus:border-primary" />
               </div>
 
               <div className="border-t border-[#333] pt-4">
@@ -228,22 +229,23 @@ export default function PurchaseOrders() {
                           <select name={`line${i}-item`} value={line.itemId} onChange={e => {
                             const value = e.target.value;
                             const item = items.find(x => x.id === value);
-                            const newLines = [...form.lines];
-                            if (item) {
-                              newLines[i] = { 
-                                ...newLines[i], 
-                                itemId: item.id, 
-                                itemName: item.name, 
-                                itemCode: item.code, 
-                                unitOfMeasure: item.unitOfMeasure || 'kg',
-                                unitPrice: item.standardCost || 0
-                              };
-                            } else {
-                              // If item not found (shouldn't happen with valid selection), clear the selection
-                              newLines[i] = { ...newLines[i], itemId: '', itemName: '', itemCode: '', unitOfMeasure: 'kg', unitPrice: 0 };
-                            }
-                            setForm({ ...form, lines: newLines });
-                          }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                            setForm(prevForm => {
+                              const newLines = [...prevForm.lines];
+                              if (item) {
+                                newLines[i] = { 
+                                  ...newLines[i], 
+                                  itemId: item.id, 
+                                  itemName: item.name, 
+                                  itemCode: item.code, 
+                                  unitOfMeasure: item.unitOfMeasure || 'kg',
+                                  unitPrice: item.standardCost || 0
+                                };
+                              } else {
+                                newLines[i] = { ...newLines[i], itemId: '', itemName: '', itemCode: '', unitOfMeasure: 'kg', unitPrice: 0 };
+                              }
+                              return { ...prevForm, lines: newLines };
+                            });
+                          }} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                             <option value="">Select item</option>
                             {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.code})</option>)}
                           </select>
@@ -256,42 +258,52 @@ export default function PurchaseOrders() {
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Qty</label>
                         <input type="number" value={line.orderedQty} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], orderedQty: Number(e.target.value) || 0 };
-                          setForm({ ...form, lines: newLines });
+                          setForm(prevForm => {
+                            const newLines = [...prevForm.lines];
+                            newLines[i] = { ...newLines[i], orderedQty: Number(e.target.value) || 0 };
+                            return { ...prevForm, lines: newLines };
+                          });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="1" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Unit</label>
                         <input type="text" value={line.unitOfMeasure} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], unitOfMeasure: e.target.value };
-                          setForm({ ...form, lines: newLines });
+                          setForm(prevForm => {
+                            const newLines = [...prevForm.lines];
+                            newLines[i] = { ...newLines[i], unitOfMeasure: e.target.value };
+                            return { ...prevForm, lines: newLines };
+                          });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Price (₦)</label>
                         <input type="number" value={line.unitPrice} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], unitPrice: Number(e.target.value) || 0 };
-                          setForm({ ...form, lines: newLines });
+                          setForm(prevForm => {
+                            const newLines = [...prevForm.lines];
+                            newLines[i] = { ...newLines[i], unitPrice: Number(e.target.value) || 0 };
+                            return { ...prevForm, lines: newLines };
+                          });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" min="0.01" step="0.01" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Tax %</label>
                         <input type="number" value={line.taxRate} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], taxRate: Number(e.target.value) || 7.5 };
-                          setForm({ ...form, lines: newLines });
+                          setForm(prevForm => {
+                            const newLines = [...prevForm.lines];
+                            newLines[i] = { ...newLines[i], taxRate: Number(e.target.value) || 7.5 };
+                            return { ...prevForm, lines: newLines };
+                          });
                         }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1">Bin</label>
                         <select value={line.destinationBinId} onChange={e => {
-                          const newLines = [...form.lines];
-                          newLines[i] = { ...newLines[i], destinationBinId: e.target.value };
-                          setForm({ ...form, lines: newLines });
-                        }} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
+                          setForm(prevForm => {
+                            const newLines = [...prevForm.lines];
+                            newLines[i] = { ...newLines[i], destinationBinId: e.target.value };
+                            return { ...prevForm, lines: newLines };
+                          });
+                        }} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} className="w-full p-2 bg-[#0a0a0a] border border-[#444] rounded text-white outline-none focus:border-primary" required>
                           <option value="">Select bin</option>
                           {availableBins.map(b => (
                             <option key={b.id} value={b.id}>{b.fullAddress} {b.currentItemId ? `(${b.currentItemId}: ${b.currentQty})` : '(empty)'}</option>
