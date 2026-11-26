@@ -2,7 +2,7 @@
 //
 // Purchase Order list + create page.
 
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   subscribeToPurchaseOrders, createPurchaseOrder, submitPurchaseOrder,
