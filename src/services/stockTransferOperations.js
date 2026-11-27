@@ -46,6 +46,7 @@ export async function createStockTransfer(transferData, requestedByUid, requeste
       lineNumber: i + 1,
       itemId: line.itemId,
       itemName: line.itemName,
+      itemCode: line.itemCode,
       lotId: line.lotId,
       requestedQty: line.requestedQty,
       issuedQty: 0,
